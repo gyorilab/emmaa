@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 import logging
@@ -22,10 +23,13 @@ class TcgaCancerPrior(object):
     corresponding nodes in the prior is used to identify a set of relevant
     nodes.
     """
-    def __init__(self, tcga_study_name, sif_prior, diffusion_service=None,
+    def __init__(self, tcga_study_prefix, sif_prior, diffusion_service=None,
                  mutation_cache=None):
-        # e.g. paad_icgc
-        self.tcga_study_name = tcga_study_name
+        if tcga_study_prefix not in tcga_studies:
+            raise ValueError('TCGA study prefix must be one of %s' %
+                             (', '.join(tcga_studies.keys())))
+        # e.g. paad
+        self.tcga_study_prefix = tcga_study_prefix
         self.mutations = None
         self.prior_graph = None
         self.sif_prior = sif_prior
@@ -49,22 +53,24 @@ class TcgaCancerPrior(object):
                 return self.mutations
         logger.info('Getting mutations from cBio web service')
         mutations = {}
-        for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(),
-                                                         100)):
-            logger.info('Fetching mutations for gene batch %s' % idx)
-            patient_mutations = \
-                cbio_client.get_profile_data(self.tcga_study_name,
-                                             hgnc_name_batch,
-                                             'mutation')
-            # e.g. 'ICGC_0002_TD': {'BRAF': None, 'KRAS': 'G12D'}
-            for patient, gene_mut_dict in patient_mutations.items():
-                # 'BRAF': None
-                for gene, mutated in gene_mut_dict.items():
-                    if mutated is not None:
-                        try:
-                            mutations[gene] += 1
-                        except KeyError:
-                            mutations[gene] = 1
+        for tcga_study_name in tcga_studies[self.tcga_study_prefix]:
+            for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(),
+                                                             100)):
+                logger.info('Fetching mutations for %s and gene batch %s' %
+                            (tcga_study_name, idx))
+                patient_mutations = \
+                    cbio_client.get_profile_data(tcga_study_name,
+                                                 hgnc_name_batch,
+                                                 'mutation')
+                # e.g. 'ICGC_0002_TD': {'BRAF': None, 'KRAS': 'G12D'}
+                for patient, gene_mut_dict in patient_mutations.items():
+                    # 'BRAF': None
+                    for gene, mutated in gene_mut_dict.items():
+                        if mutated is not None:
+                            try:
+                                mutations[gene] += 1
+                            except KeyError:
+                                mutations[gene] = 1
         self.mutations = mutations
         return mutations
 
@@ -112,3 +118,15 @@ class TcgaCancerPrior(object):
         relevant_nodes = [n for n, heat in zip(self.prior_graph.nodes(), Df) if
                           heat >= heat_thresh]
         return relevant_nodes
+
+
+def _load_tcga_studies():
+    here = os.path.dirname(os.path.abspath(__file__))
+    resources = os.path.join(here, os.pardir, 'resources')
+    studies_file = os.path.join(resources, 'cancer_studies.json')
+    with open(studies_file, 'r') as fh:
+        studies = json.load(fh)
+    return studies
+
+
+tcga_studies = _load_tcga_studies()
