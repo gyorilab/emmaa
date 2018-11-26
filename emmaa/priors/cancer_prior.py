@@ -2,7 +2,9 @@ import csv
 import json
 import logging
 import requests
-from ndex2.nice_cx_network import NiceCXNetwork
+import numpy as np
+import networkx as nx
+from scipy.sparse.linalg import expm_multiply
 from indra.util import batch_iter
 from indra.databases import cbio_client
 from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id
@@ -12,18 +14,25 @@ logger = logging.getLogger(__name__)
 
 
 class TcgaCancerPrior(object):
+    """Prior network generation using TCGA mutations for a given cancer type.
+
+    This class implements building a prior network using a generic underlying
+    prior, and TCGA data for a specific cancer type. Mutations for the given
+    cancer type are extracted from TCGA studies and heat diffusion from the
+    corresponding nodes in the prior is used to identify a set of relevant
+    nodes.
+    """
     def __init__(self, tcga_study_name, sif_prior, diffusion_service=None,
                  mutation_cache=None):
         # e.g. paad_icgc
         self.tcga_study_name = tcga_study_name
         self.mutations = None
-        self.prior_cx = None
+        self.prior_graph = None
         self.sif_prior = sif_prior
         if diffusion_service is None:
             self.diffusion_service = 'http://v3.heat-diffusion.cytoscape.io:80'
         else:
             self.diffusion_service = diffusion_service
-        self.node_map = {}
         self.mutation_cache = mutation_cache
 
     def make_prior(self):
@@ -64,8 +73,9 @@ class TcgaCancerPrior(object):
         # agA_ns,agA_id,agA_name,agB_ns,agB_id,agB_name,stmt_type,
         #   evidence_count
         # FPLX,9_1_1,9_1_1,HGNC,3511,EXO1,Activation,7
+        G = nx.Graph()
         logger.info('Loading SIF prior from %s' % fname)
-        cxn = NiceCXNetwork()
+        edges = []
         with open(fname, 'r') as fh:
             csv_reader = csv.reader(fh, delimiter=',')
             header = next(csv_reader)
@@ -73,33 +83,30 @@ class TcgaCancerPrior(object):
                 agA_ns, agA_id, agA_name, agB_ns, agB_id, agB_name, \
                     stmt_type, evidence_count = row
                 A_key = '%s:%s' % (agA_ns, agA_id)
-                A_id = self.node_map.get(A_key)
-                if A_id is None:
-                    A_id = cxn.create_node(A_key)
-                    self.node_map[A_key] = A_id
                 B_key = '%s:%s' % (agB_ns, agB_id)
-                B_id = self.node_map.get(B_key)
-                if B_id is None:
-                    B_id = cxn.create_node(B_key)
-                    self.node_map[B_key] = B_id
-                cxn.create_edge(A_id, B_id, stmt_type)
-        #cx = cxn.to_cx()
-        self.prior_cx = cxn
+                edge = (A_key, B_key)
+                if edge not in edges:
+                    G.add_edge(*edge, weight=1)
+                    edges.append(set(edge))
+        self.prior_graph = G
+        return G
 
     def get_relevant_nodes(self):
-        # Given the prior CX and some mutations, we add heat to the network
         logger.info('Setting heat for relevant nodes in prior network')
+        heats = np.zeros(len(self.prior_graph))
+        mut_nodes = []
         for gene_name, muts in self.mutations.items():
             if muts:
                 hgnc_id = get_hgnc_id(gene_name)
                 node_key = 'HGNC:%s' % hgnc_id
-                node_id = self.node_map.get(node_key)
-                if node_id is not None:
-                    self.prior_cx.set_node_attribute(node_id,
-                                                     'diffusion_input', 1)
-        logger.info('Generating CX network from prior')
-        cx = self.prior_cx.to_cx()
-        # perform heat diffusion
-        logger.info('Calling heat diffusion web service')
-        res = requests.post(self.diffusion_service, json=cx)
-        return res
+                mut_nodes.append(node_key)
+
+        for idx, node in enumerate(self.prior_graph.nodes()):
+            if node in mut_nodes:
+                heats[idx] = 1.0
+
+        gamma = -0.1
+        lp_mx = nx.laplacian_matrix(self.prior_graph, weight='weight')
+        Df = expm_multiply(gamma * lp_mx, heats)
+
+        return Df
