@@ -13,8 +13,8 @@ updating the model with the new information.
 Models are also available for automated analysis in which relevant queries
 that fall within the scope of each model can be automatically mapped
 to structural and dynamical analysis procedures on the model. This allows
-recognizion changes to the model that result in meaningful changes
-to analysis results.
+recognizing and reporting changes to the model that result in meaningful
+changes to analysis results.
 
 ## Applications
 The primary application area of EMMAA is the molecular biology of cancer,
@@ -24,4 +24,8 @@ reading systems integrated with INDRA can handle.
 ## Installation
 The primary dependency of EMMAA is INDRA which can be installed using pip.
 Depending on the application, third-party dependencies of INDRA may need
-to be installed and configured manually.
+to be installed and configured separately.
+
+## Funding
+The development of EMMAA is funded under the DARPA Automating Scientific
+Knowledge Extraction (ASKE) program.
