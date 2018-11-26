@@ -24,4 +24,4 @@ reading systems integrated with INDRA can handle.
 ## Installation
 The primary dependency of EMMAA is INDRA which can be installed using pip.
 Depending on the application, third-party dependencies of INDRA may need
-to be installed and configures manually.
+to be installed and configured manually.

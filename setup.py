@@ -11,7 +11,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(name='emmaa',
       version='1.0.0',
       description='Ecosystem of Machine-maintained Models with ' + \
-                  'Automated Assembly',
+                  'Automated Analysis',
       long_description=long_description,
       long_description_content_type='text/markdown',
       url='https://github.com/indralab/emmaa',
