@@ -1,9 +1,10 @@
 import csv
 import logging
+import requests
 from ndex2.nice_cx_network import NiceCXNetwork
 from indra.util import batch_iter
 from indra.databases import cbio_client
-from indra.databases.hgnc_client import hgnc_ids
+from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id
 
 
 logger = logging.getLogger(__name__)
@@ -56,5 +57,18 @@ class TcgaCancerPrior(object):
                 A_id = cxn.create_node(A_key)
                 B_id = cxn.create_node(B_key)
                 cxn.create_edge(A_id, B_id, stmt_type)
-        cx = cxn.to_cx()
-        self.prior_cx = cx
+        #cx = cxn.to_cx()
+        self.prior_cx = cxn
+
+    def get_relevant_nodes(self):
+        # Given the prior CX and some mutations, we add heat to the network
+        for gene_name, muts in self.mutations.items():
+            if muts:
+                hgnc_id = get_hgnc_id(gene_name)
+                node_key = 'HGNC:%s' % hgnc_id
+                self.prior_cx.set_node_attribute(node_key,
+                                                 'diffusion_input', 1)
+        cx = self.prior_cx.to_cx()
+        # perform heat diffusion
+        res = requests.post('http://v3.heat-diffusion.cytoscape.io:80',
+                            json=cx)
