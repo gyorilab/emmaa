@@ -40,12 +40,14 @@ class TcgaCancerPrior(object):
         self.mutation_cache = mutation_cache
 
     def make_prior(self):
+        """Run the prior node list generation and return relevant nodes."""
         self.get_mutated_genes()
         self.load_sif_prior(self.sif_prior)
         res = self.get_relevant_nodes()
         return res
 
     def get_mutated_genes(self):
+        """Return dict of gene mutation frequencies based on TCGA studies."""
         if self.mutation_cache:
             logger.info('Loading mutations from %s' % self.mutation_cache)
             with open(self.mutation_cache, 'r') as fh:
@@ -55,7 +57,7 @@ class TcgaCancerPrior(object):
         mutations = {}
         for tcga_study_name in tcga_studies[self.tcga_study_prefix]:
             for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(),
-                                                             100)):
+                                                             200)):
                 logger.info('Fetching mutations for %s and gene batch %s' %
                             (tcga_study_name, idx))
                 patient_mutations = \
@@ -75,6 +77,7 @@ class TcgaCancerPrior(object):
         return mutations
 
     def load_sif_prior(self, fname):
+        """Return a Graph based on a SIF file describing a prior."""
         # Format
         # agA_ns,agA_id,agA_name,agB_ns,agB_id,agB_name,stmt_type,
         #   evidence_count
@@ -95,6 +98,11 @@ class TcgaCancerPrior(object):
         return G
 
     def get_relevant_nodes(self, heat_thresh=0.1):
+        """Return a list of the relevant nodes in the prior.
+
+        Heat diffusion is applied to the prior network based on initial
+        heat on nodes that are mutated according to patient statistics.
+        """
         logger.info('Setting heat for relevant nodes in prior network')
         heats = np.zeros(len(self.prior_graph))
         mut_nodes = {}
@@ -121,6 +129,11 @@ class TcgaCancerPrior(object):
 
 
 def _load_tcga_studies():
+    """Return a list of TCGA studies by prefix.
+
+    Note that the resource file read here ensures that studies are
+    non-redundant, which wouldn't be guaranteed by the web service.
+    """
     here = os.path.dirname(os.path.abspath(__file__))
     resources = os.path.join(here, os.pardir, 'resources')
     studies_file = os.path.join(resources, 'cancer_studies.json')
