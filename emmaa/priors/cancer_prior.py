@@ -91,7 +91,7 @@ class TcgaCancerPrior(object):
         self.prior_graph = G
         return G
 
-    def get_relevant_nodes(self):
+    def get_relevant_nodes(self, heat_thresh=0.1):
         logger.info('Setting heat for relevant nodes in prior network')
         heats = np.zeros(len(self.prior_graph))
         mut_nodes = []
@@ -106,7 +106,12 @@ class TcgaCancerPrior(object):
                 heats[idx] = 1.0
 
         gamma = -0.1
+        logger.info('Calculating Laplacian matrix')
         lp_mx = nx.laplacian_matrix(self.prior_graph, weight='weight')
+        logger.info('Diffusing heat')
         Df = expm_multiply(gamma * lp_mx, heats)
-
-        return Df
+        logger.info('Filtering to relevant nodes with heat threshold %.2f' %
+                    heat_threst)
+        relevant_nodes = [n for n, heat in zip(self.prior_graph.nodes(), Df) if
+                          heat >= heat_thresh]
+        return relevant_nodes
