@@ -75,7 +75,6 @@ class TcgaCancerPrior(object):
         # FPLX,9_1_1,9_1_1,HGNC,3511,EXO1,Activation,7
         G = nx.Graph()
         logger.info('Loading SIF prior from %s' % fname)
-        edges = []
         with open(fname, 'r') as fh:
             csv_reader = csv.reader(fh, delimiter=',')
             header = next(csv_reader)
@@ -84,26 +83,24 @@ class TcgaCancerPrior(object):
                     stmt_type, evidence_count = row
                 A_key = '%s:%s' % (agA_ns, agA_id)
                 B_key = '%s:%s' % (agB_ns, agB_id)
-                edge = (A_key, B_key)
-                if edge not in edges:
-                    G.add_edge(*edge, weight=1)
-                    edges.append(set(edge))
+                G.add_edge(A_key, B_key, weight=1)
         self.prior_graph = G
+        logger.info('Finished loading SIF prior')
         return G
 
     def get_relevant_nodes(self, heat_thresh=0.1):
         logger.info('Setting heat for relevant nodes in prior network')
         heats = np.zeros(len(self.prior_graph))
-        mut_nodes = []
+        mut_nodes = {}
         for gene_name, muts in self.mutations.items():
             if muts:
                 hgnc_id = get_hgnc_id(gene_name)
                 node_key = 'HGNC:%s' % hgnc_id
-                mut_nodes.append(node_key)
+                mut_nodes[node_key] = muts
 
         for idx, node in enumerate(self.prior_graph.nodes()):
             if node in mut_nodes:
-                heats[idx] = 1.0
+                heats[idx] = mut_nodes[node]
 
         gamma = -0.1
         logger.info('Calculating Laplacian matrix')
@@ -111,7 +108,7 @@ class TcgaCancerPrior(object):
         logger.info('Diffusing heat')
         Df = expm_multiply(gamma * lp_mx, heats)
         logger.info('Filtering to relevant nodes with heat threshold %.2f' %
-                    heat_threst)
+                    heat_thresh)
         relevant_nodes = [n for n, heat in zip(self.prior_graph.nodes(), Df) if
                           heat >= heat_thresh]
         return relevant_nodes
