@@ -11,14 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class TcgaCancerPrior(object):
-    def __init__(self, tcga_study_name):
+    def __init__(self, tcga_study_name, sif_prior, diffusion_service=None):
         # e.g. paad_icgc
         self.tcga_study_name = tcga_study_name
         self.mutations = None
         self.prior_cx = None
+        self.sif_prior = sif_prior
+        if diffusion_service is None:
+            self.diffusion_service = 'http://v3.heat-diffusion.cytoscape.io:80'
+        else:
+            self.diffusion_service = None
 
     def make_prior(self):
-        mutations = self.get_mutated_genes()
+        self.get_mutated_genes()
+        self.load_sif_prior(self.sif_prior)
+        res = self.get_relevant_nodes()
+        return res
 
     def get_mutated_genes(self):
         mutations = {}
@@ -70,5 +78,5 @@ class TcgaCancerPrior(object):
                                                  'diffusion_input', 1)
         cx = self.prior_cx.to_cx()
         # perform heat diffusion
-        res = requests.post('http://v3.heat-diffusion.cytoscape.io:80',
-                            json=cx)
+        res = requests.post(self.diffusion_service, json=cx)
+        return res
