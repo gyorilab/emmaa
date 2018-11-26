@@ -22,7 +22,7 @@ class TcgaCancerPrior(object):
         if diffusion_service is None:
             self.diffusion_service = 'http://v3.heat-diffusion.cytoscape.io:80'
         else:
-            self.diffusion_service = None
+            self.diffusion_service = diffusion_service
         self.node_map = {}
         self.mutation_cache = mutation_cache
 
@@ -34,11 +34,14 @@ class TcgaCancerPrior(object):
 
     def get_mutated_genes(self):
         if self.mutation_cache:
+            logger.info('Loading mutations from %s' % self.mutation_cache)
             with open(self.mutation_cache, 'r') as fh:
                 self.mutations = json.load(fh)
                 return self.mutations
+        logger.info('Getting mutations from cBio web service')
         mutations = {}
-        for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(), 100)):
+        for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(),
+                                                         100)):
             logger.info('Fetching mutations for gene batch %s' % idx)
             patient_mutations = \
                 cbio_client.get_profile_data(self.tcga_study_name,
@@ -61,6 +64,7 @@ class TcgaCancerPrior(object):
         # agA_ns,agA_id,agA_name,agB_ns,agB_id,agB_name,stmt_type,
         #   evidence_count
         # FPLX,9_1_1,9_1_1,HGNC,3511,EXO1,Activation,7
+        logger.info('Loading SIF prior from %s' % fname)
         cxn = NiceCXNetwork()
         with open(fname, 'r') as fh:
             csv_reader = csv.reader(fh, delimiter=',')
@@ -84,6 +88,7 @@ class TcgaCancerPrior(object):
 
     def get_relevant_nodes(self):
         # Given the prior CX and some mutations, we add heat to the network
+        logger.info('Setting heat for relevant nodes in prior network')
         for gene_name, muts in self.mutations.items():
             if muts:
                 hgnc_id = get_hgnc_id(gene_name)
@@ -92,7 +97,9 @@ class TcgaCancerPrior(object):
                 if node_id is not None:
                     self.prior_cx.set_node_attribute(node_id,
                                                      'diffusion_input', 1)
+        logger.info('Generating CX network from prior')
         cx = self.prior_cx.to_cx()
         # perform heat diffusion
+        logger.info('Calling heat diffusion web service')
         res = requests.post(self.diffusion_service, json=cx)
         return res
