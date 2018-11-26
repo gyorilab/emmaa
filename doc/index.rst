@@ -3,12 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to EMMAA's documentation!
-=================================
+EMMAA: Ecosystem of Machine-maintained models with Automated Analysis
+=====================================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+
+   modules/index
 
 
 
