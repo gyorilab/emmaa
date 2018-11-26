@@ -1,0 +1,51 @@
+{
+    "paad": [
+        "paad_icgc",
+        "paad_qcmg_uq_2016",
+        "paad_tcga",
+        "paad_utsw_2015"
+    ],
+    "skcm": [
+        "skcm_broad",
+        "skcm_broad_brafresist_2012",
+        "skcm_broad_dfarber",
+        "skcm_tcga",
+        "skcm_ucla_2016",
+        "skcm_vanderbilt_mskcc_2015",
+        "skcm_yale"
+    ],
+    "prad": [
+        "prad_broad",
+        "prad_broad_2013",
+        "prad_cpcg_2017",
+        "prad_eururol_2017",
+        "prad_fhcrc",
+        "prad_mich",
+        "prad_mskcc",
+        "prad_mskcc_2014",
+        "prad_mskcc_2017",
+        "prad_mskcc_cheny1_organoids_2014",
+        "prad_p1000",
+        "prad_su2c_2015",
+        "prad_tcga"
+    ],
+    "luad": [
+        "luad_broad",
+        "luad_mskcc_2015",
+        "luad_tcga",
+        "luad_tsp"
+    ],
+    "brca": [
+        "brca_bccrc",
+        "brca_bccrc_xenograft_2014",
+        "brca_broad",
+        "brca_igr_2015",
+        "brca_mbcproject_wagle_2017",
+        "brca_metabric",
+        "brca_sanger",
+        "brca_tcga"
+    ],
+    "aml": [
+        "laml_tcga"
+    ]
+}
