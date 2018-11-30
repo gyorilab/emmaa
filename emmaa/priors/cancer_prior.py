@@ -8,7 +8,7 @@ import networkx as nx
 from scipy.sparse.linalg import expm_multiply
 from indra.util import batch_iter
 from indra.databases import cbio_client
-from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id
+from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name
 
 
 logger = logging.getLogger(__name__)
@@ -76,8 +76,18 @@ class TcgaCancerPrior(object):
         self.mutations = mutations
         return mutations
 
-    def load_sif_prior(self, fname):
-        """Return a Graph based on a SIF file describing a prior."""
+    def load_sif_prior(self, fname, e50=20):
+        """Return a Graph based on a SIF file describing a prior.
+
+        Parameters
+        ----------
+        fname : str
+            Path to the SIF file.
+        e50 : int
+            Parameter for converting evidence counts into weights over the
+            interval [0, 1) according to hyperbolic function
+            `weight = (count / (count + e50))`.
+        """
         # Format
         # agA_ns,agA_id,agA_name,agB_ns,agB_id,agB_name,stmt_type,
         #   evidence_count
@@ -92,7 +102,9 @@ class TcgaCancerPrior(object):
                     stmt_type, evidence_count = row
                 A_key = '%s:%s' % (agA_ns, agA_id)
                 B_key = '%s:%s' % (agB_ns, agB_id)
-                G.add_edge(A_key, B_key, weight=1)
+                weight = (float(evidence_count) /
+                          (e50 + float(evidence_count)))
+                G.add_edge(A_key, B_key, weight=weight)
         self.prior_graph = G
         logger.info('Finished loading SIF prior')
         return G
@@ -139,7 +151,7 @@ class TcgaCancerPrior(object):
         for node in node_list:
             if node.startswith('HGNC:'):
                 hgnc_id = node.split(':')[1]
-                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+                hgnc_name = get_hgnc_name(hgnc_id)
                 if hgnc_name is None:
                     logger.log(f'{node} is not a valid HGNC ID')
                 else:
