@@ -39,11 +39,11 @@ class TcgaCancerPrior(object):
             self.diffusion_service = diffusion_service
         self.mutation_cache = mutation_cache
 
-    def make_prior(self):
+    def make_prior(self, pct_heat_threshold=99):
         """Run the prior node list generation and return relevant nodes."""
         self.get_mutated_genes()
         self.load_sif_prior(self.sif_prior)
-        res = self.get_relevant_nodes()
+        res = self.get_relevant_nodes(pct_heat_threshold)
         return res
 
     def get_mutated_genes(self):
@@ -97,7 +97,7 @@ class TcgaCancerPrior(object):
         logger.info('Finished loading SIF prior')
         return G
 
-    def get_relevant_nodes(self, heat_thresh=0.1):
+    def get_relevant_nodes(self, pct_heat_threshold):
         """Return a list of the relevant nodes in the prior.
 
         Heat diffusion is applied to the prior network based on initial
@@ -118,14 +118,33 @@ class TcgaCancerPrior(object):
 
         gamma = -0.1
         logger.info('Calculating Laplacian matrix')
-        lp_mx = nx.laplacian_matrix(self.prior_graph, weight='weight')
+        lp_mx = nx.normalized_laplacian_matrix(self.prior_graph,
+                                               weight='weight')
         logger.info('Diffusing heat')
         Df = expm_multiply(gamma * lp_mx, heats)
-        logger.info('Filtering to relevant nodes with heat threshold %.2f' %
-                    heat_thresh)
-        relevant_nodes = [n for n, heat in zip(self.prior_graph.nodes(), Df) if
-                          heat >= heat_thresh]
+        heat_thresh = np.percentile(Df, pct_heat_threshold)
+        logger.info('Filtering to relevant nodes with heat threshold %.2f '
+                    '(%s percentile)' % (heat_thresh, pct_heat_threshold))
+        # Zip the nodes with their heats and sort
+        node_heats = sorted(list(zip(self.prior_graph.nodes(), Df)),
+                            key=lambda x: x[1], reverse=True)
+        relevant_nodes = [n for n, heat in node_heats if heat >= heat_thresh]
         return relevant_nodes
+
+    @staticmethod
+    def search_terms_from_nodes(node_list):
+        """Build a list of Pubmed search terms from the nodes returned by
+        make_prior."""
+        terms = []
+        for node in node_list:
+            if node.startswith('HGNC:'):
+                hgnc_id = node.split(':')[1]
+                hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+                if hgnc_name is None:
+                    logger.log(f'{node} is not a valid HGNC ID')
+                else:
+                    terms.append(hgnc_name)
+        return terms
 
 
 def _load_tcga_studies():
