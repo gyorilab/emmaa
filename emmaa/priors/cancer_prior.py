@@ -7,8 +7,9 @@ import numpy as np
 import networkx as nx
 from scipy.sparse.linalg import expm_multiply
 from indra.util import batch_iter
-from indra.databases import cbio_client
-from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name
+from indra.databases import cbio_client, uniprot_client
+from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name, \
+                                        get_uniprot_id
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ class TcgaCancerPrior(object):
         # e.g. paad
         self.tcga_study_prefix = tcga_study_prefix
         self.mutations = None
+        self.norm_mutations = None
         self.prior_graph = None
         self.sif_prior = sif_prior
         if diffusion_service is None:
@@ -52,29 +54,47 @@ class TcgaCancerPrior(object):
             logger.info('Loading mutations from %s' % self.mutation_cache)
             with open(self.mutation_cache, 'r') as fh:
                 self.mutations = json.load(fh)
-                return self.mutations
-        logger.info('Getting mutations from cBio web service')
-        mutations = {}
-        for tcga_study_name in tcga_studies[self.tcga_study_prefix]:
-            for idx, hgnc_name_batch in enumerate(batch_iter(hgnc_ids.keys(),
-                                                             200)):
-                logger.info('Fetching mutations for %s and gene batch %s' %
-                            (tcga_study_name, idx))
-                patient_mutations = \
-                    cbio_client.get_profile_data(tcga_study_name,
-                                                 hgnc_name_batch,
-                                                 'mutation')
-                # e.g. 'ICGC_0002_TD': {'BRAF': None, 'KRAS': 'G12D'}
-                for patient, gene_mut_dict in patient_mutations.items():
-                    # 'BRAF': None
-                    for gene, mutated in gene_mut_dict.items():
-                        if mutated is not None:
-                            try:
-                                mutations[gene] += 1
-                            except KeyError:
-                                mutations[gene] = 1
-        self.mutations = mutations
-        return mutations
+        else:
+            logger.info('Getting mutations from cBio web service')
+            mutations = {}
+            for tcga_study_name in tcga_studies[self.tcga_study_prefix]:
+                for idx, hgnc_name_batch in \
+                                enumerate(batch_iter(hgnc_ids.keys(), 200)):
+                    logger.info('Fetching mutations for %s and gene batch %s' %
+                                (tcga_study_name, idx))
+                    patient_mutations = \
+                        cbio_client.get_profile_data(tcga_study_name,
+                                                     hgnc_name_batch,
+                                                     'mutation')
+                    # e.g. 'ICGC_0002_TD': {'BRAF': None, 'KRAS': 'G12D'}
+                    for patient, gene_mut_dict in patient_mutations.items():
+                        # 'BRAF': None
+                        for gene, mutated in gene_mut_dict.items():
+                            if mutated is not None:
+                                try:
+                                    mutations[gene] += 1
+                                except KeyError:
+                                    mutations[gene] = 1
+            self.mutations = mutations
+
+        # Normalize mutations by length
+        self.norm_mutations = {}
+        for gene_name, num_muts in self.mutations.items():
+            hgnc_id = get_hgnc_id(gene_name)
+            up_id = get_uniprot_id(hgnc_id)
+            if not up_id:
+                logger.warning("Could not get Uniprot ID for HGNC symbol %s "
+                               "with HGNC ID %s" % (gene_name, hgnc_id))
+                length = 500 # a guess at a default
+            else:
+                length = uniprot_client.get_length(up_id)
+                if not length:
+                    logger.warning("Could not get length for Uniprot "
+                                   "ID %s" % up_id)
+                    length = 500 # a guess at a default
+            self.norm_mutations[gene_name] = num_muts / float(length)
+
+        return self.mutations, self.norm_mutations
 
     def load_sif_prior(self, fname, e50=20):
         """Return a Graph based on a SIF file describing a prior.
@@ -118,7 +138,7 @@ class TcgaCancerPrior(object):
         logger.info('Setting heat for relevant nodes in prior network')
         heats = np.zeros(len(self.prior_graph))
         mut_nodes = {}
-        for gene_name, muts in self.mutations.items():
+        for gene_name, muts in self.norm_mutations.items():
             if muts:
                 hgnc_id = get_hgnc_id(gene_name)
                 node_key = 'HGNC:%s' % hgnc_id

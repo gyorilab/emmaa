@@ -1,8 +1,6 @@
 from indra.databases import hgnc_client
 from emmaa.priors.cancer_prior import TcgaCancerPrior
 
-
-
 #cancer_types = ('paad', 'aml', 'brca', 'luad', 'prad', 'skcm')
 cancer_types = ('paad',)
 
