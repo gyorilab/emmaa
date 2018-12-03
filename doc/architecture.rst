@@ -15,6 +15,12 @@ emmaa/models in which the model files for the given cancer type are located.
 - Prostate Adenocarcinoma (prad)
 - Skin Cutaneous Melanoma (skcm)
 
+Model availability
+------------------
+The models can currently be browsed through the Network Data Exchange (NDEx)
+portal. The EMMAA group on NDEx, listing each model is available here:
+http://ndexbio.org/#/group/be7cd689-f6a1-11e8-aaa6-0ac135e8bacf
+
 
 Defining model scope
 --------------------
@@ -57,10 +63,35 @@ we calculate statistics of mutations per gene across the patient population.
 
 Finding relevant entities in a knowledge network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We begin with a prior network that can be supplied to the
+Finding relevant entities requires a prior network that can be supplied as a
+parameter to `TcgaCancerPrior`. We use a network derived from processing and
+assembling the content of the
+`PathwayCommons <http://www.pathwaycommons.org)/>`_,
+`SIGNOR <https://signor.uniroma2.it/>`_,
+and `BEL Large Corpus <https://github.com/OpenBEL/openbel-framework-resources/blob/latest/knowledge/large_corpus.xbel.gz>`
+databases, as well as machine reading _all_ biomedical literature
+(roughly 32% full text, 68% abstracts) with two machine reading systems:
+`REACH <http://github.com/clulab/reach>`_, and
+`Sparser <http://github.com/ddmcdonald/sparser>`_. This network has
+2.5 million unique mechanisms (each corresponding to an edge).
+
+Starting from the mutated genes described in the previous section, we use
+a heat diffusion algorithm to find other relevant nodes in the knowledge network.
+We first normalize the mutation counts by the length of each protein
+(since larger proteins are statistically more likely to have random mutations
+which can lack functional significance). We then apply the normalized mutation
+count as a "heat" on the node in the network corresponding to the gene.
+When calculating the diffusion of heat from nodes, we take into account the
+amount of evidence for each edge in the network. The number of independent
+evidences for the edge (i.e. the number of database entries or extractions
+from various sentences in publications by reading systems) and use a logistic
+function with midpoint set to 20 by default (parameterizable) to set a weight
+on the edge.
+
 
 Creating a prior network
 ------------------------
+
 
 Updating the network
 --------------------
