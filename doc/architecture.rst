@@ -1,6 +1,11 @@
 EMMAA Initial Architecture and Approach
 =======================================
 
+
+.. image:: _static/images/emmaa_overview.png
+   :scale: 100 %
+
+
 Cancer types of interest
 ------------------------
 We start with six cancer types that are specifically relevant due to a
@@ -146,12 +151,15 @@ published model if they collect enough evidence to reach the belief threshold.
 
 Model testing
 -------------
+.. image:: _static/images/model_testing_concept.png
+   :scale: 60 %
 
 Model analysis
 --------------
+.. image:: _static/images/meta_model_concept.png
+   :scale: 50 %
 
-Pre-registered queries
-----------------------
-
-Notification system
--------------------
+Pre-registered queries and notifications
+----------------------------------------
+.. image:: _static/images/user_queries_concept.png
+   :scale: 60 %
