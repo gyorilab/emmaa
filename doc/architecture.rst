@@ -112,7 +112,7 @@ of assembly. This involves the following steps:
 - Map sequences of entities
 - Filter out non-human genes
 - Run preassembly in which exact and partial redundancies are found and
-resolved.
+  resolved.
 
 
 Updating the network
