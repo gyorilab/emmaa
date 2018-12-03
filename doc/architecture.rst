@@ -86,21 +86,63 @@ amount of evidence for each edge in the network. The number of independent
 evidences for the edge (i.e. the number of database entries or extractions
 from various sentences in publications by reading systems) and use a logistic
 function with midpoint set to 20 by default (parameterizable) to set a weight
-on the edge.
+on the edge. We use a normalized Laplacian matrix-based heat diffusion algorithm
+on an undirected version of the network, which can be calculated in a closed
+form using `scipy.sparse.linalg.expm_multiply`.
+
+Having calculated the amount of heat on each node, we apply a percentile-based
+cutoff to retain the nodes with the most heat.
 
 
-Creating a prior network
-------------------------
+Assembling a prior network
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Given a set of entities of interest, we turn to the INDRA DB and query
+for all Statements about these entities. This set of Statements becomes
+the initial starting point for the model. The model goes through a process
+of assembly. This involves the following steps:
+- Filter out hypotheses
+- Map grounding of entities
+- Map sequences of entities
+- Filter out non-human genes
+- Run preassembly in which exact and partial redundancies are found and
+resolved.
 
 
 Updating the network
 --------------------
+Given the search terms associated with the model, we use a client to the
+PubMed web service to search for new literature content.
+
 
 Machine-reading
 ---------------
+Given a set of PMIDs, we use our Amazon Web Services (AWS) content acquisition
+and high-throughput reading pipeline to collect and read publications using
+the REACH and Sparser systems. We then use INDRA's input processors to
+extract INDRA Statements from the reader outputs. We also associate
+metadata with each Statement: the date at which it was created, and the
+search terms which are associated with it.
 
-Automated assembly
-------------------
+
+Automated incremental assembly
+------------------------------
+The newly obtained Statements need to be evaluated against
+Statements already existing in the model. A new Statement can relate to
+the existing model in the following ways:
+- Novel: there is no such mechanism yet in the model
+- Redundant / Corroborating: the mechanism represented by the Statement
+is already in the model, hence this provides a new, corroborating evidence
+for that Statement
+- Generalization: the mechanism is a more general form of one already in the model
+- Speficication: the mechanism is a more specific form of one already in the model
+- Conflicting: the mechanism conflicts with one already in the model
+
+The process of preassembly allows determining which case from the above list
+applies. Assembly also involves calculating belief scores. One can then
+apply a cutoff to only "publish" statements in the model that are above
+the given belief threshold. The Statements below the threshold still remain
+in the "raw" model knowledge and can later advance to be included in the
+published model if they collect enough evidence to reach the belief threshold.
 
 Model testing
 -------------
