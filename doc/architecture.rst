@@ -162,13 +162,53 @@ published model if they collect enough evidence to reach the belief threshold.
 
 Model testing
 -------------
+
 .. image:: _static/images/model_testing_concept.png
    :scale: 60 %
 
+In addition to automatically extracting and assembling mechanistic models,
+EMMAA will run a set of tests to determine each model's validity and
+explanatory scope. Model constraints for testing will consist of a combination
+of high-level qualitative observations, and where available, structured
+datasets.
+
+The testing methodology will involve multiple modes of simulation and analysis,
+including both static and dynamic testing. Static testing will be carried out
+by the `Model Checker
+<https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_
+component of INDRA, which identifies causal paths linking a source or perturbed
+variable (e.g., IGF1R) with an output or observed variable (e.g., AKT1
+phosphorylated on T308).
+
+A mockup showing a simple test report for a Ras signaling pathway
+model is shown below, where each "Observation" is expressed in terms of an
+expectation of model behavior (e.g., "IGF1R phosphorylates AKT1 on T308")
+along with a determination of whether the constraint was satisfied
+("Model Result"), the number of different paths found, and the length of the
+shortest path.
+
+.. image:: _static/images/testing_mockup.png
+   :scale: 60 %
+
+In a manner analogous to continuous integration for software, model testing
+will be triggered anytime the model or its associated constraints are updated.
+This will be implemented by storing the current state of the model in
+an Amazon S3 bucket and associating the bucket with a
+`Cloudwatch Event <https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/Create-CloudWatch-Events-Rule.html>`_. The Cloudwatch Event will trigger the
+execution of a serverless Amazon Lambda function responsible for initiating
+the model testing procedure.
+
+
 Model analysis
 --------------
+
+The key requirement for 
+
 .. image:: _static/images/meta_model_concept.png
    :scale: 50 %
+
+The essential 
+
 
 Pre-registered queries and notifications
 ----------------------------------------
