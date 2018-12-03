@@ -1,7 +1,7 @@
 import yaml
 import pickle
-from indra.databases import ndex_client
-from indra.assemblers.cx import CxAssembler
+import datetime
+from emmaa.model import EmmaaStatement, EmmaaModel
 from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.cancer_prior import TcgaCancerPrior
 
@@ -13,6 +13,7 @@ def get_terms(ctype):
     cancer_terms = tcp.search_terms_from_nodes(nodes)
     drugs = tcp.find_drugs_for_genes(nodes)
     return cancer_terms, drugs
+
 
 def load_config(ctype):
     fname = f'models/{ctype}/config.yaml'
@@ -33,11 +34,15 @@ def save_prior(stmts):
         pickle.dump(stmts, fh)
 
 
-def upload_prior(ctype):
+def upload_prior(ctype, config):
     fname = f'models/{ctype}/prior_stmts.pkl'
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
-
+    estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])
+              for stmt in stmts]
+    model = EmmaaModel(ctype, config)
+    model.add_statements(estmts)
+    model.upload_to_ndex()
 
 
 if __name__ == '__main__':
