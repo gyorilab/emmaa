@@ -3,7 +3,8 @@ from indra.tools import assemble_corpus as ac
 
 
 def get_stmts_for_gene(gene):
-    return client.get_statements_by_gene_role_type(gene, preassembled=False)
+    return client.get_statements_by_gene_role_type(gene, preassembled=False,
+                                                   count=100000)
 
 
 def get_stmts_for_gene_list(gene_list):
