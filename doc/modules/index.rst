@@ -1,8 +1,9 @@
 .. _emmaa_modules_ref:
 
-Priors
-------
+EMMAA modules reference
+-----------------------
 
-.. automodule:: emmaa.priors
-    :members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 4
+
+   priors
