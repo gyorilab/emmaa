@@ -1,3 +1,4 @@
+import yaml
 import pickle
 from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.cancer_prior import TcgaCancerPrior
@@ -13,10 +14,12 @@ def get_terms(ctype):
 
 
 def save_config(ctype, terms):
-    with open(f'{ctype}_config.yaml', 'w') as fh:
-        fh.write('search_terms:\n')
-        for term in terms:
-            fh.write(f'- "{term}"\n')
+    fname = f'models/{ctype}/config.yaml'
+    with open(fname, 'r') as fh:
+        config = yaml.load(fh)
+    config['search_terms'] = [f'"{term}"' for term in terms]
+    with open(fname, 'w') as fh:
+        yaml.dump(config, fh)
 
 
 def save_prior(stmts):
