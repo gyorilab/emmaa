@@ -1,6 +1,9 @@
 # EMMAA
 EMMAA is an Ecosystem of Machine-maintained Models with Automated Analysis.
 
+## Documentation
+For a detailed documentation of EMMA, visit http://emmaa.readthedocs.io
+
 ## Concept
 The main idea behind EMMAA is to create a set of computational models that
 are kept up-to-date using automated machine reading, knowledge-assembly, and
