@@ -13,6 +13,7 @@ combination of frequency of occurrence, and lack of treatments.
 The cancer types we have initially chosen are as follows. In parentheses,
 we give the "code" of each cancer type which corresponds to the subfolder in
 emmaa/models in which the model files for the given cancer type are located.
+
 - Acute Myeloid Leukemia (aml)
 - Breast Carcinoma (brca)
 - Lung Adenocarcinoma (luad)
@@ -105,6 +106,7 @@ Given a set of entities of interest, we turn to the INDRA DB and query
 for all Statements about these entities. This set of Statements becomes
 the initial starting point for the model. The model goes through a process
 of assembly. This involves the following steps:
+
 - Filter out hypotheses
 - Map grounding of entities
 - Map sequences of entities
