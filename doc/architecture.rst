@@ -137,6 +137,8 @@ extract INDRA Statements from the reader outputs. We also associate
 metadata with each Statement: the date at which it was created, and the
 search terms which are associated with it.
 
+These functionalities are implemented in the :py:mod:`emmaa.readers.aws_reader`
+module.
 
 Automated incremental assembly
 ------------------------------
