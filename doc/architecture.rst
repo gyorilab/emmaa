@@ -39,16 +39,17 @@ set of entities.
 
 Deriving relevant terms for a given type of cancer
 --------------------------------------------------
+
 Our goal is to identify a set of relevant entities (proteins/genes, families,
 complexes, small molecules, biological processes and phenotypes) that can be
-used to find information relevant to a given model.
+used to find information relevant to a given model. This requires three
+components:
 
-This requires three components:
 - A method to find entities that are specifically relevant to the given cancer
-type
+  type
 - A background knowledge network of interactions between entities
 - A method to identify relevant links and entities on the background knowledge
-network
+  network
 
 These methods, as described in the subsections below, are implemented in
 the `TcgaCancerPrior` (:py:mod:`emmaa.priors.cancer_prior.TcgaCancerPrior`)
@@ -79,9 +80,9 @@ assembling the content of the
 `PathwayCommons <http://www.pathwaycommons.org/>`_,
 `SIGNOR <https://signor.uniroma2.it/>`_,
 and `BEL Large Corpus <https://github.com/OpenBEL/openbel-framework-resources/blob/latest/knowledge/large_corpus.xbel.gz>`_
-databases, as well as machine reading _all_ biomedical literature
+databases, as well as machine reading *all* biomedical literature
 (roughly 32% full text, 68% abstracts) with two machine reading systems:
-`REACH <http://github.com/clulab/reach>`_, and
+`REACH <http://github.com/clulab/reach>`_ and
 `Sparser <http://github.com/ddmcdonald/sparser>`_. This network has
 2.5 million unique mechanisms (each corresponding to an edge).
 
@@ -142,12 +143,14 @@ Automated incremental assembly
 The newly obtained Statements need to be evaluated against
 Statements already existing in the model. A new Statement can relate to
 the existing model in the following ways:
+
 - Novel: there is no such mechanism yet in the model
 - Redundant / Corroborating: the mechanism represented by the Statement
-is already in the model, hence this provides a new, corroborating evidence
-for that Statement
-- Generalization: the mechanism is a more general form of one already in the model
-- Speficication: the mechanism is a more specific form of one already in the model
+  is already in the model, hence this provides a new, corroborating evidence
+  for that Statement
+- Generalization: the mechanism is a more general form of one already in the
+  model
+- Subsumption: the mechanism is a more specific form of one already in the model
 - Conflicting: the mechanism conflicts with one already in the model
 
 The process of preassembly allows determining which case from the above list
