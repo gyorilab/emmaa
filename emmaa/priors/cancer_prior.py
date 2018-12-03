@@ -7,7 +7,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse.linalg import expm_multiply
 from indra.util import batch_iter
-from indra.sources import lincs_drug
+from indra.sources import tas
 from indra.databases import cbio_client, uniprot_client
 from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name, \
                                         get_uniprot_id
@@ -182,7 +182,7 @@ class TcgaCancerPrior(object):
                 terms.append(f'{mesh_id}[MeSH Terms]')
             else:
                 logger.warning('Could not create search term from {node}')
-        return terms
+        return sorted(terms)
 
     @staticmethod
     def find_drugs_for_genes(node_list):
@@ -194,12 +194,12 @@ class TcgaCancerPrior(object):
                     drugs_for_gene.add(stmt.subj.name)
             return drugs_for_gene
 
-        lincs_drug_statements = lincs_drug.process_from_web().statements
+        tas_statements = tas.process_csv().statements
         drugs = set()
         for node in node_list:
             if node.startswith('HGNC:'):
                 hgnc_id = node.split(':')[1]
-                drugs |= get_drugs_for_gene(lincs_drug_statements, hgnc_id)
+                drugs |= get_drugs_for_gene(tas_statements, hgnc_id)
         return sorted(list(drugs))
 
 
