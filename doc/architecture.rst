@@ -9,10 +9,11 @@ EMMAA Initial Architecture and Approach
 Cancer types of interest
 ------------------------
 We start with six cancer types that are specifically relevant due to a
-combination of frequency of occurrence, and lack of treatments.
+combination of frequency of occurrence, and lack of adequate treatments.
 The cancer types we have initially chosen are as follows. In parentheses,
 we give the "code" of each cancer type which corresponds to the subfolder in
-emmaa/models in which the model files for the given cancer type are located.
+`emmaa/models <https://github.com/indralab/emmaa/tree/master/models>`_ 
+in which the model files for the given cancer type are located.
 
 - Acute Myeloid Leukemia (aml)
 - Breast Carcinoma (brca)
@@ -21,12 +22,14 @@ emmaa/models in which the model files for the given cancer type are located.
 - Prostate Adenocarcinoma (prad)
 - Skin Cutaneous Melanoma (skcm)
 
+For instance, the initial configuration files for Pancreatic Adenocarcinoma
+can be found `here <https://github.com/indralab/emmaa/blob/master/models/paad/>`_.
+
 Model availability
 ------------------
 The models can currently be browsed through the Network Data Exchange (NDEx)
 portal. The EMMAA group on NDEx, listing each model is available here:
 http://ndexbio.org/#/group/be7cd689-f6a1-11e8-aaa6-0ac135e8bacf
-
 
 Defining model scope
 --------------------
@@ -47,21 +50,22 @@ type
 - A method to identify relevant links and entities on the background knowledge
 network
 
-These methods are implemented in the `TcgaCancerPrior` class of the
-`emma.priors.cancer_priors` module.
+These methods, as described in the subsections below, are implemented in
+the `TcgaCancerPrior` (:py:mod:`emmaa.priors.cancer_prior.TcgaCancerPrior`)
+class.
 
 Finding disease genes
 ~~~~~~~~~~~~~~~~~~~~~
 To identify genes that are relevant for a given type of cancer, we turn to
 The Cancer Genome Atlas (TCGA), a cancer patient genomics data set available
-via the cBio Portal (www.cbioportal.org).
+via the `cBio Portal <http://www.cbioportal.org>`_.
 
-We implemented a client to the cBio Portal which is documented at
-https://indra.readthedocs.io/en/latest/modules/databases/index.html#module-indra.databases.cbio_client
+We implemented a client to the cBio Portal which is documented `here
+<https://indra.readthedocs.io/en/latest/modules/databases/index.html#module-indra.databases.cbio_client>`_.
 
 Through this client, we first curate a list of patient studies for the given
 type of cancer. These patient studies are tabulated in
-emmaa/resources/cancer_studies.json.
+`emmaa/resources/cancer_studies.json <https://github.com/indralab/emmaa/blob/master/emmaa/resources/cancer_studies.json>`_.
 
 Next, we query each study with a list of genes (the entire human genome, in
 batches) to obtain which patient has mutations in which gene. From this,
@@ -94,11 +98,10 @@ from various sentences in publications by reading systems) and use a logistic
 function with midpoint set to 20 by default (parameterizable) to set a weight
 on the edge. We use a normalized Laplacian matrix-based heat diffusion algorithm
 on an undirected version of the network, which can be calculated in a closed
-form using `scipy.sparse.linalg.expm_multiply`.
+form using `scipy.sparse.linalg.expm_multiply <https://docs.scipy.org/doc/scipy-0.16.1/reference/generated/scipy.sparse.linalg.expm_multiply.html>`_.
 
 Having calculated the amount of heat on each node, we apply a percentile-based
 cutoff to retain the nodes with the most heat.
-
 
 Assembling a prior network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,15 +120,18 @@ of assembly. This involves the following steps:
 
 Updating the network
 --------------------
-Given the search terms associated with the model, we use a client to the
-PubMed web service to search for new literature content.
+Given the search terms associated with the model, we use a `client to the
+PubMed web service <https://indra.readthedocs.io/en/latest/modules/literature/index.html#module-indra.literature.pubmed_client>`_ to search for new literature
+content.
 
 
 Machine-reading
 ---------------
 Given a set of PMIDs, we use our Amazon Web Services (AWS) content acquisition
 and high-throughput reading pipeline to collect and read publications using
-the REACH and Sparser systems. We then use INDRA's input processors to
+the `REACH <https://github.com/clulab/reach>`_ and
+`Sparser <https://github.com/ddmcdonald/sparser>`_ systems.
+We then use INDRA's input processors to
 extract INDRA Statements from the reader outputs. We also associate
 metadata with each Statement: the date at which it was created, and the
 search terms which are associated with it.
