@@ -169,5 +169,31 @@ Model analysis
 
 Pre-registered queries and notifications
 ----------------------------------------
+Each EMMAA model will also come with a set of pre-registered queries from
+users. The queries will be in a machine-readable representation that utilizes
+the meta-model semantics developed for automated model analysis. EMMAA will
+initially support the following types of queries (here we show examples in
+natural language but we initially imagine these queries to be submitted in
+a formal, templated language):
+
+- Structural properties with constraints:
+  e.g., "What drugs bind PIK3CA but not PIK3CB?"
+- Mechanistic path properties with constraints: e.g.,
+  "How does treatment with PD-325901 lead to EGFR activation?"
+- Simple intervention properties: e.g., "What intervention can reduce ERK
+  activation by EGF?"
+- Comparative intervention properties: e.g., "How is the effect of targeting
+  MEK different from targeting PI3K on the activation of ERK by EGF?"
+
+Each such property maps onto a specific model analysis task that can be run
+on an EMMAA model, for instance, causal path finding with semantic constraints,
+or dynamical simulations under differential initial conditions.
+
+Further, the result of analysis for each property on a given version of the
+model will be saved. This will then allow comparing any changes to
+the result of analysis with previous states of the model. If a meaningful
+change occurs, a notification will be generated to the user who registered
+the query.
+
 .. image:: _static/images/user_queries_concept.png
    :scale: 60 %
