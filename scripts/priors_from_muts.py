@@ -46,7 +46,7 @@ def upload_prior(ctype, config):
 
 
 if __name__ == '__main__':
-    cancer_types = ('aml', 'brca', 'luad', 'prad', 'skcm')
+    cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm')
 
     for ctype in cancer_types:
         cancer_terms, drugs = get_terms(ctype)
