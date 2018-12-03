@@ -7,7 +7,8 @@ def get_terms(ctype):
                           mutation_cache=f'mutations_{ctype}.json')
     nodes = tcp.make_prior(pct_heat_threshold=99)
     cancer_terms = tcp.search_terms_from_nodes(nodes)
-    return cancer_terms
+    drugs = tcp.find_drugs_for_genes(nodes)
+    return cancer_terms + drugs
 
 
 def save_config(ctype, terms):

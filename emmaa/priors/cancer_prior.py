@@ -7,6 +7,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse.linalg import expm_multiply
 from indra.util import batch_iter
+from indra.sources import lincs_drug
 from indra.databases import cbio_client, uniprot_client
 from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name, \
                                         get_uniprot_id
@@ -176,7 +177,30 @@ class TcgaCancerPrior(object):
                     logger.log(f'{node} is not a valid HGNC ID')
                 else:
                     terms.append(hgnc_name)
+            elif node.startswith('MESH:'):
+                mesh_id = node.split(':')[1]
+                terms.append(f'{mesh_id}[MeSH Terms]')
+            else:
+                logger.warning('Could not create search term from {node}')
         return terms
+
+    @staticmethod
+    def find_drugs_for_genes(node_list):
+        """Return list of drugs targeting gene nodes."""
+        def get_drugs_for_gene(stmts, hgnc_id):
+            drugs_for_gene = set()
+            for stmt in stmts:
+                if stmt.obj.db_refs.get('HGNC') == hgnc_id:
+                    drugs_for_gene.add(stmt.subj.name)
+            return drugs_for_gene
+
+        lincs_drug_statements = lincs_drug.process_from_web().statements
+        drugs = set()
+        for node in node_list:
+            if node.startswith('HGNC:'):
+                hgnc_id = node.split(':')[1]
+                drugs |= get_drugs_for_gene(lincs_drug_statements, hgnc_id)
+        return sorted(list(drugs))
 
 
 def _load_tcga_studies():
