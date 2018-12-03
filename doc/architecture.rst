@@ -164,13 +164,39 @@ published model if they collect enough evidence to reach the belief threshold.
 Model analysis
 --------------
 
-The key requirement for 
+Analysis of scientific models is typical a manual process in which specific
+simulation scenarios are formulated in code, executed, and the results
+evaluated. In EMMAA models will be semantically annotated with concepts
+allowing scientific queries to be automatically formulated and executed.
+The core component of this process will be a *meta-model* for associating
+the necessary metadata with specific model elements.
 
 .. image:: _static/images/meta_model_concept.png
    :scale: 50 %
 
-The essential 
+EMMAA models automatically assembled via `INDRA <http://indra.bio>`_
+will already have semantic annotations identifying the relevant entities
+(e.g., specific genes or biological processes) and relations (e.g.,
+post-translational modifications). As shown in the figure above,
+the EMMAA meta-model will allow the annotation of:
 
+- quantities in model-relevant data, for example measured values associated
+  with specific model parameters
+- features of model parameters and observables relevant to subsequent
+  experimental follow-up, for example whether a parameter can be experimentally
+  altered or whether measurement of a particular observable is cost-effective;
+- higher-level scientific aspects associated with model variables and outcomes,
+  such as the utility associated with particular model states (e.g.,
+  decreased cell proliferation).
+
+The meta-model will be implemented in JSON-LD and will allow model elements
+encoded in different formalisms to be associated with the concepts necessary for
+automated analysis in EMMAA. For example, a protein initial condition parameter
+from an executable `PySB <http://pysb.org>`_ model could be linked to the EMMAA
+concepts for a parameter that is *naturally varying,* *non-perturbable,* and
+*experimentally measurable.* The use of JSON-LD (rather than RDF, for example)
+will additionally allow these annotation documents to be human readable and
+editable.
 
 Model testing
 -------------
@@ -178,11 +204,12 @@ Model testing
 .. image:: _static/images/model_testing_concept.png
    :scale: 60 %
 
-In addition to automatically extracting and assembling mechanistic models,
-EMMAA will run a set of tests to determine each model's validity and
-explanatory scope. Model constraints for testing will consist of a combination
-of high-level qualitative observations, and where available, structured
-datasets.
+A key benefit of using semantically annotated models models is that it allows
+models to be automatically validated in a common framework. In addition to
+automatically extracting and assembling mechanistic models, EMMAA will run a
+set of tests to determine each model's validity and explanatory scope.  Model
+constraints for testing will consist of a combination of high-level qualitative
+observations, and where available, structured datasets.
 
 The testing methodology will involve multiple modes of simulation and analysis,
 including both static and dynamic testing. Static testing will be carried out
