@@ -160,6 +160,18 @@ the given belief threshold. The Statements below the threshold still remain
 in the "raw" model knowledge and can later advance to be included in the
 published model if they collect enough evidence to reach the belief threshold.
 
+
+Model analysis
+--------------
+
+The key requirement for 
+
+.. image:: _static/images/meta_model_concept.png
+   :scale: 50 %
+
+The essential 
+
+
 Model testing
 -------------
 
@@ -198,16 +210,6 @@ an Amazon S3 bucket and associating the bucket with a
 execution of a serverless Amazon Lambda function responsible for initiating
 the model testing procedure.
 
-
-Model analysis
---------------
-
-The key requirement for 
-
-.. image:: _static/images/meta_model_concept.png
-   :scale: 50 %
-
-The essential 
 
 
 Pre-registered queries and notifications
