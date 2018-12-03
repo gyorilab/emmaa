@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     for ctype in cancer_types:
         cancer_terms, drugs = get_terms(ctype)
-        prior_stmts = get_stmts_for_gene_list(cancer_terms)
+        prior_stmts = get_stmts_for_gene_list(cancer_terms, drugs)
         save_prior(prior_stmts)
         terms = cancer_terms + drugs
         #save_config(ctype, terms)

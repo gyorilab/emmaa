@@ -7,9 +7,9 @@ def get_stmts_for_gene(gene):
                                                    count=100000)
 
 
-def get_stmts_for_gene_list(gene_list):
+def get_stmts_for_gene_list(gene_list, other_entities):
     stmts = []
     for gene in gene_list:
         stmts += get_stmts_for_gene(gene)
-    stmts = ac.filter_gene_list(stmts, gene_list, policy='all')
+    stmts = ac.filter_gene_list(stmts, gene_list + other_entities, policy='all')
     return stmts
