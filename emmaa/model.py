@@ -81,16 +81,18 @@ class EmmaaModel(object):
                     pmid_to_terms[pmid] = [term]
         return pmid_to_terms
 
-    def get_new_readings(self, pmit_to_terms):
+    def get_new_readings(self):
+        """Search new literature, read, and add to model statements"""
         pmid_to_terms = self.search_literature(date_limit=10)
         estmts = read_pmid_search_terms(pmid_to_terms)
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
-        source_hashes = {est.stmt.evidence[0].get_source_hash()
+        """Extend model statements only if it is not already there."""
+        source_hashes = {est.stmt.get_hash(shallow=False)
                          for est in self.stmts}
         for estmt in estmts:
-            if estmt.stmt.evidence[0].get_source_hash() not in source_hashes:
+            if estmt.stmt.get_hash(shallow=False) not in source_hashes:
                 self.stmts.append(estmt)
 
     def run_assembly(self):

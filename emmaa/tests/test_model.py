@@ -16,3 +16,7 @@ def test_model_extend():
     em.add_statements([emmaa_sts[0]])
     em.extend_unique(emmaa_sts[1:])
     assert len(em.stmts) == 2
+    stmt = EmmaaStatement(Phosphorylation(None, Agent('b'), evidence=ev1),
+                          datetime.datetime.now(), ['x'])
+    em.extend_unique([stmt])
+    assert len(em.stmts) == 3
