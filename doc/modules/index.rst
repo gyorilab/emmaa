@@ -8,3 +8,4 @@ EMMAA modules reference
 
    model
    priors
+   readers
