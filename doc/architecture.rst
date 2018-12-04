@@ -1,9 +1,11 @@
 EMMAA Initial Architecture and Approach
 =======================================
-
+The Ecosystem of Machine-maintained Models with Automated Analysis is
+available at http://github.com/indralab/emmaa.
 
 .. image:: _static/images/emmaa_overview.png
-   :scale: 100 %
+   :scale: 90 %
+   :align: center
 
 
 Cancer types of interest
@@ -261,6 +263,10 @@ a formal, templated language):
 - Comparative intervention properties: e.g., "How is the effect of targeting
   MEK different from targeting PI3K on the activation of ERK by EGF?"
 
+.. image:: _static/images/user_queries_concept.png
+   :scale: 60 %
+   :align: right
+
 Each such property maps onto a specific model analysis task that can be run
 on an EMMAA model, for instance, causal path finding with semantic constraints,
 or dynamical simulations under differential initial conditions.
@@ -271,5 +277,3 @@ the result of analysis with previous states of the model. If a meaningful
 change occurs, a notification will be generated to the user who registered
 the query.
 
-.. image:: _static/images/user_queries_concept.png
-   :scale: 60 %
