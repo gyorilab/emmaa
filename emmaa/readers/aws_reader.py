@@ -24,7 +24,7 @@ def read_pmid_search_terms(pmid_search_terms):
     date = datetime.datetime.utcnow()
     pmid_stmts = read_pmids(pmids, date)
     estmts = []
-    for pmid, stmts in pmid_stmts.keys():
+    for pmid, stmts in pmid_stmts.items():
         for stmt in stmts:
             es = EmmaaStatement(stmt, date, pmid_search_terms[pmid])
             estmts.append(es)
@@ -38,10 +38,13 @@ def read_pmids(pmids, date):
     ----------
     pmids : list[str]
         A list of PMIDs to read.
+    date : datetime
+        The date and time associated with the reading, typically the
+        current time.
 
     Returns
     -------
-    dict[str, list[indra.statements.Statement]]
+    dict[str, list[indra.statements.Statement]
         A dict of PMIDs and the list of Statements extracted for the given
         PMID by reading.
     """
