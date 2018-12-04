@@ -1,11 +1,16 @@
+import yaml
+import time
 import boto3
 import pickle
+import logging
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
-from emmaa.statements import EmmaaStatement
 from emmaa.readers.aws_reader import read_pmid_search_terms
+
+
+logger = logging.getLogger(__name__)
 
 
 class EmmaaModel(object):
@@ -73,7 +78,9 @@ class EmmaaModel(object):
         term_to_pmids = {}
         for term in self.search_terms:
             pmids = pubmed_client.get_ids(term, reldate=date_limit)
+            logger.info(f'{len(pmids)} PMIDs found for {term}')
             term_to_pmids[term] = pmids
+            time.sleep(0.5)
         pmid_to_terms = {}
         for term, pmids in term_to_pmids.items():
             for pmid in pmids:
@@ -133,3 +140,11 @@ class EmmaaModel(object):
         obj = client.get_object(Bucket='emmaa', Key=fname)
         stmts = pickle.loads(obj['Body'].read())
         self.stmts = stmts
+
+
+def load_model(name, config_file):
+    with open(config_file, 'r') as fh:
+        config = yaml.load(fh)
+    em = EmmaaModel(name, config)
+    #em.load_from_s3()
+    return em
