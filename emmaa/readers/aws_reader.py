@@ -1,12 +1,9 @@
-import boto3
 import datetime
 from indra.sources import reach
 from indra.literature.s3_client import get_reader_json_str, get_full_text
 from indra.tools.reading.submit_reading_pipeline import \
     submit_reading, wait_for_complete
 from emmaa.statements import EmmaaStatement
-
-client = boto3.client('batch')
 
 
 def read_pmid_search_terms(pmid_search_terms):
@@ -48,11 +45,11 @@ def read_pmids(pmids, date):
         A dict of PMIDs and the list of Statements extracted for the given
         PMID by reading.
     """
+    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
     pmid_fname = 'pmids-%s.txt' % date_str
     with open(pmid_fname, 'wt') as fh:
         fh.write('\n'.join(pmids))
     job_list = submit_reading('emmaa', pmid_fname, ['reach'])
-    date_str = date.strftime('%Y-%m-%d-%H-%M-%S')
     wait_for_complete('run_reach_queue', job_list, idle_log_timeout=600,
                       kill_on_log_timeout=True)
     pmid_stmts = {}
