@@ -1,3 +1,5 @@
+import boto3
+import pickle
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
@@ -118,3 +120,16 @@ class EmmaaModel(object):
         cxa.make_model()
         cx_str = cxa.print_cx()
         ndex_client.update_network(cx_str, self.ndex_network)
+
+    def save_to_s3(self):
+        fname = f'{self.name}_statements.pkl'
+        client = boto3.client('s3')
+        client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
+                          Key=fname)
+
+    def load_from_s3(self):
+        fname = f'{self.name}_statements.pkl'
+        client = boto3.client('s3')
+        obj = client.get_object(Bucket='emmaa', Key=fname)
+        stmts = pickle.loads(obj['Body'].read())
+        self.stmts = stmts
