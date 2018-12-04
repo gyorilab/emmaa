@@ -2,28 +2,8 @@ from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
+from emmaa.statements import EmmaaStatement
 from emmaa.readers.aws_reader import read_pmid_search_terms
-
-
-class EmmaaStatement(object):
-    """Represents an EMMAA Statement.
-
-    Parameters
-    ----------
-    stmt : indra.statements.Statement
-        An INDRA Statement
-    date : datetime
-        A datetime object that is attached to the Statement. Typically represnts
-        the time at which the Statement was created.
-    search_terms
-        The set of search terms that lead to the creation of the Sttement.
-
-    """
-    def __init__(self, stmt, date, search_terms):
-
-        self.stmt = stmt
-        self.date = date
-        self.search_terms = search_terms
 
 
 class EmmaaModel(object):
@@ -58,7 +38,7 @@ class EmmaaModel(object):
         """
         self.stmts += stmts
 
-    def get_indra_smts(self):
+    def get_indra_stmts(self):
         """Return the INDRA Statements contained in the model.
 
         Returns
@@ -107,9 +87,10 @@ class EmmaaModel(object):
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
-        source_hashes = {est.stmts.source_hash for est in self.stmts}
+        source_hashes = {est.stmt.evidence[0].get_source_hash()
+                         for est in self.stmts}
         for estmt in estmts:
-            if estmt.stmt.source_hash not in source_hashes:
+            if estmt.stmt.evidence[0].get_source_hash() not in source_hashes:
                 self.stmts.append(estmt)
 
     def run_assembly(self):
@@ -120,7 +101,7 @@ class EmmaaModel(object):
         stmts : list[indra.statements.Statement]
             The list of assembled INDRA Statements.
         """
-        stmts = self.get_indra_smts()
+        stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
         stmts = ac.map_sequence(stmts)

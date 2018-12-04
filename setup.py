@@ -22,5 +22,5 @@ setup(name='emmaa',
         'Programming Language :: Python :: 3'
         ],
       packages=find_packages(),
-      install_requires=['indra']
+      install_requires=['indra', 'boto3']
       )

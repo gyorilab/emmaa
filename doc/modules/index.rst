@@ -6,6 +6,7 @@ EMMAA modules reference
 .. toctree::
    :maxdepth: 4
 
+   statements
    model
    priors
    readers
