@@ -2,6 +2,7 @@ from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
+from emmaa.readers.aws_reader import read_pmid_search_terms
 
 
 class EmmaaStatement(object):
@@ -99,6 +100,17 @@ class EmmaaModel(object):
                 except KeyError:
                     pmid_to_terms[pmid] = [term]
         return pmid_to_terms
+
+    def get_new_readings(self, pmit_to_terms):
+        pmid_to_terms = self.search_literature(date_limit=10)
+        estmts = read_pmid_search_terms(pmid_to_terms)
+        self.extend_unique(estmts)
+
+    def extend_unique(self, estmts):
+        source_hashes = {est.stmts.source_hash for est in self.stmts}
+        for estmt in estmts:
+            if estmt.stmt.source_hash not in source_hashes:
+                self.stmts.append(estmt)
 
     def run_assembly(self):
         """Run INDRA's assembly pipeline on the Statements.
