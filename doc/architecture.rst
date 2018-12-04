@@ -204,7 +204,8 @@ Model testing
 -------------
 
 .. image:: _static/images/model_testing_concept.png
-   :scale: 60 %
+   :scale: 80 %
+   :align: right
 
 A key benefit of using semantically annotated models models is that it allows
 models to be automatically validated in a common framework. In addition to
