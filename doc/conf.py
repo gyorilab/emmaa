@@ -12,6 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import mock
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
@@ -168,3 +169,11 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+
+MOCK_MODULES = [
+    'indra_db', 'indra_db.client'
+]
+
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.MagicMock()
