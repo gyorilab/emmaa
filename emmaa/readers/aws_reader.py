@@ -58,6 +58,9 @@ def read_pmids(pmids, date):
     pmid_stmts = {}
     for pmid in pmids:
         reach_json_str = get_reader_json_str('reach', pmid)
+        if reach_json_str is None:
+            pmid_stmts[pmid] = []
+            continue
         rp = reach.process_json_str(reach_json_str)
         if not rp:
             pmid_stmts[pmid] = []
