@@ -31,3 +31,8 @@ class SearchTerm(object):
         jd['db_refs'] = self.db_refs
         jd['search_term'] = self.search_term
         return jd
+
+    def __eq__(self, other):
+        return self.type == other.type and self.name == other.name and \
+            self.db_refs == other.db_refs and \
+            self.search_term == other.search_term
