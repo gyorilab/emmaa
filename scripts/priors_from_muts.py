@@ -11,22 +11,26 @@ def get_terms(ctype):
                           mutation_cache=f'mutations_{ctype}.json')
     nodes = tcp.make_prior(pct_heat_threshold=99)
     cancer_terms = tcp.search_terms_from_nodes(nodes)
-    drugs = tcp.find_drugs_for_genes(nodes)
-    return cancer_terms, drugs
+    drug_terms = tcp.find_drugs_for_genes(nodes)
+    return cancer_terms, drug_terms
 
 
 def load_config(ctype):
     fname = f'models/{ctype}/config.yaml'
     with open(fname, 'r') as fh:
         config = yaml.load(fh)
+    # TODO: make the search term entries here SearchTerm objects
+    for term in config.get('search_terms', []):
+        pass
     return config
 
 
 def save_config(ctype, terms):
+    fname = f'models/{ctype}/config.yaml'
     config = load_config(ctype)
-    config['search_terms'] = [f'"{term}"' for term in terms]
+    config['search_terms'] = [term.to_json() for term in terms]
     with open(fname, 'w') as fh:
-        yaml.dump(config, fh)
+        yaml.dump(config, fh, default_flow_style=False)
 
 
 def save_prior(stmts):
@@ -49,8 +53,10 @@ if __name__ == '__main__':
     cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm')
 
     for ctype in cancer_types:
-        cancer_terms, drugs = get_terms(ctype)
-        prior_stmts = get_stmts_for_gene_list(cancer_terms, drugs)
+        cancer_terms, drug_terms = get_terms(ctype)
+        gene_names = [g.name for g in cancer_terms]
+        drug_names = [d.name for d in drug_terms]
+        prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)
         save_prior(prior_stmts)
-        terms = cancer_terms + drugs
-        #save_config(ctype, terms)
+        terms = cancer_terms + drug_terms
+        save_config(ctype, terms)
