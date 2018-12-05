@@ -1,5 +1,4 @@
 """This module contains classes to generate prior networks."""
-from collections import OrderedDict
 
 
 class SearchTerm(object):
@@ -25,11 +24,10 @@ class SearchTerm(object):
 
     def to_json(self):
         """Return search term as JSON."""
-        jd = OrderedDict()
-        jd['type'] = self.type
-        jd['name'] = self.name
-        jd['db_refs'] = self.db_refs
-        jd['search_term'] = self.search_term
+        jd = {'type': self.type,
+              'name': self.name,
+              'db_refs': self.db_refs,
+              'search_term': self.search_term}
         return jd
 
     def __eq__(self, other):

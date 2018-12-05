@@ -1,7 +1,8 @@
 import yaml
 import pickle
 import datetime
-from emmaa.model import EmmaaStatement, EmmaaModel
+from emmaa.model import EmmaaModel
+from emmaa.statements import EmmaaStatement
 from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.cancer_prior import TcgaCancerPrior
 
@@ -20,8 +21,6 @@ def load_config(ctype):
     with open(fname, 'r') as fh:
         config = yaml.load(fh)
     # TODO: make the search term entries here SearchTerm objects
-    for term in config.get('search_terms', []):
-        pass
     return config
 
 

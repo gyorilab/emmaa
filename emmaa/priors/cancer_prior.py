@@ -187,9 +187,9 @@ class TcgaCancerPrior(object):
                                   search_term=f'{mesh_id}[MeSH Terms]',
                                   db_refs={'MESH': mesh_id})
                 terms.append(term)
-            # TODO: handle MeSH here
+            # TODO: handle GO here
             else:
-                logger.warning('Could not create search term from {node}')
+                logger.warning(f'Could not create search term from {node}')
         return sorted(terms, key=lambda x: x.name)
 
     @staticmethod
@@ -216,7 +216,7 @@ class TcgaCancerPrior(object):
                     if drug.name not in already_added:
                         drug_terms.append(drug)
                         already_added.add(drug.name)
-        return sorted(drugs, key=lambda x: x.name)
+        return sorted(drug_terms, key=lambda x: x.name)
 
 
 def _load_tcga_studies():
