@@ -55,7 +55,7 @@ if __name__ == '__main__':
         cancer_terms, drug_terms = get_terms(ctype)
         gene_names = [g.name for g in cancer_terms]
         drug_names = [d.name for d in drug_terms]
-        prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)
-        save_prior(prior_stmts)
         terms = cancer_terms + drug_terms
         save_config(ctype, terms)
+        #prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)
+        #save_prior(prior_stmts)
