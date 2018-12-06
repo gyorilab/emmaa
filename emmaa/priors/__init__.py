@@ -30,6 +30,10 @@ class SearchTerm(object):
               'search_term': self.search_term}
         return jd
 
+    @classmethod
+    def from_json(cls, jd):
+        return SearchTerm(**jd)
+
     def __eq__(self, other):
         return self.type == other.type and self.name == other.name and \
             self.db_refs == other.db_refs and \
