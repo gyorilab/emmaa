@@ -7,6 +7,7 @@ from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
+from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 
 
@@ -57,7 +58,8 @@ class EmmaaModel(object):
         return [es.stmt for es in self.stmts]
 
     def _load_config(self, config):
-        self.search_terms = config['search_terms']
+        self.search_terms = [SearchTerm.from_json(s) for s in
+                             config['search_terms']]
         self.ndex_network = config['ndex']['network']
 
     def search_literature(self, date_limit=None):

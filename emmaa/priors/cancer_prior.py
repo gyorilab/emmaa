@@ -2,7 +2,6 @@ import os
 import csv
 import json
 import logging
-import requests
 import numpy as np
 import networkx as nx
 from scipy.sparse.linalg import expm_multiply
@@ -11,6 +10,7 @@ from indra.sources import tas
 from indra.databases import cbio_client, uniprot_client
 from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name, \
                                         get_uniprot_id
+from emmaa.priors import SearchTerm
 
 
 logger = logging.getLogger(__name__)
@@ -176,31 +176,47 @@ class TcgaCancerPrior(object):
                 if hgnc_name is None:
                     logger.log(f'{node} is not a valid HGNC ID')
                 else:
-                    terms.append(hgnc_name)
+                    term = SearchTerm(type='gene', name=hgnc_name,
+                                      search_term=f'"{hgnc_name}"',
+                                      db_refs={'HGNC': hgnc_id})
+                    terms.append(term)
             elif node.startswith('MESH:'):
                 mesh_id = node.split(':')[1]
-                terms.append(f'{mesh_id}[MeSH Terms]')
+                # TODO: get actual process name here
+                term = SearchTerm(type='bioprocess', name=mesh_id,
+                                  search_term=f'{mesh_id}[MeSH Terms]',
+                                  db_refs={'MESH': mesh_id})
+                terms.append(term)
+            # TODO: handle GO here
             else:
-                logger.warning('Could not create search term from {node}')
-        return sorted(terms)
+                logger.warning(f'Could not create search term from {node}')
+        return sorted(terms, key=lambda x: x.name)
 
     @staticmethod
     def find_drugs_for_genes(node_list):
         """Return list of drugs targeting gene nodes."""
         def get_drugs_for_gene(stmts, hgnc_id):
-            drugs_for_gene = set()
+            drugs_for_gene = []
             for stmt in stmts:
                 if stmt.obj.db_refs.get('HGNC') == hgnc_id:
-                    drugs_for_gene.add(stmt.subj.name)
+                    term = SearchTerm(type='drug', name=stmt.subj.name,
+                                      db_refs=stmt.subj.db_refs,
+                                      search_term=f'"{stmt.subj.name}"')
+                    drugs_for_gene.append(term)
             return drugs_for_gene
 
         tas_statements = tas.process_csv().statements
-        drugs = set()
+        already_added = set()
+        drug_terms = []
         for node in node_list:
             if node.startswith('HGNC:'):
                 hgnc_id = node.split(':')[1]
-                drugs |= get_drugs_for_gene(tas_statements, hgnc_id)
-        return sorted(list(drugs))
+                drugs = get_drugs_for_gene(tas_statements, hgnc_id)
+                for drug in drugs:
+                    if drug.name not in already_added:
+                        drug_terms.append(drug)
+                        already_added.add(drug.name)
+        return sorted(drug_terms, key=lambda x: x.name)
 
 
 def _load_tcga_studies():
