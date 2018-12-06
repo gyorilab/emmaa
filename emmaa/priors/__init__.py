@@ -32,6 +32,7 @@ class SearchTerm(object):
 
     @classmethod
     def from_json(cls, jd):
+        """Return a SearchTerm object from JSON."""
         return SearchTerm(**jd)
 
     def __eq__(self, other):
