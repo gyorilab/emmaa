@@ -1,6 +1,6 @@
+import re
 import logging
 import requests
-from random import sample
 from functools import lru_cache
 from indra.databases.uniprot_client import get_gene_name
 from indra.databases.hgnc_client import get_hgnc_id, get_uniprot_id
@@ -40,20 +40,19 @@ def make_prior_from_genes(gene_list):
     all_reactome_ids.update(reactome_ids)
 
     all_pathways = set([])
-    test_pathways = []
     for reactome_id in reactome_ids:
-        if reactome_id.split('-')[1] != 'HSA':
+        if not re.match('^R-HSA-[0-9]+', reactome_id):
+            # skip non-human genes
             continue
-        pathways = get_pathways_containing_gene(reactome_id)
-        if pathways is not None:
-            all_pathways.update(pathways)
-            test_pathways.extend(pathways)
+        additional_pathways = get_pathways_containing_gene(reactome_id)
+        if additional_pathways is not None:
+            all_pathways.update(additional_pathways)
 
     all_genes = set([])
-    for pathway in sample(all_pathways, len(all_pathways)):
-        genes = get_genes_contained_in_pathway(pathway)
-        if genes is not None:
-            all_genes.update(genes)
+    for pathway in all_pathways:
+        additional_genes = get_genes_contained_in_pathway(pathway)
+        if additional_genes is not None:
+            all_genes.update(additional_genes)
 
     result = []
     for uniprot_id in all_genes:
@@ -175,9 +174,3 @@ def get_genes_contained_in_pathway(reactome_id):
              for entity in result['refEntities']
              if entity.get('schemaClass') == 'ReferenceGeneProduct']
     return list(set(genes))
-
-
-if __name__ == '__main__':
-    example_genes = ['KRAS', 'TP53', 'SMAD4', 'TTN', 'CDKN2A']
-    prior = make_prior_from_genes(example_genes)
-    print(len(prior))
