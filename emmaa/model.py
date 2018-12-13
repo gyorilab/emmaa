@@ -144,6 +144,7 @@ class EmmaaModel(object):
         """Load the latest model state from S3."""
         key = find_latest_s3_file('emmaa', f'models/{self.name}/model_')
         client = boto3.client('s3')
+        logger.info(f'Loading model state from {key}')
         obj = client.get_object(Bucket='emmaa', Key=key)
         stmts = pickle.loads(obj['Body'].read())
         self.stmts = stmts
@@ -153,18 +154,21 @@ class EmmaaModel(object):
         istmts = self.get_indra_stmts()
         agents = []
         for stmt in istmts:
-            agents += [a for a in stmt.agent_list() is a is not None]
+            agents += [a for a in stmt.agent_list() if a is not None]
+        return agents
 
     def assemble_pysb(self):
+        """Assemble the model into PySB and return the assembled model."""
         stmts = self.get_indra_stmts()
         pa = PysbAssembler()
         pa.add_statements(stmts)
         pysb_model = pa.make_model()
+        return pysb_model
+
 
 def load_model(name, config_file):
     with open(config_file, 'r') as fh:
         config = yaml.load(fh)
     em = EmmaaModel(name, config)
-    #em.load_from_s3()
+    em.load_from_s3()
     return em
-
