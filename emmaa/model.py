@@ -8,7 +8,7 @@ import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
 from emmaa.priors import SearchTerm
-from emmaa.util import make_date_str
+from emmaa.util import make_date_str, find_latest_s3_file
 from emmaa.readers.aws_reader import read_pmid_search_terms
 
 
@@ -139,9 +139,9 @@ class EmmaaModel(object):
                           Key=fname)
 
     def load_from_s3(self):
-        fname = f'models/{self.name}/model_statements.pkl'
+        key = find_latest_s3_file('emmaa', f'models/{self.name}/model_')
         client = boto3.client('s3')
-        obj = client.get_object(Bucket='emmaa', Key=fname)
+        obj = client.get_object(Bucket='emmaa', Key=key)
         stmts = pickle.loads(obj['Body'].read())
         self.stmts = stmts
 
