@@ -1,5 +1,23 @@
 """This module implements the object model for EMMAA model testing."""
+import itertools
 from indra.explanation.model_checker import ModelChecker
+
+
+class TestManager(object):
+    def __init__(self, models, tests):
+        self.models = models
+        self.tests = tests
+        self.pairs_to_test = []
+        self.test_results = {}
+
+    def make_tests(self, test_connector):
+        for model, test in itertools.product(self.models, self.tests):
+            if test_connector.applicable(model, test):
+                self.pairs_to_test.append(model, test)
+
+    def run_tests(self):
+        for model, test in self.pairs_to_test:
+            self.test_results[(model, test)] = test.check(model)
 
 
 class TestConnector(object):
