@@ -3,6 +3,7 @@ import time
 import boto3
 import pickle
 import logging
+import datetime
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
@@ -131,7 +132,8 @@ class EmmaaModel(object):
         ndex_client.update_network(cx_str, self.ndex_network)
 
     def save_to_s3(self):
-        fname = f'{self.name}_statements.pkl'
+        date_str = make_date_str()
+        fname = f'models/{self.name}/model_{date_str}.pkl'
         client = boto3.client('s3')
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname)
@@ -150,3 +152,7 @@ def load_model(name, config_file):
     em = EmmaaModel(name, config)
     #em.load_from_s3()
     return em
+
+
+def make_date_str():
+    return datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
