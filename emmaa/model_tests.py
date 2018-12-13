@@ -1,5 +1,9 @@
 """This module implements the object model for EMMAA model testing."""
+import logging
 import itertools
+
+
+logger = logging.getLogger(__name__)
 
 
 class TestManager(object):
@@ -26,9 +30,12 @@ class TestManager(object):
         test_connector : emmaa.model_tests.TestConnector
             A TestConnector object to use for connecting models to tests.
         """
+        logger.info(f'Checking applicability of {len(self.tests)} tests to '
+                    f'{len(self.models)} models')
         for model, test in itertools.product(self.models, self.tests):
             if test_connector.applicable(model, test):
                 self.pairs_to_test.append(model, test)
+        logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
@@ -41,20 +48,32 @@ class TestConnector(object):
     def __init__(self):
         pass
 
-    def applicable(self, model, test):
+    @staticmethod
+    def applicable(model, test):
         """Return True if the test is applicable to the given model."""
         return True
 
 
 class ScopeTestConnector(TestConnector):
     """Determines applicability of a test to a model by overlap in scope."""
-    def applicable(self, model, test):
+    @staticmethod
+    def applicable(model, test):
+        """Return True of all test entities are in the set of model entities"""
         model_entities = model.get_entities()
         test_entities = test.get_entities()
-        return self._overlap(model_entities, test_entities)
+        return ScopeTestConnector._overlap(model_entities, test_entities)
 
-    def _overlap(self, ents1, ents2):
-        return True if set(ents1) & set(ents2) else False
+    @staticmethod
+    def _overlap(model_entities, test_entities):
+        for te in test_entities:
+            found = False
+            for me in model_entities:
+                if te.name == me.name:
+                    found = True
+                    break
+            if not found:
+                return False
+        return True
 
 
 class EmmaaTest(object):
@@ -70,7 +89,8 @@ class StatementCheckingTest(EmmaaTest):
 
     def check(self, model_checker, model):
         """Use a model checker to check if a given model satisfies the test."""
-        mc = model_checker(model, [self.stmt])
+        pysb_model = model.assemble_pysb()
+        mc = model_checker(pysb_model, [self.stmt])
         res = mc.check_statement(self.stmt)
         return res
 
