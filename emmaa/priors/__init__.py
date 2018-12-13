@@ -22,6 +22,12 @@ class SearchTerm(object):
         self.db_refs = db_refs
         self.search_term = search_term
 
+    def __str__(self):
+        return f'SearchTerm({self.type}, {self.name})'
+
+    def __repr__(self):
+        return str(self)
+
     def to_json(self):
         """Return search term as JSON."""
         jd = {'type': self.type,
