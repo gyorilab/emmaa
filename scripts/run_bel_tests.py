@@ -20,12 +20,8 @@ if __name__ == '__main__':
     indirect_stmts = get_indirect_stmts()
     tests = [StatementCheckingTest(stmt) for stmt in indirect_stmts]
     ctypes = ['luad']
-    models = []
-    for ctype in ctypes:
-        # load model from S3
-        model = load_model(ctype)
-        models.append(model)
-    # make TestManager
+    models = [load_model(ctype, f'models/{ctype}/config.yaml')
+              for ctype in ctypes]
     tm = TestManager(models, tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()

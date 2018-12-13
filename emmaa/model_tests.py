@@ -1,6 +1,7 @@
 """This module implements the object model for EMMAA model testing."""
 import logging
 import itertools
+from indra.explanation.model_checker import ModelChecker
 
 
 logger = logging.getLogger(__name__)
@@ -33,14 +34,19 @@ class TestManager(object):
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
                     f'{len(self.models)} models')
         for model, test in itertools.product(self.models, self.tests):
+            logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model, test):
-                self.pairs_to_test.append(model, test)
+                self.pairs_to_test.append((model, test))
+                logger.info(f'Test {test.stmt} is applicable')
+            else:
+                logger.info(f'Test {test.stmt} is not applicable')
+
         logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
-        for model, test in self.pairs_to_test:
-            self.test_results[(model, test)] = test.check(model)
+        for idx, (model, test) in enumerate(self.pairs_to_test):
+            self.test_results[idx] = test.check(model)
 
 
 class TestConnector(object):
@@ -65,15 +71,11 @@ class ScopeTestConnector(TestConnector):
 
     @staticmethod
     def _overlap(model_entities, test_entities):
-        for te in test_entities:
-            found = False
-            for me in model_entities:
-                if te.name == me.name:
-                    found = True
-                    break
-            if not found:
-                return False
-        return True
+        me_names = {e.name for e in model_entities}
+        te_names = {e.name for e in test_entities}
+        # If all test entities are in model entities, we get an empty set here
+        # so we return True
+        return not te_names - me_names
 
 
 class EmmaaTest(object):
@@ -87,10 +89,10 @@ class StatementCheckingTest(EmmaaTest):
     def __init__(self, stmt):
         self.stmt = stmt
 
-    def check(self, model_checker, model):
+    def check(self, model):
         """Use a model checker to check if a given model satisfies the test."""
         pysb_model = model.assemble_pysb()
-        mc = model_checker(pysb_model, [self.stmt])
+        mc = ModelChecker(pysb_model, [self.stmt])
         res = mc.check_statement(self.stmt)
         return res
 
