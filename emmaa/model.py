@@ -3,12 +3,12 @@ import time
 import boto3
 import pickle
 import logging
-import datetime
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
 from emmaa.priors import SearchTerm
+from emmaa.util import make_date_str
 from emmaa.readers.aws_reader import read_pmid_search_terms
 
 
@@ -139,7 +139,7 @@ class EmmaaModel(object):
                           Key=fname)
 
     def load_from_s3(self):
-        fname = f'{self.name}_statements.pkl'
+        fname = f'models/{self.name}/model_statements.pkl'
         client = boto3.client('s3')
         obj = client.get_object(Bucket='emmaa', Key=fname)
         stmts = pickle.loads(obj['Body'].read())
@@ -153,6 +153,3 @@ def load_model(name, config_file):
     #em.load_from_s3()
     return em
 
-
-def make_date_str():
-    return datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
