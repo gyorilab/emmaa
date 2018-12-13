@@ -1,4 +1,4 @@
-FROM indra:latest
+FROM 292075781285.dkr.ecr.us-east-1.amazonaws.com/indra:latest
 
 ARG BUILD_BRANCH
 
