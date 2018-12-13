@@ -1,9 +1,72 @@
-import requests
 import logging
+import requests
 from functools import lru_cache
+from indra.databases.uniprot_client import get_gene_name
+from indra.databases.hgnc_client import get_hgnc_id, get_uniprot_id
 
+from emmaa.priors import SearchTerm
 
 logger = logging.getLogger('reactome_prior')
+
+
+def make_prior_from_genes(gene_list):
+    """Returns reactome prior based on a list of genes
+
+    Parameters
+    ----------
+    gene_list: list of str
+        list of HGNC symbols for genes
+
+    Returns
+    -------
+    res: list of :py:class:`emmaa.priors.SearchTerm`
+        list of search terms corresponding to all genes found in any reactome
+        pathway containing one of the genes in the input gene list
+    """
+    reactome_ids = []
+    for gene_name in gene_list:
+        hgnc_id = get_hgnc_id(gene_name)
+        uniprot_id = get_uniprot_id(hgnc_id)
+        if not uniprot_id:
+            logger.warning('Could not get Uniprot ID for HGNC symbol'
+                           f' {gene_name}')
+            continue
+        reactome_id = rx_id_from_up_id(uniprot_id)
+        if not reactome_id:
+            logger.warning('Could not get Reactome ID for HGNC symbol'
+                           f' {gene_name}')
+            continue
+    reactome_ids.append(reactome_id)
+
+    all_pathways = set([])
+    for reactome_id in reactome_ids:
+        pathways = get_pathways_containing_gene(reactome_id)
+        if pathways is not None:
+            all_pathways.update(pathways)
+
+    all_genes = set([])
+    for pathway in all_pathways:
+        genes = get_genes_contained_in_pathway(pathway)
+        if genes is not None:
+            all_genes.update(genes)
+
+    result = []
+    for uniprot_id in genes:
+        hgnc_name = get_gene_name(uniprot_id)
+        if hgnc_name is None:
+            logger.warning('Could not get HGNC name for UniProt ID'
+                           f' {uniprot_id}')
+            continue
+        hgnc_id = get_hgnc_id(hgnc_name)
+        if not hgnc_id:
+            logger.warning(f'{hgnc_name} is not a valid HGNC name')
+            continue
+        term = SearchTerm(type='gene', name=hgnc_name,
+                          search_term=f'"{hgnc_name}"',
+                          db_refs={'HGNC': hgnc_id,
+                                   'UP': uniprot_id})
+        result.append(term)
+    return result
 
 
 @lru_cache(10000)
@@ -18,7 +81,7 @@ def rx_id_from_up_id(up_id):
     json = res.json()
     results = json.get('results')
     if not results:
-        logger.info(f'No results for {up_id}')
+        logger.warning(f'No results for {up_id}')
         return None
     stable_ids = []
     for result in results:
@@ -51,7 +114,18 @@ def up_id_from_rx_id(reactome_id):
 
 @lru_cache(1000)
 def get_pathways_containing_gene(reactome_id):
-    """"Get all ids for reactom pathways containing some form of an entity"""
+    """"Get all ids for reactom pathways containing some form of an entity
+
+    Parameters
+    ----------
+    reactome_id: str
+        reactome id for a gene
+
+    Returns
+    -------
+    pathway_ids: list of str
+        list of reactome ids for pathways containing the input gene
+    """
     react_url = ('http://www.reactome.org/ContentService/data/pathways/low'
                  f'/entity/{reactome_id}/allForms')
     params = {'species': 'Homo sapiens'}
@@ -69,11 +143,23 @@ def get_pathways_containing_gene(reactome_id):
 
 @lru_cache(1000)
 def get_genes_contained_in_pathway(reactome_id):
-    """Get all genes contained in a given pathway"""
+    """Get all genes contained in a given pathway
+
+    Parameters
+    ----------
+    reactome_id: strig
+        reactome id for a pathway
+
+    Returns
+    -------
+    genes: list of str
+        list of uniprot ids for all unique genes contained in input pathway
+    """
     react_url = ('http://www.reactome.org/ContentService/data'
                  f'/participants/{reactome_id}')
+    params = {'species': 'Homo species'}
     headers = {'Accept': 'application/json'}
-    res = requests.get(react_url, headers=headers)
+    res = requests.get(react_url, headers=headers, params=params)
     results = res.json()
     if not res.status_code == 200:
         return None
@@ -82,4 +168,4 @@ def get_genes_contained_in_pathway(reactome_id):
     genes = [entity['identifier'] for result in results
              for entity in result['refEntities']
              if entity.get('schemaClass') == 'ReferenceGeneProduct']
-    return genes
+    return list(set(genes))
