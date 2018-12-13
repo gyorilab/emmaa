@@ -7,6 +7,7 @@ from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
+from indra.assemblers.pysb import PysbAssembler
 from emmaa.priors import SearchTerm
 from emmaa.util import make_date_str, find_latest_s3_file
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -132,6 +133,7 @@ class EmmaaModel(object):
         ndex_client.update_network(cx_str, self.ndex_network)
 
     def save_to_s3(self):
+        """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}.pkl'
         client = boto3.client('s3')
@@ -139,12 +141,25 @@ class EmmaaModel(object):
                           Key=fname)
 
     def load_from_s3(self):
+        """Load the latest model state from S3."""
         key = find_latest_s3_file('emmaa', f'models/{self.name}/model_')
         client = boto3.client('s3')
         obj = client.get_object(Bucket='emmaa', Key=key)
         stmts = pickle.loads(obj['Body'].read())
         self.stmts = stmts
 
+    def get_entities(self):
+        """Return a list of Agent objects that the model contains."""
+        istmts = self.get_indra_stmts()
+        agents = []
+        for stmt in istmts:
+            agents += [a for a in stmt.agent_list() is a is not None]
+
+    def assemble_pysb(self):
+        stmts = self.get_indra_stmts()
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pysb_model = pa.make_model()
 
 def load_model(name, config_file):
     with open(config_file, 'r') as fh:
