@@ -1,5 +1,6 @@
 import logging
 import requests
+from random import sample
 from functools import lru_cache
 from indra.databases.uniprot_client import get_gene_name
 from indra.databases.hgnc_client import get_hgnc_id, get_uniprot_id
@@ -39,19 +40,23 @@ def make_prior_from_genes(gene_list):
     all_reactome_ids.update(reactome_ids)
 
     all_pathways = set([])
+    test_pathways = []
     for reactome_id in reactome_ids:
+        if reactome_id.split('-')[1] != 'HSA':
+            continue
         pathways = get_pathways_containing_gene(reactome_id)
         if pathways is not None:
             all_pathways.update(pathways)
+            test_pathways.extend(pathways)
 
     all_genes = set([])
-    for pathway in all_pathways:
+    for pathway in sample(all_pathways, len(all_pathways)):
         genes = get_genes_contained_in_pathway(pathway)
         if genes is not None:
             all_genes.update(genes)
 
     result = []
-    for uniprot_id in genes:
+    for uniprot_id in all_genes:
         hgnc_name = get_gene_name(uniprot_id)
         if hgnc_name is None:
             logger.warning('Could not get HGNC name for UniProt ID'
@@ -132,6 +137,7 @@ def get_pathways_containing_gene(reactome_id):
     headers = {'Accept': 'application/json'}
     res = requests.get(react_url, headers=headers, params=params)
     if not res.status_code == 200:
+        logger.warning(f'Request failed for reactome_id {reactome_id}')
         return None
     results = res.json()
     if not results:
@@ -169,3 +175,9 @@ def get_genes_contained_in_pathway(reactome_id):
              for entity in result['refEntities']
              if entity.get('schemaClass') == 'ReferenceGeneProduct']
     return list(set(genes))
+
+
+if __name__ == '__main__':
+    example_genes = ['KRAS', 'TP53', 'SMAD4', 'TTN', 'CDKN2A']
+    prior = make_prior_from_genes(example_genes)
+    print(len(prior))
