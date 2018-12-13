@@ -19,7 +19,8 @@ setup(name='emmaa',
       author_email='benjamin_gyori@hms.harvard.edu',
       classifiers=[
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
         ],
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'pyyaml']
