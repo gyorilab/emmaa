@@ -23,7 +23,7 @@ def make_prior_from_genes(gene_list):
         list of search terms corresponding to all genes found in any reactome
         pathway containing one of the genes in the input gene list
     """
-    reactome_ids = []
+    all_reactome_ids = set([])
     for gene_name in gene_list:
         hgnc_id = get_hgnc_id(gene_name)
         uniprot_id = get_uniprot_id(hgnc_id)
@@ -31,12 +31,12 @@ def make_prior_from_genes(gene_list):
             logger.warning('Could not get Uniprot ID for HGNC symbol'
                            f' {gene_name}')
             continue
-        reactome_id = rx_id_from_up_id(uniprot_id)
-        if not reactome_id:
+        reactome_ids = rx_id_from_up_id(uniprot_id)
+        if not reactome_ids:
             logger.warning('Could not get Reactome ID for HGNC symbol'
                            f' {gene_name}')
             continue
-    reactome_ids.append(reactome_id)
+    all_reactome_ids.update(reactome_ids)
 
     all_pathways = set([])
     for reactome_id in reactome_ids:
