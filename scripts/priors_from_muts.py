@@ -4,9 +4,10 @@ import pickle
 import datetime
 from emmaa.model import EmmaaModel
 from emmaa.statements import EmmaaStatement
-from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.cancer_prior import TcgaCancerPrior
-
+from emmaa.priors.prior_stmts import get_stmts_for_gene_list
+from emmaa.priors.reactome_prior import find_drugs_for_genes
+from emmaa.priors.reactome_prior import make_prior_from_genes
 
 '''
 def get_terms(ctype):
@@ -19,8 +20,8 @@ def get_terms(ctype):
 '''
 
 
-def get_top_genes(ctype)
-    mut_file = f'mutations_{ctype}.json'
+def get_top_genes(ctype):
+    mut_file = f'../models/{ctype}/prior/mutations.json'
     with open(mut_file, 'r') as fh:
         mut_counts = json.load(fh)
     norm_mut_counts = {g: TcgaCancerPrior.normalize_mutation_count(g, n) for
@@ -32,7 +33,7 @@ def get_top_genes(ctype)
 
 
 def load_config(ctype):
-    fname = f'models/{ctype}/config.yaml'
+    fname = f'../models/{ctype}/config.yaml'
     with open(fname, 'r') as fh:
         config = yaml.load(fh)
     # TODO: make the search term entries here SearchTerm objects
@@ -40,20 +41,20 @@ def load_config(ctype):
 
 
 def save_config(ctype, terms):
-    fname = f'models/{ctype}/config.yaml'
+    fname = f'../models/{ctype}/config.yaml'
     config = load_config(ctype)
     config['search_terms'] = [term.to_json() for term in terms]
     with open(fname, 'w') as fh:
         yaml.dump(config, fh, default_flow_style=False)
 
 
-def save_prior(stmts):
-    with open(f'models/{ctype}/prior_stmts.pkl', 'wb') as fh:
+def save_prior(ctype, stmts):
+    with open(f'../models/{ctype}/prior_stmts.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
 
 
 def upload_prior(ctype, config):
-    fname = f'models/{ctype}/prior_stmts.pkl'
+    fname = f'../models/{ctype}/prior_stmts.pkl'
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
     estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])
@@ -67,10 +68,12 @@ if __name__ == '__main__':
     cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm')
 
     for ctype in cancer_types:
-        cancer_terms, drug_terms = get_terms(ctype)
+        top_genes = get_top_genes(ctype)
+        cancer_terms = make_prior_from_genes(top_genes)
+        drug_terms = find_drugs_for_genes(cancer_terms)
         gene_names = [g.name for g in cancer_terms]
         drug_names = [d.name for d in drug_terms]
         terms = cancer_terms + drug_terms
         save_config(ctype, terms)
-        #prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)
-        #save_prior(prior_stmts)
+        prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)       
+        save_prior(ctype, prior_stmts)
