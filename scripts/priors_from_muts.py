@@ -1,4 +1,5 @@
 import yaml
+import json
 import pickle
 import datetime
 from emmaa.model import EmmaaModel
@@ -7,6 +8,7 @@ from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.cancer_prior import TcgaCancerPrior
 
 
+'''
 def get_terms(ctype):
     tcp = TcgaCancerPrior(ctype, 'stmts_by_pair_type.csv',
                           mutation_cache=f'mutations_{ctype}.json')
@@ -14,6 +16,19 @@ def get_terms(ctype):
     cancer_terms = tcp.search_terms_from_nodes(nodes)
     drug_terms = tcp.find_drugs_for_genes(nodes)
     return cancer_terms, drug_terms
+'''
+
+
+def get_top_genes(ctype)
+    mut_file = f'mutations_{ctype}.json'
+    with open(mut_file, 'r') as fh:
+        mut_counts = json.load(fh)
+    norm_mut_counts = {g: TcgaCancerPrior.normalize_mutation_count(g, n) for
+                       g, n in mut_counts.items()}
+    sorted_counts = sorted(norm_mut_counts.items(), key=lambda x: x[1],
+                           reverse=True)
+    top_genes = [s[0] for s in sorted_counts[:5]]
+    return top_genes
 
 
 def load_config(ctype):

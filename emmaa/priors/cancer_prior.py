@@ -81,21 +81,27 @@ class TcgaCancerPrior(object):
         # Normalize mutations by length
         self.norm_mutations = {}
         for gene_name, num_muts in self.mutations.items():
-            hgnc_id = get_hgnc_id(gene_name)
-            up_id = get_uniprot_id(hgnc_id)
-            if not up_id:
-                logger.warning("Could not get Uniprot ID for HGNC symbol %s "
-                               "with HGNC ID %s" % (gene_name, hgnc_id))
-                length = 500 # a guess at a default
-            else:
-                length = uniprot_client.get_length(up_id)
-                if not length:
-                    logger.warning("Could not get length for Uniprot "
-                                   "ID %s" % up_id)
-                    length = 500 # a guess at a default
-            self.norm_mutations[gene_name] = num_muts / float(length)
+            self.norm_mutations[gene_name] = \
+                self.normalize_mutation_count(gene_name, num_muts)
 
         return self.mutations, self.norm_mutations
+
+    @staticmethod
+    def normalize_mutation_count(gene_name, num_muts):
+        hgnc_id = get_hgnc_id(gene_name)
+        up_id = get_uniprot_id(hgnc_id)
+        if not up_id:
+            logger.warning("Could not get Uniprot ID for HGNC symbol %s "
+                           "with HGNC ID %s" % (gene_name, hgnc_id))
+            length = 500 # a guess at a default
+        else:
+            length = uniprot_client.get_length(up_id)
+            if not length:
+                logger.warning("Could not get length for Uniprot "
+                               "ID %s" % up_id)
+                length = 500 # a guess at a default
+        norm_mutations = num_muts / float(length)
+        return norm_mutations
 
     def load_sif_prior(self, fname, e50=20):
         """Return a Graph based on a SIF file describing a prior.
