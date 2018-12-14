@@ -34,14 +34,15 @@ def make_prior_from_genes(gene_list):
             continue
         reactome_ids = rx_id_from_up_id(uniprot_id)
         if not reactome_ids:
-            logger.warning('Could not get Reactome ID for HGNC symbol'
+            logger.warning('Could not get Reactome ID for Uniprot ID'
+                           f' {unprot_id} with corresonding HGNC symbol'
                            f' {gene_name}')
             continue
     all_reactome_ids.update(reactome_ids)
 
     all_pathways = set([])
     for reactome_id in reactome_ids:
-        if not re.match('^R-HSA-[0-9]+', reactome_id):
+        if not re.match('^R-HSA-[0-9]', reactome_id):
             # skip non-human genes
             continue
         additional_pathways = get_pathways_containing_gene(reactome_id)
@@ -63,7 +64,9 @@ def make_prior_from_genes(gene_list):
             continue
         hgnc_id = get_hgnc_id(hgnc_name)
         if not hgnc_id:
-            logger.warning(f'{hgnc_name} is not a valid HGNC name')
+            logger.warning('Could not find HGNC ID for HGNC symbol'
+                           f' {hgnc_name} with corresonding Uniprot ID'
+                           f' {uniprot_id}')
             continue
         term = SearchTerm(type='gene', name=hgnc_name,
                           search_term=f'"{hgnc_name}"',
