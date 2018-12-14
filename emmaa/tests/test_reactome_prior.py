@@ -1,5 +1,6 @@
 from emmaa.priors import SearchTerm
 from emmaa.priors.reactome_prior import rx_id_from_up_id
+from emmaa.priors.reactome_prior import find_drugs_for_genes
 from emmaa.priors.reactome_prior import make_prior_from_genes
 from emmaa.priors.reactome_prior import get_pathways_containing_gene
 from emmaa.priors.reactome_prior import get_genes_contained_in_pathway
@@ -54,6 +55,31 @@ def test_make_prior_from_genes():
     # make sure the prior is a list of SearchTerms
     assert all(isinstance(term, SearchTerm) for term in prior)
 
+    # if we get fewer than 100 genes for KRAS something is very wrong
+    assert len(prior) > 100
+
     # test that the prior contains some of the usual suspects
-    gene_names = set([term.name for term in prior])
+    gene_names = set(term.name for term in prior)
     assert set(['KRAS', 'RAF1', 'MAPK1', 'BRAF']) <= set(gene_names)
+
+
+def test_find_drugs_for_genes():
+    # SearchTerm for SRC
+    SRC = SearchTerm(type='gene', name='SRC', search_term='"SRC"',
+                     db_refs={'HGNC': '11283'})
+    # drugs targeting KRAS
+    drug_terms = find_drugs_for_genes([SRC])
+
+    # make sure there are results
+    assert drug_terms
+
+    # make sure the result is a list of search terms
+    assert all(isinstance(term, SearchTerm) for term in drug_terms)
+
+    # something is wrong if there are fewer than 10 drugs
+    assert len(drug_terms) > 10
+
+    # test that some example drugs are included
+    drug_names = set(term.name for term in drug_terms)
+    example_drugs = set(['Dasatinib', 'Tozasertib', 'Ponatinib'])
+    assert example_drugs <= drug_names

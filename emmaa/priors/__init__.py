@@ -45,3 +45,28 @@ class SearchTerm(object):
         return self.type == other.type and self.name == other.name and \
             self.db_refs == other.db_refs and \
             self.search_term == other.search_term
+
+
+def get_drugs_for_gene(stmts, hgnc_id):
+    """Get list of drugs that target a gene
+
+    Parameters
+    ----------
+    stmts: list of :py:class:`indra.statements.Statement`
+        list of indra statements with a drug as subject
+    hgnc_id: str
+        HGNC id for a gene
+
+    Returns
+    -------
+    drugs_for_gene: list of :py:class:`emmaa.priors.SearchTerm`
+        list of search terms for drugs targeting the input gene
+    """
+    drugs_for_gene = []
+    for stmt in stmts:
+        if stmt.obj.db_refs.get('HGNC') == hgnc_id:
+            term = SearchTerm(type='drug', name=stmt.subj.name,
+                              db_refs=stmt.subj.db_refs,
+                              search_term=f'"{stmt.subj.name}"')
+            drugs_for_gene.append(term)
+    return drugs_for_gene

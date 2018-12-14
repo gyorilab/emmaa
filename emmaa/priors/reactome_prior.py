@@ -2,10 +2,12 @@ import re
 import logging
 import requests
 from functools import lru_cache
+
+from indra.sources import tas
 from indra.databases.uniprot_client import get_gene_name
 from indra.databases.hgnc_client import get_hgnc_id, get_uniprot_id
 
-from emmaa.priors import SearchTerm
+from emmaa.priors import get_drugs_for_gene, SearchTerm
 
 logger = logging.getLogger('reactome_prior')
 
@@ -35,7 +37,7 @@ def make_prior_from_genes(gene_list):
         reactome_ids = rx_id_from_up_id(uniprot_id)
         if not reactome_ids:
             logger.warning('Could not get Reactome ID for Uniprot ID'
-                           f' {unprot_id} with corresonding HGNC symbol'
+                           f' {uniprot_id} with corresonding HGNC symbol'
                            f' {gene_name}')
             continue
     all_reactome_ids.update(reactome_ids)
@@ -55,7 +57,7 @@ def make_prior_from_genes(gene_list):
         if additional_genes is not None:
             all_genes.update(additional_genes)
 
-    result = []
+    gene_terms = []
     for uniprot_id in all_genes:
         hgnc_name = get_gene_name(uniprot_id)
         if hgnc_name is None:
@@ -72,8 +74,35 @@ def make_prior_from_genes(gene_list):
                           search_term=f'"{hgnc_name}"',
                           db_refs={'HGNC': hgnc_id,
                                    'UP': uniprot_id})
-        result.append(term)
-    return result
+        gene_terms.append(term)
+    return sorted(gene_terms, key=lambda x: x.name)
+
+
+def find_drugs_for_genes(search_terms):
+    """Return list of drugs targeting at least one gene from a list of genes
+
+    Parameters
+    ----------
+    search_terms: list of :py:class:`emmaa.priors.SearchTerm`
+        list of search terms for genes
+
+    Returns
+    -------
+    drug_terms: list of :py:class:`emmaa.priors.SearchTerm`
+        list of search terms of drugs targeting at least one of the input genes
+    """
+    tas_statements = tas.process_csv().statements
+    drug_terms = []
+    already_added = set()
+    for search_term in search_terms:
+        if search_term.type == 'gene':
+            hgnc_id = search_term.db_refs['HGNC']
+            drugs = get_drugs_for_gene(tas_statements, hgnc_id)
+            for drug in drugs:
+                if drug.name not in already_added:
+                    drug_terms.append(drug)
+                    already_added.add(drug.name)
+    return sorted(drug_terms, key=lambda x: x.name)
 
 
 @lru_cache(10000)
