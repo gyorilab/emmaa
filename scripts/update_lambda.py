@@ -1,4 +1,5 @@
 import boto3
+from zipfile import ZipFile
 
 
 def upload_function():
@@ -8,8 +9,11 @@ def upload_function():
     contains the lambda script, which should be named: `lambda_script.py`.
     """
     s3 = boto3.client('s3')
-    with open('lambda_script.py', 'rb') as f:
-        s3.put_object(f, Bucket='emmaa', Key='lambda_script.py')
+    with ZipFile('lambda.zip', 'w') as zf:
+        zf.write('lambda_script.py')
+
+    with open('lambda.zip', 'rb') as zf:
+        s3.put_object(Body=zf, Bucket='emmaa', Key='lambda.zip')
     return
 
 
