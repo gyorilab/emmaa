@@ -13,12 +13,75 @@
 
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+  <!-- AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
+  <script>
+    // cognito arameters
+    var userPoolID = 'us-east-1_5sb1590b6'; // User pool ID; User info lives here
+    // var awsCognitoLogin = 'cognito-idp.us-east-1.amazonaws.com/' + userPoolID;
+    var identitypoolid = 'us-east-1:3df28551-37da-4e74-a250-cf4c23ba837a'; // IdentityPool Id
+    AWS.config.region = 'us-east-1' // Set region
+    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+        IdentityPoolId: 'us-east-1:3df28551-37da-4e74-a250-cf4c23ba837a',
+    });
+
+    // Cognito User Parameters
+    var userAuthenticationData = {
+        Username : 'kkaris',
+        Password : 'S%ugha77Sfn29U^uTkBR36YgVa87!x98'
+    };
+
+  function responseResolve(err, data) {
+    if (err) {
+      console.log('Error occured while trying to initiate auth:')
+      console.log(err, err.stack)
+    } else {
+      console.log('Auth data:')
+      console.log(data)
+      notifyUser("Successfully signed in!")
+    }
+  }
+
+
+    // Testing signing in
+    function signIn() {
+      console.log('Sign in button')
+      cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
+      cogIdServiceProvider.initiateAuth({
+        AuthFlow: 'USER_PASSWORD_AUTH', // What type of authentication to use
+        ClientId: '3ej6b95mbsu28e5nkcb6oa8fnp', // AppClientId for UserPool??
+        
+        AuthParameters: {
+          'USERNAME': 'kkaris',
+          'PASSWORD': 'S%ugha77Sfn29U^uTkBR36YgVa87!x98'
+          /* '<StringType>': ... */
+        }
+      }, function(err, data) {
+        responseResolve(err, data)
+      });
+    }
+
+    // CHANGE TEXT
+    function notifyUser(outputText) {
+      let outputDiv = document.getElementById('sign-in-check');
+      outputDiv.textContent = outputText;
+    }
+  </script>
 </head>
 
 <body>
   This is the EMMAA dashboard landing page
+  <h5>Check if you're signed in</h5>
   <div class="container">
-    <div class="sign-in-check">Not signed in</div>
+    <div id="sign-in-check">Not signed in</div>
+  </div>
+
+  <h5>Sign in here</h5>
+  <div class="container">
+    <div class="button">
+      <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in...</button>
+    </div>
   </div>
 </body>
 </html>
