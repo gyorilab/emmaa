@@ -15,10 +15,10 @@ from io import StringIO, BytesIO
 from datetime import datetime
 
 JOB_DEF = 'emmaa_jobdef'
-QUEUE_NAME = 'run_db_lite_queue'
+QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
-test_python = """
+TEST_PYTHON = """
 import boto3
 from datetime import datetime
 
@@ -32,6 +32,7 @@ dt_str = datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
 f = BytesIO(data_str.encode('utf-8'))
 s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
 """.replace('\n', '; ')
+
 
 def lambda_handler(event, context):
     """Initial batch jobs for any changed models or tests.
@@ -74,8 +75,8 @@ def lambda_handler(event, context):
     """
     s3 = boto3.client('s3')
     batch = boto3.client('batch')
-    
-    core_command = f'python -c "{test_python}"'
+
+    core_command = f'python -c "{TEST_PYTHON}"'
     print(core_command)
 
     records = event['Records']
@@ -88,7 +89,7 @@ def lambda_handler(event, context):
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
                         core_command.format(model_name=model_name),
-                        '--project', PROJECT, '--purpose', PURPOSE]
+                        '--project', PROJECT, '--purpose', PURPOSE],
             'environment': [
                 {'name': 'AWS_ACCESS_KEY_ID',
                  'value': 'AKIAI6FXZWEEIU7WLUCQ'},
@@ -97,7 +98,7 @@ def lambda_handler(event, context):
                 ]
             }
         ret = batch.submit_job(jobName=f'{model_name}_{datetime.utcnow()}',
-                               jobQueue=JOB_QUEUE, jobDefinition=JOB_DEF,
+                               jobQueue=QUEUE, jobDefinition=JOB_DEF,
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
 
