@@ -5,6 +5,6 @@ ARG BUILD_BRANCH
 ENV DIRPATH /sw
 WORKDIR $DIRPATH
 
-# Install INDRA and dependencies
+# Get EMMAA repo.
 RUN git clone --recursive https://github.com/indralab/emmaa.git
 
