@@ -49,7 +49,7 @@ def save_config(ctype, terms):
 
 
 def save_prior(ctype, stmts):
-    with open(f'../models/{ctype}/prior_stmts.pkl', 'wb') as fh:
+    with open(f'../models/{ctype}/reactome_prior.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
 
 
