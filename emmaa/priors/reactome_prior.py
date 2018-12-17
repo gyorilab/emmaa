@@ -40,10 +40,10 @@ def make_prior_from_genes(gene_list):
                            f' {uniprot_id} with corresonding HGNC symbol'
                            f' {gene_name}')
             continue
-    all_reactome_ids.update(reactome_ids)
+        all_reactome_ids.update(reactome_ids)
 
     all_pathways = set([])
-    for reactome_id in reactome_ids:
+    for reactome_id in all_reactome_ids:
         if not re.match('^R-HSA-[0-9]', reactome_id):
             # skip non-human genes
             continue

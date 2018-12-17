@@ -20,7 +20,7 @@ def get_terms(ctype):
 '''
 
 
-def get_top_genes(ctype):
+def get_top_genes(ctype, k):
     mut_file = f'../models/{ctype}/prior/mutations.json'
     with open(mut_file, 'r') as fh:
         mut_counts = json.load(fh)
@@ -28,7 +28,7 @@ def get_top_genes(ctype):
                        g, n in mut_counts.items()}
     sorted_counts = sorted(norm_mut_counts.items(), key=lambda x: x[1],
                            reverse=True)
-    top_genes = [s[0] for s in sorted_counts[:5]]
+    top_genes = [s[0] for s in sorted_counts[:k]]
     return top_genes
 
 
@@ -65,15 +65,14 @@ def upload_prior(ctype, config):
 
 
 if __name__ == '__main__':
-    cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm')
-
+    cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm',)
     for ctype in cancer_types:
-        top_genes = get_top_genes(ctype)
+        top_genes = get_top_genes(ctype, 5)
         cancer_terms = make_prior_from_genes(top_genes)
         drug_terms = find_drugs_for_genes(cancer_terms)
         gene_names = [g.name for g in cancer_terms]
         drug_names = [d.name for d in drug_terms]
         terms = cancer_terms + drug_terms
         save_config(ctype, terms)
-        prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)       
+        prior_stmts = get_stmts_for_gene_list(gene_names, drug_names)
         save_prior(ctype, prior_stmts)
