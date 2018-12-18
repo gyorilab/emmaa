@@ -30,7 +30,7 @@ def find_latest_s3_file(bucket, prefix):
         fname_with_extension = os.path.basename(key)
         fname = os.path.splitext(fname_with_extension)[0]
         date_str = fname.split('_')[1]
-        return datetime.datetime.strptime(date_str, '%Y-%m-%d-%H-%M-%S')
+        return datetime.strptime(date_str, '%Y-%m-%d-%H-%M-%S')
     client = boto3.client('s3')
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
     files = resp.get('Contents', [])
@@ -46,8 +46,3 @@ def to_emmaa_stmts(stmt_list, date, search_terms):
         es = EmmaaStatement(indra_stmt, date, search_terms)
         emmaa_stmts.append(es)
     return emmaa_stmts
-
-
-def make_now_str():
-    """This function defines the standard datetime stamp."""
-    return datetime.utcnow().strftime('%Y-%m-%h-%H-%M-%S')
