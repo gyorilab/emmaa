@@ -9,9 +9,7 @@ $ python update_lambda.py
 in this directory.
 """
 
-import json
 import boto3
-from io import StringIO, BytesIO
 from datetime import datetime
 
 JOB_DEF = 'emmaa_jobdef'

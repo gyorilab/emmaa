@@ -1,5 +1,8 @@
 import boto3
+from os import path
 from zipfile import ZipFile
+
+HERE = path.dirname(path.abspath(__file__))
 
 
 def upload_function():
@@ -9,10 +12,10 @@ def upload_function():
     contains the lambda script, which should be named: `lambda_script.py`.
     """
     lamb = boto3.client('lambda')
-    with ZipFile('lambda.zip', 'w') as zf:
-        zf.write('lambda_script.py')
+    with ZipFile(path.join(HERE, 'lambda.zip'), 'w') as zf:
+        zf.write(path.join(HERE, 'script.py'))
 
-    with open('lambda.zip', 'rb') as zf:
+    with open(path.join(HERE, 'lambda.zip'), 'rb') as zf:
         lamb.update_function_code(ZipFile=zf.read(),
                                   FunctionName='emmaa-analysis')
     return

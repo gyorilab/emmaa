@@ -1,7 +1,8 @@
 import os
 import boto3
-import datetime
+from datetime import datetime
 from .statements import EmmaaStatement
+
 
 def make_date_str(date=None):
     """Return a date string in a standardized format.
@@ -19,7 +20,7 @@ def make_date_str(date=None):
         The datetime string in a standardized format.
     """
     if not date:
-        date = datetime.datetime.utcnow()
+        date = datetime.utcnow()
     return date.strftime('%Y-%m-%d-%H-%M-%S')
 
 
@@ -45,3 +46,8 @@ def to_emmaa_stmts(stmt_list, date, search_terms):
         es = EmmaaStatement(indra_stmt, date, search_terms)
         emmaa_stmts.append(es)
     return emmaa_stmts
+
+
+def make_now_str():
+    """This function defines the standard datetime stamp."""
+    return datetime.utcnow().strftime('%Y-%m-%h-%H-%M-%S')

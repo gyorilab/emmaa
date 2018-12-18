@@ -1,17 +1,13 @@
 import boto3
 import pickle
-from datetime import datetime
 
-from lambda_script import lambda_handler
-
-
-def now_str():
-    return datetime.utcnow().strftime('%Y-%m-%h-%H-%M-%S')
+from emmaa.aws_lambda.script import lambda_handler
+from emmaa.util import make_now_str
 
 
 def test_handler():
     """Test the lambda handler locally."""
-    dts = now_str()
+    dts = make_now_str()
     event = {'Records': [
         {'s3': {'object': {'key': f'models/test/test_model_{dts}.pkl'}}}
         ]}
@@ -33,7 +29,7 @@ def test_s3_response():
     batch = boto3.client('batch')
 
     # Define some fairly random parameters.
-    key = f'models/test/model_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.pkl'
+    key = f'models/test/model_{make_now_str()}.pkl'
     data = {'test_message': 'Hello world!'}
 
     # This should trigger the lambda to start a batch job.
