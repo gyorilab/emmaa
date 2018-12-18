@@ -12,20 +12,18 @@ in this directory.
 import boto3
 from datetime import datetime
 
+from emmaa.util import make_now_str
+
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
-TEST_PYTHON = """
-import boto3
+TEST_PYTHON = """import boto3
 from datetime import datetime
-
 s3 = boto3.client('s3')
-
 data = [{"name": "test", "passed": True}]
 data_str = json.dumps(data)
 print(data_str)
-
 dt_str = datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
 f = BytesIO(data_str.encode('utf-8'))
 s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
@@ -71,7 +69,6 @@ def lambda_handler(event, context):
         A dict containing 'statusCode', with a valid HTTP status code, and any
         other data to be returned to Lambda.
     """
-    s3 = boto3.client('s3')
     batch = boto3.client('batch')
 
     core_command = f'python -c "{TEST_PYTHON}"'
@@ -86,7 +83,7 @@ def lambda_handler(event, context):
         model_name = model_key.split('/')[1]
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
-                        core_command.format(model_name=model_name),
+                        core_command.replace('{model_name}', model_name),
                         '--project', PROJECT, '--purpose', PURPOSE],
             'environment': [
                 {'name': 'AWS_ACCESS_KEY_ID',
@@ -95,7 +92,7 @@ def lambda_handler(event, context):
                  'value': 'wm9IYqUSP/us4rwu/D/Fst9x/8akE8U2No4AiNmA'}
                 ]
             }
-        ret = batch.submit_job(jobName=f'{model_name}_{datetime.utcnow()}',
+        ret = batch.submit_job(jobName=f'{model_name}_{make_now_str()}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
