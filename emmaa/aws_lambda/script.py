@@ -85,13 +85,7 @@ def lambda_handler(event, context):
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
                         core_command.replace('{model_name}', model_name),
-                        '--project', PROJECT, '--purpose', PURPOSE],
-            'environment': [
-                {'name': 'AWS_ACCESS_KEY_ID',
-                 'value': 'AKIAI6FXZWEEIU7WLUCQ'},
-                {'name': 'AWS_SECRET_ACCESS_KEY',
-                 'value': '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'}
-                ]
+                        '--project', PROJECT, '--purpose', PURPOSE]
             }
         ret = batch.submit_job(jobName=f'{model_name}_{make_now_str()}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
