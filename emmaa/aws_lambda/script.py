@@ -10,7 +10,6 @@ in this directory.
 """
 
 import boto3
-from datetime import datetime
 
 from emmaa.util import make_now_str
 
@@ -19,12 +18,14 @@ QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
 TEST_PYTHON = """import boto3
+import json
+from io import BytesIO
 from datetime import datetime
 s3 = boto3.client('s3')
-data = [{"name": "test", "passed": True}]
+data = [{'name': 'test', 'passed': True}]
 data_str = json.dumps(data)
 print(data_str)
-dt_str = datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
+dt_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 f = BytesIO(data_str.encode('utf-8'))
 s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
 """.replace('\n', '; ')
@@ -97,5 +98,4 @@ def lambda_handler(event, context):
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
 
-    return {'statusCode': 200, 'body': f"Submitted {job_id}"}
- 
+    return {'statusCode': 200, 'result': 'SUCCESS', 'job_id': job_id}
