@@ -25,12 +25,13 @@
     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
         IdentityPoolId: 'us-east-1:3df28551-37da-4e74-a250-cf4c23ba837a',
     });
+    cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
     // Cognito User Parameters
-    var userAuthenticationData = {
-        Username : 'kkaris',
-        Password : 'S%ugha77Sfn29U^uTkBR36YgVa87!x98'
-    };
+    // var userAuthenticationData = {
+    //     Username : 'kkaris',
+    //     Password : 'redacted'
+    // };
 
   function responseResolve(err, data) {
     if (err) {
@@ -39,7 +40,8 @@
     } else {
       console.log('Auth data:')
       console.log(data)
-      notifyUser("Successfully signed in!")
+      accToken = data.AuthenticationResult.AccessToken;
+      verifyUser(accToken)
     }
   }
 
@@ -47,19 +49,37 @@
     // Testing signing in
     function signIn() {
       console.log('Sign in button')
-      cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
       cogIdServiceProvider.initiateAuth({
         AuthFlow: 'USER_PASSWORD_AUTH', // What type of authentication to use
         ClientId: '3ej6b95mbsu28e5nkcb6oa8fnp', // AppClientId for UserPool??
         
         AuthParameters: {
-          'USERNAME': 'kkaris',
-          'PASSWORD': 'redacted'
+          'USERNAME': document.getElementById('uname_input').value,
+          'PASSWORD': document.getElementById('pwd_input').value
           /* '<StringType>': ... */
         }
       }, function(err, data) {
         responseResolve(err, data)
       });
+    }
+
+    // CHECK SIGN IN
+    // this function should check if there is a session active and get the user pool tokens for that session
+    function checkSignIn() {
+      return;
+    }
+
+    // VERIFY USER
+    function verifyUser(AccessToken) {
+      cogIdServiceProvider.getUser({'AccessToken': AccessToken}, function(err, data) {
+        if (err) {
+          notifyUser('Could not verify user');
+          return;
+        } else {
+          username = data.Username;
+          notifyUser(username + ' is signed in');
+        }
+      })
     }
 
     // CHANGE TEXT
@@ -81,6 +101,19 @@
   <div class="container">
     <div class="button">
       <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in...</button>
+    </div>
+  </div>
+  <div class="container">
+    <form name="username_form">
+      <input type="text" name="username" id="uname_input" placeholder="Enter username here" style="width: 250px;">
+      <input type="password" name="password" id="pwd_input" placeholder="Enter password here" style="width: 250px;">
+    </form>
+  </div>
+
+  <h5>Check if you're signed in here</h5>
+  <div class="container">
+    <div class="button">
+      <button class="btn btn-default" id="checkSignIn" onClick="signIn()">Sign in...</button>
     </div>
   </div>
 
