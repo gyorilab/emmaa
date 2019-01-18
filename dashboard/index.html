@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>EMMMAA dashboard</title>
+  <title>EMMAA dashboard</title>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
   <!-- Latest compiled and minified CSS -->
@@ -17,7 +17,12 @@
   <!-- AWS SDK -->
   <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
   <script>
-    // cognito arameters
+    // Check if user signed in immediately after page load
+    $(document).ready(function(){
+      checkSignIn()
+    })
+
+    // cognito parameters
     var userPoolID = 'us-east-1_5sb1590b6'; // User pool ID; User info lives here
     // var awsCognitoLogin = 'cognito-idp.us-east-1.amazonaws.com/' + userPoolID;
     var identitypoolid = 'us-east-1:3df28551-37da-4e74-a250-cf4c23ba837a'; // IdentityPool Id
@@ -27,31 +32,118 @@
     });
     cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
+    // Constants and fixed IDs
+    var STATE_VALUE = 'EMMAA_TEST' // Should in production be a random string stored in a cookie for security
+    var APP_CLIENT_ID = '3ej6b95mbsu28e5nkcb6oa8fnp';
+    var AUTH_ENDPOINT_BASE_URL = 'https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?';
+    // PATTERN should match any redirect uri: http?://.*code=([a-z0-9\-]+)\&state=([a-zA-Z0-9\-]+)
+    // var AUTH_CODE_REDIRECT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\?code=([a-z0-9\-]+)\&state/;
+    var AUTH_CODE_REDIRECT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\?code=([a-z0-9\-]+)\&state=([A-Z\_]+)/;
+    // Matches URL of type (regex might need escaping):
+    // https://YOUR_APP/redirect_uri#
+    // id_token=[a-zA-Z0-9. _-]
+    // &access_token=ACCESS_TOKEN
+    // &token_type=bearer
+    // &expires_in=3600
+    // &state=STATE
+    var TOKEN_FROM_AUTH_ENDPOINT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\#id_token=([a-zA-Z0-9. _-]+)\&access_token=([a-zA-Z0-9. _-]+)\&expires_in=([0-9]+)\&token_type=([a-zA-Z]+)\&state=([a-zA-Z0-9-_]+)/;
+
     // Cognito User Parameters
     // var userAuthenticationData = {
     //     Username : 'kkaris',
     //     Password : 'redacted'
     // };
 
-  function responseResolve(err, data) {
-    if (err) {
-      console.log('Error occured while trying to initiate auth:')
-      console.log(err, err.stack)
-    } else {
-      console.log('Auth data:')
-      console.log(data)
-      accToken = data.AuthenticationResult.AccessToken;
-      verifyUser(accToken)
+    function getJsonFromUrl(url) {
+      // No url provided
+      if (!url) return;
+      var query = {};
+      // Check if (authorization) code flow or token (implicit) flow
+      if (url.split('#')[1]) {
+        query = url.split('#')[1];
+      } else if (url.split('?')[1]) {
+        query = url.split('?')[1];
+      } else return;
+      
+      var result = {};
+      query.split("&").forEach(function(part) {
+        var item = part.split("=");
+        result[item[0]] = decodeURIComponent(item[1]);
+      });
+      return result;
     }
-  }
 
+    function responseResolve(err, data) {
+      if (err) {
+        console.log('Error occured while trying to initiate auth:')
+        console.log(err, err.stack)
+      } else {
+        console.log('Auth data:')
+        console.log(data)
+        tokenData = data.AuthenticationResult;
+        verifyUser(tokenData.AccessToken);
+        return tokenData;
+      }
+    }
+
+    function getTokenFromAuthEndpoint() {
+      console.log('function getTokenFromAuthEndpoint()')
+      base_url = AUTH_ENDPOINT_BASE_URL;
+      resp_type = 'response_type=token';
+      client_id='client_id=' + APP_CLIENT_ID;
+      redirect = 'redirect_uri=http://localhost:5000/index.html';
+      state = 'state=' + STATE_VALUE;
+      scope = 'scope=openid+profile';
+      let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
+      console.log('get_url=' + get_url)
+      window.location.replace(get_url)
+    }
+
+    // GET for oauth2/authorize - gives the authorization code
+    function getAuthCode() {
+      console.log('function getAuthCode()')
+      // For docs, see:
+      // https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
+      // sign in through user pool portal with authorization code returned, example:
+      // https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?response_type=code&client_id=3ej6b95mbsu28e5nkcb6oa8fnp&redirect_uri=http://localhost:5000/index.html&state=EMMAA_TEST&scope=openid+profile
+      base_url = AUTH_ENDPOINT_BASE_URL;
+      resp_type = 'response_type=code';
+      client_id='client_id=' + APP_CLIENT_ID;
+      redirect = 'redirect_uri=http://localhost:5000/index.html';
+      state = 'state=' + STATE_VALUE;
+      id_provider = 'identity_provider=COGNITO';
+      scope = 'scope=openid+profile';
+      let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
+      console.log('get_url=' + get_url)
+      window.location.replace(get_url); // HTTP redirect; user will be prompted to sign in at portal
+    }
+
+    // GET for exchanging authorization code with tokens; For docs, see:
+    // https://docs.aws.amazon.com/cognito/latest/developerguide/token-endpoint.html
+    function getTokensFromAuthCode(authCode) {
+      var post_url = "https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/token&Content-Type='application/x-www-form-urlencoded'&Authorization=Basic " + window.btoa(authCode + ":");
+      // var post_url = "https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/token&Content-Type='application/x-www-form-urlencoded'";
+
+      var params = {
+        'grant_type': 'authorization_code',
+        'client_id': APP_CLIENT_ID,
+        'code': authCode,
+        'redirect_uri': 'http://localhost:5000/index.html'
+      }
+
+      return $.ajax({
+        url: post_url,
+        type: "POST",
+        data: JSON.stringify(params)
+      })
+    }
 
     // Testing signing in
     function signIn() {
       console.log('Sign in button')
       cogIdServiceProvider.initiateAuth({
-        AuthFlow: 'USER_PASSWORD_AUTH', // What type of authentication to use
-        ClientId: '3ej6b95mbsu28e5nkcb6oa8fnp', // AppClientId for UserPool??
+        'AuthFlow': 'USER_PASSWORD_AUTH', // What type of authentication to use
+        'ClientId': APP_CLIENT_ID, // AppClientId for UserPool??
         
         AuthParameters: {
           'USERNAME': document.getElementById('uname_input').value,
@@ -66,15 +158,56 @@
     // CHECK SIGN IN
     // this function should check if there is a session active and get the user pool tokens for that session
     function checkSignIn() {
-      return;
+      console.log('function checkSignIn()')
+      let return_url = window.location.href;
+      console.log('Return url: ' + return_url);
+      url_dict = getJsonFromUrl(return_url);
+
+      // No dict returned. Probably at first visit to page
+      if (!url_dict) return;
+
+      // State value does not match, do not proceed
+      if (url_dict['state'] != STATE_VALUE) return;
+
+      // Check if code flow or token flow
+      if (url_dict['code']) {
+        console.log('authorization code flow!')
+        console.log('Auth Code: ' + url_dict['code']);
+        console.log('STATE_VALUE: ' + url_dict['state']);
+        console.log('STATE_VALUE match: ');
+        console.log(url_dict['state'] == STATE_VALUE)
+        tokenPromise = getTokensFromAuthCode(url_dict['code'])
+        console.log('token Promise')
+        console.log(tokenPromise)
+        tokenPromise.then(function(responseTokens){
+          console.log('responseTokens')
+          console.log(responseTokens)
+          tokenData = responseTokens.AuthenticationResult;
+          verifyUser(tokenData.AccessToken);
+        }, function(errorResolve) {
+          console.log('Promise did not sucessfully resolve')
+          notifyUser('Could not retrieve tokens.')
+        })
+      } else if (url_dict['access_token']) {
+        console.log('token from authorization-endpoint flow!')
+        console.log('ID token: ' + url_dict['id_token']);
+        console.log('Access token: ' + url_dict['access_token']);
+        console.log('token type: ' + url_dict['token_type']);
+        console.log('expires in: ' + url_dict['expires_in']);
+        console.log('STATE_VALUE match: ' + (url_dict['state'] == STATE_VALUE));
+        verifyUser(url_dict['access_token'])
+      } else {
+        console.log('No pattern match...')
+        notifyUser('Unable to retreive session/session expired. Please log in again.');
+      }
     }
 
     // VERIFY USER
     function verifyUser(AccessToken) {
+      console.log('function verifyUser(AccessToken)');
       cogIdServiceProvider.getUser({'AccessToken': AccessToken}, function(err, data) {
         if (err) {
           notifyUser('Could not verify user');
-          return;
         } else {
           username = data.Username;
           notifyUser(username + ' is signed in');
@@ -88,36 +221,55 @@
       outputDiv.textContent = outputText;
     }
   </script>
+
+  <style type="text/css">
+    .container {
+      margin: 0px;
+      padding: 0px;
+    }
+  </style>
 </head>
 
 <body>
-  This is the EMMAA dashboard landing page
-  <h5>Check if you're signed in</h5>
-  <div class="container">
-    <div id="sign-in-check">Not signed in</div>
-  </div>
+  <h3>This is the EMMAA dashboard landing page</h3>
+  <hr>
 
-  <h5>Sign in here</h5>
-  <div class="container">
-    <div class="button">
-      <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in...</button>
-    </div>
-  </div>
+  <h4>Sign in here with username and password</h4>
   <div class="container">
     <form name="username_form">
       <input type="text" name="username" id="uname_input" placeholder="Enter username here" style="width: 250px;">
       <input type="password" name="password" id="pwd_input" placeholder="Enter password here" style="width: 250px;">
     </form>
   </div>
-
-  <h5>Check if you're signed in here</h5>
   <div class="container">
     <div class="button">
-      <button class="btn btn-default" id="checkSignIn" onClick="signIn()">Sign in...</button>
+      <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in with credentials</button>
     </div>
   </div>
+  <hr>
 
-  <h4>Sign up</h4>
-  Sign up <a href="https://emmaa.auth.us-east-1.amazoncognito.com/login?response_type=code&client_id=3ej6b95mbsu28e5nkcb6oa8fnp&redirect_uri=https://indralab.github.io">here</a>
+  <h4>Sign up/Sign in through the EMMAA AWS cognito user pool</h4>
+  <div class="container">
+    <div class="button">
+      <!-- <button class="btn btn-default" id="signInUserPool" onClick="getAuthCode()">Sign in via user pool</button> -->
+      <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool</button>
+    </div>
+  </div>
+  <hr>
+
+  <h4>GET link for tokens</h4>
+  GET <a href="https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?response_type=token&client_id=3ej6b95mbsu28e5nkcb6oa8fnp&redirect_uri=http://localhost:5000/index.html&state=EMMAA_TEST&scope=openid+profile">link</a>
+  <hr>
+
+  <h4>Check if you're signed in here</h4>
+  <div class="container">
+    <div class="button">
+      <button class="btn btn-default" id="checkSignIn" onClick="checkSignIn()">Check if signed in</button>
+    </div>
+  </div>
+  <div class="container">
+    <div id="sign-in-check">Not signed in</div>
+  </div>
+
 </body>
 </html>
