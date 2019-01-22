@@ -36,23 +36,6 @@
     var STATE_VALUE = 'EMMAA_TEST' // Should in production be a random string stored in a cookie for security
     var APP_CLIENT_ID = '3ej6b95mbsu28e5nkcb6oa8fnp';
     var AUTH_ENDPOINT_BASE_URL = 'https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?';
-    // PATTERN should match any redirect uri: http?://.*code=([a-z0-9\-]+)\&state=([a-zA-Z0-9\-]+)
-    // var AUTH_CODE_REDIRECT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\?code=([a-z0-9\-]+)\&state/;
-    var AUTH_CODE_REDIRECT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\?code=([a-z0-9\-]+)\&state=([A-Z\_]+)/;
-    // Matches URL of type (regex might need escaping):
-    // https://YOUR_APP/redirect_uri#
-    // id_token=[a-zA-Z0-9. _-]
-    // &access_token=ACCESS_TOKEN
-    // &token_type=bearer
-    // &expires_in=3600
-    // &state=STATE
-    var TOKEN_FROM_AUTH_ENDPOINT_URL_PATTERN = /http\:\/\/localhost\:5000\/index\.html\#id_token=([a-zA-Z0-9. _-]+)\&access_token=([a-zA-Z0-9. _-]+)\&expires_in=([0-9]+)\&token_type=([a-zA-Z]+)\&state=([a-zA-Z0-9-_]+)/;
-
-    // Cognito User Parameters
-    // var userAuthenticationData = {
-    //     Username : 'kkaris',
-    //     Password : 'redacted'
-    // };
 
     function getJsonFromUrl(url) {
       // No url provided
@@ -93,7 +76,7 @@
       client_id='client_id=' + APP_CLIENT_ID;
       redirect = 'redirect_uri=http://localhost:5000/index.html';
       state = 'state=' + STATE_VALUE;
-      scope = 'scope=openid+profile';
+      scope = 'scope=aws.cognito.signin.user.admin+openid+profile';
       let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
       console.log('get_url=' + get_url)
       window.location.replace(get_url)
@@ -112,7 +95,7 @@
       redirect = 'redirect_uri=http://localhost:5000/index.html';
       state = 'state=' + STATE_VALUE;
       id_provider = 'identity_provider=COGNITO';
-      scope = 'scope=openid+profile';
+      scope = 'scope=openid+profile+aws.cognito.signin.user.admin';
       let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
       console.log('get_url=' + get_url)
       window.location.replace(get_url); // HTTP redirect; user will be prompted to sign in at portal
@@ -166,7 +149,10 @@
       // No dict returned. Probably at first visit to page
       if (!url_dict) return;
 
-      // State value does not match, do not proceed
+      console.log('returned url_dict')
+      console.log(url_dict)
+
+      // State value does not match, do not proceed; Simple first layer security
       if (url_dict['state'] != STATE_VALUE) return;
 
       // Check if code flow or token flow
@@ -248,11 +234,18 @@
   </div>
   <hr>
 
-  <h4>Sign up/Sign in through the EMMAA AWS cognito user pool</h4>
+  <h4>Sign up/Sign in through the EMMAA AWS cognito user pool using <i>tokens</i> from the authorization endpoint</h4>
   <div class="container">
     <div class="button">
-      <!-- <button class="btn btn-default" id="signInUserPool" onClick="getAuthCode()">Sign in via user pool</button> -->
-      <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool</button>
+      <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool (token)</button>
+    </div>
+  </div>
+  <hr>
+
+  <h4>Sign up/Sign in through the EMMAA AWS cognito user pool using <i>authorization code</i> from the authorization endpoint. <i>Currently not working!</i></h4>
+  <div class="container">
+    <div class="button">
+      <button class="btn btn-default" id="signInUserPool">Sign in via user pool (auth code) <i>Currently unavailable</i></button>
     </div>
   </div>
   <hr>
@@ -267,8 +260,11 @@
       <button class="btn btn-default" id="checkSignIn" onClick="checkSignIn()">Check if signed in</button>
     </div>
   </div>
+  <hr>
   <div class="container">
-    <div id="sign-in-check">Not signed in</div>
+    <div style="color: #ffc107;" id="sign-in-check">
+      <h3>Not signed in</h3>
+    </div>
   </div>
 
 </body>
