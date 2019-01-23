@@ -23,7 +23,8 @@
     })
 
     // Constants and fixed IDs
-    var STATE_VALUE = 'EMMAA_TEST' // Should in production be a random string stored in a cookie for security
+    var EMMAA_COOKIE_NAME = 'emmaaStateCookie=';
+    var STATE_VALUE = '' // State value to secure requests to cognito login
     var ACCESS_TOKEN_STRING = ''; // access token string
     var ACCESS_TOKEN = {}; // access token
     var ID_TOKEN_STRING = ''; // id token string
@@ -41,6 +42,64 @@
         IdentityPoolId: IDENTITY_POOL_ID,
     });
     cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
+
+function readCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0;i < ca.length;i++) {
+    var c = ca[i];
+    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+  }
+  return null;
+}
+
+    function _readStateCookie() {
+      console.log('function _readStateCookie()')
+      var nameEQ = EMMAA_COOKIE_NAME;
+      console.log('nameEQ: ' + nameEQ)
+      var ca = document.cookie.split(';');
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) {
+          console.log('function _readStateCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
+          return c.substring(nameEQ.length, c.length)
+        };
+      }
+      console.log('function _readStateCookie() did not resolve cookie value')
+      return;
+    }
+
+    function _writeStateCookie(stateValue, hours) {
+      console.log('function _writeStateCookie(stateValue, hours)')
+      if (hours) {
+        let _hours = 0;
+        maxHours = 12;
+        if (hours > maxHours) {
+          _hours = maxHours;
+        } else {
+          _hours = hours;
+        } 
+        console.log('hours to expiration: ' + _hours)
+        var date = new Date();
+        date.setTime(date.getTime() + (_hours*60*60*1000))
+        var expires = '; expires=' + date.toGMTString();
+        console.log('cookie expiration date: ' + date.toGMTString());
+      } else var expires = '';  // No expiration or infinite?
+      var cookieString = EMMAA_COOKIE_NAME + stateValue + expires + '; path=/'
+      console.log('cookieString: ' + cookieString);
+      document.cookie = cookieString;
+    }
+
+    function _getNewStateValue() {
+      let state = ''
+      let numArray = window.crypto.getRandomValues(new Uint32Array(4))
+      for (num of numArray) {
+        state = state + window.btoa(num).split('=').join('')
+      }
+      return state
+    }
 
     function getJsonFromUrl(url) {
       // No url provided
@@ -76,6 +135,9 @@
 
     function getTokenFromAuthEndpoint() {
       console.log('function getTokenFromAuthEndpoint()')
+      STATE_VALUE = _getNewStateValue();
+      console.log('current STATE_VALUE: ' + STATE_VALUE)
+      _writeStateCookie(STATE_VALUE, 1)
       base_url = AUTH_ENDPOINT_BASE_URL;
       resp_type = 'response_type=token';
       client_id='client_id=' + APP_CLIENT_ID;
@@ -84,7 +146,7 @@
       scope = 'scope=aws.cognito.signin.user.admin+openid+profile';
       let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
       console.log('get_url=' + get_url)
-      window.location.replace(get_url)
+      window.location.replace(get_url) // Redirect
     }
 
     // Testing signing in
@@ -108,6 +170,7 @@
     // this function should check if there is a session active and get the user pool tokens for that session
     function checkSignIn() {
       console.log('function checkSignIn()')
+      STATE_VALUE = _readStateCookie();
       let return_url = window.location.href;
       console.log('Return url: ' + return_url);
       url_dict = getJsonFromUrl(return_url);
@@ -119,7 +182,10 @@
       console.log(url_dict)
 
       // State value does not match, do not proceed; Simple first layer security
-      if (url_dict['state'] != STATE_VALUE) return;
+      if (url_dict['state'] != STATE_VALUE) {
+        console.log('State Value does not match')
+        return;
+      };
 
       // Check if token flow
       if (url_dict['access_token']) {
