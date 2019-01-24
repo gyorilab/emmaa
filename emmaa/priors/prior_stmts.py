@@ -1,5 +1,9 @@
+import logging
 from indra_db import client
 from indra.tools import assemble_corpus as ac
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_stmts_for_gene(gene):
@@ -37,6 +41,9 @@ def get_stmts_for_gene_list(gene_list, other_entities):
     """
     stmts = []
     for gene in gene_list:
-        stmts += get_stmts_for_gene(gene)
+        logger.info(f'Querying {gene}')
+        st = get_stmts_for_gene(gene)
+        logger.info(f'Got {len(st)} statements for {gene}')
+        stmts += st
     stmts = ac.filter_gene_list(stmts, gene_list + other_entities, policy='all')
     return stmts
