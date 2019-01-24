@@ -13,11 +13,12 @@ def upload_function():
     """
     lamb = boto3.client('lambda')
     with ZipFile(path.join(HERE, 'lambda.zip'), 'w') as zf:
-        zf.write(path.join(HERE, 'script.py'))
+        zf.write('./script.py')
 
     with open(path.join(HERE, 'lambda.zip'), 'rb') as zf:
-        lamb.update_function_code(ZipFile=zf.read(),
-                                  FunctionName='emmaa-analysis')
+        ret = lamb.update_function_code(ZipFile=zf.read(),
+                                        FunctionName='emmaa-analysis')
+        print(ret)
     return
 
 
