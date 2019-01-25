@@ -8,7 +8,7 @@ allowing scientific queries to be automatically formulated and executed.  The
 core component of this process will be a *meta-model* for associating the
 necessary metadata with specific model elements.
 
-.. image:: _static/images/meta_model_concept.png
+.. image:: ../_static/images/meta_model_concept.png
    :scale: 50 %
 
 EMMAA models automatically assembled via `INDRA <http://indra.bio>`_ will
@@ -39,7 +39,7 @@ human readable and editable.
 Model testing
 -------------
 
-.. image:: _static/images/model_testing_concept.png
+.. image:: ../_static/images/model_testing_concept.png
    :scale: 80 %
    :align: right
 
@@ -64,7 +64,7 @@ of model behavior (e.g., "IGF1R phosphorylates AKT1 on T308") along with a
 determination of whether the constraint was satisfied ("Model Result"), the
 number of different paths found, and the length of the shortest path.
 
-.. image:: _static/images/testing_mockup.png
+.. image:: ../_static/images/testing_mockup.png
    :scale: 60 %
 
 In a manner analogous to continuous integration for software, model testing
@@ -94,7 +94,7 @@ formal, templated language):
 - Comparative intervention properties: e.g., "How is the effect of targeting
   MEK different from targeting PI3K on the activation of ERK by EGF?"
 
-.. image:: _static/images/user_queries_concept.png
+.. image:: ../_static/images/user_queries_concept.png
    :scale: 60 %
    :align: right
 
