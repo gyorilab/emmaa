@@ -22,9 +22,13 @@
       checkSignIn()
     })
 
+    function grabJSON (url, callback) {
+      return $.ajax({url: url, dataType: "json"});
+    };
+
     // Constants and fixed IDs
     var EMMAA_COOKIE_NAME = 'emmaaStateCookie=';
-    var STATE_VALUE = '' // State value to secure requests to cognito login
+    var STATE_VALUE = '' // State value to secure requests to cognito endpoints
     var ACCESS_TOKEN_STRING = ''; // access token string
     var ACCESS_TOKEN = {}; // access token
     var ID_TOKEN_STRING = ''; // id token string
@@ -33,31 +37,20 @@
     var APP_CLIENT_ID = '3ej6b95mbsu28e5nkcb6oa8fnp';
     var AUTH_ENDPOINT_BASE_URL = 'https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?';
     var USER_SIGNED_IN = false;
+    var identityId = '' // 
 
     // cognito parameters
     var USER_POOL_ID = 'us-east-1_5sb1590b6'; // User pool ID; User info lives here
-    var IDENTITY_POOL_ID = 'us-east-1:76854655-a365-4e69-b080-0f8ca94a46fc'; // IdentityPool Id FOR emmaa s3 test pool
+    var IDENTITY_POOL_ID = 'us-east-1:76854655-a365-4e69-b080-0f8ca94a46fc'; // IdentityPool Id for "emmaa s3 test pool"
     AWS.config.region = 'us-east-1' // Set region
     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
         IdentityPoolId: IDENTITY_POOL_ID,
     });
-    cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
-
-function readCookie(name) {
-  var nameEQ = name + "=";
-  var ca = document.cookie.split(';');
-  for(var i=0;i < ca.length;i++) {
-    var c = ca[i];
-    while (c.charAt(0)==' ') c = c.substring(1,c.length);
-    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-  }
-  return null;
-}
+    var cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
     function _readStateCookie() {
       console.log('function _readStateCookie()')
       var nameEQ = EMMAA_COOKIE_NAME;
-      console.log('nameEQ: ' + nameEQ)
       var ca = document.cookie.split(';');
       for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
@@ -81,14 +74,15 @@ function readCookie(name) {
         } else {
           _hours = hours;
         } 
-        console.log('hours to expiration: ' + _hours)
+        // console.log('hours to expiration: ' + _hours)
         var date = new Date();
         date.setTime(date.getTime() + (_hours*60*60*1000))
         var expires = '; expires=' + date.toGMTString();
-        console.log('cookie expiration date: ' + date.toGMTString());
+        // console.log('cookie expiration date: ' + date.toGMTString());
       } else var expires = '';  // No expiration or infinite?
+
       var cookieString = EMMAA_COOKIE_NAME + stateValue + expires + '; path=/'
-      console.log('cookieString: ' + cookieString);
+      // console.log('cookieString: ' + cookieString);
       document.cookie = cookieString;
     }
 
@@ -96,7 +90,7 @@ function readCookie(name) {
       let state = ''
       let numArray = window.crypto.getRandomValues(new Uint32Array(4))
       for (num of numArray) {
-        state = state + window.btoa(num).split('=').join('')
+        state = state + window.btoa(num).replace(/=/g, '');
       }
       return state
     }
@@ -128,7 +122,7 @@ function readCookie(name) {
         console.log('Auth data:')
         console.log(data)
         tokenData = data.AuthenticationResult;
-        verifyUser(tokenData.AccessToken);
+        verifyUser(tokenData.AccessToken, tokenData.IdToken);
         return tokenData;
       }
     }
@@ -136,20 +130,21 @@ function readCookie(name) {
     function getTokenFromAuthEndpoint() {
       console.log('function getTokenFromAuthEndpoint()')
       STATE_VALUE = _getNewStateValue();
-      console.log('current STATE_VALUE: ' + STATE_VALUE)
+      // console.log('current STATE_VALUE: ' + STATE_VALUE)
       _writeStateCookie(STATE_VALUE, 1)
       base_url = AUTH_ENDPOINT_BASE_URL;
       resp_type = 'response_type=token';
       client_id='client_id=' + APP_CLIENT_ID;
       redirect = 'redirect_uri=http://localhost:5000/index.html';
       state = 'state=' + STATE_VALUE;
-      scope = 'scope=aws.cognito.signin.user.admin+openid+profile';
+      cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
+      scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
       let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
       console.log('get_url=' + get_url)
       window.location.replace(get_url) // Redirect
     }
 
-    // Testing signing in
+    // Signing in using username/password, return JWTs
     function signIn() {
       console.log('Sign in button')
       cogIdServiceProvider.initiateAuth({
@@ -177,24 +172,24 @@ function readCookie(name) {
 
       // No dict returned. Probably at first visit to page
       if (!url_dict) return;
-
-      console.log('returned url_dict')
-      console.log(url_dict)
+      // console.log('returned url_dict')
+      // console.log(url_dict)
 
       // State value does not match, do not proceed; Simple first layer security
       if (url_dict['state'] != STATE_VALUE) {
-        console.log('State Value does not match')
+        console.log('State Value does not match');
+        notifyUser('State Value does not match');
         return;
       };
 
       // Check if token flow
       if (url_dict['access_token']) {
         console.log('token from authorization-endpoint flow!')
-        console.log('ID token: ' + url_dict['id_token']);
-        console.log('Access token: ' + url_dict['access_token']);
-        console.log('token type: ' + url_dict['token_type']);
-        console.log('expires in: ' + url_dict['expires_in']);
-        console.log('STATE_VALUE match: ' + (url_dict['state'] == STATE_VALUE));
+        // console.log('ID token: ' + url_dict['id_token']);
+        // console.log('Access token: ' + url_dict['access_token']);
+        // console.log('token type: ' + url_dict['token_type']);
+        // console.log('expires in: ' + url_dict['expires_in']);
+        // console.log('STATE_VALUE match: ' + (url_dict['state'] == STATE_VALUE));
         if (verifyUser(url_dict['access_token'], url_dict['id_token'])) {
           console.log('User verified')
         } else {
@@ -214,8 +209,8 @@ function readCookie(name) {
           notifyUser('Could not verify user');
           return false;
         } else {
-          console.log('User meta data from cogIdServiceProvider.getUser()');
-          console.log(data);
+          // console.log('User meta data from cogIdServiceProvider.getUser()');
+          // console.log(data);
           username = data.Username;
           notifyUser('Hello ' + username + '!');
           ACCESS_TOKEN_STRING = AccessTokenString;
@@ -229,7 +224,6 @@ function readCookie(name) {
 
     // ADD USER TO THE CREDENTIALS LOGIN MAP
     function addUserToIdentityCredentials(userIdToken) {
-      // if (!verifyUser(ACCESS_TOKEN_STRING, ID_TOKEN_STRING)) return;
       console.log('Linking user to IdentityPool with ID userIdToken')
       AWS.config.credentials = new AWS.CognitoIdentityCredentials({
           IdentityPoolId: IDENTITY_POOL_ID,
@@ -238,11 +232,157 @@ function readCookie(name) {
             'cognito-idp.us-east-1.amazonaws.com/us-east-1_5sb1590b6': userIdToken
           }
       });
+
+      // Call to obtain credentials
+      AWS.config.credentials.get(function(){
+
+          // Credentials will be available when this function is called.
+          var accessKeyId = AWS.config.credentials.accessKeyId;
+          var secretAccessKey = AWS.config.credentials.secretAccessKey;
+          var sessionToken = AWS.config.credentials.sessionToken;
+      });
+
+      // AWS.config.credentials.identityId should now be available
+      console.log('Setting identityId for logged in user')
+      identityId = AWS.config.credentials.identityId;
+    }
+
+    // S3 FUNCTIONS
+    function populateS3TestResultsJSON (resultsJson) {
+      let testResultsTableBody = document.getElementById('resultsTableBody');
+      testResultsTableBody.innerHTML = null;
+
+      for (var k in resultsJson) {
+        let tableRow = document.createElement('tr');
+        
+        keyColumn = document.createElement('td');
+        keyColumn.textContent = k
+        valueColumn = document.createElement('td');
+        valueColumn.textContent = resultsJson[k]
+
+        tableRow.appendChild(keyColumn);
+        tableRow.appendChild(valueColumn);
+
+        testResultsTableBody.appendChild(tableRow);
+      }
+    }
+
+    function populateModelsList(s3Interface) {
+      let bucket = 'emmaa';
+      let prefix = 'results'
+      listObjectsInBucket(s3Interface, bucket, prefix, 100);
+    }
+
+    function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys) {
+      let _maxKeys = 1000
+      if (maxKeys) {
+        _maxKeys = maxKeys;
+      }
+      let params = {
+        Bucket: bucket,
+        MaxKeys: _maxKeys,
+        Prefix: prefix
+      }
+      s3Interface.listObjectsV2(params, function(err, data) {
+        if (err) console.log(err, err.stack);
+        else {
+          // console.log('List of objects resolved from S3')
+          // console.log(data)
+          let tableBody = document.getElementById('listObjectsTableBody');
+          tableBody.innerHTML = null;
+          for (let i = 0; i < data.Contents.length; i++) {
+            if (data.Contents[i].Key.endsWith('.json')) {
+              let tableRow = document.createElement('tr');
+              
+              let modelColumn = document.createElement('td');
+
+              let modelLink = document.createElement('a');
+              modelLink.setAttribute('href', '#'); // LINK TO MODEL
+              modelLink.textContent = data.Contents[i].Key.split('/')[1]
+              modelColumn.appendChild(modelLink)
+              tableRow.appendChild(modelColumn);
+
+              let testColumn = document.createElement('td');
+              testColumn.textContent = data.Contents[i].Key.split('/')[2].split('.')[0];
+              let testJsonPromise = getPublicJson(bucket, data.Contents[i].Key);
+              testJsonPromise.then(function(json){
+                if (json[0].passed) {
+                  testColumn.setAttribute('bgcolor', '00AA55;'); // Green if passed
+                }
+                else {
+                  testColumn.setAttribute('bgcolor', 'DD4400;'); // Red if not
+                }
+              })
+              tableRow.appendChild(testColumn);
+
+              tableBody.appendChild(tableRow);
+            }
+          }
+        }
+      })
+    }
+
+    function getFromS3(getListPrefix, model, fileName) {
+      // Test these addresses:
+      // Behind some type of permissions wall
+      // https://s3.amazonaws.com/emmaa/results/brca/2018-12-13-21-23-15.json
+      // Fully public
+      // https://s3.amazonaws.com/emmaa-test/test-results-public/test_json_on_S3.json
+      // https://s3.amazonaws.com/emmaa-test/results/brca/2018-12-13-21-23-15.json
+      bucket = 'emmaa-test'
+      key = 'results/brca/2018-12-13-21-23-15.json'
+      // let s3JSON = readFromS3();
+
+      let s3JsonPromise = getPublicJson(bucket, key);
+      s3JsonPromise.then(function(s3JSON) {
+        if (s3JSON.length == 1) populateS3TestResultsJSON(s3JSON[0])
+        else populateS3TestResultsJSON(s3JSON)
+      })
+    }
+
+    // Can be used when something is public on S3
+    function getPublicJson(bucket, key) {
+      // For production: get list of results and select based on some criteria
+      base_url = 'https://s3.amazonaws.com'
+      pathString = '/' + bucket + '/' + key;
+      url = base_url +  pathString.replace(/\/\//g, '/'); // Avoid double slashes;
+      // console.log('getting json from ' + url);
+      return grabJSON(url);
+    }
+
+    function readFromS3() {
+      s3InterfaceOptions = {
+        credentials: AWS.config.credentials
+      }
+      console.log('New s3 interface object using the following AWS.config.credentials:');
+      console.log(AWS.config.credentials);
+      var s3Interface = new AWS.S3(s3InterfaceOptions);
+      var params = {
+        Bucket: 'emmaa-test',
+        Key: 'test-results-public/test_json_on_S3.json',
+        // Key: 'test-results/test_json_on_S3',
+      }
+
+      // Documentation for s3.getObject():
+      // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getObject-property
+      s3Interface.getObject(params, function(err, data){
+        if (err) {
+          console.log(err);
+          return;
+        }
+        else {
+          console.log('S3 getOjbect resolved successfully');
+          console.log(data);
+          let s3ObjectJSON = data.Body;
+          return s3ObjectJSON;
+        }
+      });
     }
 
     // CHANGE TEXT
     function notifyUser(outputText) {
       let outputDiv = document.getElementById('sign-in-check');
+      outputDiv.style = "color: #0000ff;"
       outputDiv.textContent = outputText;
     }
   </script>
@@ -252,47 +392,96 @@ function readCookie(name) {
       margin: 0px;
       padding: 0px;
     }
+    .card {
+      margin: 15px;
+    }
   </style>
 </head>
 
 <body>
-  <h3>This is the EMMAA dashboard landing page</h3>
-  <hr>
+<!-- Wrap page in theme showcase -->
+<div class="container theme-showcase">
 
-  <h4>Sign in here with username and password</h4>
-  <div class="container">
-    <form name="username_form">
-      <input type="text" name="username" id="uname_input" placeholder="Enter username here" style="width: 250px;">
-      <input type="password" name="password" id="pwd_input" placeholder="Enter password here" style="width: 250px;">
-    </form>
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="display-3">EMMAA dashboard</h1>
+    <p id="sign-in-check">Not signed in</p>
+    <hr>
   </div>
-  <div class="container">
-    <div class="button">
-      <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in with credentials</button>
+
+  <div class="card">
+    <h4 class="card-header">Sign In</h4>
+    <div class="card-body">
+      <h5>Sign in here with username and password</h5>
+      <div class="container">
+        <form name="username_form">
+          <input type="text" name="username" id="uname_input" placeholder="Enter username here" style="width: 250px;">
+          <input type="password" name="password" id="pwd_input" placeholder="Enter password here" style="width: 250px;">
+        </form>
+      </div>
+      <div class="container">
+        <div class="button">
+          <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in with credentials</button>
+        </div>
+      </div>
+      <hr>
+
+      <h5>Sign up/Sign in through the EMMAA AWS cognito user pool</h5>
+      <div class="container">
+        <div class="button">
+          <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool (token)</button>
+        </div>
+      </div>
     </div>
   </div>
-  <hr>
 
-  <h4>Sign up/Sign in through the EMMAA AWS cognito user pool using <i>tokens</i> from the authorization endpoint</h4>
-  <div class="container">
-    <div class="button">
-      <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool (token)</button>
+  <div class="card">
+    <h4 class="card-header">
+      <div class="container">
+        <div class="button">
+          <button class="btn btn-default" id="listS3Objects" onClick="populateModelsList(new AWS.S3())">List Model Tests</button>
+        </div>
+      </div>
+    </h4>
+    <div class="card-body">
+      <div class="container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Test</th>
+            </tr>
+          </thead>
+          <tbody id="listObjectsTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-  <hr>
 
-  <h4>Check if you're signed in here</h4>
-  <div class="container">
-    <div class="button">
-      <button class="btn btn-default" id="checkSignIn" onClick="checkSignIn()">Check if signed in</button>
+  <div class="card">
+    <h4 class="card-header">Test Results</h4>
+    <div class="card-body">
+      <div class="container">
+        <div class="button">
+          <button class="btn btn-default" id="getS3Object" onClick="getFromS3()">Download Test json from S3</button>
+        </div>
+      </div>
+      <div class="container" id="testResultsOutput">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>key</th>
+              <th>value</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-  <hr>
-  <div class="container">
-    <h3>
-      <div style="color: #ffc107;" id="sign-in-check">Not signed in</div>
-    </h3>
-  </div>
-
+  
+</div> <!-- /theme showcase -->
 </body>
 </html>
