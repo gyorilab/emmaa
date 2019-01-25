@@ -69,11 +69,6 @@ number of different paths found, and the length of the shortest path.
 
 In a manner analogous to continuous integration for software, model testing
 will be triggered anytime the model or its associated constraints are updated.
-This will be implemented by storing the current state of the model in an Amazon
-S3 bucket and associating the bucket with a `Cloudwatch Event
-<https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/Create-CloudWatch-Events-Rule.html>`_.
-The Cloudwatch Event will trigger the execution of a serverless Amazon Lambda
-function responsible for initiating the model testing procedure.
 
 Pre-registered queries and notifications
 ----------------------------------------
@@ -107,4 +102,16 @@ model will be saved. This will then allow comparing any changes to the result
 of analysis with previous states of the model. If a meaningful change occurs, a
 notification will be generated to the user who registered the query.
 
+Software architecture for analysis and testing
+----------------------------------------------
+
+Automated tests and user-driven queries are designed to be triggered upon any
+changes in the underlying model. This
+
+
+This will be implemented by storing the current state of the model in an Amazon
+S3 bucket and associating the bucket with a `Cloudwatch Event
+<https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/Create-CloudWatch-Events-Rule.html>`_.
+The Cloudwatch Event will trigger the execution of a serverless Amazon Lambda
+function responsible for initiating the model testing procedure.
 
