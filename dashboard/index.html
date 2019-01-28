@@ -27,7 +27,9 @@
     };
 
     // Constants and fixed IDs
-    var EMMAA_COOKIE_NAME = 'emmaaStateCookie=';
+    var EMMAA_STATE_COOKIE_NAME = 'emmaaStateCookie=';
+    var EMMAA_ACCESSTOKEN_COOKIE_NAME = 'emmaaAccessCookie=';
+    var EMMAA_IDTOKEN_COOKIE_NAME = 'emmaaIdCookie=';
     var STATE_VALUE = '' // State value to secure requests to cognito endpoints
     var ACCESS_TOKEN_STRING = ''; // access token string
     var ACCESS_TOKEN = {}; // access token
@@ -48,24 +50,24 @@
     });
     var cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
-    function _readStateCookie() {
-      console.log('function _readStateCookie()')
-      var nameEQ = EMMAA_COOKIE_NAME;
+    function _readCookie(cookieName) {
+      console.log('function _readCookie()')
+      var nameEQ = cookieName;
       var ca = document.cookie.split(';');
       for (var i = 0; i < ca.length; i++) {
         var c = ca[i];
         while (c.charAt(0) == ' ') c = c.substring(1, c.length);
         if (c.indexOf(nameEQ) == 0) {
-          console.log('function _readStateCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
+          console.log('function _readCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
           return c.substring(nameEQ.length, c.length)
         };
       }
-      console.log('function _readStateCookie() did not resolve cookie value')
+      console.log('function _readCookie() did not resolve cookie value')
       return;
     }
 
-    function _writeStateCookie(stateValue, hours) {
-      console.log('function _writeStateCookie(stateValue, hours)')
+    function _writeCookie(cookieName, value, hours) {
+      console.log('function _writeCookie(cookieName, value, hours)')
       if (hours) {
         let _hours = 0;
         maxHours = 12;
@@ -81,7 +83,7 @@
         // console.log('cookie expiration date: ' + date.toGMTString());
       } else var expires = '';  // No expiration or infinite?
 
-      var cookieString = EMMAA_COOKIE_NAME + stateValue + expires + '; path=/'
+      var cookieString = cookieName + value + expires + '; path=/'
       // console.log('cookieString: ' + cookieString);
       document.cookie = cookieString;
     }
@@ -95,7 +97,7 @@
       return state
     }
 
-    function getJsonFromUrl(url) {
+    function getDictFromUrl(url) {
       // No url provided
       if (!url) return;
       var query = {};
@@ -131,7 +133,7 @@
       console.log('function getTokenFromAuthEndpoint()')
       STATE_VALUE = _getNewStateValue();
       // console.log('current STATE_VALUE: ' + STATE_VALUE)
-      _writeStateCookie(STATE_VALUE, 1)
+      _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
       base_url = AUTH_ENDPOINT_BASE_URL;
       resp_type = 'response_type=token';
       client_id='client_id=' + APP_CLIENT_ID;
@@ -165,10 +167,10 @@
     // this function should check if there is a session active and get the user pool tokens for that session
     function checkSignIn() {
       console.log('function checkSignIn()')
-      STATE_VALUE = _readStateCookie();
+      STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
       let return_url = window.location.href;
       console.log('Return url: ' + return_url);
-      url_dict = getJsonFromUrl(return_url);
+      url_dict = getDictFromUrl(return_url);
 
       // No dict returned. Probably at first visit to page
       if (!url_dict) return;
@@ -214,7 +216,9 @@
           username = data.Username;
           notifyUser('Hello ' + username + '!');
           ACCESS_TOKEN_STRING = AccessTokenString;
+          _writeCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME, ACCESS_TOKEN_STRING, 1);
           ID_TOKEN_STRING = IdTokenString;
+          _writeCookie(EMMAA_IDTOKEN_COOKIE_NAME, ID_TOKEN_STRING, 1);
           USER_SIGNED_IN = true
           addUserToIdentityCredentials(ID_TOKEN_STRING) // Add user to identity pool 
           return true;
@@ -268,12 +272,15 @@
     }
 
     function populateModelsList(s3Interface) {
+      // console.log('function populateModelsList(s3Interface)');
       let bucket = 'emmaa';
-      let prefix = 'results'
-      listObjectsInBucket(s3Interface, bucket, prefix, 100);
+      let prefix = 'results';
+      let endsWith = '.json';
+      listObjectsInBucket(s3Interface, bucket, prefix, 100, endsWith);
     }
 
-    function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys) {
+    function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith) {
+      // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
       let _maxKeys = 1000
       if (maxKeys) {
         _maxKeys = maxKeys;
@@ -291,7 +298,7 @@
           let tableBody = document.getElementById('listObjectsTableBody');
           tableBody.innerHTML = null;
           for (let i = 0; i < data.Contents.length; i++) {
-            if (data.Contents[i].Key.endsWith('.json')) {
+            if (data.Contents[i].Key.endsWith(endsWith)) {
               let tableRow = document.createElement('tr');
               
               let modelColumn = document.createElement('td');
@@ -312,15 +319,15 @@
                 else {
                   testColumn.setAttribute('bgcolor', 'DD4400;'); // Red if not
                 }
-              })
+              });
               tableRow.appendChild(testColumn);
 
               tableBody.appendChild(tableRow);
             }
           }
         }
-      })
-    }
+      });
+    };
 
     function getFromS3(getListPrefix, model, fileName) {
       // Test these addresses:
@@ -396,7 +403,6 @@
       margin: 15px;
     }
   </style>
-</head>
 
 <body>
 <!-- Wrap page in theme showcase -->
