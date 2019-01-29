@@ -204,9 +204,9 @@
     }
 
     // VERIFY USER 
-    function verifyUser(AccessTokenString, IdTokenString) {
-      console.log('function verifyUser(AccessTokenString, IdTokenString)');
-      cogIdServiceProvider.getUser({'AccessToken': AccessTokenString}, function(err, data) {
+    function verifyUser(accessTokenString, idTokenString) {
+      console.log('function verifyUser(accessTokenString, idTokenString)');
+      cogIdServiceProvider.getUser({'AccessToken': accessTokenString}, function(err, data) {
         if (err) {
           notifyUser('Could not verify user');
           return false;
@@ -214,10 +214,10 @@
           // console.log('User meta data from cogIdServiceProvider.getUser()');
           // console.log(data);
           username = data.Username;
-          notifyUser('Hello ' + username + '!');
-          ACCESS_TOKEN_STRING = AccessTokenString;
+          notifyUser('Hello ' + username);
+          ACCESS_TOKEN_STRING = accessTokenString;
           _writeCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME, ACCESS_TOKEN_STRING, 1);
-          ID_TOKEN_STRING = IdTokenString;
+          ID_TOKEN_STRING = idTokenString;
           _writeCookie(EMMAA_IDTOKEN_COOKIE_NAME, ID_TOKEN_STRING, 1);
           USER_SIGNED_IN = true
           addUserToIdentityCredentials(ID_TOKEN_STRING) // Add user to identity pool 
@@ -388,8 +388,9 @@
 
     // CHANGE TEXT
     function notifyUser(outputText) {
-      let outputDiv = document.getElementById('sign-in-check');
-      outputDiv.style = "color: #0000ff;"
+      // let outputDiv = document.getElementById('sign-in-check');
+      let outputDiv = document.getElementById('signInUserPool');
+      // outputDiv.style = "color: #0000ff;"
       outputDiv.textContent = outputText;
     }
   </script>
@@ -402,20 +403,142 @@
     .card {
       margin: 15px;
     }
+    .card-body {
+       text-align: left;
+    }
   </style>
 
 <body>
-<!-- Wrap page in theme showcase -->
-<div class="container theme-showcase">
-
   <!-- Page Header -->
-  <div class="page-header">
-    <h1 class="display-3">EMMAA dashboard</h1>
-    <p id="sign-in-check">Not signed in</p>
-    <hr>
+  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+    <h5 class="my-0 mr-md-auto font-weight-normal">EMMAA Dashboard</h5>
+    <nav class="my-2 my-md-0 mr-md-3">
+      <a class="p-2 text-dark" href="#about">About</a>
+    </nav>
+    <button class="btn btn-outline-primary" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign up/Sign in</button>
   </div>
 
-  <div class="card">
+  <div class="container">
+    <div class="row card-deck mb-3 text-center">
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Acute myeloid leukemia</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of acute myeloid leukemia</p>
+            <p class="card-text" id="amlStatus">Status of latest test</p>
+            <p class="card-text" id="amlUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=aml">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Breast Cancer</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of breast cancer</p>
+            <p class="card-text" id="brcaStatus">Status of latest test</p>
+            <p class="card-text" id="brcaUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=brca">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/a16b5ca0-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Lung adenocarcinoma</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of lung adenocarcinoma</p>
+            <p class="card-text" id="luadStatus">Status of latest test</p>
+            <p class="card-text" id="luadUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=luad">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/b56642b3-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Pancreas adenocarcinoma</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of pancreas adenocarcinoma</p>
+            <p class="card-text" id="paadStatus">Status of latest test</p>
+            <p class="card-text" id="paadUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=paad">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/8d1330ca-f6a2-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Prostate adenocarcinoma</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of prostate adenocarcinoma</p>
+            <p class="card-text" id="pradStatus">Status of latest test</p>
+            <p class="card-text" id="pradUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=prad">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/caa8c3f6-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Skin cutaneous melanoma</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_ndex.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of skin cutaneous melanoma</p>
+            <p class="card-text" id="skcmStatus">Status of latest test</p>
+            <p class="card-text" id="skcmUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="da832549-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!--   <div class="card">
     <h4 class="card-header">Sign In</h4>
     <div class="card-body">
       <h5>Sign in here with username and password</h5>
@@ -439,9 +562,9 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 
-  <div class="card">
+<!--   <div class="card">
     <h4 class="card-header">
       <div class="container">
         <div class="button">
@@ -463,9 +586,9 @@
         </table>
       </div>
     </div>
-  </div>
+  </div> -->
 
-  <div class="card">
+<!--   <div class="card">
     <h4 class="card-header">Test Results</h4>
     <div class="card-body">
       <div class="container">
@@ -486,8 +609,20 @@
         </table>
       </div>
     </div>
-  </div>
-  
-</div> <!-- /theme showcase -->
+  </div> -->
+
+  <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
+    <div class="container">
+      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+      <small>
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+        <p><a href="https://indralab.github.io">INDRALAB</a></p>
+        <p><a href="http://hits.harvard.edu">Harvard Program in Therapeutic Science (HiTS)</a></p>
+        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+      </small>
+    </div>
+  </footer>
 </body>
 </html>
