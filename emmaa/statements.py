@@ -13,7 +13,6 @@ class EmmaaStatement(object):
 
     """
     def __init__(self, stmt, date, search_terms):
-
         self.stmt = stmt
         self.date = date
         self.search_terms = search_terms
