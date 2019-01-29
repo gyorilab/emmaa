@@ -165,6 +165,9 @@ class EmmaaModel(object):
         pysb_model = pa.make_model()
         return pysb_model
 
+    def __repr__(self):
+        return "EmmaModel(%s, %d stmts, %d search terms)" % \
+                   (self.name, len(self.stmts), len(self.search_terms))
 
 def load_model(name, config_file):
     with open(config_file, 'r') as fh:

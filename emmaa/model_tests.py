@@ -99,3 +99,6 @@ class StatementCheckingTest(EmmaaTest):
     def get_entities(self):
         """Return a list of entities that the test checks for."""
         return self.stmt.agent_list()
+
+    def __repr__(self):
+        return "%s(stmt=%s)" % (self.__class__.__name__, repr(self.stmt))
