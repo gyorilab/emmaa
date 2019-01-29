@@ -11,7 +11,7 @@ from emmaa.model_tests import TestManager, ScopeTestConnector, \
 
 def get_indirect_stmts():
     lcpath = os.path.join(indra.__path__[0], os.pardir, 'data',
-                          'large_corpus.bel')
+                          'small_corpus.bel')
     bp = bel.process_belscript(lcpath)
     indirect_stmts = [st for st in bp.statements
                       if not st.evidence[0].epistemics.get('direct')]
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     indirect_stmts = get_indirect_stmts()
     tests = [StatementCheckingTest(stmt) for stmt in indirect_stmts]
     if mode == 'dump':
-        with open('large_corpus_tests.pkl', 'wb') as f:
+        with open('small_corpus_tests.pkl', 'wb') as f:
             pickle.dump(tests, f)
     elif mode == 'run':
         ctypes = ['rasmodel']
