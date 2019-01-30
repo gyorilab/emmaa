@@ -140,14 +140,22 @@ class EmmaaModel(object):
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname)
 
-    def load_from_s3(self):
+    @classmethod
+    def load_from_s3(klass, model_name):
         """Load the latest model state from S3."""
-        key = find_latest_s3_file('emmaa', f'models/{self.name}/model_')
+        base_key = f'models/{model_name}'
+        config_key = f'{base_key}/config.yaml'
+        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
         client = boto3.client('s3')
-        logger.info(f'Loading model state from {key}')
-        obj = client.get_object(Bucket='emmaa', Key=key)
+        logger.info(f'Loading model config from {config_key}')
+        obj = client.get_object(Bucket='emmaa', Key=config_key)
+        config = yaml.load(obj['Body'].read().decode('utf8'))
+        logger.info(f'Loading model state from {latest_model_key}')
+        obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
         stmts = pickle.loads(obj['Body'].read())
-        self.stmts = stmts
+        em = klass(model_name, config)
+        em.stmts = stmts
+        return em
 
     def get_entities(self):
         """Return a list of Agent objects that the model contains."""
@@ -169,9 +177,4 @@ class EmmaaModel(object):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
 
-def load_model(name, config_file):
-    with open(config_file, 'r') as fh:
-        config = yaml.load(fh)
-    em = EmmaaModel(name, config)
-    em.load_from_s3()
-    return em
+
