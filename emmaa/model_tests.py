@@ -80,7 +80,9 @@ class ScopeTestConnector(TestConnector):
 
 class EmmaaTest(object):
     """Represent an EMMAA test condition"""
-    pass
+    def get_entities(self):
+        """Return a list of entities that the test checks for."""
+        raise NotImplementedError()
 
 
 class StatementCheckingTest(EmmaaTest):
