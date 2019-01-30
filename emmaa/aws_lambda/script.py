@@ -31,6 +31,7 @@ dt_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 f = BytesIO(data_str.encode('utf-8'))
 s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
 """
+BRANCH = 'indralab/master'
 
 
 def lambda_handler(event, context):
@@ -83,9 +84,12 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-        core_command = ('\'[{{"name": "test", "passed": true}}]\' > {fn}.json; '
-                        'aws s3 cp {fn} results/{model_name}/{fn}')\
-            .format(fn=fn, model_name=model_name)
+        core_command = ('emmaa/scripts/update_git_and_run.sh'
+                        f' {BRANCH} '
+                        '"\'[{{\\"name\\": \\"test\\", \\"passed\\": true}}]\''
+                        f' > {fn};'
+                        f' aws s3 cp {fn}'
+                        f' results/{model_name}/{fn}"')
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
