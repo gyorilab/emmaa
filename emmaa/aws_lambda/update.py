@@ -7,7 +7,7 @@ HERE = path.dirname(path.abspath(__file__))
 
 def upload_function():
     """Upload the lambda function by pushing a zip :ile to Lambda.
-    
+
     This function pre-supposes you are running from the same directory that
     contains the lambda script, which should be named: `lambda_script.py`.
     """
@@ -17,8 +17,10 @@ def upload_function():
                  'emmaa/%s/script.py' % path.basename(HERE))
         zf.write(path.join(HERE, '__init__.py'),
                  'emmaa/%s/__init__.py' % path.basename(HERE))
-        zf.write(path.join(HERE, path.pardir, 'util.py'),
-                 'emmaa/util.py')
+        zf.write(path.join(HERE, path.pardir, 'util/date.py'),
+                 'emmaa/util/date.py')
+        zf.write(path.join(HERE, path.pardir, 'util/__init__.py'),
+                 'emmaa/util/__init__.py')
         zf.write(path.join(HERE, path.pardir, '__init__.py'),
                  'emmaa/__init__.py')
 
