@@ -1,4 +1,5 @@
 """This module implements the object model for EMMAA model testing."""
+import json
 import pickle
 import logging
 import itertools
@@ -158,6 +159,9 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
         Name of EmmaaModel to load from S3.
     test_name : str
         Name of test file to load from S3.
+    upload_results : bool
+        Whether to upload test results to S3 in JSON format. Can be set
+        to False when running tests.
 
     Returns
     -------
@@ -170,7 +174,15 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     tm = TestManager([model], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
-    results_json = tm.results_to_json()
-    import ipdb; ipdb.set_trace()
+    results_json_dict = tm.results_to_json()
+    results_json_str = json.dumps(results_json_dict)
+    # Optionally upload test results to S3
+    if upload_results:
+        s3_client = boto3.client('s3')
+        date_str = make_date_str(datetime.datetime.now())
+        result_key = f'results/{model_name}/results_{date_str}.json'
+        logger.info(f'Uploading test results to {result_key}')
+        s3_client.put_object(Bucket='emmaa', Key=result_key,
+                             Body=results_json_str.encode('utf8'))
     return tm
 
