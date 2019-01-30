@@ -2,11 +2,14 @@
 import json
 import pickle
 import logging
+import datetime
 import itertools
 import boto3
 import jsonpickle
 from indra.explanation.model_checker import ModelChecker
 from emmaa.model import EmmaaModel
+from emmaa.util import make_date_str
+
 
 logger = logging.getLogger(__name__)
 
