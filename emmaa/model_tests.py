@@ -1,6 +1,8 @@
 """This module implements the object model for EMMAA model testing."""
+import pickle
 import logging
 import itertools
+import boto3
 from indra.explanation.model_checker import ModelChecker
 
 
@@ -106,7 +108,17 @@ class StatementCheckingTest(EmmaaTest):
         return "%s(stmt=%s)" % (self.__class__.__name__, repr(self.stmt))
 
 
+def load_tests_from_s3(test_name):
+    client = boto3.client('s3')
+    test_key = f'tests/{test_name}'
+    logger.info(f'Loading tests from {test_key}')
+    obj = client.get_object(Bucket='emmaa', Key=test_key)
+    tests = pickle.loads(obj['Body'].read())
+    return tests
+
+
 def run_tests_from_s3(model_name, test_name):
+    # Get EMMAA model from S3
     pass
 
 
