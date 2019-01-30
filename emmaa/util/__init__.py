@@ -1,27 +1,10 @@
+__all__ = ['find_latest_s3_file', 'to_emmaa_stmts', 'make_date_str',
+           'get_date_from_str']
+
 import os
 import boto3
-from datetime import datetime
-from .statements import EmmaaStatement
-
-
-def make_date_str(date=None):
-    """Return a date string in a standardized format.
-
-    Parameters
-    ----------
-    date : Optional[datetime.datetime]
-        A date object to get the standardized string for. If not provided,
-        utcnow() is used to construct the date. (Note: using UTC is important
-        because this code may run in multiple contexts).
-
-    Returns
-    -------
-    str
-        The datetime string in a standardized format.
-    """
-    if not date:
-        date = datetime.utcnow()
-    return date.strftime('%Y-%m-%d-%H-%M-%S')
+from emmaa.statements import EmmaaStatement
+from .date import make_date_str, get_date_from_str
 
 
 def find_latest_s3_file(bucket, prefix):
@@ -30,7 +13,7 @@ def find_latest_s3_file(bucket, prefix):
         fname_with_extension = os.path.basename(key)
         fname = os.path.splitext(fname_with_extension)[0]
         date_str = fname.split('_')[1]
-        return datetime.strptime(date_str, '%Y-%m-%d-%H-%M-%S')
+        return get_date_from_str(date_str)
     client = boto3.client('s3')
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
     files = resp.get('Contents', [])

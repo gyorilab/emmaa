@@ -13,7 +13,7 @@ import boto3
 
 # Note that all non-standard imports will need to be added to the update script
 # including secondary, tertiary, and so forth imports.
-from emmaa.util import make_now_str
+from emmaa.util.date import make_date_str
 
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
@@ -75,7 +75,7 @@ def lambda_handler(event, context):
     """
     batch = boto3.client('batch')
 
-    fn = make_now_str() + '.json'
+    fn = make_date_str() + '.json'
 
     records = event['Records']
     for rec in records:
@@ -96,7 +96,7 @@ def lambda_handler(event, context):
                         core_command.replace('{model_name}', model_name),
                         '--project', PROJECT, '--purpose', PURPOSE]
             }
-        ret = batch.submit_job(jobName=f'{model_name}_{make_now_str()}',
+        ret = batch.submit_job(jobName=f'{model_name}_{make_date_str()}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
