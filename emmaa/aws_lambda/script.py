@@ -11,6 +11,8 @@ in this directory.
 
 import boto3
 
+# Note that all non-standard imports will need to be added to the update script
+# including secondary, tertiary, and so forth imports.
 from emmaa.util import make_now_str
 
 JOB_DEF = 'emmaa_jobdef'
@@ -28,7 +30,7 @@ print(data_str)
 dt_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 f = BytesIO(data_str.encode('utf-8'))
 s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
-""".replace('\n', '; ')
+"""
 
 
 def lambda_handler(event, context):
@@ -72,8 +74,7 @@ def lambda_handler(event, context):
     """
     batch = boto3.client('batch')
 
-    core_command = f'python -c "{TEST_PYTHON}"'
-    print(core_command)
+    fn = make_now_str() + '.json'
 
     records = event['Records']
     for rec in records:
@@ -82,6 +83,10 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
+        core_command = ('\'[{{"name": "test", "passed": true}}]\' > {fn}.json; '
+                        'aws s3 cp {fn} results/{model_name}/{fn}')\
+            .format(fn=fn, model_name=model_name)
+        print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
                         core_command.replace('{model_name}', model_name),
