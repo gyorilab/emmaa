@@ -3,6 +3,7 @@ import pickle
 import logging
 import itertools
 import boto3
+import jsonpickle
 from indra.explanation.model_checker import ModelChecker
 from emmaa.model import EmmaaModel
 
@@ -23,7 +24,7 @@ class TestManager(object):
         self.models = models
         self.tests = tests
         self.pairs_to_test = []
-        self.test_results = {}
+        self.test_results = []
 
     def make_tests(self, test_connector):
         """Generate a list of model-test pairs with a given test connector
@@ -47,8 +48,19 @@ class TestManager(object):
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
-        for idx, (model, test) in enumerate(self.pairs_to_test):
-            self.test_results[idx] = test.check(model)
+        for (model, test) in self.pairs_to_test:
+            self.test_results.append(test.check(model))
+
+    def results_to_json(self):
+        pickler = jsonpickle.pickler.Pickler()
+        results_json = []
+        for ix, (model, test) in enumerate(self.pairs_to_test):
+            results_json.append({
+                   'model_name': model.name,
+                   'test_type': test.__class__.__name__,
+                   'test_json': test.to_json(),
+                   'result_json': pickler.flatten(self.test_results[ix])})
+        return results_json
 
 
 class TestConnector(object):
@@ -104,6 +116,9 @@ class StatementCheckingTest(EmmaaTest):
         """Return a list of entities that the test checks for."""
         return self.stmt.agent_list()
 
+    def to_json(self):
+        return self.stmt.to_json()
+
     def __repr__(self):
         return "%s(stmt=%s)" % (self.__class__.__name__, repr(self.stmt))
 
@@ -130,7 +145,7 @@ def load_tests_from_s3(test_name):
     return tests
 
 
-def run_model_tests_from_s3(model_name, test_name):
+def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -146,14 +161,16 @@ def run_model_tests_from_s3(model_name, test_name):
 
     Returns
     -------
-    dict
-        Dictionary containing test results.
+    emmaa.model_tests.TestManager
+        Instance of TestManager containing the model/test pairs and the
+        test results.
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
     tm = TestManager([model], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
-    print(tm.test_results)
+    results_json = tm.results_to_json()
+    import ipdb; ipdb.set_trace()
     return tm
 

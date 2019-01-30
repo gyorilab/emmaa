@@ -10,7 +10,9 @@ def test_load_tests_from_s3():
 
 
 def test_run_tests_from_s3():
-    results = run_model_tests_from_s3('test', 'simple_model_test.pkl')
+    tm = run_model_tests_from_s3('test', 'simple_model_test.pkl',
+                                      upload_results=False)
+    
     globals().update(locals())
 
 if __name__ == '__main__':
