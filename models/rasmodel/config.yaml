@@ -1,0 +1,8 @@
+ndex:
+  network: foobar
+search_terms:
+- db_refs:
+    HGNC: '20974'
+  name:
+  search_term: '"ADGRL3"'
+  type: gene

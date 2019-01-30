@@ -3,12 +3,13 @@ import time
 import boto3
 import pickle
 import logging
-import datetime
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
 from indra.assemblers.cx import CxAssembler
+from indra.assemblers.pysb import PysbAssembler
 from emmaa.priors import SearchTerm
+from emmaa.util import make_date_str, find_latest_s3_file
 from emmaa.readers.aws_reader import read_pmid_search_terms
 
 
@@ -132,27 +133,62 @@ class EmmaaModel(object):
         ndex_client.update_network(cx_str, self.ndex_network)
 
     def save_to_s3(self):
+        """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}.pkl'
         client = boto3.client('s3')
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname)
 
-    def load_from_s3(self):
-        fname = f'{self.name}_statements.pkl'
+    @classmethod
+    def load_from_s3(klass, model_name):
+        """Load the latest model state from S3.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of model to load. This function expects the latest model
+            to be found on S3 in the emmaa bucket with key
+            'models/{model_name}/model_{date_string}', and the model config
+            file at 'models/{model_name}/config.yaml'.
+
+        Returns
+        -------
+        emmaa.model.EmmaaModel
+            Latest instance of EmmaaModel with the given name, loaded from S3.
+        """
+        base_key = f'models/{model_name}'
+        config_key = f'{base_key}/config.yaml'
+        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
         client = boto3.client('s3')
-        obj = client.get_object(Bucket='emmaa', Key=fname)
+        logger.info(f'Loading model config from {config_key}')
+        obj = client.get_object(Bucket='emmaa', Key=config_key)
+        config = yaml.load(obj['Body'].read().decode('utf8'))
+        logger.info(f'Loading model state from {latest_model_key}')
+        obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
         stmts = pickle.loads(obj['Body'].read())
-        self.stmts = stmts
+        em = klass(model_name, config)
+        em.stmts = stmts
+        return em
+
+    def get_entities(self):
+        """Return a list of Agent objects that the model contains."""
+        istmts = self.get_indra_stmts()
+        agents = []
+        for stmt in istmts:
+            agents += [a for a in stmt.agent_list() if a is not None]
+        return agents
+
+    def assemble_pysb(self):
+        """Assemble the model into PySB and return the assembled model."""
+        stmts = self.get_indra_stmts()
+        pa = PysbAssembler()
+        pa.add_statements(stmts)
+        pysb_model = pa.make_model()
+        return pysb_model
+
+    def __repr__(self):
+        return "EmmaModel(%s, %d stmts, %d search terms)" % \
+                   (self.name, len(self.stmts), len(self.search_terms))
 
 
-def load_model(name, config_file):
-    with open(config_file, 'r') as fh:
-        config = yaml.load(fh)
-    em = EmmaaModel(name, config)
-    #em.load_from_s3()
-    return em
-
-
-def make_date_str():
-    return datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')

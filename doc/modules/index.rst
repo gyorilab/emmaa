@@ -8,5 +8,7 @@ EMMAA modules reference
 
    statements
    model
+   model_tests
    priors
    readers
+   util
