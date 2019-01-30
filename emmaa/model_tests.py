@@ -104,3 +104,9 @@ class StatementCheckingTest(EmmaaTest):
 
     def __repr__(self):
         return "%s(stmt=%s)" % (self.__class__.__name__, repr(self.stmt))
+
+
+def run_tests_from_s3(model_name, test_name):
+    pass
+
+
