@@ -4,6 +4,7 @@ import yaml
 import boto3
 from indra.statements import *
 from indra.sources import trips
+from indra.assemblers.cx import CxAssembler
 from emmaa.model import EmmaaModel
 from emmaa.statements import EmmaaStatement
 from emmaa.model_tests import StatementCheckingTest
@@ -15,7 +16,11 @@ def generate_model(model_name):
     indra_stmts = tp.statements
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1')
                     for stmt in indra_stmts]
-    config_dict = {'ndex': {'network': 'testing'},
+    # Create a CXAssembled model, upload to NDEx and retrieve key
+    #cxa = CxAssembler(indra_stmts)
+    #cxa.make_model()
+    #ndex_id = cxa.upload_model(private=False)
+    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
                    'search_terms': [{'db_refs': {'HGNC': '20974'},
                                      'name': 'MAPK1',
                                      'search_term': 'MAPK1',
