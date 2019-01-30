@@ -194,6 +194,12 @@
       return $.ajax({url: url, dataType: "json"});
     };
 
+    function clearTables() {
+      document.getElementById('modelMetaDataTableBody').innerHTML = null;
+      document.getElementById('modelTestResultBody').innerHTML = null;
+      document.getElementById('modelTestsTableBody').innerHTML = null;
+    }
+
     // Can be used when something is public on S3
     function getPublicJson(bucket, key) {
       // For production: get list of results and select based on some criteria
@@ -249,7 +255,7 @@
           // console.log('List of objects resolved from S3')
           // console.log(data)
           let ddSelect = document.getElementById('modelSelectDD');
-          tableBody.innerHTML = null;
+          clearTables();
           var modelKey = '';
           for (let i = 0; i < data.Contents.length; i++) {
             if (endsWith & data.Contents[i].Key.endsWith(endsWith)) {
@@ -292,7 +298,7 @@
 
     function listModelMetaData(json) {
       var metaTableBody = document.getElementById('modelMetaDataTableBody');
-      metaTableBody.innerHTML = null;
+      clearTables();
       // Put json info in table or similar structure
       for (var k in json) {
         let tableRow = document.createElement('tr');
@@ -330,8 +336,57 @@
           break;
         }
       }
-      modelKey = 'models/' + model + '/' + model + '_model_meta.json';
-      loadModelMetaData(EMMMAA_BUCKET, modelKey);
+      if (model == 'test') {
+        modelKey = 'results/test/results_2019-01-30-14-44-59.json';
+        modelTestResultJsonPromise = getPublicJson(EMMMAA_BUCKET, modelKey)
+        modelTestResultJsonPromise.then(function(json){
+          clearTables()
+          populateTestResultTable(json[0])
+        })
+      } else {
+        modelKey = 'models/' + model + '/' + model + '_model_meta.json';
+        loadModelMetaData(EMMMAA_BUCKET, modelKey);
+      }
+    }
+
+    // Populate test results json to modelTestResultBody
+    function populateTestResultTable(json) {
+      let tableBody = document.getElementById('modelTestResultBody');
+      clearTables();
+
+      let results = json.result_json;
+
+      tableBody.appendChild(addToRow('Model Name', json.model_name));
+      tableBody.appendChild(addToRow('Test Type', json.test_type));
+
+      // Results contents: 
+      // max_path_length: int (e.g. 5)
+      // max_paths: int (e.g. 1)
+      // path_found: bool (e.g. false)
+      // path_metrics: Array []
+      // paths: Array []
+      // py/object: str (e.g. "indra.explanation.model_checker.PathResult")
+      // result_code: str (e.g. "NO_PATHS_FOUND")
+      tableBody.appendChild(addToRow('Max Path Length', results.max_path_length));
+      tableBody.appendChild(addToRow('Max Paths', results.max_paths));
+      tableBody.appendChild(addToRow('Path Found', results.path_found));
+      tableBody.appendChild(addToRow('Number of Path Metrics', results.path_metrics.length));
+      tableBody.appendChild(addToRow('Number of Paths', results.paths.length));
+      tableBody.appendChild(addToRow('Results Code', results.result_code));
+    }
+
+    function addToRow(key, value) {
+      let tableRow = document.createElement('tr');
+
+      keyColumn = document.createElement('td');
+      keyColumn.textContent = key;
+      valueColumn = document.createElement('td');
+      valueColumn.textContent = value;
+
+      tableRow.appendChild(keyColumn);
+      tableRow.appendChild(valueColumn);
+
+      return tableRow;
     }
 
     // CHANGE TEXT
@@ -360,6 +415,7 @@
         <option value="paad">Pancreas adenocarcinoma (PAAD)</option>
         <option value="prad">Prostate adenocarcinoma (PRAD)</option>
         <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
+        <option value="test">Test Model (test)</option>
       </select>
       <div class="input-group-append">
         <button class="btn btn-outline-secondary" onClick="selectModel()" type="button">Load Model</button>
@@ -367,25 +423,58 @@
     </div>
   </div>
 
+  <!-- This table displays model data -->
   <div class="container" id="modelMetaDataTable">
-    <table class="table">
-      <thead>
-        <th>Key</th>
-        <th>Value</th>
-      </thead>
-      <tbody id="modelMetaDataTableBody"></tbody>
-    </table>
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Model Info</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Key</th>
+            <th>Value</th>
+          </thead>
+          <tbody id="modelMetaDataTableBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
+  <!-- This table lists the tests -->
   <div class="container" id="modelTestsTable">
-    <table class="table">
-      <thead>
-        <th>Test ID</th>
-        <th>Passed</th>
-        <th>Details</th>
-      </thead>
-      <tbody id="modelTestsTableBody"></tbody>
-    </table>
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Latest Tests</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Test ID</th>
+            <th>Date</th>
+          </thead>
+          <tbody id="modelTestsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- This table shows the contents of a test json -->
+  <div class="container" id="modelTestResult">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Test Result Details</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Key</th>
+            <th>Value</th>
+          </thead>
+          <tbody id="modelTestResultBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 </body>
