@@ -1,4 +1,4 @@
-from emmaa.model_tests import (StatementCheckingTest, run_tests_from_s3,
+from emmaa.model_tests import (StatementCheckingTest, run_model_tests_from_s3,
                                load_tests_from_s3)
 
 def test_load_tests_from_s3():
@@ -10,8 +10,8 @@ def test_load_tests_from_s3():
 
 
 def test_run_tests_from_s3():
-    path_results = run_tests_from_s3('test', 'simple_model_test.pkl')
+    results = run_model_tests_from_s3('test', 'simple_model_test.pkl')
+    globals().update(locals())
 
 if __name__ == '__main__':
-    #test_run_tests_from_s3()
-    test_load_tests_from_s3()
+    test_run_tests_from_s3()

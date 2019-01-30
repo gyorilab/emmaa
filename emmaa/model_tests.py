@@ -4,7 +4,7 @@ import logging
 import itertools
 import boto3
 from indra.explanation.model_checker import ModelChecker
-
+from emmaa.model import EmmaaModel
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +109,19 @@ class StatementCheckingTest(EmmaaTest):
 
 
 def load_tests_from_s3(test_name):
+    """Load Emmaa Tests with the given name from S3.
+
+    Parameters
+    ----------
+    test_name : str
+        Looks for a test file in the emmaa bucket on S3 with key
+        'tests/{test_name}'.
+
+    Return
+    ------
+    list of EmmaaTest
+        List of EmmaaTest objects loaded from S3.
+    """
     client = boto3.client('s3')
     test_key = f'tests/{test_name}'
     logger.info(f'Loading tests from {test_key}')
@@ -117,8 +130,30 @@ def load_tests_from_s3(test_name):
     return tests
 
 
-def run_tests_from_s3(model_name, test_name):
-    # Get EMMAA model from S3
-    pass
+def run_model_tests_from_s3(model_name, test_name):
+    """Run a given set of tests on a given model, both loaded from S3.
 
+    After loading both the model and the set of tests, model/test overlap
+    is determined using a ScopeTestConnector and tests are run.
+
+
+    Parameters
+    ----------
+    model_name : str
+        Name of EmmaaModel to load from S3.
+    test_name : str
+        Name of test file to load from S3.
+
+    Returns
+    -------
+    dict
+        Dictionary containing test results.
+    """
+    model = EmmaaModel.load_from_s3(model_name)
+    tests = load_tests_from_s3(test_name)
+    tm = TestManager([model], tests)
+    tm.make_tests(ScopeTestConnector())
+    tm.run_tests()
+    print(tm.test_results)
+    return tm
 
