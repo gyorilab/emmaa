@@ -84,7 +84,7 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-        core_command = ('emmaa/scripts/update_git_and_run.sh'
+        core_command = ('bash emmaa/scripts/update_git_and_run.sh'
                         f' {BRANCH} '
                         '"\'[{{\\"name\\": \\"test\\", \\"passed\\": true}}]\''
                         f' > {fn};'
