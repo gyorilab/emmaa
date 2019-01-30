@@ -16,3 +16,7 @@ class EmmaaStatement(object):
         self.stmt = stmt
         self.date = date
         self.search_terms = search_terms
+
+    def __repr__(self):
+        return '%s(%s, %s, %s)' % (self.__class__.__name__, self.stmt,
+                                   self.date, self.search_terms)
