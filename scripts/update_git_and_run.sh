@@ -15,6 +15,6 @@ fi
 branch=$1
 IFS='//'; remote=($branch); unset IFS;
 git fetch $remote
-#git reset --hard $branch
+git reset --hard $branch
 command=$2
 $command
