@@ -12,7 +12,8 @@ from emmaa.model_tests import StatementCheckingTest
 
 def generate_model(model_name):
     """Generate a simple model for end-to-end testing using natural language."""
-    tp = trips.process_text('BRAF activates MAP2K1. MAP2K1 activates MAPK1.')
+    tp = trips.process_text('BRAF activates MAP2K1. '
+                            'Active MAP2K1 activates MAPK1.')
     indra_stmts = tp.statements
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1')
                     for stmt in indra_stmts]
