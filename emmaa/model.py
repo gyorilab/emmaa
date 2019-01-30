@@ -142,7 +142,21 @@ class EmmaaModel(object):
 
     @classmethod
     def load_from_s3(klass, model_name):
-        """Load the latest model state from S3."""
+        """Load the latest model state from S3.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of model to load. This function expects the latest model
+            to be found on S3 in the emmaa bucket with key
+            'models/{model_name}/model_{date_string}', and the model config
+            file at 'models/{model_name}/config.yaml'.
+
+        Returns
+        -------
+        emmaa.model.EmmaaModel
+            Latest instance of EmmaaModel with the given name, loaded from S3.
+        """
         base_key = f'models/{model_name}'
         config_key = f'{base_key}/config.yaml'
         latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
