@@ -6,15 +6,23 @@
 # environments. Do not use if you don't know what you're doing.
 #------------------------------------------------------------------------------
 
+echo $#
+echo $@
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <branch> <command>"
-    exit 1
-fi
+
+
+# if [ "$#" -ne 2 ]; then
+#     echo "Usage: $0 <branch> <command>"
+#     exit 1
+# fi
 
 branch=$1
 IFS='//'; remote=($branch); unset IFS;
-git fetch $remote
-git reset --hard $branch
-command=$2
-$command
+
+echo $branch
+echo $remote
+echo $command
+# git fetch $remote
+# git reset --hard $branch
+# command=$2
+# $command
