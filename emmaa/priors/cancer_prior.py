@@ -180,22 +180,22 @@ class TcgaCancerPrior(object):
                 hgnc_id = node.split(':')[1]
                 hgnc_name = get_hgnc_name(hgnc_id)
                 if hgnc_name is None:
-                    logger.log(f'{node} is not a valid HGNC ID')
+                    logger.log('%s is not a valid HGNC ID' % node)
                 else:
                     term = SearchTerm(type='gene', name=hgnc_name,
-                                      search_term=f'"{hgnc_name}"',
+                                      search_term='"%s"' % hgnc_name,
                                       db_refs={'HGNC': hgnc_id})
                     terms.append(term)
             elif node.startswith('MESH:'):
                 mesh_id = node.split(':')[1]
                 # TODO: get actual process name here
                 term = SearchTerm(type='bioprocess', name=mesh_id,
-                                  search_term=f'{mesh_id}[MeSH Terms]',
+                                  search_term='%s[MeSH Terms]' % mesh_id,
                                   db_refs={'MESH': mesh_id})
                 terms.append(term)
             # TODO: handle GO here
             else:
-                logger.warning(f'Could not create search term from {node}')
+                logger.warning('Could not create search term from %s' % node))
         return sorted(terms, key=lambda x: x.name)
 
     @staticmethod
@@ -207,7 +207,7 @@ class TcgaCancerPrior(object):
                 if stmt.obj.db_refs.get('HGNC') == hgnc_id:
                     term = SearchTerm(type='drug', name=stmt.subj.name,
                                       db_refs=stmt.subj.db_refs,
-                                      search_term=f'"{stmt.subj.name}"')
+                                      search_term='"%s"' % stmt.subj.name)
                     drugs_for_gene.append(term)
             return drugs_for_gene
 

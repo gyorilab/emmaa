@@ -22,7 +22,7 @@ def __get_jobs(batch):
 def test_handler():
     """Test the lambda handler locally."""
     dts = make_now_str()
-    key = f'models/test/test_model_{dts}.pkl'
+    key = 'models/test/test_model_%s.pkl' % dts
     event = {'Records': [{'s3': {'object': {'key': key}}}]}
     context = None
     res = lambda_handler(event, context)
@@ -52,7 +52,7 @@ def test_s3_response():
     batch = boto3.client('batch')
 
     # Define some fairly random parameters.
-    key = f'models/test/model_{make_now_str()}.pkl'
+    key = 'models/test/model_%s.pkl' % make_now_str()
     data = {'test_message': 'Hello world!'}
 
     # This should trigger the lambda to start a batch job.
