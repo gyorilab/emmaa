@@ -17,10 +17,8 @@ def upload_function():
                  'emmaa/%s/script.py' % path.basename(HERE))
         zf.write(path.join(HERE, '__init__.py'),
                  'emmaa/%s/__init__.py' % path.basename(HERE))
-        zf.write(path.join(HERE, path.pardir, 'util/date.py'),
-                 'emmaa/util/date.py')
-        zf.write(path.join(HERE, path.pardir, 'util/__init__.py'),
-                 'emmaa/util/__init__.py')
+        zf.write(path.join(HERE, path.pardir, 'date.py'),
+                 'emmaa/date.py')
         zf.write(path.join(HERE, path.pardir, '__init__.py'),
                  'emmaa/__init__.py')
 
