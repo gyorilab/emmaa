@@ -9,7 +9,7 @@ if __name__ == '__main__':
     cancer_types = ('aml', 'brca', 'luad', 'paad', 'prad', 'skcm')
 
     for ctype in cancer_types:
-        config = yaml.load(open('models/%s/config.yaml' % ctype, 'r'))
+        config = yaml.load(open(f'models/{ctype}/config.yaml', 'r'))
         em = EmmaaModel(ctype, config)
         em.load_from_s3()
         em.get_new_readings()

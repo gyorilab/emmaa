@@ -18,10 +18,9 @@ def update_cancer(cancer_type):
         directory in the models directory, as described above.
     """
     print(cancer_type)
-    with open('models/%s/prior_stmts.pkl' % cancer_type, 'rb') as fh:
-
+    with open(f'models/{cancer_type}/prior_stmts.pkl', 'rb') as fh:
         stmts = pickle.load(fh)
-    config = yaml.load(open('models/%s/config.yaml' % cancer_type, 'r'))
+    config = yaml.load(open(f'models/{cancer_type}/config.yaml', 'r'))
     em = EmmaaModel(cancer_type, config)
     ess = [EmmaaStatement(st, datetime.datetime.now(), []) for st in stmts]
     em.add_statements(ess)

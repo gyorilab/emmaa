@@ -11,7 +11,7 @@ from emmaa.priors.cancer_prior import TcgaCancerPrior
 '''
 def get_terms(ctype):
     tcp = TcgaCancerPrior(ctype, 'stmts_by_pair_type.csv',
-                          mutation_cache='mutations_%s.json' % ctype)
+                          mutation_cache=f'mutations_{ctype}.json')
     nodes = tcp.make_prior(pct_heat_threshold=99)
     cancer_terms = tcp.search_terms_from_nodes(nodes)
     drug_terms = tcp.find_drugs_for_genes(nodes)
@@ -20,7 +20,7 @@ def get_terms(ctype):
 
 
 def get_top_genes(ctype)
-    mut_file = 'mutations_%s.json' % ctype
+    mut_file = f'mutations_{ctype}.json'
     with open(mut_file, 'r') as fh:
         mut_counts = json.load(fh)
     norm_mut_counts = {g: TcgaCancerPrior.normalize_mutation_count(g, n) for
@@ -32,7 +32,7 @@ def get_top_genes(ctype)
 
 
 def load_config(ctype):
-    fname = 'models/%s/config.yaml' % ctype
+    fname = f'models/{ctype}/config.yaml'
     with open(fname, 'r') as fh:
         config = yaml.load(fh)
     # TODO: make the search term entries here SearchTerm objects
@@ -40,7 +40,7 @@ def load_config(ctype):
 
 
 def save_config(ctype, terms):
-    fname = 'models/%s/config.yaml' % ctype
+    fname = f'models/{ctype}/config.yaml'
     config = load_config(ctype)
     config['search_terms'] = [term.to_json() for term in terms]
     with open(fname, 'w') as fh:
@@ -48,12 +48,12 @@ def save_config(ctype, terms):
 
 
 def save_prior(stmts):
-    with open('models/%s/prior_stmts.pkl' % ctype, 'wb') as fh:
+    with open(f'models/{ctype}/prior_stmts.pkl', 'wb') as fh:
         pickle.dump(stmts, fh)
 
 
 def upload_prior(ctype, config):
-    fname = 'models/%s/prior_stmts.pkl' % ctype
+    fname = f'models/{ctype}/prior_stmts.pkl'
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
     estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])

@@ -82,7 +82,7 @@ class EmmaaModel(object):
         term_to_pmids = {}
         for term in self.search_terms:
             pmids = pubmed_client.get_ids(term, reldate=date_limit)
-            logger.info('%d PMIDs found for %s' % (len(pmids), term))
+            logger.info(f'{len(pmids)} PMIDs found for {term}')
             term_to_pmids[term] = pmids
             time.sleep(0.5)
         pmid_to_terms = {}
@@ -135,7 +135,7 @@ class EmmaaModel(object):
     def save_to_s3(self):
         """Dump the model state to S3."""
         date_str = make_date_str()
-        fname = 'models/%s/model_%s.pkl' % (self.name, date_str)
+        fname = f'models/{self.name}/model_{date_str}.pkl'
         client = boto3.client('s3')
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname)
@@ -157,14 +157,14 @@ class EmmaaModel(object):
         emmaa.model.EmmaaModel
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
-        base_key = 'models/%s' % model_name
-        config_key = '%s/config.yaml' % base_key
-        latest_model_key = find_latest_s3_file('emmaa', '%s/model_' % base_key)
+        base_key = f'models/{model_name}'
+        config_key = f'{base_key}/config.yaml'
+        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
         client = boto3.client('s3')
-        logger.info('Loading model config from %s' % config_key)
+        logger.info(f'Loading model config from {config_key}')
         obj = client.get_object(Bucket='emmaa', Key=config_key)
         config = yaml.load(obj['Body'].read().decode('utf8'))
-        logger.info('Loading model state from %s' % latest_model_key)
+        logger.info(f'Loading model state from {latest_model_key}')
         obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
         stmts = pickle.loads(obj['Body'].read())
         em = klass(model_name, config)

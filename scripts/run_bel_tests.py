@@ -32,7 +32,7 @@ if __name__ == '__main__':
             pickle.dump(tests, f)
     elif mode == 'run':
         ctypes = ['rasmodel']
-        models = [load_model(ctype, 'models/%s/config.yaml' % ctype)
+        models = [load_model(ctype, f'models/{ctype}/config.yaml')
                   for ctype in ctypes]
         tm = TestManager(models, tests)
         tm.make_tests(ScopeTestConnector())
