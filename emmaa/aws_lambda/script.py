@@ -93,8 +93,8 @@ def lambda_handler(event, context):
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
-                        core_command.replace('{model_name}', model_name),
-                        '--project', PROJECT, '--purpose', PURPOSE]
+                        '--project', PROJECT, '--purpose', PURPOSE,
+                        core_command.replace('{model_name}', model_name)]
             }
         ret = batch.submit_job(jobName=f'{model_name}_{make_date_str()}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
