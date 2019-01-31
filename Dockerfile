@@ -11,3 +11,6 @@ RUN git clone --recursive https://github.com/indralab/emmaa.git && \
     git checkout $BUILD_BRANCH && \
     echo $BUILD_BRANCH && \
     git branch
+
+ENV EMMAAPATH /sw/emmaa
+WORKDIR $EMMAAPATH
