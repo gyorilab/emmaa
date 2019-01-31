@@ -16,383 +16,346 @@
 
   <!-- AWS SDK -->
   <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
+
+  <!-- Local Script Files -->
+  <!-- <script src="http://localhost/awsServices.js"></script> -->
+  <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
+  <!-- <script src="http://localhost/emmaaFunctions.js"></script> -->
+  <script src="https://s3.amazonaws.com/emmaa-test/emmaaFunctions.js"></script>
   <script>
     // Check if user signed in immediately after page load
     $(document).ready(function(){
       checkSignIn()
     })
 
-    function grabJSON (url, callback) {
-      return $.ajax({url: url, dataType: "json"});
-    };
+    var OUTPUT_NODE = document.getElementById('signInUserPool');
 
-    // Constants and fixed IDs
-    var EMMAA_STATE_COOKIE_NAME = 'emmaaStateCookie=';
-    var EMMAA_ACCESSTOKEN_COOKIE_NAME = 'emmaaAccessCookie=';
-    var EMMAA_IDTOKEN_COOKIE_NAME = 'emmaaIdCookie=';
-    var STATE_VALUE = '' // State value to secure requests to cognito endpoints
-    var ACCESS_TOKEN_STRING = ''; // access token string
-    var ACCESS_TOKEN = {}; // access token
-    var ID_TOKEN_STRING = ''; // id token string
-    var ID_TOKEN = {}; // id token
-    var REFRESH_TOKEN = ''; // refresh token (typically not provided without providing username/password directly)
-    var APP_CLIENT_ID = '3ej6b95mbsu28e5nkcb6oa8fnp';
-    var AUTH_ENDPOINT_BASE_URL = 'https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?';
-    var USER_SIGNED_IN = false;
-    var identityId = '' // 
+    // function grabJSON (url, callback) {
+    //   return $.ajax({url: url, dataType: "json"});
+    // };
 
-    // cognito parameters
-    var USER_POOL_ID = 'us-east-1_5sb1590b6'; // User pool ID; User info lives here
-    var IDENTITY_POOL_ID = 'us-east-1:76854655-a365-4e69-b080-0f8ca94a46fc'; // IdentityPool Id for "emmaa s3 test pool"
-    AWS.config.region = 'us-east-1' // Set region
-    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: IDENTITY_POOL_ID,
-    });
-    var cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
+    // // Constants and fixed IDs
+    // var EMMAA_STATE_COOKIE_NAME = 'emmaaStateCookie=';
+    // var EMMAA_ACCESSTOKEN_COOKIE_NAME = 'emmaaAccessCookie=';
+    // var EMMAA_IDTOKEN_COOKIE_NAME = 'emmaaIdCookie=';
+    // var STATE_VALUE = '' // State value to secure requests to cognito endpoints
+    // var ACCESS_TOKEN_STRING = ''; // access token string
+    // var ACCESS_TOKEN = {}; // access token
+    // var ID_TOKEN_STRING = ''; // id token string
+    // var ID_TOKEN = {}; // id token
+    // var REFRESH_TOKEN = ''; // refresh token (typically not provided without providing username/password directly)
+    // var APP_CLIENT_ID = '3ej6b95mbsu28e5nkcb6oa8fnp';
+    // var AUTH_ENDPOINT_BASE_URL = 'https://emmaa.auth.us-east-1.amazoncognito.com/oauth2/authorize?';
+    // var USER_SIGNED_IN = false;
+    // var identityId = '' // 
 
-    function _readCookie(cookieName) {
-      console.log('function _readCookie()')
-      var nameEQ = cookieName;
-      var ca = document.cookie.split(';');
-      for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) == 0) {
-          console.log('function _readCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
-          return c.substring(nameEQ.length, c.length)
-        };
-      }
-      console.log('function _readCookie() did not resolve cookie value')
-      return;
-    }
+    // // cognito parameters
+    // var USER_POOL_ID = 'us-east-1_5sb1590b6'; // User pool ID; User info lives here
+    // var IDENTITY_POOL_ID = 'us-east-1:76854655-a365-4e69-b080-0f8ca94a46fc'; // IdentityPool Id for "emmaa s3 test pool"
+    // AWS.config.region = 'us-east-1' // Set region
+    // AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    //     IdentityPoolId: IDENTITY_POOL_ID,
+    // });
+    // var cogIdServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
-    function _writeCookie(cookieName, value, hours) {
-      console.log('function _writeCookie(cookieName, value, hours)')
-      if (hours) {
-        let _hours = 0;
-        maxHours = 12;
-        if (hours > maxHours) {
-          _hours = maxHours;
-        } else {
-          _hours = hours;
-        } 
-        // console.log('hours to expiration: ' + _hours)
-        var date = new Date();
-        date.setTime(date.getTime() + (_hours*60*60*1000))
-        var expires = '; expires=' + date.toGMTString();
-        // console.log('cookie expiration date: ' + date.toGMTString());
-      } else var expires = '';  // No expiration or infinite?
+    // function _readCookie(cookieName) {
+    //   console.log('function _readCookie()')
+    //   var nameEQ = cookieName;
+    //   var ca = document.cookie.split(';');
+    //   for (var i = 0; i < ca.length; i++) {
+    //     var c = ca[i];
+    //     while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+    //     if (c.indexOf(nameEQ) == 0) {
+    //       console.log('function _readCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
+    //       return c.substring(nameEQ.length, c.length)
+    //     };
+    //   }
+    //   console.log('function _readCookie() did not resolve cookie value')
+    //   return;
+    // }
 
-      var cookieString = cookieName + value + expires + '; path=/'
-      // console.log('cookieString: ' + cookieString);
-      document.cookie = cookieString;
-    }
+    // function _writeCookie(cookieName, value, hours) {
+    //   console.log('function _writeCookie(cookieName, value, hours)')
+    //   if (hours) {
+    //     let _hours = 0;
+    //     maxHours = 12;
+    //     if (hours > maxHours) {
+    //       _hours = maxHours;
+    //     } else {
+    //       _hours = hours;
+    //     }
+    //     // console.log('hours to expiration: ' + _hours)
+    //     var date = new Date();
+    //     date.setTime(date.getTime() + (_hours*60*60*1000))
+    //     var expires = '; expires=' + date.toGMTString();
+    //     // console.log('cookie expiration date: ' + date.toGMTString());
+    //   } else var expires = '';  // No expiration or infinite?
 
-    function _getNewStateValue() {
-      let state = ''
-      let numArray = window.crypto.getRandomValues(new Uint32Array(4))
-      for (num of numArray) {
-        state = state + window.btoa(num).replace(/=/g, '');
-      }
-      return state
-    }
+    //   var cookieString = cookieName + value + expires + '; path=/'
+    //   // console.log('cookieString: ' + cookieString);
+    //   document.cookie = cookieString;
+    // }
 
-    function getDictFromUrl(url) {
-      // No url provided
-      if (!url) return;
-      var query = {};
-      // Check if (authorization) code flow or token (implicit) flow
-      if (url.split('#')[1]) {
-        query = url.split('#')[1];
-      } else if (url.split('?')[1]) {
-        query = url.split('?')[1];
-      } else return;
+    // function _getNewStateValue() {
+    //   let state = ''
+    //   let numArray = window.crypto.getRandomValues(new Uint32Array(4))
+    //   for (num of numArray) {
+    //     state = state + window.btoa(num).replace(/=/g, '');
+    //   }
+    //   return state
+    // }
+
+    // function getDictFromUrl(url) {
+    //   // No url provided
+    //   if (!url) return;
+    //   var query = {};
+    //   // Check if (authorization) code flow or token (implicit) flow
+    //   if (url.split('#')[1]) {
+    //     query = url.split('#')[1];
+    //   } else if (url.split('?')[1]) {
+    //     query = url.split('?')[1];
+    //   } else return;
       
-      var result = {};
-      query.split("&").forEach(function(part) {
-        var item = part.split("=");
-        result[item[0]] = decodeURIComponent(item[1]);
-      });
-      return result;
-    }
+    //   var result = {};
+    //   query.split("&").forEach(function(part) {
+    //     var item = part.split("=");
+    //     result[item[0]] = decodeURIComponent(item[1]);
+    //   });
+    //   return result;
+    // }
 
-    function responseResolve(err, data) {
-      if (err) {
-        console.log('Error occured while trying to initiate auth:')
-        console.log(err, err.stack)
-      } else {
-        console.log('Auth data:')
-        console.log(data)
-        tokenData = data.AuthenticationResult;
-        verifyUser(tokenData.AccessToken, tokenData.IdToken);
-        return tokenData;
-      }
-    }
+    // function responseResolve(err, data) {
+    //   if (err) {
+    //     console.log('Error occured while trying to initiate auth:')
+    //     console.log(err, err.stack)
+    //   } else {
+    //     console.log('Auth data:')
+    //     console.log(data)
+    //     tokenData = data.AuthenticationResult;
+    //     verifyUser(tokenData.AccessToken, tokenData.IdToken);
+    //     return tokenData;
+    //   }
+    // }
 
-    function getTokenFromAuthEndpoint() {
-      console.log('function getTokenFromAuthEndpoint()')
-      STATE_VALUE = _getNewStateValue();
-      // console.log('current STATE_VALUE: ' + STATE_VALUE)
-      _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
-      base_url = AUTH_ENDPOINT_BASE_URL;
-      resp_type = 'response_type=token';
-      client_id='client_id=' + APP_CLIENT_ID;
-      redirect = 'redirect_uri=http://localhost:5000/index.html';
-      state = 'state=' + STATE_VALUE;
-      cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
-      scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
-      let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
-      console.log('get_url=' + get_url)
-      window.location.replace(get_url) // Redirect
-    }
+    // function getTokenFromAuthEndpoint() {
+    //   console.log('function getTokenFromAuthEndpoint()')
+    //   STATE_VALUE = _getNewStateValue();
+    //   // console.log('current STATE_VALUE: ' + STATE_VALUE)
+    //   _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
+    //   base_url = AUTH_ENDPOINT_BASE_URL;
+    //   resp_type = 'response_type=token';
+    //   client_id='client_id=' + APP_CLIENT_ID;
+    //   redirect = 'redirect_uri=http://localhost:5000/index.html';
+    //   state = 'state=' + STATE_VALUE;
+    //   cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
+    //   scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
+    //   let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
+    //   console.log('get_url=' + get_url)
+    //   window.location.replace(get_url) // Redirect
+    // }
 
-    // Signing in using username/password, return JWTs
-    function signIn() {
-      console.log('Sign in button')
-      cogIdServiceProvider.initiateAuth({
-        'AuthFlow': 'USER_PASSWORD_AUTH', // What type of authentication to use
-        'ClientId': APP_CLIENT_ID, // AppClientId for UserPool??
+    // // Signing in using username/password, return JWTs
+    // function signIn(uname, pwd) {
+    //   console.log('Sign in button')
+    //   cogIdServiceProvider.initiateAuth({
+    //     'AuthFlow': 'USER_PASSWORD_AUTH', // What type of authentication to use
+    //     'ClientId': APP_CLIENT_ID, // AppClientId for UserPool??
         
-        AuthParameters: {
-          'USERNAME': document.getElementById('uname_input').value,
-          'PASSWORD': document.getElementById('pwd_input').value
-          /* '<StringType>': ... */
-        }
-      }, function(err, data) {
-        responseResolve(err, data)
-      });
-    }
+    //     AuthParameters: {
+    //       'USERNAME': uname,
+    //       'PASSWORD': pwd
+    //       /* '<StringType>': ... */
+    //     }
+    //   }, function(err, data) {
+    //     responseResolve(err, data)
+    //   });
+    // }
 
-    // CHECK SIGN IN
-    // this function should check if there is a session active and get the user pool tokens for that session
-    function checkSignIn() {
-      console.log('function checkSignIn()')
-      STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
-      let return_url = window.location.href;
-      console.log('Return url: ' + return_url);
-      url_dict = getDictFromUrl(return_url);
+    // // CHECK SIGN IN
+    // // this function should check if there is a session active and get the user pool tokens for that session
+    // function checkSignIn() {
+    //   console.log('function checkSignIn()')
+    //   STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
+    //   let return_url = window.location.href;
+    //   console.log('Return url: ' + return_url);
+    //   url_dict = getDictFromUrl(return_url);
 
-      // No dict returned. Probably at first visit to page
-      if (!url_dict) return;
-      // console.log('returned url_dict')
-      // console.log(url_dict)
+    //   // No dict returned. Probably at first visit to page
+    //   if (!url_dict) return;
+    //   // console.log('returned url_dict')
+    //   // console.log(url_dict)
 
-      // State value does not match, do not proceed; Simple first layer security
-      if (url_dict['state'] != STATE_VALUE) {
-        console.log('State Value does not match');
-        notifyUser('State Value does not match');
-        return;
-      };
+    //   // State value does not match, do not proceed; Simple first layer security
+    //   if (url_dict['state'] != STATE_VALUE) {
+    //     console.log('State Value does not match');
+    //     notifyUser(document.getElementById('signInUserPool'), 'State Value does not match');
+    //     return;
+    //   };
 
-      // Check if token flow
-      if (url_dict['access_token']) {
-        console.log('token from authorization-endpoint flow!')
-        // console.log('ID token: ' + url_dict['id_token']);
-        // console.log('Access token: ' + url_dict['access_token']);
-        // console.log('token type: ' + url_dict['token_type']);
-        // console.log('expires in: ' + url_dict['expires_in']);
-        // console.log('STATE_VALUE match: ' + (url_dict['state'] == STATE_VALUE));
-        if (verifyUser(url_dict['access_token'], url_dict['id_token'])) {
-          console.log('User verified')
-        } else {
-          console.log('User could not be verified...')
-        }
-      } else {
-        console.log('No pattern match...')
-        notifyUser('Unable to retreive session/session expired. Please log in again.');
-      }
-    }
+    //   // Check if token flow
+    //   if (url_dict['access_token']) {
+    //     console.log('token from authorization-endpoint flow!')
+    //     // console.log('ID token: ' + url_dict['id_token']);
+    //     // console.log('Access token: ' + url_dict['access_token']);
+    //     // console.log('token type: ' + url_dict['token_type']);
+    //     // console.log('expires in: ' + url_dict['expires_in']);
+    //     // console.log('STATE_VALUE match: ' + (url_dict['state'] == STATE_VALUE));
+    //     if (verifyUser(url_dict['access_token'], url_dict['id_token'])) {
+    //       console.log('User verified')
+    //     } else {
+    //       console.log('User could not be verified...')
+    //     }
+    //   } else {
+    //     console.log('No pattern match...')
+    //     notifyUser(document.getElementById('signInUserPool'), 'Unable to retreive session/session expired. Please log in again.');
+    //   }
+    // }
 
-    // VERIFY USER 
-    function verifyUser(accessTokenString, idTokenString) {
-      console.log('function verifyUser(accessTokenString, idTokenString)');
-      cogIdServiceProvider.getUser({'AccessToken': accessTokenString}, function(err, data) {
-        if (err) {
-          notifyUser('Could not verify user');
-          return false;
-        } else {
-          // console.log('User meta data from cogIdServiceProvider.getUser()');
-          // console.log(data);
-          username = data.Username;
-          notifyUser('Hello ' + username);
-          ACCESS_TOKEN_STRING = accessTokenString;
-          _writeCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME, ACCESS_TOKEN_STRING, 1);
-          ID_TOKEN_STRING = idTokenString;
-          _writeCookie(EMMAA_IDTOKEN_COOKIE_NAME, ID_TOKEN_STRING, 1);
-          USER_SIGNED_IN = true
-          addUserToIdentityCredentials(ID_TOKEN_STRING) // Add user to identity pool 
-          return true;
-        }
-      })
-    }
+    // // VERIFY USER 
+    // function verifyUser(accessTokenString, idTokenString) {
+    //   console.log('function verifyUser(accessTokenString, idTokenString)');
+    //   cogIdServiceProvider.getUser({'AccessToken': accessTokenString}, function(err, data) {
+    //     if (err) {
+    //       notifyUser(document.getElementById('signInUserPool'), 'Could not verify user');
+    //       return false;
+    //     } else {
+    //       // console.log('User meta data from cogIdServiceProvider.getUser()');
+    //       // console.log(data);
+    //       username = data.Username;
+    //       notifyUser(document.getElementById('signInUserPool'), 'Hello ' + username);
+    //       ACCESS_TOKEN_STRING = accessTokenString;
+    //       _writeCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME, ACCESS_TOKEN_STRING, 1);
+    //       ID_TOKEN_STRING = idTokenString;
+    //       _writeCookie(EMMAA_IDTOKEN_COOKIE_NAME, ID_TOKEN_STRING, 1);
+    //       USER_SIGNED_IN = true
+    //       addUserToIdentityCredentials(ID_TOKEN_STRING) // Add user to identity pool 
+    //       return true;
+    //     }
+    //   })
+    // }
 
-    // ADD USER TO THE CREDENTIALS LOGIN MAP
-    function addUserToIdentityCredentials(userIdToken) {
-      console.log('Linking user to IdentityPool with ID userIdToken')
-      AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-          IdentityPoolId: IDENTITY_POOL_ID,
-          Logins: {
-            // cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>
-            'cognito-idp.us-east-1.amazonaws.com/us-east-1_5sb1590b6': userIdToken
-          }
-      });
+    // // ADD USER TO THE CREDENTIALS LOGIN MAP
+    // function addUserToIdentityCredentials(userIdToken) {
+    //   console.log('Linking user to IdentityPool with ID userIdToken')
+    //   AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    //       IdentityPoolId: IDENTITY_POOL_ID,
+    //       Logins: {
+    //         // cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>
+    //         'cognito-idp.us-east-1.amazonaws.com/us-east-1_5sb1590b6': userIdToken
+    //       }
+    //   });
 
-      // Call to obtain credentials
-      AWS.config.credentials.get(function(){
+    //   // Call to obtain credentials
+    //   AWS.config.credentials.get(function(){
 
-          // Credentials will be available when this function is called.
-          var accessKeyId = AWS.config.credentials.accessKeyId;
-          var secretAccessKey = AWS.config.credentials.secretAccessKey;
-          var sessionToken = AWS.config.credentials.sessionToken;
-      });
+    //       // Credentials will be available when this function is called.
+    //       var accessKeyId = AWS.config.credentials.accessKeyId;
+    //       var secretAccessKey = AWS.config.credentials.secretAccessKey;
+    //       var sessionToken = AWS.config.credentials.sessionToken;
+    //   });
 
-      // AWS.config.credentials.identityId should now be available
-      console.log('Setting identityId for logged in user')
-      identityId = AWS.config.credentials.identityId;
-    }
+    //   // AWS.config.credentials.identityId should now be available
+    //   console.log('Setting identityId for logged in user')
+    //   identityId = AWS.config.credentials.identityId;
+    // }
 
-    // S3 FUNCTIONS
-    function populateS3TestResultsJSON (resultsJson) {
-      let testResultsTableBody = document.getElementById('resultsTableBody');
-      testResultsTableBody.innerHTML = null;
-
-      for (var k in resultsJson) {
-        let tableRow = document.createElement('tr');
-        
-        keyColumn = document.createElement('td');
-        keyColumn.textContent = k
-        valueColumn = document.createElement('td');
-        valueColumn.textContent = resultsJson[k]
-
-        tableRow.appendChild(keyColumn);
-        tableRow.appendChild(valueColumn);
-
-        testResultsTableBody.appendChild(tableRow);
-      }
-    }
-
-    function populateModelsList(s3Interface) {
-      // console.log('function populateModelsList(s3Interface)');
-      let bucket = 'emmaa';
-      let prefix = 'results';
-      let endsWith = '.json';
-      listObjectsInBucket(s3Interface, bucket, prefix, 100, endsWith);
-    }
-
-    function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith) {
-      // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
-      let _maxKeys = 1000
-      if (maxKeys) {
-        _maxKeys = maxKeys;
-      }
-      let params = {
-        Bucket: bucket,
-        MaxKeys: _maxKeys,
-        Prefix: prefix
-      }
-      s3Interface.listObjectsV2(params, function(err, data) {
-        if (err) console.log(err, err.stack);
-        else {
-          // console.log('List of objects resolved from S3')
-          // console.log(data)
-          let tableBody = document.getElementById('listObjectsTableBody');
-          tableBody.innerHTML = null;
-          for (let i = 0; i < data.Contents.length; i++) {
-            if (data.Contents[i].Key.endsWith(endsWith)) {
-              let tableRow = document.createElement('tr');
+    // function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith) {
+    //   // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
+    //   let _maxKeys = 1000
+    //   if (maxKeys) {
+    //     _maxKeys = maxKeys;
+    //   }
+    //   let params = {
+    //     Bucket: bucket,
+    //     MaxKeys: _maxKeys,
+    //     Prefix: prefix
+    //   }
+    //   s3Interface.listObjectsV2(params, function(err, data) {
+    //     if (err) console.log(err, err.stack);
+    //     else {
+    //       // console.log('List of objects resolved from S3')
+    //       // console.log(data)
+    //       let tableBody = document.getElementById('listObjectsTableBody');
+    //       tableBody.innerHTML = null;
+    //       for (let i = 0; i < data.Contents.length; i++) {
+    //         if (data.Contents[i].Key.endsWith(endsWith)) {
+    //           let tableRow = document.createElement('tr');
               
-              let modelColumn = document.createElement('td');
+    //           let modelColumn = document.createElement('td');
 
-              let modelLink = document.createElement('a');
-              modelLink.setAttribute('href', '#'); // LINK TO MODEL
-              modelLink.textContent = data.Contents[i].Key.split('/')[1]
-              modelColumn.appendChild(modelLink)
-              tableRow.appendChild(modelColumn);
+    //           let modelLink = document.createElement('a');
+    //           modelLink.setAttribute('href', '#'); // LINK TO MODEL
+    //           modelLink.textContent = data.Contents[i].Key.split('/')[1]
+    //           modelColumn.appendChild(modelLink)
+    //           tableRow.appendChild(modelColumn);
 
-              let testColumn = document.createElement('td');
-              testColumn.textContent = data.Contents[i].Key.split('/')[2].split('.')[0];
-              let testJsonPromise = getPublicJson(bucket, data.Contents[i].Key);
-              testJsonPromise.then(function(json){
-                if (json[0].passed) {
-                  testColumn.setAttribute('bgcolor', '00AA55;'); // Green if passed
-                }
-                else {
-                  testColumn.setAttribute('bgcolor', 'DD4400;'); // Red if not
-                }
-              });
-              tableRow.appendChild(testColumn);
+    //           let testColumn = document.createElement('td');
+    //           testColumn.textContent = data.Contents[i].Key.split('/')[2].split('.')[0];
+    //           let testJsonPromise = getPublicJson(bucket, data.Contents[i].Key);
+    //           testJsonPromise.then(function(json){
+    //             if (json[0].passed) {
+    //               testColumn.setAttribute('bgcolor', '00AA55;'); // Green if passed
+    //             }
+    //             else {
+    //               testColumn.setAttribute('bgcolor', 'DD4400;'); // Red if not
+    //             }
+    //           });
+    //           tableRow.appendChild(testColumn);
 
-              tableBody.appendChild(tableRow);
-            }
-          }
-        }
-      });
-    };
+    //           tableBody.appendChild(tableRow);
+    //         }
+    //       }
+    //     }
+    //   });
+    // };
 
-    function getFromS3(getListPrefix, model, fileName) {
-      // Test these addresses:
-      // Behind some type of permissions wall
-      // https://s3.amazonaws.com/emmaa/results/brca/2018-12-13-21-23-15.json
-      // Fully public
-      // https://s3.amazonaws.com/emmaa-test/test-results-public/test_json_on_S3.json
-      // https://s3.amazonaws.com/emmaa-test/results/brca/2018-12-13-21-23-15.json
-      bucket = 'emmaa-test'
-      key = 'results/brca/2018-12-13-21-23-15.json'
-      // let s3JSON = readFromS3();
+    // // Can be used when something is public on S3
+    // function getPublicJson(bucket, key) {
+    //   // For production: get list of results and select based on some criteria
+    //   base_url = 'https://s3.amazonaws.com'
+    //   pathString = '/' + bucket + '/' + key;
+    //   url = base_url +  pathString.replace(/\/\//g, '/'); // Avoid double slashes;
+    //   // console.log('getting json from ' + url);
+    //   return grabJSON(url);
+    // }
 
-      let s3JsonPromise = getPublicJson(bucket, key);
-      s3JsonPromise.then(function(s3JSON) {
-        if (s3JSON.length == 1) populateS3TestResultsJSON(s3JSON[0])
-        else populateS3TestResultsJSON(s3JSON)
-      })
-    }
+    // // When and object needs credentials to be read from S3
+    // function readFromS3(bucket, key) {
+    //   s3InterfaceOptions = {
+    //     credentials: AWS.config.credentials
+    //   }
+    //   console.log('New s3 interface object using the following AWS.config.credentials:');
+    //   console.log(AWS.config.credentials);
+    //   var s3Interface = new AWS.S3(s3InterfaceOptions);
+    //   var params = {
+    //     Bucket: bucket,
+    //     Key: key
+    //     // Bucket: 'emmaa-test',
+    //     // Key: 'test-results-public/test_json_on_S3.json',
+    //   }
 
-    // Can be used when something is public on S3
-    function getPublicJson(bucket, key) {
-      // For production: get list of results and select based on some criteria
-      base_url = 'https://s3.amazonaws.com'
-      pathString = '/' + bucket + '/' + key;
-      url = base_url +  pathString.replace(/\/\//g, '/'); // Avoid double slashes;
-      // console.log('getting json from ' + url);
-      return grabJSON(url);
-    }
+    //   // Documentation for s3.getObject():
+    //   // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getObject-property
+    //   s3Interface.getObject(params, function(err, data){
+    //     if (err) {
+    //       console.log(err);
+    //       return;
+    //     }
+    //     else {
+    //       console.log('S3 getOjbect resolved successfully');
+    //       console.log(data);
+    //       let s3ObjectJSON = data.Body;
+    //       return s3ObjectJSON;
+    //     }
+    //   });
+    // }
 
-    function readFromS3() {
-      s3InterfaceOptions = {
-        credentials: AWS.config.credentials
-      }
-      console.log('New s3 interface object using the following AWS.config.credentials:');
-      console.log(AWS.config.credentials);
-      var s3Interface = new AWS.S3(s3InterfaceOptions);
-      var params = {
-        Bucket: 'emmaa-test',
-        Key: 'test-results-public/test_json_on_S3.json',
-        // Key: 'test-results/test_json_on_S3',
-      }
+    // // CHANGE TEXT
+    // function notifyUser(outputNode, outputText) {
+    //   // Add other things here
+    //   outputNode.textContent = outputText;
+    // }
 
-      // Documentation for s3.getObject():
-      // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getObject-property
-      s3Interface.getObject(params, function(err, data){
-        if (err) {
-          console.log(err);
-          return;
-        }
-        else {
-          console.log('S3 getOjbect resolved successfully');
-          console.log(data);
-          let s3ObjectJSON = data.Body;
-          return s3ObjectJSON;
-        }
-      });
-    }
-
-    // CHANGE TEXT
-    function notifyUser(outputText) {
-      // let outputDiv = document.getElementById('sign-in-check');
-      let outputDiv = document.getElementById('signInUserPool');
-      // outputDiv.style = "color: #0000ff;"
-      outputDiv.textContent = outputText;
-    }
   </script>
 
   <style type="text/css">
@@ -428,8 +391,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/aml_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of acute myeloid leukemia</p>
-            <p class="card-text" id="amlStatus">Status of latest test</p>
-            <p class="card-text" id="amlUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="amlUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=aml">Details</a>
@@ -439,6 +401,7 @@
           </div>
         </div>
       </div>
+
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
@@ -447,8 +410,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/brca_netwrok_1step_RB1.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of breast cancer</p>
-            <p class="card-text" id="brcaStatus">Status of latest test</p>
-            <p class="card-text" id="brcaUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="brcaUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=brca">Details</a>
@@ -458,6 +420,7 @@
           </div>
         </div>
       </div>
+
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
@@ -466,8 +429,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/luad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of lung adenocarcinoma</p>
-            <p class="card-text" id="luadStatus">Status of latest test</p>
-            <p class="card-text" id="luadUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="luadUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=luad">Details</a>
@@ -486,8 +448,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/paad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of pancreas adenocarcinoma</p>
-            <p class="card-text" id="paadStatus">Status of latest test</p>
-            <p class="card-text" id="paadUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="paadUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=paad">Details</a>
@@ -497,6 +458,7 @@
           </div>
         </div>
       </div>
+
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
@@ -505,8 +467,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/prad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of prostate adenocarcinoma</p>
-            <p class="card-text" id="pradStatus">Status of latest test</p>
-            <p class="card-text" id="pradUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="pradUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=prad">Details</a>
@@ -516,6 +477,7 @@
           </div>
         </div>
       </div>
+
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
@@ -524,8 +486,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/skcm_network_1step_CDKN2A.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of skin cutaneous melanoma</p>
-            <p class="card-text" id="skcmStatus">Status of latest test</p>
-            <p class="card-text" id="skcmUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="skcmUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
@@ -535,6 +496,26 @@
           </div>
         </div>
       </div>
+
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Test RAS</h4>
+          </div>
+          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/ras_test_network.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
+          <div class="card-body">
+            <p class="card-text">Short model description of the test model</p>
+            <p class="card-text modelUpdateInfo" id="testRASUpdate">Last updated</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group">
+                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://ndexbio.org/#/network/a08479d1-24ce-11e9-bb6a-0ac135e8bacf">View on NDEX</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -550,7 +531,7 @@
       </div>
       <div class="container">
         <div class="button">
-          <button class="btn btn-default" id="signIn" onClick="signIn()">Sign in with credentials</button>
+          <button class="btn btn-default" id="signIn" onClick="signIn(document.getElementById('uname_input').value, document.getElementById('pwd_input').value)">Sign in with credentials</button>
         </div>
       </div>
       <hr>
@@ -560,53 +541,6 @@
         <div class="button">
           <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool (token)</button>
         </div>
-      </div>
-    </div>
-  </div> -->
-
-<!--   <div class="card">
-    <h4 class="card-header">
-      <div class="container">
-        <div class="button">
-          <button class="btn btn-default" id="listS3Objects" onClick="populateModelsList(new AWS.S3())">List Model Tests</button>
-        </div>
-      </div>
-    </h4>
-    <div class="card-body">
-      <div class="container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Model</th>
-              <th>Test</th>
-            </tr>
-          </thead>
-          <tbody id="listObjectsTableBody">
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div> -->
-
-<!--   <div class="card">
-    <h4 class="card-header">Test Results</h4>
-    <div class="card-body">
-      <div class="container">
-        <div class="button">
-          <button class="btn btn-default" id="getS3Object" onClick="getFromS3()">Download Test json from S3</button>
-        </div>
-      </div>
-      <div class="container" id="testResultsOutput">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>key</th>
-              <th>value</th>
-            </tr>
-          </thead>
-          <tbody id="resultsTableBody">
-          </tbody>
-        </table>
       </div>
     </div>
   </div> -->
