@@ -23,5 +23,5 @@ setup(name='emmaa',
         'Programming Language :: Python :: 3.7'
         ],
       packages=find_packages(),
-      install_requires=['indra', 'boto3', 'pyyaml']
+      install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle']
       )

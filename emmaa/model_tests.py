@@ -38,17 +38,17 @@ class TestManager(object):
         test_connector : emmaa.model_tests.TestConnector
             A TestConnector object to use for connecting models to tests.
         """
-        logger.info(f'Checking applicability of {len(self.tests)} tests to '
-                    f'{len(self.models)} models')
+        logger.info('Checking applicability of %d tests to %d models' %
+                    (len(self.tests), len(self.models)))
         for model, test in itertools.product(self.models, self.tests):
-            logger.info(f'Checking applicability of test {test.stmt}')
+            logger.info('Checking applicability of test %s' % test.stmt)
             if test_connector.applicable(model, test):
                 self.pairs_to_test.append((model, test))
-                logger.info(f'Test {test.stmt} is applicable')
+                logger.info('Test %s is applicable' % test.stmt)
             else:
-                logger.info(f'Test {test.stmt} is not applicable')
+                logger.info('Test %s is not applicable' % test.stmt)
 
-        logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
+        logger.info('Created %d model-test pairs.' % len(self.pairs_to_test))
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
@@ -142,8 +142,8 @@ def load_tests_from_s3(test_name):
         List of EmmaaTest objects loaded from S3.
     """
     client = boto3.client('s3')
-    test_key = f'tests/{test_name}'
-    logger.info(f'Loading tests from {test_key}')
+    test_key = 'tests/%s' % test_name
+    logger.info('Loading tests from %s' % test_key)
     obj = client.get_object(Bucket='emmaa', Key=test_key)
     tests = pickle.loads(obj['Body'].read())
     return tests
@@ -183,8 +183,9 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     if upload_results:
         s3_client = boto3.client('s3')
         date_str = make_date_str(datetime.datetime.now())
-        result_key = f'results/{model_name}/results_{date_str}.json'
-        logger.info(f'Uploading test results to {result_key}')
+        result_key = 'results/%s/results_%s.json' \
+                     % (model_name, date_str)
+        logger.info('Uploading test results to %s' % result_key)
         s3_client.put_object(Bucket='emmaa', Key=result_key,
                              Body=results_json_str.encode('utf8'))
     return tm
