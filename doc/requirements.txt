@@ -4,3 +4,4 @@ mock
 boto3
 indra
 pyyaml
+jsonpickle
