@@ -26,14 +26,12 @@ the annotation of:
   such as the utility associated with particular model states (e.g., decreased
   cell proliferation)
 
-The meta-model allows model elements encoded in different formalisms to be
-associated with the concepts necessary for automated analysis in EMMAA. For
+The EMMAA meta-model allows model elements encoded in different formalisms to
+be associated with the concepts necessary for automated analysis in EMMAA. For
 example, a protein initial condition parameter from an executable `PySB
 <http://pysb.org>`_ model could be linked to the EMMAA concepts for a parameter
 that is *naturally varying,* *non-perturbable,* and *experimentally
-measurable.* The use of JSON-LD (rather than RDF, for example) will
-additionally allow these annotation documents to be human readable and
-editable.
+measurable.*
 
 Initial specification of annotation guidelines
 ----------------------------------------------
@@ -41,17 +39,19 @@ Initial specification of annotation guidelines
 The meta-model will be implemented as a specification that can be implemented
 in different ways depending on the model type; in this way it will resemble the
 `MIRIAM <https://co.mbine.org/standards/miriam>`_ (Minimimal Information
-Required In the Annotation of Models) standard, but with specific extensions
-aimed at automating high-level scientific queries.
+Required In the Annotation of Models) standard, which specifies the use of
+`(subject, predicate, object)` triples to link model element to semantic
+concepts.
 
-In particular, the initial specification for model annotation in EMMAA
-will include the following requirements to support basic simulation and
-analysis tasks:
+The EMMAA metamodel establishes several specific concepts and annotation
+guidelines aimed at automating high-level scientific queries. In particular,
+the initial specification for model annotation in EMMAA includes the
+following requirements to support basic simulation and analysis tasks:
 
 1. Model entities (e.g., variables in an ODE model, nodes in a network model)
    must be linked to identifiers in external ontologies.
 2. Entity states (e.g., phosphorylated, mutated, active or inactive proteins)
-   should be identified semantically variables using an external ontology or
+   should be identified semantically using an external ontology or
    controlled vocabulary.
 3. Model processes (e.g., reactions in an ODE model,
    edges in a network model) must be linked to a piece of knowledge including
@@ -64,13 +64,13 @@ analysis tasks:
    model process can be annotated with the `sign` of the process on its
    participants (i.e., positive or negative regulation).
 
-"Does X..." queries currently supported for PySB models
--------------------------------------------------------
+EMMAA currently supports "does X..." queries for PySB models
+------------------------------------------------------------
 
-Implementing the five requirements above supports high-level queries such as:
-"Does treatment with drug X cause an increase in the phosphorylation of protein
-Y?" Answering this high-level query makes use of model annotations in the
-following way:
+Annotating a model using the five types of information above supports
+high-level queries such as: "Does treatment with drug X cause an increase in
+the phosphorylation of protein Y?" Answering this query makes use of model
+annotations in the following way:
 
 - Entities in the model representing drug X are identified (#1,
   above).
@@ -82,12 +82,13 @@ following way:
   entities/processes are determined using a model-specific analytical procedure,
   making use of `sign` information if necessary (#5).
 - The analysis results are linked back to the knowledge model via
-  `has_indra_stmt` annotations.
+  `has_indra_stmt` annotations (#3).
 
 We currently have an end-to-end implementation that uses model annotations to
-answer these types of queries for a single model type, executable dynamical
-models implemented in PySB. Model annotations are generated as part of the
-model assembly process; for instance see `the PySB Assembler code here
+answer these types of queries for a single model type: executable dynamical
+models implemented in `PySB <http://pysb.org>`_. Model annotations are
+generated as part of the PySB model assembly process in INDRA; for instance see
+`the PySB Assembler code here
 <https://github.com/sorgerlab/indra/blob/master/indra/assemblers/pysb/assembler.py#L1190>`_
 for an example of how the `PySB Annotation class
 <https://github.com/pysb/pysb/blob/master/pysb/annotation.py>`_ is used to
