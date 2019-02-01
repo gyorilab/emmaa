@@ -1,6 +1,10 @@
 Model Analysis and Testing
 ==========================
 
+.. image:: ../_static/images/model_testing_concept.png
+   :scale: 80 %
+   :align: right
+
 A key benefit of using semantically annotated models is that it allows models
 to be automatically validated in a common framework. In addition to
 automatically extracting and assembling mechanistic models, EMMAA runs a
@@ -11,6 +15,8 @@ knowledge base,
 (2) deciding which test condition is applicable to which model,
 (3) executing the applicable tests on each model, and
 (4) reporting the summary results of the tests on each model.
+
+
 
 Model test cycle deployed on AWS
 --------------------------------

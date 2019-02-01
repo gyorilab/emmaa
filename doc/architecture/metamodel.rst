@@ -27,10 +27,6 @@ the annotation of:
   such as the utility associated with particular model states (e.g., decreased
   cell proliferation)
 
-.. image:: ../_static/images/model_testing_concept.png
-   :scale: 80 %
-   :align: right
-
 The meta-model allows model elements encoded in different formalisms to be
 associated with the concepts necessary for automated analysis in EMMAA. For
 example, a protein initial condition parameter from an executable `PySB
