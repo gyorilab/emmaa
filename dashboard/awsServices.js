@@ -235,15 +235,15 @@ function listObjectsInBucket(tableBody, s3Interface, bucket, prefix, maxKeys, en
 };
 
 // FIXME: redirect should be variable: could be index.html or model.html
-function getTokenFromAuthEndpoint() {
-  console.log('function getTokenFromAuthEndpoint()')
+function getTokenFromAuthEndpoint(currentUrl) {
+  console.log('function getTokenFromAuthEndpoint(currentUrl)')
   STATE_VALUE = _getNewStateValue();
   // console.log('current STATE_VALUE: ' + STATE_VALUE)
   _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
   base_url = AUTH_ENDPOINT_BASE_URL;
   resp_type = 'response_type=token';
   client_id='client_id=' + APP_CLIENT_ID;
-  redirect = 'redirect_uri=http://localhost:5000/index.html';
+  redirect = 'redirect_uri=' + currentUrl;
   state = 'state=' + STATE_VALUE;
   cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
   scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
