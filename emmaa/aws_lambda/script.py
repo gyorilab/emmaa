@@ -13,7 +13,7 @@ import boto3
 
 # Note that all non-standard imports will need to be added to the update script
 # including secondary, tertiary, and so forth imports.
-from emmaa.date import make_date_str
+from emmaa.util import make_date_str
 
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
