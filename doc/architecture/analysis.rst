@@ -1,10 +1,6 @@
 Model Analysis and Testing
 ==========================
 
-.. image:: ../_static/images/model_testing_concept.png
-   :scale: 80 %
-   :align: right
-
 A key benefit of using semantically annotated models is that it allows models
 to be automatically validated in a common framework. In addition to
 automatically extracting and assembling mechanistic models, EMMAA runs a
@@ -16,6 +12,15 @@ We have implemented an approach to model testing that automates
 - deciding which test condition is applicable to which model,
 - executing the applicable tests on each model, and
 - reporting the summary results of the tests on each model.
+
+.. image:: ../_static/images/model_testing_concept.png
+   :scale: 80 %
+   :align: right
+
+The overall concept of automated model testing in EMMAA is shown in this
+figure. Each time a model is updated with new findings, the model is tested
+against a set of expected observations or properties. The tests themselves
+can evolve over time as new observations are collected.
 
 
 Model test cycle deployed on AWS
@@ -36,7 +41,7 @@ website. This process is summarized in the figure below.
 
 The code implemented here is avilable in the following places:
 
-- The EMMAA Dockerfile is avilable at `here <https://github.com/indralab/emmaa/tree/master/Dockerfile>`_ .
+- The EMMAA Dockerfile is available `here <https://github.com/indralab/emmaa/tree/master/Dockerfile>`_ .
 - The Lambda implementation (:py:mod:`emmaa.aws_lambda`) is documented
   `here <https://emmaa.readthedocs.io/en/latest/modules/aws_lambda.html>`_.
 
@@ -60,12 +65,14 @@ test conditions from the BEL Small Corpus, a corpus of experimental
 observations and molecular mechanisms extracted by human experts from the
 scientific literature. Going forward, we will also rely on observations
 collected directly from the literature for automated model testing.
+The code to generate and run this corpus of test statements is available
+`here <https://github.com/indralab/emmaa/blob/master/scripts/run_bel_tests.py>`_.
 
 General EMMAA model testing framework
 -------------------------------------
-EMMMA contains a test framework in :py:mod:`emmaa.model_tests` with an asbtract
+EMMMA contains a test framework in :py:mod:`emmaa.model_tests` with an abtract
 class interface to connect models with applicable tests and then execute
-each applicable test with respect to each applicable model. One strenght of
+each applicable test with respect to each applicable model. One strength of
 this abstract class architecture is that it is agnostic to
 
 - the specific content and implementation of each model and test,
@@ -73,8 +80,10 @@ this abstract class architecture is that it is agnostic to
 - the procedure by which a test is determined to be satisfied by a model.
 
 It therefore supports a variety of specific realizations of models and tests.
-The classes providing this interface are the TestManager, TestConnector and
-EmmaaTest. 
+The classes providing this interface are the
+`TestManager` (:py:mod:`emmaa.model_tests.TestManager`),
+`TestConnector` (:py:mod:`emmaa.model_tests.TestConnector`)
+and `EmmaaTest` (:py:mod:`emmaa.model_tests.EmmaaTest`).
 
 Test conditions mapped to models automatically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
