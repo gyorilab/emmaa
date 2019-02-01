@@ -25,10 +25,152 @@
   <script>
     // Check if user signed in immediately after page load
     $(document).ready(function(){
-      checkSignIn()
+      // checkSignIn()
+      checkLatestModelsUpdate()
     })
 
     var OUTPUT_NODE = document.getElementById('signInUserPool');
+    var MODELS_ARRAY = ['aml', // Acute myeloid leukemia
+                        'brca',
+                        'luad',
+                        'paad',
+                        'prad',
+                        'skcm',
+                        'rasmodel',
+                        'test']
+    var EMMMAA_BUCKET = 'emmaa';
+
+    function getModels(keyMapArray, endsWith) {
+      console.log('function getModels(keyMapArray, endsWith)')
+      var models = {'aml': [],
+                    'brca': [],
+                    'luad': [],
+                    'paad': [],
+                    'prad': [],
+                    'skcm': [],
+                    'rasmodel': [],
+                    'test': []}
+      for (keyItem of keyMapArray) {
+        if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
+          let model = keyItem.Key.split('/')[1]
+          switch (model) {
+            case 'aml':
+              models[model].push(keyItem.Key.split('/')[2])
+              break;
+            case 'brca':
+              models[model].push(keyItem.Key.split('/')[2])
+              break;
+            case 'luad':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            case 'paad':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            case 'prad':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            case 'skcm':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            case 'rasmodel':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            case 'test':
+              models[model].push(keyItem.Key.split('/')[2])
+              break
+            default:
+              console.log('Unhandled model ' + model)
+              break
+          }
+        }
+      }
+      return models;
+    }
+
+    function checkLatestModelsUpdate() {
+      listObjectsInBucketUnAuthenticated('modelUpdate', new AWS.S3(), 'emmaa', 'models', 100, '.pkl')
+    }
+
+    function modelsLastUpdated(keyMapArray, endsWith) {
+      //  for each model:
+      //    get list of all pickle
+      //    sort list (alphabetically?) descendingly
+      //    get first item
+      //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
+      console.log('keyMapArray')
+      console.log(keyMapArray)
+      let modelsMapArray = getModels(keyMapArray, endsWith)
+      console.log('modelsMapArray')
+      console.log(modelsMapArray)
+
+      let modelUpdateTags = document.getElementsByClassName('modelUpdateInfo')
+      for (tag of modelUpdateTags) {
+        let model = tag.getAttribute('id').split('Update')[0]
+        console.log(model)
+        if (model) {
+          console.log('modelsMapArray[model].sort()[modelsMapArray[model].length - 1]: ' + modelsMapArray[model].sort()[modelsMapArray[model].length - 1])
+          lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
+          tag.textContent = 'Last updated: ' + lastUpdated;
+        }
+      }
+    }
+
+    function listObjectsInBucketUnAuthenticated(mode, s3Interface, bucket, prefix, maxKeys, endsWith) {
+      // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
+      let _maxKeys = 1000
+      if (maxKeys & maxKeys < _maxKeys) {
+        _maxKeys = maxKeys;
+      }
+      let params = {
+        Bucket: bucket,
+        MaxKeys: _maxKeys,
+        Prefix: prefix
+      }
+      s3Interface.makeUnauthenticatedRequest('listObjectsV2', params, function(err, data) {
+        if (err) console.log(err, err.stack);
+        else {
+          // console.log('List of objects resolved from S3')
+          // console.log(data)
+          switch (mode) {
+            case 'modelUpdate':
+              modelsLastUpdated(data.Contents, endsWith)
+              break;
+
+            default:
+              let tableBody = document.getElementById('listObjectsTableBody');
+              tableBody.innerHTML = null;
+              for (let i = 0; i < data.Contents.length; i++) {
+                if (data.Contents[i].Key.endsWith(endsWith)) {
+                  let tableRow = document.createElement('tr');
+                  
+                  let modelColumn = document.createElement('td');
+
+                  let modelLink = document.createElement('a');
+                  modelLink.setAttribute('href', '#'); // LINK TO MODEL
+                  modelLink.textContent = data.Contents[i].Key.split('/')[1]
+                  modelColumn.appendChild(modelLink)
+                  tableRow.appendChild(modelColumn);
+
+                  let testColumn = document.createElement('td');
+                  testColumn.textContent = data.Contents[i].Key.split('/')[2].split('.')[0];
+                  let testJsonPromise = getPublicJson(bucket, data.Contents[i].Key);
+                  testJsonPromise.then(function(json){
+                    if (json[0].passed) {
+                      testColumn.setAttribute('bgcolor', '00AA55;'); // Green if passed
+                    }
+                    else {
+                      testColumn.setAttribute('bgcolor', 'DD4400;'); // Red if not
+                    }
+                  });
+                  tableRow.appendChild(testColumn);
+
+                  tableBody.appendChild(tableRow);
+                }
+              }
+          }
+        }
+      });
+    };
 
     // function grabJSON (url, callback) {
     //   return $.ajax({url: url, dataType: "json"});
@@ -505,7 +647,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/ras_test_network.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of the test model</p>
-            <p class="card-text modelUpdateInfo" id="testRASUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="rasmodelUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
@@ -518,32 +660,6 @@
 
     </div>
   </div>
-
-<!--   <div class="card">
-    <h4 class="card-header">Sign In</h4>
-    <div class="card-body">
-      <h5>Sign in here with username and password</h5>
-      <div class="container">
-        <form name="username_form">
-          <input type="text" name="username" id="uname_input" placeholder="Enter username here" style="width: 250px;">
-          <input type="password" name="password" id="pwd_input" placeholder="Enter password here" style="width: 250px;">
-        </form>
-      </div>
-      <div class="container">
-        <div class="button">
-          <button class="btn btn-default" id="signIn" onClick="signIn(document.getElementById('uname_input').value, document.getElementById('pwd_input').value)">Sign in with credentials</button>
-        </div>
-      </div>
-      <hr>
-
-      <h5>Sign up/Sign in through the EMMAA AWS cognito user pool</h5>
-      <div class="container">
-        <div class="button">
-          <button class="btn btn-default" id="signInUserPool" onClick="getTokenFromAuthEndpoint()">Sign in via user pool (token)</button>
-        </div>
-      </div>
-    </div>
-  </div> -->
 
   <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
     <div class="container">
