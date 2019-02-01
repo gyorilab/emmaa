@@ -1,3 +1,5 @@
+.. _metamodel:
+
 Meta-Model
 ==========
 
@@ -33,17 +35,37 @@ example, a protein initial condition parameter from an executable `PySB
 that is *naturally varying,* *non-perturbable,* and *experimentally
 measurable.*
 
+While several of these concepts have not been previously implemented in
+existing ontologies for semantic annotations of biological models, we will
+aim to reuse terms and concepts from `ontologies developed by
+the COMBINE community <http://co.mbine.org/standards>`_ where appropriate.
+These may include:
+
+- `MIRIAM <https://co.mbine.org/standards/miriam>`_ (Minimimal Information
+  Required In the Annotation of Models)
+- `SED-ML <https://sed-ml.github.io/>`_ (Simulation Experiment Description
+  Markup Language)
+- `SBO <http://www.ebi.ac.uk/sbo/main/>`_ (Systems Biology Ontology)
+- `KISAO <http://co.mbine.org/standards/kisao>`_ (Kinetic Simulation Algorithm
+  Ontology)
+- `Biomodels.net qualifiers <http://co.mbine.org/specifications/qualifiers>`_
+- `MAMO <http://co.mbine.org/standards/mamo>`_ (the Mathematical Modeling
+  Ontology)
+- `SBRML <http://precedings.nature.com/documents/6351/version/1>`_
+  (Systems Biology Results Markup Language)
+- `TEDDY <http://co.mbine.org/specifications/teddy>`_ (TErminology for the
+  Description of DYnamics)
+
 Initial specification of annotation guidelines
 ----------------------------------------------
 
 The meta-model will be implemented as a specification that can be implemented
 in different ways depending on the model type; in this way it will resemble the
-`MIRIAM <https://co.mbine.org/standards/miriam>`_ (Minimimal Information
-Required In the Annotation of Models) standard, which specifies the use of
-`(subject, predicate, object)` triples to link model element to semantic
-concepts.
+`MIRIAM <https://co.mbine.org/standards/miriam>`_ standard, which is not itself
+a terminology but rather a set of guidelines for using of `(subject, predicate,
+object)` triples to link essential model features to semantic concepts.
 
-The EMMAA metamodel establishes several specific concepts and annotation
+The EMMAA meta-model establishes several specific concepts and annotation
 guidelines aimed at automating high-level scientific queries. In particular,
 the initial specification for model annotation in EMMAA includes the
 following requirements to support basic simulation and analysis tasks:
@@ -69,8 +91,8 @@ EMMAA currently supports "does X..." queries for PySB models
 
 Annotating a model using the five types of information above supports
 high-level queries such as: "Does treatment with drug X cause an increase in
-the phosphorylation of protein Y?" Answering this query makes use of model
-annotations in the following way:
+the phosphorylation of protein Y?" Answering this yes-or-no query makes use of
+model annotations in the following way:
 
 - Entities in the model representing drug X are identified (#1,
   above).
@@ -92,12 +114,17 @@ generated as part of the PySB model assembly process in INDRA; for instance see
 <https://github.com/sorgerlab/indra/blob/master/indra/assemblers/pysb/assembler.py#L1190>`_
 for an example of how the `PySB Annotation class
 <https://github.com/pysb/pysb/blob/master/pysb/annotation.py>`_ is used to
-associate a entities with their role (subject/object) in a process (#4).
+associate entities with their role (subject/object) in a process (#4).
 
 To answer a "does" query like the one specified above, the `ModelChecker
-<https://github.com/sorgerlab/indra/blob/c5f15dfe9f30f71cc1b8798e7c9042c4d10bd051/indra/explanation/model_checker.py#L144>`_ makes use of these annotations
-to search for a path through the model's influence map with the appropriate
-sign.
+<https://github.com/sorgerlab/indra/blob/c5f15dfe9f30f71cc1b8798e7c9042c4d10bd051/indra/explanation/model_checker.py#L144>`_
+makes use of these annotations to search for a path through the model's
+influence map with the appropriate sign.
+
+These types of queries can currently be used to formulate model tests using
+the `StatementCheckingTest` (:py:mod:`emmaa.model_tests.StatementCheckingTest`),
+and triggered automatically upon every model update using the testing pipeline
+described in :ref:`model_analysis`.
 
 Annotations required for "what if" queries
 ------------------------------------------

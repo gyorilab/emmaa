@@ -1,3 +1,5 @@
+.. _model_analysis:
+
 Model Analysis and Testing
 ==========================
 
