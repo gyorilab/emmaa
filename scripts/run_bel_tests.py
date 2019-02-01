@@ -4,7 +4,7 @@ import indra
 import pickle
 from indra.sources import bel
 from indra.assemblers.english import EnglishAssembler
-from emmaa.model import load_model
+from emmaa.model import EmmaaModel
 from emmaa.model_tests import TestManager, ScopeTestConnector, \
     StatementCheckingTest
 
@@ -32,8 +32,7 @@ if __name__ == '__main__':
             pickle.dump(tests, f)
     elif mode == 'run':
         ctypes = ['rasmodel']
-        models = [load_model(ctype, f'models/{ctype}/config.yaml')
-                  for ctype in ctypes]
+        models = [EmmaaModel(ctype) for ctype in ctypes]
         tm = TestManager(models, tests)
         tm.make_tests(ScopeTestConnector())
         tm.run_tests()
