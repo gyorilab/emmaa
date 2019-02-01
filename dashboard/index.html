@@ -30,14 +30,14 @@
     })
 
     var OUTPUT_NODE = document.getElementById('signInUserPool');
-    var MODELS_ARRAY = ['aml', // Acute myeloid leukemia
-                        'brca',
-                        'luad',
-                        'paad',
-                        'prad',
-                        'skcm',
-                        'rasmodel',
-                        'test']
+    var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
+                        'brca',     // Breast Cancer
+                        'luad',     // Lung adenocarcinoma
+                        'paad',     // Pancreas adenocarcinoma
+                        'prad',     // Prostate adenocarcinoma
+                        'skcm',     // Skin cutaneous melanoma
+                        'rasmodel', // RasModel
+                        'test']     // TestModel (only three nodes/two edges)
     var EMMMAA_BUCKET = 'emmaa';
 
     function getModels(keyMapArray, endsWith) {
@@ -136,6 +136,7 @@
               modelsLastUpdated(data.Contents, endsWith)
               break;
 
+            // Default behaviour: just list key,value pairs in table
             default:
               let tableBody = document.getElementById('listObjectsTableBody');
               tableBody.innerHTML = null;
@@ -647,7 +648,7 @@
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/ras_test_network.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
             <p class="card-text">Short model description of the test model</p>
-            <p class="card-text modelUpdateInfo" id="rasmodelUpdate">Last updated</p>
+            <p class="card-text modelUpdateInfo" id="testUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
