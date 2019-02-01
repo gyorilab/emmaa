@@ -13,17 +13,17 @@ logger = logging.getLogger('reactome_prior')
 
 
 def make_prior_from_genes(gene_list):
-    """Returns reactome prior based on a list of genes
+    """Return reactome prior based on a list of genes
 
     Parameters
     ----------
-    gene_list: list of str
-        list of HGNC symbols for genes
+    gene_list : list of str
+        List of HGNC symbols for genes
 
     Returns
     -------
-    res: list of :py:class:`emmaa.priors.SearchTerm`
-        list of search terms corresponding to all genes found in any reactome
+    res : list of :py:class:`emmaa.priors.SearchTerm`
+        List of search terms corresponding to all genes found in any reactome
         pathway containing one of the genes in the input gene list
     """
     all_reactome_ids = set([])
@@ -83,13 +83,13 @@ def find_drugs_for_genes(search_terms):
 
     Parameters
     ----------
-    search_terms: list of :py:class:`emmaa.priors.SearchTerm`
-        list of search terms for genes
+    search_terms : list of :py:class:`emmaa.priors.SearchTerm`
+        List of search terms for genes
 
     Returns
     -------
-    drug_terms: list of :py:class:`emmaa.priors.SearchTerm`
-        list of search terms of drugs targeting at least one of the input genes
+    drug_terms : list of :py:class:`emmaa.priors.SearchTerm`
+        List of search terms of drugs targeting at least one of the input genes
     """
     tas_statements = tas.process_csv().statements
     drug_terms = []
@@ -107,7 +107,7 @@ def find_drugs_for_genes(search_terms):
 
 @lru_cache(10000)
 def rx_id_from_up_id(up_id):
-    """Get the Reactome Stable ID for a given Uniprot ID."""
+    """Return the Reactome Stable IDs for a given Uniprot ID."""
     react_search_url = 'http://www.reactome.org/ContentService/search/query'
     params = {'query': up_id, 'cluster': 'true', 'species': 'Homo sapiens'}
     headers = {'Accept': 'application/json'}
@@ -154,13 +154,13 @@ def get_pathways_containing_gene(reactome_id):
 
     Parameters
     ----------
-    reactome_id: str
-        reactome id for a gene
+    reactome_id : str
+        Reactome id for a gene
 
     Returns
     -------
-    pathway_ids: list of str
-        list of reactome ids for pathways containing the input gene
+    pathway_ids : list of str
+        List of reactome ids for pathways containing the input gene
     """
     react_url = ('http://www.reactome.org/ContentService/data/pathways/low'
                  f'/entity/{reactome_id}/allForms')
@@ -184,13 +184,13 @@ def get_genes_contained_in_pathway(reactome_id):
 
     Parameters
     ----------
-    reactome_id: strig
-        reactome id for a pathway
+    reactome_id : str
+        Reactome id for a pathway
 
     Returns
     -------
-    genes: list of str
-        list of uniprot ids for all unique genes contained in input pathway
+    genes : list of str
+        List of uniprot ids for all unique genes contained in input pathway
     """
     react_url = ('http://www.reactome.org/ContentService/data'
                  f'/participants/{reactome_id}')
