@@ -1,9 +1,21 @@
 /* emmaaFunctions.js - main javascript functions for the ASKE emmaa project
 
 This file contains helper functions and project specific functions that does 
-the client side work of exposing cnacer network models for the end users
+the client side work of exposing cancer network models for the end users
 
 */
+
+// CONSTANTS AND IDs
+var INDRA_ENGLISH_ASSEMBLY = "http://api.indra.bio:8000/assemblers/english";
+var EMMMAA_BUCKET = 'emmaa';
+var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
+                    'brca',     // Breast Cancer
+                    'luad',     // Lung adenocarcinoma
+                    'paad',     // Pancreas adenocarcinoma
+                    'prad',     // Prostate adenocarcinoma
+                    'skcm',     // Skin cutaneous melanoma
+                    'rasmodel', // RasModel
+                    'test']     // TestModel (only three nodes/two edges)
 
 function grabJSON (url, callback) {
   return $.ajax({url: url, dataType: "json"});
@@ -88,7 +100,7 @@ function addToRow(col1, col2) {
 }
 
 // CHANGE TEXT
-function notifyUser(outputText) {
+function notifyUser(outputNode, outputText) {
   // Add other things here
-  OUTPUT_NODE.textContent = outputText;
+  outputNode.textContent = outputText;
 }
