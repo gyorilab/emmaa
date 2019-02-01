@@ -19,18 +19,6 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
-TEST_PYTHON = """import boto3
-import json
-from io import BytesIO
-from datetime import datetime
-s3 = boto3.client('s3')
-data = [{'name': 'test', 'passed': True}]
-data_str = json.dumps(data)
-print(data_str)
-dt_str = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
-f = BytesIO(data_str.encode('utf-8'))
-s3.upload_fileobj(f, 'emmaa', f'results/{model_name}/{dt_str}.json')
-"""
 BRANCH = 'indralab/master'
 
 
@@ -74,9 +62,6 @@ def lambda_handler(event, context):
         other data to be returned to Lambda.
     """
     batch = boto3.client('batch')
-
-    fn = make_date_str() + '.json'
-
     records = event['Records']
     for rec in records:
         try:
@@ -94,7 +79,7 @@ def lambda_handler(event, context):
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
                         '--project', PROJECT, '--purpose', PURPOSE,
-                        core_command.replace('{model_name}', model_name)]
+                        core_command]
             }
         ret = batch.submit_job(jobName=f'{model_name}_{make_date_str()}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
