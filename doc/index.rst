@@ -9,7 +9,7 @@ EMMAA: Ecosystem of Machine-maintained models with Automated Analysis
 .. toctree::
    :maxdepth: 3
 
-   architecture
+   architecture/index
    modules/index
 
 
