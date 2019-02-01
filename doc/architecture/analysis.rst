@@ -1,6 +1,6 @@
 .. _model_analysis:
 
-Model Analysis and Testing
+Model Testing and Analysis
 ==========================
 
 A key benefit of using semantically annotated models is that it allows models
