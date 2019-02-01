@@ -19,7 +19,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
-BRANCH = 'indralab/master'
+BRANCH = None
 
 
 def lambda_handler(event, context):
@@ -69,12 +69,10 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-        core_command = ('bash emmaa/scripts/update_git_and_run.sh'
-                        f' {BRANCH} '
-                        '"\'[{{\\"name\\": \\"test\\", \\"passed\\": true}}]\''
-                        f' > {fn};'
-                        f' aws s3 cp {fn}'
-                        f' results/{model_name}/{fn}"')
+        core_command = './scripts/run_model_tests_from_s3.sh'
+        if BRANCH is not None:
+            core_command += f' --branch {BRANCH}'
+        core_command += f(' --model {model_name} --test simple_model_test.pkl')
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
