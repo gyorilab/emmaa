@@ -24,12 +24,6 @@
   <!-- <script src="https://s3.amazonaws.com/emmaa-test/emmaaFunctions.js"></script> -->
 
   <script>
-    // CONSTANTS AND IDs
-    // var OUTPUT_NODE = document.getElementById('status-notify');
-
-    // Initialize an S3 interface object
-    // var s3Interface = new AWS.S3();
-
     // Check if user signed in immediately after page load
     $(document).ready(function(){
       console.log('document ready')
@@ -52,270 +46,30 @@
 
       // If linked from model name: load that model
       if (url_dict) {
-        let model = url_dict['model']
+        let model = url_dict['model'];
         // Set the model to the one that is selected
-        setModel(document.getElementById('modelSelectDD'), model)
-        modelKey = 'models/' + model + '/' + model + '_model_meta.json';
-        loadModelMetaData(EMMMAA_BUCKET, modelKey)
+        setModel(document.getElementById('modelSelectDD'), model);
+        var infoTableBody = document.getElementById('modelInfoTableBody');
+        var testResultsTableBody = document.getElementById('modelTestResultBody');
+
+        if (model == 'test') {
+          let promises = [];
+          // FIXME 
+          testKey = 'results/test/results_2019-01-31-19-44-26.json'; // Replace with funtion return that grabs latest test of 'model'
+          modelKey = 'models/rasmodel/rasmodel_json.json'; // Replace with function return that grabs latest model of 'model' 
+          promises.push(getPublicJson(EMMMAA_BUCKET, modelKey))
+          promises.push(getPublicJson(EMMMAA_BUCKET, testKey))
+          Promise.all(promises).then(function(jsonArray){
+            console.log(jsonArray)
+            populateModelsTable(infoTableBody, JSON.parse(jsonArray[0])) // Parse the jsonstring saved on S3 for the model
+            populateTestResultTable(testResultsTableBody, jsonArray[1][0]) //
+          })
+        } else {
+          modelKey = 'models/' + model + '/' + model + '_model_meta.json';
+          loadModelMetaData(EMMMAA_BUCKET, modelKey);
+        }
       }
     });
-
-    // function getEnglishByJson(json_stmt_array) {
-    //     eng_stmt = $.ajax({
-    //         url: INDRA_ENGLISH_ASSEMBLY,
-    //         type: "POST",
-    //         dataType: "json",
-    //         contentType: "application/json",
-    //         data: JSON.stringify(json_stmt_array),
-    //     });
-    //     return eng_stmt
-    // };
-
-    // function getTokenFromAuthEndpoint() {
-    //   console.log('function getTokenFromAuthEndpoint()')
-    //   STATE_VALUE = _getNewStateValue();
-    //   // console.log('current STATE_VALUE: ' + STATE_VALUE)
-    //   _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
-    //   base_url = AUTH_ENDPOINT_BASE_URL;
-    //   resp_type = 'response_type=token';
-    //   client_id='client_id=' + APP_CLIENT_ID;
-    //   redirect = 'redirect_uri=http://localhost:5000/model.html';
-    //   state = 'state=' + STATE_VALUE;
-    //   cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
-    //   scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
-    //   let get_url = base_url + resp_type + '&' + client_id + '&' + redirect + '&' + state + '&' + scope;
-    //   console.log('get_url=' + get_url)
-    //   window.location.replace(get_url) // Redirect
-    // }
-
-    // function _readCookie(cookieName) {
-    //   console.log('function _readCookie()')
-    //   var nameEQ = cookieName;
-    //   var ca = document.cookie.split(';');
-    //   for (var i = 0; i < ca.length; i++) {
-    //     var c = ca[i];
-    //     while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-    //     if (c.indexOf(nameEQ) == 0) {
-    //       console.log('function _readCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
-    //       return c.substring(nameEQ.length, c.length)
-    //     };
-    //   }
-    //   console.log('function _readCookie() did not resolve cookie value')
-    //   return;
-    // }
-
-    // function _writeCookie(cookieName, value, hours) {
-    //   console.log('function _writeCookie(cookieName, value, hours)')
-    //   if (hours) {
-    //     let _hours = 0;
-    //     maxHours = 12;
-    //     if (hours > maxHours) {
-    //       _hours = maxHours;
-    //     } else {
-    //       _hours = hours;
-    //     } 
-    //     // console.log('hours to expiration: ' + _hours)
-    //     var date = new Date();
-    //     date.setTime(date.getTime() + (_hours*60*60*1000))
-    //     var expires = '; expires=' + date.toGMTString();
-    //     // console.log('cookie expiration date: ' + date.toGMTString());
-    //   } else var expires = '';  // No expiration or infinite?
-
-    //   var cookieString = cookieName + value + expires + '; path=/'
-    //   // console.log('cookieString: ' + cookieString);
-    //   document.cookie = cookieString;
-    // }
-
-    // function _getNewStateValue() {
-    //   let state = ''
-    //   let numArray = window.crypto.getRandomValues(new Uint32Array(4))
-    //   for (num of numArray) {
-    //     state = state + window.btoa(num).replace(/=/g, '');
-    //   }
-    //   return state;
-    // }
-
-    // // VERIFY USER 
-    // function verifyUser(accessTokenString, idTokenString) {
-    //   console.log('function verifyUser(accessTokenString, idTokenString)');
-    //   cogIdServiceProvider.getUser({'AccessToken': accessTokenString}, function(err, data) {
-    //     if (err) {
-    //       console.log('Could not verify user');
-    //       console.log(err, err.stack);
-    //       notifyUser(document.getElementId('status-notify'), 'Could not verify user');
-    //       return false;
-    //     } else {
-    //       // console.log('User meta data from cogIdServiceProvider.getUser()');
-    //       // console.log(data);
-    //       username = data.Username;
-    //       notifyUser(document.getElementId('status-notify'), 'Hello ' + username);
-    //       ACCESS_TOKEN_STRING = accessTokenString;
-    //       _writeCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME, ACCESS_TOKEN_STRING, 1);
-    //       ID_TOKEN_STRING = idTokenString;
-    //       _writeCookie(EMMAA_IDTOKEN_COOKIE_NAME, ID_TOKEN_STRING, 1);
-    //       USER_SIGNED_IN = true
-    //       addUserToIdentityCredentials(ID_TOKEN_STRING) // Add user to identity pool 
-    //       return true;
-    //     }
-    //   })
-    // }
-
-    // // ADD USER TO THE CREDENTIALS LOGIN MAP
-    // function addUserToIdentityCredentials(userIdToken) {
-    //   console.log('Linking user to IdentityPool with ID userIdToken')
-    //   AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    //       IdentityPoolId: IDENTITY_POOL_ID,
-    //       Logins: {
-    //         // cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>
-    //         'cognito-idp.us-east-1.amazonaws.com/us-east-1_5sb1590b6': userIdToken
-    //       }
-    //   });
-
-    //   // Call to obtain credentials
-    //   AWS.config.credentials.get(function(){
-
-    //       // Credentials will be available when this function is called.
-    //       var accessKeyId = AWS.config.credentials.accessKeyId;
-    //       var secretAccessKey = AWS.config.credentials.secretAccessKey;
-    //       var sessionToken = AWS.config.credentials.sessionToken;
-    //   });
-
-    //   // AWS.config.credentials.identityId should now be available
-    //   console.log('Setting identityId for logged in user')
-    //   identityId = AWS.config.credentials.identityId;
-    // }
-
-    // function grabJSON (url, callback) {
-    //   return $.ajax({url: url, dataType: "json"});
-    // };
-
-    // function clearTables(arrayOfTableBodys) {
-    //   for (tableBody of arrayOfTableBodys) {
-    //     tableBody.innerHTML = null;
-    //   }
-    //   // document.getElementById('modelInfoTableBody').innerHTML = null;
-    //   // document.getElementById('modelTestResultBody').innerHTML = null;
-    //   // document.getElementById('modelTestsTableBody').innerHTML = null;
-    // }
-
-    // // Can be used when something is public on S3
-    // function getPublicJson(bucket, key) {
-    //   // For production: get list of results and select based on some criteria
-    //   // base_url = 'https://s3.amazonaws.com';
-    //   base_url = 'http://s3.amazonaws.com'; // Insecure url used for development on localhost
-    //   pathString = '/' + bucket + '/' + key;
-    //   url = base_url +  pathString.replace(/\/\//g, '/'); // Avoid double slashes;
-    //   // console.log('getting json from ' + url);
-    //   return grabJSON(url);
-    // }
-
-    // function getDictFromUrl(url) {
-    //   // No url provided
-    //   if (!url) return;
-    //   var query = {};
-    //   // Check if (authorization) code flow or token (implicit) flow
-    //   if (url.split('#')[1]) {
-    //     query = url.split('#')[1];
-    //   } else if (url.split('?')[1]) {
-    //     query = url.split('?')[1];
-    //   } else return;
-      
-    //   var result = {};
-    //   query.split("&").forEach(function(part) {
-    //     var item = part.split("=");
-    //     result[item[0]] = decodeURIComponent(item[1]);
-    //   });
-    //   return result;
-    // }
-    
-    // function populateModelsList(s3Interface, model) {
-    //   console.log('function populateModelsList(s3Interface, model)')
-    //   let bucket = 'emmaa';
-    //   let prefix = 'models';
-    //   let endsWith = 'model_meta.json';
-    //   return listObjectsInBucket(s3Interface, bucket, prefix, model, 100, endsWith);
-    // }
-
-    // function listObjectsInBucket(s3Interface, bucket, prefix, model, maxKeys, endsWith) {
-    //   console.log('function listObjectsInBucket(s3Interface, bucket, prefix, model, maxKeys, endsWith)');
-    //   let _maxKeys = 1000
-    //   if (maxKeys) {
-    //     _maxKeys = maxKeys;
-    //   }
-    //   let params = {
-    //     Bucket: bucket,
-    //     MaxKeys: _maxKeys,
-    //     Prefix: prefix
-    //   }
-    //   s3Interface.listObjectsV2(params, function(err, data) {
-    //     if (err) console.log(err, err.stack);
-    //     else {
-    //       // console.log('List of objects resolved from S3')
-    //       // console.log(data)
-    //       let ddSelect = document.getElementById('modelSelectDD');
-    //       clearTables(document.getElementsByClassName('table-body'));
-    //       var modelKey = '';
-    //       for (let i = 0; i < data.Contents.length; i++) {
-    //         if (endsWith & data.Contents[i].Key.endsWith(endsWith)) {
-    //           let option = document.createElement('option');
-    //           option.value = data.Contents[i].Key;
-    //           option.textContent = data.Contents[i].Key.split('/')[1];
-
-    //           // Store model Key
-    //           if (model & model.toLowerCase() == data.Contents[i].Key.split('/')[1].toLowerCase()) {
-    //             modelKey = data.Contents[i].Key;
-    //           }
-
-    //           ddSelect.appendChild(option);
-    //         }
-    //       }
-
-    //       if (model) {
-    //         // select the model option if it exists
-    //         for (child of ddSelect.children) {
-    //           if (child.textContent.toLowerCase() == model.toLowerCase()) {
-    //             // Change this option to selected
-    //             child.selected = 'selected';
-    //             break
-    //           }
-    //         }
-    //         // Load model json
-    //         loadModelMetaData(bucket, modelKey);
-    //       }
-    //     }
-    //   });
-    // };
-
-    function loadModelMetaData(bucket, modelKey) {
-      console.log('function loadModelMetaData(bucket, modelKey)')
-      modelMetaInfoPromise = getPublicJson(bucket, modelKey)
-      modelMetaInfoPromise.then(function(json) {
-        console.log(json)
-        populateModelsTable(json);
-      });
-    }
-
-    // // Creates a new two-column table row with the key value pair
-    // function addToRow(key, value) {
-    //   let tableRow = document.createElement('tr');
-
-    //   keyColumn = document.createElement('td');
-    //   keyColumn.textContent = key;
-    //   valueColumn = document.createElement('td');
-    //   valueColumn.textContent = value;
-
-    //   tableRow.appendChild(keyColumn);
-    //   tableRow.appendChild(valueColumn);
-
-    //   return tableRow;
-    // }
-
-    // // CHANGE TEXT
-    // function notifyUser(outputNode, outputText) {
-    //   // Add other things here
-    //   outputNode.textContent = outputText;
-    // }
-
   </script>
 </head>
 

@@ -113,8 +113,16 @@ function selectModel(infoTableBody, testResultsTableBody, ddSelect) {
     })
   } else {
     modelKey = 'models/' + model + '/' + model + '_model_meta.json';
-    loadModelMetaData(EMMMAA_BUCKET, modelKey);
+    loadModelMetaData(infoTableBody, EMMMAA_BUCKET, modelKey);
   }
+}
+
+function loadModelMetaData(modelInfoTable, bucket, modelKey) {
+  console.log('function loadModelMetaData(bucket, modelKey)')
+  modelMetaInfoPromise = getPublicJson(bucket, modelKey)
+  modelMetaInfoPromise.then(function(json) {
+    populateModelsTable(modelInfoTable, json);
+  });
 }
 
 function clearTables(arrayOfTableBodys) {
@@ -139,7 +147,7 @@ function addToRow(col1, col2) {
 }
 
 function populateModelsTable(metaTableBody, json) {
-  // console.log('function populateModelsTable(json)')
+  console.log('function populateModelsTable(metaTableBody, json)')
   // console.log(json)
   clearTables(document.getElementsByClassName('table-body'));
 
