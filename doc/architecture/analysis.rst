@@ -10,12 +10,11 @@ to be automatically validated in a common framework. In addition to
 automatically extracting and assembling mechanistic models, EMMAA runs a
 set of tests to determine each model's validity and explanatory scope.
 We have implemented an approach to model testing that automates
-(1) the collection of test conditions from a pre-existing observational
+- the collection of test conditions from a pre-existing observational
 knowledge base,
-(2) deciding which test condition is applicable to which model,
-(3) executing the applicable tests on each model, and
-(4) reporting the summary results of the tests on each model.
-
+- deciding which test condition is applicable to which model,
+- executing the applicable tests on each model, and
+- reporting the summary results of the tests on each model.
 
 
 Model test cycle deployed on AWS
@@ -52,20 +51,55 @@ polarity of the path is positive.
 As a proof of principle, we created a script which generates such a set of
 test conditions from the BEL Small Corpus, a corpus of experimental
 observations and molecular mechanisms extracted by human experts from the
-scientific literature.
+scientific literature. Going forward, we will also rely on observations
+collected directly from the literature for automated model testing.
 
+General EMMAA model testing framework
+-------------------------------------
+EMMMA contains a test framework in :py:mod:`emmaa.model_tests` with an asbtract
+class interface to connect models with applicable tests and then execute
+each applicable test with respect to each applicable model. One strenght of
+this abstract class architecture is that it is agnostic to
+- the specific content and implementation of each model and test,
+- the criteria by which a test is determined to be applicable to a model,
+- the procedure by which a test is determined to be satisfied by a model.
+
+It therefore supports a variety of specific realizations of models and tests.
+The classes providing this interface are the TestManager, TestConnector and
+EmmaaTest. 
+
+Test conditions mapped to models automatically
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+EMMAA currently implements a specific set of testing classes that
+are adequate for our cancer models.
+
+This implementation uses the ScopeTestConnector and StatementCheckingTest
+classes in EMMAA. The ScopeTestConnector class uses our meta-model annotations to
+determine the identity of the concepts in the model as well as in the test, and
+deems the test to be applicable to the model if all the concepts (i.e. the
+perturbation and the readout) in the test are also contained in the model. 
+
+Testing models using static analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The StatementCheckingTest class takes a pair of a model and an applicable tests,
+and determines whether the model satisfies the test as follows. The model is
+first assembled into a rule-based PySB model object using INDRA's
+PySB Assembler. The model is then exported into the Kappa framework, which
+provides static analysis methods, including generating an influence map
+(a signed, directed graph) over the set of rules in the model. EMMAA then
+uses INDRA's `Model Checker
+<https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_ to find paths in this influence map that match
+the test condition (itself expressed as an INDRA Statement). If one or more
+such paths are found, the test is assumed to be satisfied, and the results
+are reported and stored. Otherwise, the model is assumed to to satisfy the
+test.
 
 Going forward, the testing methodology will involve multiple modes of
-simulation and analysis
-including also dynamic testing. 
+simulation and analysis including also dynamic testing. 
 
-
-Static testing will be carried out
-by the `Model Checker
-<https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_
-component of INDRA, which identifies causal paths linking a source or perturbed
-variable (e.g., IGF1R) with an output or observed variable (e.g., AKT1
-phosphorylated on T308).
+Human-readable model test reports
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A mockup showing a simple test report for a Ras signaling pathway model is
 shown below, where each "Observation" is expressed in terms of an expectation
