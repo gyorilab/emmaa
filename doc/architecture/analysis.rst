@@ -27,6 +27,11 @@ the annotation of:
   such as the utility associated with particular model states (e.g., decreased
   cell proliferation)
 
+
+.. image:: ../_static/images/model_testing_concept.png
+   :scale: 80 %
+   :align: right
+
 The meta-model will be implemented in JSON-LD and will allow model elements
 encoded in different formalisms to be associated with the concepts necessary
 for automated analysis in EMMAA. For example, a protein initial condition
@@ -65,17 +70,25 @@ website. This process is summarized in the figure below.
 .. image:: ../_static/images/testing_pipeline.png
    :scale: 50 %
 
-Automatically generating test conditions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-EMMAA implements a novel approach to collecting observations.
-Model
-constraints for testing will consist of a combination of high-level qualitative
-observations and, where available, structured datasets.
+Test conditions generated automatically
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+EMMAA implements a novel approach to collecting observations with respect to
+which models can be tested. Given a set of INDRA Statements, which can be
+obtained either from human-curated databases or literature extractions,
+EMMAA selects ones that represent experimental observations (which relate a
+perturbation to a potentially indirect downstream readout) from direct
+physical interaction-like mechanisms. We treat these observational Statements
+as constraints on mechanistic paths in a model. For instance, the observation
+"treatment with Vemurafenib leads to decreased phosphorylation of MAPK1", could
+be satisfied if the model contained a sequence of mechanisms connecting
+Vemurafenib with the phosphorylation state of MAPK1 such that the aggregate
+polarity of the path is positive.
 
+As a proof of principle, we created a script which generates such a set of
+test conditions from the BEL Small Corpus, a corpus of experimental
+observations and molecular mechanisms extracted by human experts from the
+scientific literature.
 
-.. image:: ../_static/images/model_testing_concept.png
-   :scale: 80 %
-   :align: right
 
 Going forward, the testing methodology will involve multiple modes of
 simulation and analysis

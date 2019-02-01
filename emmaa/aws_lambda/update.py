@@ -6,7 +6,7 @@ HERE = path.dirname(path.abspath(__file__))
 
 
 def upload_function():
-    """Upload the lambda function by pushing a zip :ile to Lambda.
+    """Upload the lambda function by pushing a zip file to Lambda.
 
     This function pre-supposes you are running from the same directory that
     contains the lambda script, which should be named: `lambda_script.py`.
