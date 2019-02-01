@@ -39,19 +39,50 @@ human readable and editable.
 Model testing
 -------------
 
+A key benefit of using semantically annotated models is that it allows models
+to be automatically validated in a common framework. In addition to
+automatically extracting and assembling mechanistic models, EMMAA runs a
+set of tests to determine each model's validity and explanatory scope.
+We have implemented an approach to model testing that automates
+(1) the collection of test conditions from a pre-existing observational
+knowledge base,
+(2) deciding which test condition is applicable to which model,
+(3) executing the applicable tests on each model, and
+(4) reporting the summary results of the tests on each model.
+
+Model test cycle deployed on AWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Whenever there is a change to a model, a pipeline on Amazon Web Services (AWS)
+is triggered to run a set of applicable model tests. When a model is updated
+(i.e., with new findings extracted and assembled from novel research
+publictions), a snapshot of it is deposited on the S3 storage service. A
+Lambda process monitors changes on S3 and when a change occurs, triggers
+a Batch job. The Batch job accesses the Dockerized EMMAA codebase and runs the
+automated test suite on the model. The test results are then deposited on
+S3. Finally, the new test results are propagated onto the EMMAA Dashboard
+website. This process is summarized in the figure below.
+
+.. image:: ../_static/images/testing_pipeline.png
+   :scale: 50 %
+
+Automatically generating test conditions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+EMMAA implements a novel approach to collecting observations.
+Model
+constraints for testing will consist of a combination of high-level qualitative
+observations and, where available, structured datasets.
+
+
 .. image:: ../_static/images/model_testing_concept.png
    :scale: 80 %
    :align: right
 
-A key benefit of using semantically annotated models is that it allows models
-to be automatically validated in a common framework. In addition to
-automatically extracting and assembling mechanistic models, EMMAA will run a
-set of tests to determine each model's validity and explanatory scope.  Model
-constraints for testing will consist of a combination of high-level qualitative
-observations and, where available, structured datasets.
+Going forward, the testing methodology will involve multiple modes of
+simulation and analysis
+including also dynamic testing. 
 
-The testing methodology will involve multiple modes of simulation and analysis
-including both static and dynamic testing. Static testing will be carried out
+
+Static testing will be carried out
 by the `Model Checker
 <https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_
 component of INDRA, which identifies causal paths linking a source or perturbed
