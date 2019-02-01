@@ -14,4 +14,5 @@ available at http://github.com/indralab/emmaa.
    :maxdepth: 4
 
    assembly
+   metamodel
    analysis
