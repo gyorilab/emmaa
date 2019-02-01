@@ -234,6 +234,7 @@ function listObjectsInBucket(tableBody, s3Interface, bucket, prefix, maxKeys, en
   });
 };
 
+// FIXME: redirect should be variable: could be index.html or model.html
 function getTokenFromAuthEndpoint() {
   console.log('function getTokenFromAuthEndpoint()')
   STATE_VALUE = _getNewStateValue();
