@@ -67,6 +67,7 @@ test conditions from the BEL Small Corpus, a corpus of experimental
 observations and molecular mechanisms extracted by human experts from the
 scientific literature. Going forward, we will also rely on observations
 collected directly from the literature for automated model testing.
+
 The code to generate and run this corpus of test statements is available
 `here <https://github.com/indralab/emmaa/blob/master/scripts/run_bel_tests.py>`_.
 
@@ -114,6 +115,8 @@ such paths are found, the test is assumed to be satisfied, and the results
 are reported and stored. Otherwise, the model is assumed to to satisfy the
 test.
 
+An end-to-end model building and testing example is available `here <https://github.com/indralab/emmaa/blob/master/scripts/generate_simple_model_test.py>`_.
+
 Going forward, the testing methodology will involve multiple modes of
 simulation and analysis including also dynamic testing. 
 
@@ -135,12 +138,12 @@ will be triggered anytime the model or its associated constraints are updated.
 Pre-registered queries and notifications
 ----------------------------------------
 
-Each EMMAA model will also come with a set of pre-registered queries from
-users. The queries will be in a machine-readable representation that utilizes
-the meta-model semantics developed for automated model analysis. EMMAA will
-initially support the following types of queries (here we show examples in
-natural language but we initially imagine these queries to be submitted in a
-formal, templated language):
+Going forward, each EMMAA model will also come with a set of pre-registered
+queries from users. The queries will be in a machine-readable representation
+that utilizes the meta-model semantics developed for automated model analysis.
+EMMAA will initially support the following types of queries (here we show
+examples in natural language but we initially imagine these queries to be
+submitted in a formal, templated language):
 
 - Structural properties with constraints: e.g., "What drugs bind PIK3CA but not
   PIK3CB?"
@@ -163,17 +166,3 @@ Further, the result of analysis for each property on a given version of the
 model will be saved. This will then allow comparing any changes to the result
 of analysis with previous states of the model. If a meaningful change occurs, a
 notification will be generated to the user who registered the query.
-
-Software architecture for analysis and testing
-----------------------------------------------
-
-Automated tests and user-driven queries are designed to be triggered upon any
-changes in the underlying model. This
-
-
-This will be implemented by storing the current state of the model in an Amazon
-S3 bucket and associating the bucket with a `Cloudwatch Event
-<https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/Create-CloudWatch-Events-Rule.html>`_.
-The Cloudwatch Event will trigger the execution of a serverless Amazon Lambda
-function responsible for initiating the model testing procedure.
-
