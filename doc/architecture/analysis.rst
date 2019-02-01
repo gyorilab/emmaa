@@ -10,8 +10,9 @@ to be automatically validated in a common framework. In addition to
 automatically extracting and assembling mechanistic models, EMMAA runs a
 set of tests to determine each model's validity and explanatory scope.
 We have implemented an approach to model testing that automates
+
 - the collection of test conditions from a pre-existing observational
-knowledge base,
+  knowledge base,
 - deciding which test condition is applicable to which model,
 - executing the applicable tests on each model, and
 - reporting the summary results of the tests on each model.
@@ -32,6 +33,12 @@ website. This process is summarized in the figure below.
 
 .. image:: ../_static/images/testing_pipeline.png
    :scale: 50 %
+
+The code implemented here is avilable in the following places:
+
+- The EMMAA Dockerfile is avilable at `here <https://github.com/indralab/emmaa/tree/master/Dockerfile>`_ .
+- The Lambda implementation (:py:mod:`emmaa.aws_lambda`) is documented
+  `here <https://emmaa.readthedocs.io/en/latest/modules/aws_lambda.html>`_.
 
 Test conditions generated automatically
 ---------------------------------------
@@ -60,6 +67,7 @@ EMMMA contains a test framework in :py:mod:`emmaa.model_tests` with an asbtract
 class interface to connect models with applicable tests and then execute
 each applicable test with respect to each applicable model. One strenght of
 this abstract class architecture is that it is agnostic to
+
 - the specific content and implementation of each model and test,
 - the criteria by which a test is determined to be applicable to a model,
 - the procedure by which a test is determined to be satisfied by a model.
@@ -72,10 +80,10 @@ Test conditions mapped to models automatically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 EMMAA currently implements a specific set of testing classes that
-are adequate for our cancer models.
-
-This implementation uses the ScopeTestConnector and StatementCheckingTest
-classes in EMMAA. The ScopeTestConnector class uses our meta-model annotations to
+are adequate for our cancer models. This implementation uses the
+`ScopeTestConnector` (:py:mod:`emmaa.model_tests.ScopeTestConnector`)
+and `StatementCheckingTest` (:py:mod:`emmaa.model_tests.StatementCheckingTest`) classes in EMMAA.
+The ScopeTestConnector class uses our meta-model annotations to
 determine the identity of the concepts in the model as well as in the test, and
 deems the test to be applicable to the model if all the concepts (i.e. the
 perturbation and the readout) in the test are also contained in the model. 
