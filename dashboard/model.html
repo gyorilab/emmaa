@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EMMAA dashboard</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+  <!-- AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
+
+  <!-- Script Files -->
+  <script src="./awsServices.js"></script>
+  <!-- <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script> -->
+  <script src="./emmaaFunctions.js"></script>
+  <!-- <script src="https://s3.amazonaws.com/emmaa-test/emmaaFunctions.js"></script> -->
+
+  <script>
+    // Check if user signed in immediately after page load
+    $(document).ready(function(){
+      console.log('document ready')
+      var return_url = window.location.href;
+      let url_dict = getDictFromUrl(return_url);
+
+      // Get access and ID tokens
+      // accessTokenString = _readCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME)
+      // idTokenString = _readCookie(EMMAA_IDTOKEN_COOKIE_NAME)
+
+      // if (!accessTokenString | !idTokenString) {
+      //   console.log('Could not read either idToken or accessToken!')
+      //   notifyUser(document.getElementId('status-notify'), 'Could not read either idToken or accessToken!')
+      //   // Send user to be logged in again
+      //   window.location.replace()
+      // }
+
+      // // Verify user
+      // verifyUser(accessTokenString, idTokenString);
+
+      // If linked from model name: load that model
+      if (url_dict) {
+        let model = url_dict['model'];
+        // Set the model to the one that is selected
+        setModel(document.getElementById('modelSelectDD'), model);
+        var infoTableBody = document.getElementById('modelInfoTableBody');
+        var testResultsTableBody = document.getElementById('modelTestResultBody');
+
+        if (model == 'test') {
+          let promises = [];
+          // FIXME 
+          testKey = 'results/test/results_2019-01-31-19-44-26.json'; // Replace with funtion return that grabs latest test of 'model'
+          modelKey = 'models/rasmodel/rasmodel_json.json'; // Replace with function return that grabs latest model of 'model' 
+          promises.push(getPublicJson(EMMMAA_BUCKET, modelKey))
+          promises.push(getPublicJson(EMMMAA_BUCKET, testKey))
+          Promise.all(promises).then(function(jsonArray){
+            console.log(jsonArray)
+            populateModelsTable(infoTableBody, JSON.parse(jsonArray[0])) // Parse the jsonstring saved on S3 for the model
+            populateTestResultTable(testResultsTableBody, jsonArray[1][0]) //
+          })
+        } else {
+          modelKey = 'models/' + model + '/' + model + '_model_meta.json';
+          loadModelMetaData(EMMMAA_BUCKET, modelKey);
+        }
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <div class="page-header">
+    <h1 class="display-3">EMMAA models</h1>
+    <p id="status-notify">Not logged in</p>
+    <hr>
+  </div>
+
+  <div class="container">
+    <div class="input-group">
+      <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
+        <option selected disabled hidden>Select model...</option>
+        <option value="aml">Acute myeloid leukemia (AML)</option>
+        <option value="brca">Breast cancer (BRCA)</option>
+        <option value="luad">Lung adenocarcinoma (LUAD)</option>
+        <option value="paad">Pancreas adenocarcinoma (PAAD)</option>
+        <option value="prad">Prostate adenocarcinoma (PRAD)</option>
+        <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
+        <option value="test">Test Model (test)</option>
+      </select>
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" onClick="selectModel(document.getElementById('modelInfoTableBody'), document.getElementById('modelTestResultBody'), this.parentNode.previousElementSibling)" type="button">Load Model</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- This table displays model data -->
+  <div class="container" id="modelInfoTable">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Model Info</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Statement</th>
+            <th>Evidence Details</th>
+          </thead>
+          <tbody class="table-body" id="modelInfoTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- This table lists the tests -->
+  <div class="container" id="modelTestsTable">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Latest Tests</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Test ID</th>
+            <th>Date</th>
+          </thead>
+          <tbody class="table-body" id="modelTestsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- This table shows the contents of a test json -->
+  <div class="container" id="modelTestResult">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Test Result Details</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <th>Key</th>
+            <th>Value</th>
+          </thead>
+          <tbody class="table-body" id="modelTestResultBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
