@@ -10,7 +10,7 @@ from indra.sources import tas
 from indra.databases import cbio_client, uniprot_client
 from indra.databases.hgnc_client import hgnc_ids, get_hgnc_id, get_hgnc_name, \
                                         get_uniprot_id
-from emmaa.priors import SearchTerm
+from emmaa.priors import get_drugs_for_gene, SearchTerm
 
 
 logger = logging.getLogger(__name__)
@@ -201,16 +201,6 @@ class TcgaCancerPrior(object):
     @staticmethod
     def find_drugs_for_genes(node_list):
         """Return list of drugs targeting gene nodes."""
-        def get_drugs_for_gene(stmts, hgnc_id):
-            drugs_for_gene = []
-            for stmt in stmts:
-                if stmt.obj.db_refs.get('HGNC') == hgnc_id:
-                    term = SearchTerm(type='drug', name=stmt.subj.name,
-                                      db_refs=stmt.subj.db_refs,
-                                      search_term=f'"{stmt.subj.name}"')
-                    drugs_for_gene.append(term)
-            return drugs_for_gene
-
         tas_statements = tas.process_csv().statements
         already_added = set()
         drug_terms = []

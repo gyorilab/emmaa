@@ -2,990 +2,6405 @@ ndex:
   network: ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf
 search_terms:
 - db_refs:
-    HGNC: '18275'
-  name: ABTB1
-  search_term: '"ABTB1"'
+    HGNC: '5'
+    UP: P04217
+  name: A1BG
+  search_term: '"A1BG"'
   type: gene
 - db_refs:
-    HGNC: '483'
-  name: ANG
-  search_term: '"ANG"'
+    HGNC: '13666'
+    UP: Q9NRG9
+  name: AAAS
+  search_term: '"AAAS"'
   type: gene
 - db_refs:
-    HGNC: '571'
-  name: AP3S2
-  search_term: '"AP3S2"'
+    HGNC: '14638'
+    UP: Q86UQ4
+  name: ABCA13
+  search_term: '"ABCA13"'
   type: gene
 - db_refs:
-    HGNC: '638'
-  name: AQP5
-  search_term: '"AQP5"'
+    HGNC: '82'
+    UP: P09110
+  name: ACAA1
+  search_term: '"ACAA1"'
   type: gene
 - db_refs:
-    HGNC: '694'
-  name: ARL3
-  search_term: '"ARL3"'
+    HGNC: '115'
+    UP: P53396
+  name: ACLY
+  search_term: '"ACLY"'
   type: gene
 - db_refs:
-    HGNC: '18318'
-  name: ASXL1
-  search_term: '"ASXL1"'
+    HGNC: '18431'
+    UP: P49753
+  name: ACOT2
+  search_term: '"ACOT2"'
   type: gene
 - db_refs:
-    HGNC: '18265'
-  name: ATP6V1G3
-  search_term: '"ATP6V1G3"'
+    HGNC: '19748'
+    UP: Q8N9L9
+  name: ACOT4
+  search_term: '"ACOT4"'
   type: gene
 - db_refs:
-    HGNC: '11391'
-  name: AURKC
-  search_term: '"AURKC"'
+    HGNC: '15919'
+    UP: O14734
+  name: ACOT8
+  search_term: '"ACOT8"'
   type: gene
 - db_refs:
-    HGNC: '920'
-  name: B3GALT5
-  search_term: '"B3GALT5"'
+    HGNC: '119'
+    UP: Q15067
+  name: ACOX1
+  search_term: '"ACOX1"'
   type: gene
 - db_refs:
-    HGNC: '24185'
-  name: BRCC3
-  search_term: '"BRCC3"'
+    HGNC: '120'
+    UP: Q99424
+  name: ACOX2
+  search_term: '"ACOX2"'
   type: gene
 - db_refs:
-    HGNC: '22393'
-  name: BRINP3
-  search_term: '"BRINP3"'
+    HGNC: '121'
+    UP: O15254
+  name: ACOX3
+  search_term: '"ACOX3"'
   type: gene
 - db_refs:
-    HGNC: '17262'
-  name: BRMS1
-  search_term: '"BRMS1"'
+    HGNC: '125'
+    UP: P15309
+  name: ACPP
+  search_term: '"ACPP"'
   type: gene
 - db_refs:
-    HGNC: '1328'
-  name: C4BPB
-  search_term: '"C4BPB"'
+    HGNC: '132'
+    UP: P60709
+  name: ACTB
+  search_term: '"ACTB"'
   type: gene
 - db_refs:
-    HGNC: '1406'
-  name: CACNG2
-  search_term: '"CACNG2"'
+    HGNC: '144'
+    UP: P63261
+  name: ACTG1
+  search_term: '"ACTG1"'
   type: gene
 - db_refs:
-    HGNC: '29849'
-  name: CADM2
-  search_term: '"CADM2"'
+    HGNC: '24124'
+    UP: O96019
+  name: ACTL6A
+  search_term: '"ACTL6A"'
   type: gene
 - db_refs:
-    HGNC: '1455'
-  name: CALR
-  search_term: '"CALR"'
+    HGNC: '160'
+    UP: O94805
+  name: ACTL6B
+  search_term: '"ACTL6B"'
   type: gene
 - db_refs:
-    HGNC: '1487'
-  name: CAPS
-  search_term: '"CAPS"'
+    HGNC: '164'
+    UP: P35609
+  name: ACTN2
+  search_term: '"ACTN2"'
   type: gene
 - db_refs:
-    HGNC: '28861'
-  name: CARD18
-  search_term: '"CARD18"'
+    HGNC: '17372'
+    UP: Q9NZ32
+  name: ACTR10
+  search_term: '"ACTR10"'
   type: gene
 - db_refs:
-    HGNC: '1539'
-  name: CBFB
-  search_term: '"CBFB"'
+    HGNC: '168'
+    UP: P42025
+  name: ACTR1B
+  search_term: '"ACTR1B"'
+  type: gene
+- db_refs:
+    HGNC: '169'
+    UP: P61160
+  name: ACTR2
+  search_term: '"ACTR2"'
+  type: gene
+- db_refs:
+    HGNC: '1839'
+    UP: Q9NZK5
+  name: ADA2
+  search_term: '"ADA2"'
+  type: gene
+- db_refs:
+    HGNC: '188'
+    UP: O14672
+  name: ADAM10
+  search_term: '"ADAM10"'
+  type: gene
+- db_refs:
+    HGNC: '215'
+    UP: P78325
+  name: ADAM8
+  search_term: '"ADAM8"'
+  type: gene
+- db_refs:
+    HGNC: '23647'
+    UP: Q9BY15
+  name: ADGRE3
+  search_term: '"ADGRE3"'
+  type: gene
+- db_refs:
+    HGNC: '13728'
+    UP: Q86Y34
+  name: ADGRG3
+  search_term: '"ADGRG3"'
+  type: gene
+- db_refs:
+    HGNC: '24051'
+    UP: Q6ZN18
+  name: AEBP2
+  search_term: '"AEBP2"'
+  type: gene
+- db_refs:
+    HGNC: '318'
+    UP: P20933
+  name: AGA
+  search_term: '"AGA"'
+  type: gene
+- db_refs:
+    HGNC: '24684'
+    UP: Q8N302
+  name: AGGF1
+  search_term: '"AGGF1"'
+  type: gene
+- db_refs:
+    HGNC: '21869'
+    UP: Q53H12
+  name: AGK
+  search_term: '"AGK"'
+  type: gene
+- db_refs:
+    HGNC: '321'
+    UP: P35573
+  name: AGL
+  search_term: '"AGL"'
+  type: gene
+- db_refs:
+    HGNC: '325'
+    UP: O15120
+  name: AGPAT2
+  search_term: '"AGPAT2"'
+  type: gene
+- db_refs:
+    HGNC: '327'
+    UP: O00116
+  name: AGPS
+  search_term: '"AGPS"'
+  type: gene
+- db_refs:
+    HGNC: '329'
+    UP: O00468
+  name: AGRN
+  search_term: '"AGRN"'
+  type: gene
+- db_refs:
+    HGNC: '13539'
+    UP: Q6RW13
+  name: AGTRAP
+  search_term: '"AGTRAP"'
+  type: gene
+- db_refs:
+    HGNC: '341'
+    UP: P21549
+  name: AGXT
+  search_term: '"AGXT"'
+  type: gene
+- db_refs:
+    HGNC: '344'
+    UP: O43865
+  name: AHCYL1
+  search_term: '"AHCYL1"'
+  type: gene
+- db_refs:
+    HGNC: '349'
+    UP: P02765
+  name: AHSG
+  search_term: '"AHSG"'
+  type: gene
+- db_refs:
+    HGNC: '379'
+    UP: Q99996
+  name: AKAP9
+  search_term: '"AKAP9"'
+  type: gene
+- db_refs:
+    HGNC: '392'
+    UP: P31751
+  name: AKT2
+  search_term: '"AKT2"'
+  type: gene
+- db_refs:
+    HGNC: '395'
+    UP: P13716
+  name: ALAD
+  search_term: '"ALAD"'
+  type: gene
+- db_refs:
+    HGNC: '410'
+    UP: P43353
+  name: ALDH3B1
+  search_term: '"ALDH3B1"'
+  type: gene
+- db_refs:
+    HGNC: '414'
+    UP: P04075
+  name: ALDOA
+  search_term: '"ALDOA"'
+  type: gene
+- db_refs:
+    HGNC: '418'
+    UP: P09972
+  name: ALDOC
+  search_term: '"ALDOC"'
+  type: gene
+- db_refs:
+    HGNC: '435'
+    UP: P09917
+  name: ALOX5
+  search_term: '"ALOX5"'
+  type: gene
+- db_refs:
+    HGNC: '451'
+    UP: Q9UHK6
+  name: AMACR
+  search_term: '"AMACR"'
+  type: gene
+- db_refs:
+    HGNC: '470'
+    UP: Q01432
+  name: AMPD3
+  search_term: '"AMPD3"'
+  type: gene
+- db_refs:
+    HGNC: '484'
+    UP: Q15389
+  name: ANGPT1
+  search_term: '"ANGPT1"'
+  type: gene
+- db_refs:
+    HGNC: '485'
+    UP: O15123
+  name: ANGPT2
+  search_term: '"ANGPT2"'
+  type: gene
+- db_refs:
+    HGNC: '487'
+    UP: Q9Y264
+  name: ANGPT4
+  search_term: '"ANGPT4"'
+  type: gene
+- db_refs:
+    HGNC: '25240'
+    UP: Q4KMQ2
+  name: ANO6
+  search_term: '"ANO6"'
+  type: gene
+- db_refs:
+    HGNC: '500'
+    UP: P15144
+  name: ANPEP
+  search_term: '"ANPEP"'
+  type: gene
+- db_refs:
+    HGNC: '537'
+    UP: P07355
+  name: ANXA2
+  search_term: '"ANXA2"'
+  type: gene
+- db_refs:
+    HGNC: '80'
+    UP: P19801
+  name: AOC1
+  search_term: '"AOC1"'
+  type: gene
+- db_refs:
+    HGNC: '13667'
+    UP: Q9BXS5
+  name: AP1M1
+  search_term: '"AP1M1"'
+  type: gene
+- db_refs:
+    HGNC: '562'
+    UP: O94973
+  name: AP2A2
+  search_term: '"AP2A2"'
+  type: gene
+- db_refs:
+    HGNC: '566'
+    UP: O00203
+  name: AP3B1
+  search_term: '"AP3B1"'
+  type: gene
+- db_refs:
+    HGNC: '576'
+    UP: O14727
+  name: APAF1
+  search_term: '"APAF1"'
+  type: gene
+- db_refs:
+    HGNC: '17379'
+    UP: Q7Z5R6
+  name: APBB1IP
+  search_term: '"APBB1IP"'
+  type: gene
+- db_refs:
+    HGNC: '586'
+    UP: P13798
+  name: APEH
+  search_term: '"APEH"'
+  type: gene
+- db_refs:
+    HGNC: '626'
+    UP: P07741
+  name: APRT
+  search_term: '"APRT"'
+  type: gene
+- db_refs:
+    HGNC: '646'
+    UP: P10398
+  name: ARAF
+  search_term: '"ARAF"'
+  type: gene
+- db_refs:
+    HGNC: '651'
+    UP: P15514
+  name: AREG
+  search_term: '"AREG"'
+  type: gene
+- db_refs:
+    HGNC: '663'
+    UP: P05089
+  name: ARG1
+  search_term: '"ARG1"'
+  type: gene
+- db_refs:
+    HGNC: '4591'
+    UP: Q9NRY4
+  name: ARHGAP35
+  search_term: '"ARHGAP35"'
+  type: gene
+- db_refs:
+    HGNC: '17102'
+    UP: Q92619
+  name: ARHGAP45
+  search_term: '"ARHGAP45"'
+  type: gene
+- db_refs:
+    HGNC: '14130'
+    UP: Q9BRR9
+  name: ARHGAP9
+  search_term: '"ARHGAP9"'
+  type: gene
+- db_refs:
+    HGNC: '11110'
+    UP: O14497
+  name: ARID1A
+  search_term: '"ARID1A"'
+  type: gene
+- db_refs:
+    HGNC: '18040'
+    UP: Q8NFD5
+  name: ARID1B
+  search_term: '"ARID1B"'
+  type: gene
+- db_refs:
+    HGNC: '18037'
+    UP: Q68CP9
+  name: ARID2
+  search_term: '"ARID2"'
+  type: gene
+- db_refs:
+    HGNC: '25192'
+    UP: Q96BM9
+  name: ARL8A
+  search_term: '"ARL8A"'
+  type: gene
+- db_refs:
+    HGNC: '24999'
+    UP: Q8IUR7
+  name: ARMC8
+  search_term: '"ARMC8"'
+  type: gene
+- db_refs:
+    HGNC: '708'
+    UP: O15511
+  name: ARPC5
+  search_term: '"ARPC5"'
+  type: gene
+- db_refs:
+    HGNC: '711'
+    UP: P49407
+  name: ARRB1
+  search_term: '"ARRB1"'
+  type: gene
+- db_refs:
+    HGNC: '712'
+    UP: P32121
+  name: ARRB2
+  search_term: '"ARRB2"'
+  type: gene
+- db_refs:
+    HGNC: '713'
+    UP: P15289
+  name: ARSA
+  search_term: '"ARSA"'
+  type: gene
+- db_refs:
+    HGNC: '714'
+    UP: P15848
+  name: ARSB
+  search_term: '"ARSB"'
+  type: gene
+- db_refs:
+    HGNC: '727'
+    UP: Q5T4W7
+  name: ARTN
+  search_term: '"ARTN"'
+  type: gene
+- db_refs:
+    HGNC: '735'
+    UP: Q13510
+  name: ASAH1
+  search_term: '"ASAH1"'
+  type: gene
+- db_refs:
+    HGNC: '24007'
+    UP: Q5T9A4
+  name: ATAD3B
+  search_term: '"ATAD3B"'
+  type: gene
+- db_refs:
+    HGNC: '16935'
+    UP: O95352
+  name: ATG7
+  search_term: '"ATG7"'
+  type: gene
+- db_refs:
+    HGNC: '13552'
+    UP: P98196
+  name: ATP11A
+  search_term: '"ATP11A"'
+  type: gene
+- db_refs:
+    HGNC: '13553'
+    UP: Q9Y2G3
+  name: ATP11B
+  search_term: '"ATP11B"'
+  type: gene
+- db_refs:
+    HGNC: '18305'
+    UP: O75787
+  name: ATP6AP2
+  search_term: '"ATP6AP2"'
+  type: gene
+- db_refs:
+    HGNC: '865'
+    UP: Q93050
+  name: ATP6V0A1
+  search_term: '"ATP6V0A1"'
+  type: gene
+- db_refs:
+    HGNC: '855'
+    UP: P27449
+  name: ATP6V0C
+  search_term: '"ATP6V0C"'
+  type: gene
+- db_refs:
+    HGNC: '13527'
+    UP: Q9Y5K8
+  name: ATP6V1D
+  search_term: '"ATP6V1D"'
+  type: gene
+- db_refs:
+    HGNC: '13531'
+    UP: Q9Y2Q0
+  name: ATP8A1
+  search_term: '"ATP8A1"'
+  type: gene
+- db_refs:
+    HGNC: '13536'
+    UP: Q8TF62
+  name: ATP8B4
+  search_term: '"ATP8B4"'
+  type: gene
+- db_refs:
+    HGNC: '913'
+    UP: P20160
+  name: AZU1
+  search_term: '"AZU1"'
+  type: gene
+- db_refs:
+    HGNC: '914'
+    UP: P61769
+  name: B2M
+  search_term: '"B2M"'
+  type: gene
+- db_refs:
+    HGNC: '924'
+    UP: P15291
+  name: B4GALT1
+  search_term: '"B4GALT1"'
+  type: gene
+- db_refs:
+    HGNC: '932'
+    UP: Q14032
+  name: BAAT
+  search_term: '"BAAT"'
+  type: gene
+- db_refs:
+    HGNC: '940'
+    UP: O95429
+  name: BAG4
+  search_term: '"BAG4"'
+  type: gene
+- db_refs:
+    HGNC: '971'
+    UP: P56945
+  name: BCAR1
+  search_term: '"BCAR1"'
+  type: gene
+- db_refs:
+    HGNC: '994'
+    UP: O43521
+  name: BCL2L11
+  search_term: '"BCL2L11"'
+  type: gene
+- db_refs:
+    HGNC: '1014'
+    UP: P11274
+  name: BCR
+  search_term: '"BCR"'
+  type: gene
+- db_refs:
+    HGNC: '1033'
+    UP: P23560
+  name: BDNF
+  search_term: '"BDNF"'
+  type: gene
+- db_refs:
+    HGNC: '1053'
+    UP: Q9UBW5
+  name: BIN2
+  search_term: '"BIN2"'
+  type: gene
+- db_refs:
+    HGNC: '1095'
+    UP: P17213
+  name: BPI
+  search_term: '"BPI"'
+  type: gene
+- db_refs:
+    HGNC: '1097'
+    UP: P15056
+  name: BRAF
+  search_term: '"BRAF"'
+  type: gene
+- db_refs:
+    HGNC: '1099'
+    UP: Q7Z569
+  name: BRAP
+  search_term: '"BRAP"'
+  type: gene
+- db_refs:
+    HGNC: '1109'
+    UP: O95415
+  name: BRI3
+  search_term: '"BRI3"'
+  type: gene
+- db_refs:
+    HGNC: '1118'
+    UP: Q10588
+  name: BST1
+  search_term: '"BST1"'
+  type: gene
+- db_refs:
+    HGNC: '1119'
+    UP: Q10589
+  name: BST2
+  search_term: '"BST2"'
+  type: gene
+- db_refs:
+    HGNC: '1121'
+    UP: P35070
+  name: BTC
+  search_term: '"BTC"'
+  type: gene
+- db_refs:
+    HGNC: '1131'
+    UP: P78543
+  name: BTG2
+  search_term: '"BTG2"'
+  type: gene
+- db_refs:
+    HGNC: '1133'
+    UP: Q06187
+  name: BTK
+  search_term: '"BTK"'
+  type: gene
+- db_refs:
+    HGNC: '1318'
+    UP: P01024
+  name: C3
+  search_term: '"C3"'
+  type: gene
+- db_refs:
+    HGNC: '1319'
+    UP: Q16581
+  name: C3AR1
+  search_term: '"C3AR1"'
+  type: gene
+- db_refs:
+    HGNC: '1338'
+    UP: P21730
+  name: C5AR1
+  search_term: '"C5AR1"'
+  type: gene
+- db_refs:
+    HGNC: '21247'
+    UP: Q7Z4R8
+  name: C6orf120
+  search_term: '"C6orf120"'
+  type: gene
+- db_refs:
+    HGNC: '20292'
+    UP: Q9Y376
+  name: CAB39
+  search_term: '"CAB39"'
+  type: gene
+- db_refs:
+    HGNC: '1390'
+    UP: Q13936
+  name: CACNA1C
+  search_term: '"CACNA1C"'
+  type: gene
+- db_refs:
+    HGNC: '1391'
+    UP: Q01668
+  name: CACNA1D
+  search_term: '"CACNA1D"'
+  type: gene
+- db_refs:
+    HGNC: '1394'
+    UP: O43497
+  name: CACNA1G
+  search_term: '"CACNA1G"'
+  type: gene
+- db_refs:
+    HGNC: '1395'
+    UP: O95180
+  name: CACNA1H
+  search_term: '"CACNA1H"'
+  type: gene
+- db_refs:
+    HGNC: '1396'
+    UP: Q9P0X4
+  name: CACNA1I
+  search_term: '"CACNA1I"'
+  type: gene
+- db_refs:
+    HGNC: '1397'
+    UP: Q13698
+  name: CACNA1S
+  search_term: '"CACNA1S"'
+  type: gene
+- db_refs:
+    HGNC: '1401'
+    UP: Q02641
+  name: CACNB1
+  search_term: '"CACNB1"'
+  type: gene
+- db_refs:
+    HGNC: '1402'
+    UP: Q08289
+  name: CACNB2
+  search_term: '"CACNB2"'
+  type: gene
+- db_refs:
+    HGNC: '1403'
+    UP: P54284
+  name: CACNB3
+  search_term: '"CACNB3"'
+  type: gene
+- db_refs:
+    HGNC: '1404'
+    UP: O00305
+  name: CACNB4
+  search_term: '"CACNB4"'
+  type: gene
+- db_refs:
+    HGNC: '1442'
+    UP: P0DP23
+  name: CALM1
+  search_term: '"CALM1"'
+  type: gene
+- db_refs:
+    HGNC: '18180'
+    UP: Q9NZT1
+  name: CALML5
+  search_term: '"CALML5"'
+  type: gene
+- db_refs:
+    HGNC: '1472'
+    UP: P49913
+  name: CAMP
+  search_term: '"CAMP"'
+  type: gene
+- db_refs:
+    HGNC: '30688'
+    UP: Q86VP6
+  name: CAND1
+  search_term: '"CAND1"'
+  type: gene
+- db_refs:
+    HGNC: '19721'
+    UP: Q8WVQ1
+  name: CANT1
+  search_term: '"CANT1"'
+  type: gene
+- db_refs:
+    HGNC: '20040'
+    UP: Q01518
+  name: CAP1
+  search_term: '"CAP1"'
+  type: gene
+- db_refs:
+    HGNC: '1476'
+    UP: P07384
+  name: CAPN1
+  search_term: '"CAPN1"'
+  type: gene
+- db_refs:
+    HGNC: '1510'
+    UP: Q9UKL3
+  name: CASP8AP2
+  search_term: '"CASP8AP2"'
+  type: gene
+- db_refs:
+    HGNC: '1516'
+    UP: P04040
+  name: CAT
+  search_term: '"CAT"'
   type: gene
 - db_refs:
     HGNC: '1541'
+    UP: P22681
   name: CBL
   search_term: '"CBL"'
   type: gene
 - db_refs:
-    HGNC: '1555'
-  name: CBX5
-  search_term: '"CBX5"'
+    HGNC: '1582'
+    UP: P24385
+  name: CCND1
+  search_term: '"CCND1"'
   type: gene
 - db_refs:
-    HGNC: '1557'
-  name: CBX7
-  search_term: '"CBX7"'
+    HGNC: '1615'
+    UP: P78371
+  name: CCT2
+  search_term: '"CCT2"'
   type: gene
 - db_refs:
-    HGNC: '28688'
-  name: CCDC24
-  search_term: '"CCDC24"'
+    HGNC: '1623'
+    UP: P50990
+  name: CCT8
+  search_term: '"CCT8"'
   type: gene
 - db_refs:
-    HGNC: '28295'
-  name: CCDC32
-  search_term: '"CCDC32"'
+    HGNC: '1628'
+    UP: P08571
+  name: CD14
+  search_term: '"CD14"'
   type: gene
 - db_refs:
-    HGNC: '10610'
-  name: CCL11
-  search_term: '"CCL11"'
+    HGNC: '30072'
+    UP: Q8N6Q3
+  name: CD177
+  search_term: '"CD177"'
   type: gene
 - db_refs:
-    HGNC: '10614'
-  name: CCL16
-  search_term: '"CCL16"'
+    HGNC: '1641'
+    UP: Q9NNX6
+  name: CD209
+  search_term: '"CD209"'
   type: gene
 - db_refs:
-    HGNC: '10619'
-  name: CCL20
-  search_term: '"CCL20"'
+    HGNC: '19319'
+    UP: Q9UGN4
+  name: CD300A
+  search_term: '"CD300A"'
   type: gene
 - db_refs:
-    HGNC: '10620'
-  name: CCL21
-  search_term: '"CCL21"'
+    HGNC: '1659'
+    UP: P20138
+  name: CD33
+  search_term: '"CD33"'
   type: gene
 - db_refs:
-    HGNC: '16692'
-  name: CD320
-  search_term: '"CD320"'
+    HGNC: '1663'
+    UP: P16671
+  name: CD36
+  search_term: '"CD36"'
   type: gene
 - db_refs:
-    HGNC: '11937'
-  name: CD70
-  search_term: '"CD70"'
+    HGNC: '1678'
+    UP: P01730
+  name: CD4
+  search_term: '"CD4"'
   type: gene
 - db_refs:
-    HGNC: '1697'
-  name: CD74
-  search_term: '"CD74"'
+    HGNC: '1681'
+    UP: P16070
+  name: CD44
+  search_term: '"CD44"'
   type: gene
 - db_refs:
-    HGNC: '1736'
-  name: CDC42
-  search_term: '"CDC42"'
+    HGNC: '1682'
+    UP: Q08722
+  name: CD47
+  search_term: '"CD47"'
   type: gene
 - db_refs:
-    HGNC: '1833'
-  name: CEBPA
-  search_term: '"CEBPA"'
+    HGNC: '1686'
+    UP: P19397
+  name: CD53
+  search_term: '"CD53"'
   type: gene
 - db_refs:
-    HGNC: '28188'
-  name: CFAP300
-  search_term: '"CFAP300"'
+    HGNC: '2665'
+    UP: P08174
+  name: CD55
+  search_term: '"CD55"'
   type: gene
 - db_refs:
-    HGNC: '4890'
-  name: CFHR2
-  search_term: '"CFHR2"'
+    HGNC: '1688'
+    UP: P19256
+  name: CD58
+  search_term: '"CD58"'
   type: gene
 - db_refs:
-    HGNC: '1935'
-  name: CHIC2
-  search_term: '"CHIC2"'
+    HGNC: '1689'
+    UP: P13987
+  name: CD59
+  search_term: '"CD59"'
   type: gene
 - db_refs:
-    HGNC: '8514'
-  name: CLDN11
-  search_term: '"CLDN11"'
+    HGNC: '1692'
+    UP: P08962
+  name: CD63
+  search_term: '"CD63"'
   type: gene
 - db_refs:
-    HGNC: '2035'
-  name: CLDN14
-  search_term: '"CLDN14"'
+    HGNC: '1693'
+    UP: P34810
+  name: CD68
+  search_term: '"CD68"'
   type: gene
 - db_refs:
-    HGNC: '2039'
-  name: CLDN18
-  search_term: '"CLDN18"'
+    HGNC: '15855'
+    UP: Q9NPY3
+  name: CD93
+  search_term: '"CD93"'
   type: gene
 - db_refs:
-    HGNC: '18206'
-  name: CRISPLD1
-  search_term: '"CRISPLD1"'
+    HGNC: '1712'
+    UP: P32320
+  name: CDA
+  search_term: '"CDA"'
+  type: gene
+- db_refs:
+    HGNC: '1727'
+    UP: P30307
+  name: CDC25C
+  search_term: '"CDC25C"'
+  type: gene
+- db_refs:
+    HGNC: '1735'
+    UP: Q16543
+  name: CDC37
+  search_term: '"CDC37"'
+  type: gene
+- db_refs:
+    HGNC: '1733'
+    UP: Q14004
+  name: CDK13
+  search_term: '"CDK13"'
+  type: gene
+- db_refs:
+    HGNC: '1773'
+    UP: P11802
+  name: CDK4
+  search_term: '"CDK4"'
+  type: gene
+- db_refs:
+    HGNC: '1814'
+    UP: P13688
+  name: CEACAM1
+  search_term: '"CEACAM1"'
+  type: gene
+- db_refs:
+    HGNC: '1815'
+    UP: P40198
+  name: CEACAM3
+  search_term: '"CEACAM3"'
+  type: gene
+- db_refs:
+    HGNC: '1818'
+    UP: P40199
+  name: CEACAM6
+  search_term: '"CEACAM6"'
+  type: gene
+- db_refs:
+    HGNC: '1820'
+    UP: P31997
+  name: CEACAM8
+  search_term: '"CEACAM8"'
+  type: gene
+- db_refs:
+    HGNC: '1851'
+    UP: P49450
+  name: CENPA
+  search_term: '"CENPA"'
+  type: gene
+- db_refs:
+    HGNC: '1854'
+    UP: Q03188
+  name: CENPC
+  search_term: '"CENPC"'
+  type: gene
+- db_refs:
+    HGNC: '17268'
+    UP: Q9H3R5
+  name: CENPH
+  search_term: '"CENPH"'
+  type: gene
+- db_refs:
+    HGNC: '3968'
+    UP: Q92674
+  name: CENPI
+  search_term: '"CENPI"'
+  type: gene
+- db_refs:
+    HGNC: '17272'
+    UP: Q9HC77
+  name: CENPJ
+  search_term: '"CENPJ"'
+  type: gene
+- db_refs:
+    HGNC: '29479'
+    UP: Q9BS16
+  name: CENPK
+  search_term: '"CENPK"'
+  type: gene
+- db_refs:
+    HGNC: '17879'
+    UP: Q8N0S6
+  name: CENPL
+  search_term: '"CENPL"'
+  type: gene
+- db_refs:
+    HGNC: '18352'
+    UP: Q9NSP4
+  name: CENPM
+  search_term: '"CENPM"'
+  type: gene
+- db_refs:
+    HGNC: '30873'
+    UP: Q96H22
+  name: CENPN
+  search_term: '"CENPN"'
+  type: gene
+- db_refs:
+    HGNC: '28152'
+    UP: Q9BU64
+  name: CENPO
+  search_term: '"CENPO"'
+  type: gene
+- db_refs:
+    HGNC: '32933'
+    UP: Q6IPU0
+  name: CENPP
+  search_term: '"CENPP"'
+  type: gene
+- db_refs:
+    HGNC: '21347'
+    UP: Q7L2Z9
+  name: CENPQ
+  search_term: '"CENPQ"'
+  type: gene
+- db_refs:
+    HGNC: '23163'
+    UP: Q8N2Z9
+  name: CENPS
+  search_term: '"CENPS"'
+  type: gene
+- db_refs:
+    HGNC: '25787'
+    UP: Q96BT3
+  name: CENPT
+  search_term: '"CENPT"'
+  type: gene
+- db_refs:
+    HGNC: '21348'
+    UP: Q71F23
+  name: CENPU
+  search_term: '"CENPU"'
+  type: gene
+- db_refs:
+    HGNC: '21488'
+    UP: Q5EE01
+  name: CENPW
+  search_term: '"CENPW"'
+  type: gene
+- db_refs:
+    HGNC: '11422'
+    UP: A8MT69
+  name: CENPX
+  search_term: '"CENPX"'
+  type: gene
+- db_refs:
+    HGNC: '29021'
+    UP: O15078
+  name: CEP290
+  search_term: '"CEP290"'
+  type: gene
+- db_refs:
+    HGNC: '2771'
+    UP: P00746
+  name: CFD
+  search_term: '"CFD"'
+  type: gene
+- db_refs:
+    HGNC: '8864'
+    UP: P27918
+  name: CFP
+  search_term: '"CFP"'
+  type: gene
+- db_refs:
+    HGNC: '1925'
+    UP: O14757
+  name: CHEK1
+  search_term: '"CHEK1"'
+  type: gene
+- db_refs:
+    HGNC: '1932'
+    UP: P36222
+  name: CHI3L1
+  search_term: '"CHI3L1"'
+  type: gene
+- db_refs:
+    HGNC: '1936'
+    UP: Q13231
+  name: CHIT1
+  search_term: '"CHIT1"'
+  type: gene
+- db_refs:
+    HGNC: '1964'
+    UP: P30926
+  name: CHRNB4
+  search_term: '"CHRNB4"'
+  type: gene
+- db_refs:
+    HGNC: '16991'
+    UP: Q07065
+  name: CKAP4
+  search_term: '"CKAP4"'
+  type: gene
+- db_refs:
+    HGNC: '2024'
+    UP: P51797
+  name: CLCN6
+  search_term: '"CLCN6"'
+  type: gene
+- db_refs:
+    HGNC: '31713'
+    UP: Q5QGZ9
+  name: CLEC12A
+  search_term: '"CLEC12A"'
+  type: gene
+- db_refs:
+    HGNC: '13258'
+    UP: Q8WTT0
+  name: CLEC4C
+  search_term: '"CLEC4C"'
+  type: gene
+- db_refs:
+    HGNC: '14554'
+    UP: Q8WXI8
+  name: CLEC4D
+  search_term: '"CLEC4D"'
+  type: gene
+- db_refs:
+    HGNC: '2054'
+    UP: Q9NY25
+  name: CLEC5A
+  search_term: '"CLEC5A"'
+  type: gene
+- db_refs:
+    HGNC: '19177'
+    UP: Q9NX76
+  name: CMTM6
+  search_term: '"CMTM6"'
+  type: gene
+- db_refs:
+    HGNC: '19700'
+    UP: Q969H4
+  name: CNKSR1
+  search_term: '"CNKSR1"'
+  type: gene
+- db_refs:
+    HGNC: '19701'
+    UP: Q8WXI2
+  name: CNKSR2
+  search_term: '"CNKSR2"'
+  type: gene
+- db_refs:
+    HGNC: '2156'
+    UP: Q99439
+  name: CNN2
+  search_term: '"CNN2"'
+  type: gene
+- db_refs:
+    HGNC: '7877'
+    UP: A5YKK6
+  name: CNOT1
+  search_term: '"CNOT1"'
+  type: gene
+- db_refs:
+    HGNC: '23817'
+    UP: Q9H9A5
+  name: CNOT10
+  search_term: '"CNOT10"'
+  type: gene
+- db_refs:
+    HGNC: '25217'
+    UP: Q9UKZ1
+  name: CNOT11
+  search_term: '"CNOT11"'
+  type: gene
+- db_refs:
+    HGNC: '7878'
+    UP: Q9NZN8
+  name: CNOT2
+  search_term: '"CNOT2"'
+  type: gene
+- db_refs:
+    HGNC: '7879'
+    UP: O75175
+  name: CNOT3
+  search_term: '"CNOT3"'
+  type: gene
+- db_refs:
+    HGNC: '7880'
+    UP: O95628
+  name: CNOT4
+  search_term: '"CNOT4"'
+  type: gene
+- db_refs:
+    HGNC: '14099'
+    UP: Q9ULM6
+  name: CNOT6
+  search_term: '"CNOT6"'
+  type: gene
+- db_refs:
+    HGNC: '18042'
+    UP: Q96LI5
+  name: CNOT6L
+  search_term: '"CNOT6L"'
+  type: gene
+- db_refs:
+    HGNC: '14101'
+    UP: Q9UIV1
+  name: CNOT7
+  search_term: '"CNOT7"'
+  type: gene
+- db_refs:
+    HGNC: '9207'
+    UP: Q9UFF9
+  name: CNOT8
+  search_term: '"CNOT8"'
+  type: gene
+- db_refs:
+    HGNC: '10445'
+    UP: Q92600
+  name: CNOT9
+  search_term: '"CNOT9"'
+  type: gene
+- db_refs:
+    HGNC: '2172'
+    UP: Q02246
+  name: CNTN2
+  search_term: '"CNTN2"'
+  type: gene
+- db_refs:
+    HGNC: '2200'
+    UP: P02458
+  name: COL2A1
+  search_term: '"COL2A1"'
+  type: gene
+- db_refs:
+    HGNC: '2201'
+    UP: P02461
+  name: COL3A1
+  search_term: '"COL3A1"'
+  type: gene
+- db_refs:
+    HGNC: '2202'
+    UP: P02462
+  name: COL4A1
+  search_term: '"COL4A1"'
+  type: gene
+- db_refs:
+    HGNC: '2203'
+    UP: P08572
+  name: COL4A2
+  search_term: '"COL4A2"'
+  type: gene
+- db_refs:
+    HGNC: '2204'
+    UP: Q01955
+  name: COL4A3
+  search_term: '"COL4A3"'
+  type: gene
+- db_refs:
+    HGNC: '2206'
+    UP: P53420
+  name: COL4A4
+  search_term: '"COL4A4"'
+  type: gene
+- db_refs:
+    HGNC: '2207'
+    UP: P29400
+  name: COL4A5
+  search_term: '"COL4A5"'
+  type: gene
+- db_refs:
+    HGNC: '2209'
+    UP: P20908
+  name: COL5A1
+  search_term: '"COL5A1"'
+  type: gene
+- db_refs:
+    HGNC: '2210'
+    UP: P05997
+  name: COL5A2
+  search_term: '"COL5A2"'
+  type: gene
+- db_refs:
+    HGNC: '14864'
+    UP: P25940
+  name: COL5A3
+  search_term: '"COL5A3"'
+  type: gene
+- db_refs:
+    HGNC: '2211'
+    UP: P12109
+  name: COL6A1
+  search_term: '"COL6A1"'
+  type: gene
+- db_refs:
+    HGNC: '2212'
+    UP: P12110
+  name: COL6A2
+  search_term: '"COL6A2"'
+  type: gene
+- db_refs:
+    HGNC: '2213'
+    UP: P12111
+  name: COL6A3
+  search_term: '"COL6A3"'
+  type: gene
+- db_refs:
+    HGNC: '26674'
+    UP: A8TX70
+  name: COL6A5
+  search_term: '"COL6A5"'
+  type: gene
+- db_refs:
+    HGNC: '27023'
+    UP: A6NMZ7
+  name: COL6A6
+  search_term: '"COL6A6"'
+  type: gene
+- db_refs:
+    HGNC: '2217'
+    UP: P20849
+  name: COL9A1
+  search_term: '"COL9A1"'
+  type: gene
+- db_refs:
+    HGNC: '2218'
+    UP: Q14055
+  name: COL9A2
+  search_term: '"COL9A2"'
+  type: gene
+- db_refs:
+    HGNC: '2219'
+    UP: Q14050
+  name: COL9A3
+  search_term: '"COL9A3"'
+  type: gene
+- db_refs:
+    HGNC: '23332'
+    UP: Q9UBI1
+  name: COMMD3
+  search_term: '"COMMD3"'
+  type: gene
+- db_refs:
+    HGNC: '25014'
+    UP: Q9P000
+  name: COMMD9
+  search_term: '"COMMD9"'
+  type: gene
+- db_refs:
+    HGNC: '2231'
+    UP: P53618
+  name: COPB1
+  search_term: '"COPB1"'
+  type: gene
+- db_refs:
+    HGNC: '28848'
+    UP: Q9NQ92
+  name: COPRS
+  search_term: '"COPRS"'
+  type: gene
+- db_refs:
+    HGNC: '18304'
+    UP: Q14019
+  name: COTL1
+  search_term: '"COTL1"'
+  type: gene
+- db_refs:
+    HGNC: '2314'
+    UP: Q99829
+  name: CPNE1
+  search_term: '"CPNE1"'
+  type: gene
+- db_refs:
+    HGNC: '2316'
+    UP: O75131
+  name: CPNE3
+  search_term: '"CPNE3"'
+  type: gene
+- db_refs:
+    HGNC: '25632'
+    UP: Q9BRF8
+  name: CPPED1
+  search_term: '"CPPED1"'
+  type: gene
+- db_refs:
+    HGNC: '13871'
+    UP: Q16630
+  name: CPSF6
+  search_term: '"CPSF6"'
+  type: gene
+- db_refs:
+    HGNC: '2334'
+    UP: P17927
+  name: CR1
+  search_term: '"CR1"'
+  type: gene
+- db_refs:
+    HGNC: '28657'
+    UP: Q9BSW2
+  name: CRACR2A
+  search_term: '"CRACR2A"'
+  type: gene
+- db_refs:
+    HGNC: '2342'
+    UP: P43155
+  name: CRAT
+  search_term: '"CRAT"'
+  type: gene
+- db_refs:
+    HGNC: '2345'
+    UP: P16220
+  name: CREB1
+  search_term: '"CREB1"'
+  type: gene
+- db_refs:
+    HGNC: '2348'
+    UP: Q92793
+  name: CREBBP
+  search_term: '"CREBBP"'
+  type: gene
+- db_refs:
+    HGNC: '2351'
+    UP: O75629
+  name: CREG1
+  search_term: '"CREG1"'
+  type: gene
+- db_refs:
+    HGNC: '16904'
+    UP: P54108
+  name: CRISP3
+  search_term: '"CRISP3"'
+  type: gene
+- db_refs:
+    HGNC: '25248'
+    UP: Q9H0B8
+  name: CRISPLD2
+  search_term: '"CRISPLD2"'
+  type: gene
+- db_refs:
+    HGNC: '2362'
+    UP: P46108
+  name: CRK
+  search_term: '"CRK"'
+  type: gene
+- db_refs:
+    HGNC: '2363'
+    UP: P46109
+  name: CRKL
+  search_term: '"CRKL"'
+  type: gene
+- db_refs:
+    HGNC: '2366'
+    UP: Q9UKG9
+  name: CROT
+  search_term: '"CROT"'
+  type: gene
+- db_refs:
+    HGNC: '2432'
+    UP: P09603
+  name: CSF1
+  search_term: '"CSF1"'
+  type: gene
+- db_refs:
+    HGNC: '2433'
+    UP: P07333
+  name: CSF1R
+  search_term: '"CSF1R"'
+  type: gene
+- db_refs:
+    HGNC: '2438'
+    UP: P09919
+  name: CSF3
+  search_term: '"CSF3"'
+  type: gene
+- db_refs:
+    HGNC: '2439'
+    UP: Q99062
+  name: CSF3R
+  search_term: '"CSF3R"'
+  type: gene
+- db_refs:
+    HGNC: '2444'
+    UP: P41240
+  name: CSK
+  search_term: '"CSK"'
+  type: gene
+- db_refs:
+    HGNC: '2460'
+    UP: P67870
+  name: CSNK2B
+  search_term: '"CSNK2B"'
+  type: gene
+- db_refs:
+    HGNC: '2475'
+    UP: P01034
+  name: CST3
+  search_term: '"CST3"'
+  type: gene
+- db_refs:
+    HGNC: '2482'
+    UP: P04080
+  name: CSTB
+  search_term: '"CSTB"'
+  type: gene
+- db_refs:
+    HGNC: '2494'
+    UP: Q13363
+  name: CTBP1
+  search_term: '"CTBP1"'
+  type: gene
+- db_refs:
+    HGNC: '9251'
+    UP: P10619
+  name: CTSA
+  search_term: '"CTSA"'
+  type: gene
+- db_refs:
+    HGNC: '2527'
+    UP: P07858
+  name: CTSB
+  search_term: '"CTSB"'
+  type: gene
+- db_refs:
+    HGNC: '2528'
+    UP: P53634
+  name: CTSC
+  search_term: '"CTSC"'
+  type: gene
+- db_refs:
+    HGNC: '2529'
+    UP: P07339
+  name: CTSD
+  search_term: '"CTSD"'
   type: gene
 - db_refs:
     HGNC: '2532'
+    UP: P08311
   name: CTSG
   search_term: '"CTSG"'
   type: gene
 - db_refs:
-    HGNC: '21191'
-  name: DAOA
-  search_term: '"DAOA"'
+    HGNC: '2535'
+    UP: P09668
+  name: CTSH
+  search_term: '"CTSH"'
   type: gene
 - db_refs:
-    HGNC: '2684'
-  name: DAZAP2
-  search_term: '"DAZAP2"'
+    HGNC: '2545'
+    UP: P25774
+  name: CTSS
+  search_term: '"CTSS"'
   type: gene
 - db_refs:
-    HGNC: '2710'
-  name: DCTD
-  search_term: '"DCTD"'
+    HGNC: '2547'
+    UP: Q9UBR2
+  name: CTSZ
+  search_term: '"CTSZ"'
   type: gene
 - db_refs:
-    HGNC: '18674'
-  name: DDX41
-  search_term: '"DDX41"'
+    HGNC: '2557'
+    UP: P39880
+  name: CUX1
+  search_term: '"CUX1"'
   type: gene
 - db_refs:
-    HGNC: '24577'
-  name: DESI1
-  search_term: '"DESI1"'
+    HGNC: '4602'
+    UP: P09341
+  name: CXCL1
+  search_term: '"CXCL1"'
   type: gene
 - db_refs:
-    HGNC: '2884'
-  name: DIO2
-  search_term: '"DIO2"'
+    HGNC: '6026'
+    UP: P25024
+  name: CXCR1
+  search_term: '"CXCR1"'
   type: gene
 - db_refs:
-    HGNC: '20604'
-  name: DIS3
-  search_term: '"DIS3"'
+    HGNC: '6027'
+    UP: P25025
+  name: CXCR2
+  search_term: '"CXCR2"'
   type: gene
 - db_refs:
-    HGNC: '2916'
-  name: DLX3
-  search_term: '"DLX3"'
+    HGNC: '2873'
+    UP: P00387
+  name: CYB5R3
+  search_term: '"CYB5R3"'
+  type: gene
+- db_refs:
+    HGNC: '2577'
+    UP: P13498
+  name: CYBA
+  search_term: '"CYBA"'
+  type: gene
+- db_refs:
+    HGNC: '2578'
+    UP: P04839
+  name: CYBB
+  search_term: '"CYBB"'
+  type: gene
+- db_refs:
+    HGNC: '13759'
+    UP: Q7L576
+  name: CYFIP1
+  search_term: '"CYFIP1"'
+  type: gene
+- db_refs:
+    HGNC: '30239'
+    UP: Q9H1C7
+  name: CYSTM1
+  search_term: '"CYSTM1"'
+  type: gene
+- db_refs:
+    HGNC: '17294'
+    UP: Q5VWQ8
+  name: DAB2IP
+  search_term: '"DAB2IP"'
+  type: gene
+- db_refs:
+    HGNC: '2671'
+    UP: P14920
+  name: DAO
+  search_term: '"DAO"'
+  type: gene
+- db_refs:
+    HGNC: '2681'
+    UP: Q9UER7
+  name: DAXX
+  search_term: '"DAXX"'
+  type: gene
+- db_refs:
+    HGNC: '2696'
+    UP: Q9UJU6
+  name: DBNL
+  search_term: '"DBNL"'
+  type: gene
+- db_refs:
+    HGNC: '2727'
+    UP: Q99489
+  name: DDO
+  search_term: '"DDO"'
+  type: gene
+- db_refs:
+    HGNC: '2728'
+    UP: P39656
+  name: DDOST
+  search_term: '"DDOST"'
+  type: gene
+- db_refs:
+    HGNC: '2740'
+    UP: Q92841
+  name: DDX17
+  search_term: '"DDX17"'
+  type: gene
+- db_refs:
+    HGNC: '2745'
+    UP: O00571
+  name: DDX3X
+  search_term: '"DDX3X"'
+  type: gene
+- db_refs:
+    HGNC: '2746'
+    UP: P17844
+  name: DDX5
+  search_term: '"DDX5"'
+  type: gene
+- db_refs:
+    HGNC: '2754'
+    UP: Q9NUI1
+  name: DECR2
+  search_term: '"DECR2"'
+  type: gene
+- db_refs:
+    HGNC: '2761'
+    UP: P59665
+  name: DEFA1
+  search_term: '"DEFA1"'
+  type: gene
+- db_refs:
+    HGNC: '2763'
+    UP: P12838
+  name: DEFA4
+  search_term: '"DEFA4"'
+  type: gene
+- db_refs:
+    HGNC: '13709'
+    UP: O15121
+  name: DEGS1
+  search_term: '"DEGS1"'
+  type: gene
+- db_refs:
+    HGNC: '24269'
+    UP: Q9Y315
+  name: DERA
+  search_term: '"DERA"'
+  type: gene
+- db_refs:
+    HGNC: '2843'
+    UP: O75907
+  name: DGAT1
+  search_term: '"DGAT1"'
+  type: gene
+- db_refs:
+    HGNC: '16985'
+    UP: Q9BTZ2
+  name: DHRS4
+  search_term: '"DHRS4"'
+  type: gene
+- db_refs:
+    HGNC: '2876'
+    UP: O60610
+  name: DIAPH1
+  search_term: '"DIAPH1"'
+  type: gene
+- db_refs:
+    HGNC: '2900'
+    UP: Q12959
+  name: DLG1
+  search_term: '"DLG1"'
+  type: gene
+- db_refs:
+    HGNC: '2901'
+    UP: Q15700
+  name: DLG2
+  search_term: '"DLG2"'
+  type: gene
+- db_refs:
+    HGNC: '2902'
+    UP: Q92796
+  name: DLG3
+  search_term: '"DLG3"'
+  type: gene
+- db_refs:
+    HGNC: '2903'
+    UP: P78352
+  name: DLG4
+  search_term: '"DLG4"'
+  type: gene
+- db_refs:
+    HGNC: '30343'
+    UP: O75165
+  name: DNAJC13
+  search_term: '"DNAJC13"'
+  type: gene
+- db_refs:
+    HGNC: '9439'
+    UP: Q13217
+  name: DNAJC3
+  search_term: '"DNAJC3"'
+  type: gene
+- db_refs:
+    HGNC: '16235'
+    UP: Q9H3Z4
+  name: DNAJC5
+  search_term: '"DNAJC5"'
+  type: gene
+- db_refs:
+    HGNC: '2957'
+    UP: P49184
+  name: DNASE1L1
+  search_term: '"DNASE1L1"'
+  type: gene
+- db_refs:
+    HGNC: '2976'
+    UP: P26358
+  name: DNMT1
+  search_term: '"DNMT1"'
   type: gene
 - db_refs:
     HGNC: '2978'
+    UP: Q9Y6K1
   name: DNMT3A
   search_term: '"DNMT3A"'
   type: gene
 - db_refs:
-    HGNC: '3023'
-  name: DRD2
-  search_term: '"DRD2"'
+    HGNC: '2979'
+    UP: Q9UBC3
+  name: DNMT3B
+  search_term: '"DNMT3B"'
   type: gene
 - db_refs:
-    HGNC: '32698'
-  name: DUOXA2
-  search_term: '"DUOXA2"'
+    HGNC: '2980'
+    UP: Q9UJW3
+  name: DNMT3L
+  search_term: '"DNMT3L"'
   type: gene
 - db_refs:
-    HGNC: '28161'
-  name: DUSP26
-  search_term: '"DUSP26"'
+    HGNC: '2987'
+    UP: Q14185
+  name: DOCK1
+  search_term: '"DOCK1"'
+  type: gene
+- db_refs:
+    HGNC: '2988'
+    UP: Q92608
+  name: DOCK2
+  search_term: '"DOCK2"'
+  type: gene
+- db_refs:
+    HGNC: '2991'
+    UP: O60496
+  name: DOK2
+  search_term: '"DOK2"'
+  type: gene
+- db_refs:
+    HGNC: '24583'
+    UP: Q7L591
+  name: DOK3
+  search_term: '"DOK3"'
+  type: gene
+- db_refs:
+    HGNC: '14892'
+    UP: Q9UHL4
+  name: DPP7
+  search_term: '"DPP7"'
+  type: gene
+- db_refs:
+    HGNC: '3035'
+    UP: Q08554
+  name: DSC1
+  search_term: '"DSC1"'
+  type: gene
+- db_refs:
+    HGNC: '3048'
+    UP: Q02413
+  name: DSG1
+  search_term: '"DSG1"'
+  type: gene
+- db_refs:
+    HGNC: '16165'
+    UP: Q9H410
+  name: DSN1
+  search_term: '"DSN1"'
+  type: gene
+- db_refs:
+    HGNC: '3052'
+    UP: P15924
+  name: DSP
+  search_term: '"DSP"'
+  type: gene
+- db_refs:
+    HGNC: '2961'
+    UP: Q14204
+  name: DYNC1H1
+  search_term: '"DYNC1H1"'
+  type: gene
+- db_refs:
+    HGNC: '18745'
+    UP: Q9Y6G9
+  name: DYNC1LI1
+  search_term: '"DYNC1LI1"'
+  type: gene
+- db_refs:
+    HGNC: '15476'
+    UP: P63167
+  name: DYNLL1
+  search_term: '"DYNLL1"'
+  type: gene
+- db_refs:
+    HGNC: '11697'
+    UP: P63172
+  name: DYNLT1
+  search_term: '"DYNLT1"'
+  type: gene
+- db_refs:
+    HGNC: '3149'
+    UP: Q13011
+  name: ECH1
+  search_term: '"ECH1"'
   type: gene
 - db_refs:
     HGNC: '3188'
+    UP: O75530
   name: EED
   search_term: '"EED"'
   type: gene
 - db_refs:
-    HGNC: '13944'
-  name: EGFL8
-  search_term: '"EGFL8"'
+    HGNC: '3189'
+    UP: P68104
+  name: EEF1A1
+  search_term: '"EEF1A1"'
+  type: gene
+- db_refs:
+    HGNC: '3214'
+    UP: P13639
+  name: EEF2
+  search_term: '"EEF2"'
+  type: gene
+- db_refs:
+    HGNC: '3229'
+    UP: P01133
+  name: EGF
+  search_term: '"EGF"'
+  type: gene
+- db_refs:
+    HGNC: '3236'
+    UP: P00533
+  name: EGFR
+  search_term: '"EGFR"'
+  type: gene
+- db_refs:
+    HGNC: '3247'
+    UP: Q08426
+  name: EHHADH
+  search_term: '"EHHADH"'
   type: gene
 - db_refs:
     HGNC: '3309'
+    UP: P08246
   name: ELANE
   search_term: '"ELANE"'
   type: gene
 - db_refs:
+    HGNC: '16286'
+    UP: Q92556
+  name: ELMO1
+  search_term: '"ELMO1"'
+  type: gene
+- db_refs:
+    HGNC: '17233'
+    UP: Q96JJ3
+  name: ELMO2
+  search_term: '"ELMO2"'
+  type: gene
+- db_refs:
+    HGNC: '3359'
+    UP: Q9Y6X5
+  name: ENPP4
+  search_term: '"ENPP4"'
+  type: gene
+- db_refs:
+    HGNC: '3373'
+    UP: Q09472
+  name: EP300
+  search_term: '"EP300"'
+  type: gene
+- db_refs:
     HGNC: '17470'
+    UP: Q6UW88
   name: EPGN
   search_term: '"EPGN"'
   type: gene
 - db_refs:
-    HGNC: '27052'
-  name: ETFRF1
-  search_term: '"ETFRF1"'
+    HGNC: '3402'
+    UP: P34913
+  name: EPHX2
+  search_term: '"EPHX2"'
   type: gene
 - db_refs:
-    HGNC: '3495'
-  name: ETV6
-  search_term: '"ETV6"'
+    HGNC: '3415'
+    UP: P01588
+  name: EPO
+  search_term: '"EPO"'
+  type: gene
+- db_refs:
+    HGNC: '3416'
+    UP: P19235
+  name: EPOR
+  search_term: '"EPOR"'
+  type: gene
+- db_refs:
+    HGNC: '3423'
+    UP: P11678
+  name: EPX
+  search_term: '"EPX"'
+  type: gene
+- db_refs:
+    HGNC: '3430'
+    UP: P04626
+  name: ERBB2
+  search_term: '"ERBB2"'
+  type: gene
+- db_refs:
+    HGNC: '3443'
+    UP: O14944
+  name: EREG
+  search_term: '"EREG"'
+  type: gene
+- db_refs:
+    HGNC: '1356'
+    UP: O94905
+  name: ERLIN2
+  search_term: '"ERLIN2"'
+  type: gene
+- db_refs:
+    HGNC: '18311'
+    UP: Q9BS26
+  name: ERP44
+  search_term: '"ERP44"'
+  type: gene
+- db_refs:
+    HGNC: '25966'
+    UP: Q6NXG1
+  name: ESRP1
+  search_term: '"ESRP1"'
   type: gene
 - db_refs:
     HGNC: '3527'
+    UP: Q15910
   name: EZH2
   search_term: '"EZH2"'
   type: gene
 - db_refs:
-    HGNC: '21591'
-  name: FAM19A4
-  search_term: '"FAM19A4"'
+    HGNC: '3560'
+    UP: Q01469
+  name: FABP5
+  search_term: '"FABP5"'
   type: gene
 - db_refs:
-    HGNC: '25295'
-  name: FAM57B
-  search_term: '"FAM57B"'
+    HGNC: '24666'
+    UP: Q96CS3
+  name: FAF2
+  search_term: '"FAF2"'
+  type: gene
+- db_refs:
+    HGNC: '1333'
+    UP: Q9NRY5
+  name: FAM114A2
+  search_term: '"FAM114A2"'
+  type: gene
+- db_refs:
+    HGNC: '22202'
+    UP: Q86XD5
+  name: FAM131B
+  search_term: '"FAM131B"'
+  type: gene
+- db_refs:
+    HGNC: '3608'
+    UP: P24071
+  name: FCAR
+  search_term: '"FCAR"'
+  type: gene
+- db_refs:
+    HGNC: '3611'
+    UP: P30273
+  name: FCER1G
+  search_term: '"FCER1G"'
+  type: gene
+- db_refs:
+    HGNC: '3616'
+    UP: P12318
+  name: FCGR2A
+  search_term: '"FCGR2A"'
+  type: gene
+- db_refs:
+    HGNC: '3620'
+    UP: O75015
+  name: FCGR3B
+  search_term: '"FCGR3B"'
+  type: gene
+- db_refs:
+    HGNC: '3623'
+    UP: O00602
+  name: FCN1
+  search_term: '"FCN1"'
+  type: gene
+- db_refs:
+    HGNC: '3655'
+    UP: P16591
+  name: FER
+  search_term: '"FER"'
+  type: gene
+- db_refs:
+    HGNC: '3657'
+    UP: P07332
+  name: FES
+  search_term: '"FES"'
+  type: gene
+- db_refs:
+    HGNC: '3661'
+    UP: P02671
+  name: FGA
+  search_term: '"FGA"'
+  type: gene
+- db_refs:
+    HGNC: '3662'
+    UP: P02675
+  name: FGB
+  search_term: '"FGB"'
+  type: gene
+- db_refs:
+    HGNC: '3665'
+    UP: P05230
+  name: FGF1
+  search_term: '"FGF1"'
+  type: gene
+- db_refs:
+    HGNC: '3666'
+    UP: O15520
+  name: FGF10
+  search_term: '"FGF10"'
+  type: gene
+- db_refs:
+    HGNC: '3672'
+    UP: O43320
+  name: FGF16
+  search_term: '"FGF16"'
+  type: gene
+- db_refs:
+    HGNC: '3674'
+    UP: O76093
+  name: FGF18
+  search_term: '"FGF18"'
+  type: gene
+- db_refs:
+    HGNC: '3675'
+    UP: O95750
+  name: FGF19
+  search_term: '"FGF19"'
+  type: gene
+- db_refs:
+    HGNC: '3676'
+    UP: P09038
+  name: FGF2
+  search_term: '"FGF2"'
+  type: gene
+- db_refs:
+    HGNC: '3677'
+    UP: Q9NP95
+  name: FGF20
+  search_term: '"FGF20"'
+  type: gene
+- db_refs:
+    HGNC: '3679'
+    UP: Q9HCT0
+  name: FGF22
+  search_term: '"FGF22"'
+  type: gene
+- db_refs:
+    HGNC: '3680'
+    UP: Q9GZV9
+  name: FGF23
+  search_term: '"FGF23"'
+  type: gene
+- db_refs:
+    HGNC: '3681'
+    UP: P11487
+  name: FGF3
+  search_term: '"FGF3"'
+  type: gene
+- db_refs:
+    HGNC: '3682'
+    UP: P08620
+  name: FGF4
+  search_term: '"FGF4"'
+  type: gene
+- db_refs:
+    HGNC: '3684'
+    UP: P10767
+  name: FGF6
+  search_term: '"FGF6"'
+  type: gene
+- db_refs:
+    HGNC: '3685'
+    UP: P21781
+  name: FGF7
+  search_term: '"FGF7"'
+  type: gene
+- db_refs:
+    HGNC: '3687'
+    UP: P31371
+  name: FGF9
+  search_term: '"FGF9"'
+  type: gene
+- db_refs:
+    HGNC: '3688'
+    UP: P11362
+  name: FGFR1
+  search_term: '"FGFR1"'
+  type: gene
+- db_refs:
+    HGNC: '17012'
+    UP: O95684
+  name: FGFR1OP
+  search_term: '"FGFR1OP"'
+  type: gene
+- db_refs:
+    HGNC: '23098'
+    UP: Q9NVK5
+  name: FGFR1OP2
+  search_term: '"FGFR1OP2"'
+  type: gene
+- db_refs:
+    HGNC: '3689'
+    UP: P21802
+  name: FGFR2
+  search_term: '"FGFR2"'
+  type: gene
+- db_refs:
+    HGNC: '3690'
+    UP: P22607
+  name: FGFR3
+  search_term: '"FGFR3"'
+  type: gene
+- db_refs:
+    HGNC: '3691'
+    UP: P22455
+  name: FGFR4
+  search_term: '"FGFR4"'
+  type: gene
+- db_refs:
+    HGNC: '3694'
+    UP: P02679
+  name: FGG
+  search_term: '"FGG"'
+  type: gene
+- db_refs:
+    HGNC: '3696'
+    UP: Q14314
+  name: FGL2
+  search_term: '"FGL2"'
+  type: gene
+- db_refs:
+    HGNC: '3697'
+    UP: P09769
+  name: FGR
+  search_term: '"FGR"'
+  type: gene
+- db_refs:
+    HGNC: '33276'
+    UP: Q5D862
+  name: FLG2
+  search_term: '"FLG2"'
   type: gene
 - db_refs:
     HGNC: '3765'
+    UP: P36888
   name: FLT3
   search_term: '"FLT3"'
   type: gene
 - db_refs:
-    HGNC: '30488'
-  name: GALNT18
-  search_term: '"GALNT18"'
+    HGNC: '3766'
+    UP: P49771
+  name: FLT3LG
+  search_term: '"FLT3LG"'
   type: gene
 - db_refs:
-    HGNC: '4171'
-  name: GATA2
-  search_term: '"GATA2"'
+    HGNC: '3778'
+    UP: P02751
+  name: FN1
+  search_term: '"FN1"'
   type: gene
 - db_refs:
-    HGNC: '20480'
-  name: GBP4
-  search_term: '"GBP4"'
+    HGNC: '3795'
+    UP: P41439
+  name: FOLR3
+  search_term: '"FOLR3"'
   type: gene
 - db_refs:
-    HGNC: '4312'
-  name: GCLM
-  search_term: '"GCLM"'
+    HGNC: '3796'
+    UP: P01100
+  name: FOS
+  search_term: '"FOS"'
   type: gene
 - db_refs:
-    HGNC: '4285'
-  name: GJB3
-  search_term: '"GJB3"'
+    HGNC: '3826'
+    UP: P21462
+  name: FPR1
+  search_term: '"FPR1"'
   type: gene
 - db_refs:
-    HGNC: '4286'
-  name: GJB4
-  search_term: '"GJB4"'
+    HGNC: '3827'
+    UP: P25090
+  name: FPR2
+  search_term: '"FPR2"'
   type: gene
 - db_refs:
-    HGNC: '4554'
-  name: GPX2
-  search_term: '"GPX2"'
+    HGNC: '3955'
+    UP: P42685
+  name: FRK
+  search_term: '"FRK"'
   type: gene
 - db_refs:
-    HGNC: '17655'
-  name: GREM2
-  search_term: '"GREM2"'
+    HGNC: '29382'
+    UP: Q5JV73
+  name: FRMPD3
+  search_term: '"FRMPD3"'
+  type: gene
+- db_refs:
+    HGNC: '16971'
+    UP: Q8WU20
+  name: FRS2
+  search_term: '"FRS2"'
+  type: gene
+- db_refs:
+    HGNC: '16970'
+    UP: O43559
+  name: FRS3
+  search_term: '"FRS3"'
+  type: gene
+- db_refs:
+    HGNC: '3976'
+    UP: P02794
+  name: FTH1
+  search_term: '"FTH1"'
+  type: gene
+- db_refs:
+    HGNC: '3999'
+    UP: P02792
+  name: FTL
+  search_term: '"FTL"'
+  type: gene
+- db_refs:
+    HGNC: '4006'
+    UP: P04066
+  name: FUCA1
+  search_term: '"FUCA1"'
+  type: gene
+- db_refs:
+    HGNC: '4008'
+    UP: Q9BTY2
+  name: FUCA2
+  search_term: '"FUCA2"'
+  type: gene
+- db_refs:
+    HGNC: '4023'
+    UP: P51114
+  name: FXR1
+  search_term: '"FXR1"'
+  type: gene
+- db_refs:
+    HGNC: '4037'
+    UP: P06241
+  name: FYN
+  search_term: '"FYN"'
+  type: gene
+- db_refs:
+    HGNC: '4065'
+    UP: P10253
+  name: GAA
+  search_term: '"GAA"'
+  type: gene
+- db_refs:
+    HGNC: '4066'
+    UP: Q13480
+  name: GAB1
+  search_term: '"GAB1"'
+  type: gene
+- db_refs:
+    HGNC: '14458'
+    UP: Q9UQC2
+  name: GAB2
+  search_term: '"GAB2"'
+  type: gene
+- db_refs:
+    HGNC: '4122'
+    UP: P34059
+  name: GALNS
+  search_term: '"GALNS"'
+  type: gene
+- db_refs:
+    HGNC: '15990'
+    UP: P28676
+  name: GCA
+  search_term: '"GCA"'
+  type: gene
+- db_refs:
+    HGNC: '4227'
+    UP: P50395
+  name: GDI2
+  search_term: '"GDI2"'
+  type: gene
+- db_refs:
+    HGNC: '4232'
+    UP: P39905
+  name: GDNF
+  search_term: '"GDNF"'
+  type: gene
+- db_refs:
+    HGNC: '4243'
+    UP: P56159
+  name: GFRA1
+  search_term: '"GFRA1"'
+  type: gene
+- db_refs:
+    HGNC: '4244'
+    UP: O00451
+  name: GFRA2
+  search_term: '"GFRA2"'
+  type: gene
+- db_refs:
+    HGNC: '13821'
+    UP: Q9GZZ7
+  name: GFRA4
+  search_term: '"GFRA4"'
+  type: gene
+- db_refs:
+    HGNC: '4248'
+    UP: Q92820
+  name: GGH
+  search_term: '"GGH"'
+  type: gene
+- db_refs:
+    HGNC: '24438'
+    UP: Q8N2G8
+  name: GHDC
+  search_term: '"GHDC"'
+  type: gene
+- db_refs:
+    HGNC: '4296'
+    UP: P06280
+  name: GLA
+  search_term: '"GLA"'
+  type: gene
+- db_refs:
+    HGNC: '4298'
+    UP: P16278
+  name: GLB1
+  search_term: '"GLB1"'
+  type: gene
+- db_refs:
+    HGNC: '17001'
+    UP: P48060
+  name: GLIPR1
+  search_term: '"GLIPR1"'
+  type: gene
+- db_refs:
+    HGNC: '4367'
+    UP: P17900
+  name: GM2A
+  search_term: '"GM2A"'
+  type: gene
+- db_refs:
+    HGNC: '4374'
+    UP: O60234
+  name: GMFG
+  search_term: '"GMFG"'
+  type: gene
+- db_refs:
+    HGNC: '4416'
+    UP: O15228
+  name: GNPAT
+  search_term: '"GNPAT"'
+  type: gene
+- db_refs:
+    HGNC: '4422'
+    UP: P15586
+  name: GNS
+  search_term: '"GNS"'
+  type: gene
+- db_refs:
+    HGNC: '24876'
+    UP: Q7Z5G4
+  name: GOLGA7
+  search_term: '"GOLGA7"'
+  type: gene
+- db_refs:
+    HGNC: '4458'
+    UP: P06744
+  name: GPI
+  search_term: '"GPI"'
+  type: gene
+- db_refs:
+    HGNC: '4535'
+    UP: Q9NQS5
+  name: GPR84
+  search_term: '"GPR84"'
+  type: gene
+- db_refs:
+    HGNC: '4562'
+    UP: Q13588
+  name: GRAP
+  search_term: '"GRAP"'
+  type: gene
+- db_refs:
+    HGNC: '4563'
+    UP: O75791
+  name: GRAP2
+  search_term: '"GRAP2"'
+  type: gene
+- db_refs:
+    HGNC: '4564'
+    UP: Q13322
+  name: GRB10
+  search_term: '"GRB10"'
+  type: gene
+- db_refs:
+    HGNC: '4565'
+    UP: Q14449
+  name: GRB14
+  search_term: '"GRB14"'
+  type: gene
+- db_refs:
+    HGNC: '4567'
+    UP: Q14451
+  name: GRB7
+  search_term: '"GRB7"'
+  type: gene
+- db_refs:
+    HGNC: '4584'
+    UP: Q05586
+  name: GRIN1
+  search_term: '"GRIN1"'
+  type: gene
+- db_refs:
+    HGNC: '4586'
+    UP: Q13224
+  name: GRIN2B
+  search_term: '"GRIN2B"'
+  type: gene
+- db_refs:
+    HGNC: '4588'
+    UP: O15399
+  name: GRIN2D
+  search_term: '"GRIN2D"'
+  type: gene
+- db_refs:
+    HGNC: '4601'
+    UP: P28799
+  name: GRN
+  search_term: '"GRN"'
+  type: gene
+- db_refs:
+    HGNC: '25697'
+    UP: P57764
+  name: GSDMD
+  search_term: '"GSDMD"'
+  type: gene
+- db_refs:
+    HGNC: '4620'
+    UP: P06396
+  name: GSN
+  search_term: '"GSN"'
   type: gene
 - db_refs:
     HGNC: '16906'
+    UP: Q9Y2Q3
   name: GSTK1
   search_term: '"GSTK1"'
   type: gene
 - db_refs:
-    HGNC: '4635'
-  name: GSTM3
-  search_term: '"GSTM3"'
+    HGNC: '4638'
+    UP: P09211
+  name: GSTP1
+  search_term: '"GSTP1"'
   type: gene
 - db_refs:
-    HGNC: '4682'
-  name: GUCA2A
-  search_term: '"GUCA2A"'
+    HGNC: '4652'
+    UP: P35269
+  name: GTF2F1
+  search_term: '"GTF2F1"'
   type: gene
 - db_refs:
-    HGNC: '4709'
-  name: GZMB
-  search_term: '"GZMB"'
+    HGNC: '4653'
+    UP: P13984
+  name: GTF2F2
+  search_term: '"GTF2F2"'
   type: gene
 - db_refs:
-    HGNC: '4799'
-  name: HADH
-  search_term: '"HADH"'
+    HGNC: '4696'
+    UP: P08236
+  name: GUSB
+  search_term: '"GUSB"'
   type: gene
 - db_refs:
-    HGNC: '4767'
-  name: HIST1H3D
-  search_term: '"HIST1H3D"'
+    HGNC: '4699'
+    UP: P46976
+  name: GYG1
+  search_term: '"GYG1"'
   type: gene
 - db_refs:
-    HGNC: '5044'
-  name: HNRNPK
-  search_term: '"HNRNPK"'
+    HGNC: '22516'
+    UP: P0C5Y9
+  name: H2AFB1
+  search_term: '"H2AFB1"'
   type: gene
 - db_refs:
-    HGNC: '5249'
-  name: HSPB7
-  search_term: '"HSPB7"'
+    HGNC: '14456'
+    UP: Q9BTM1
+  name: H2AFJ
+  search_term: '"H2AFJ"'
+  type: gene
+- db_refs:
+    HGNC: '20664'
+    UP: Q71UI9
+  name: H2AFV
+  search_term: '"H2AFV"'
+  type: gene
+- db_refs:
+    HGNC: '4739'
+    UP: P16104
+  name: H2AFX
+  search_term: '"H2AFX"'
+  type: gene
+- db_refs:
+    HGNC: '4741'
+    UP: P0C0S5
+  name: H2AFZ
+  search_term: '"H2AFZ"'
+  type: gene
+- db_refs:
+    HGNC: '4762'
+    UP: P57053
+  name: H2BFS
+  search_term: '"H2BFS"'
+  type: gene
+- db_refs:
+    HGNC: '4764'
+    UP: P84243
+  name: H3F3A
+  search_term: '"H3F3A"'
+  type: gene
+- db_refs:
+    HGNC: '17856'
+    UP: Q9UJ83
+  name: HACL1
+  search_term: '"HACL1"'
+  type: gene
+- db_refs:
+    HGNC: '4809'
+    UP: Q9UJM8
+  name: HAO1
+  search_term: '"HAO1"'
+  type: gene
+- db_refs:
+    HGNC: '4810'
+    UP: Q9NYQ3
+  name: HAO2
+  search_term: '"HAO2"'
+  type: gene
+- db_refs:
+    HGNC: '4827'
+    UP: P68871
+  name: HBB
+  search_term: '"HBB"'
+  type: gene
+- db_refs:
+    HGNC: '3059'
+    UP: Q99075
+  name: HBEGF
+  search_term: '"HBEGF"'
+  type: gene
+- db_refs:
+    HGNC: '15716'
+    UP: Q9Y5Z4
+  name: HEBP2
+  search_term: '"HEBP2"'
+  type: gene
+- db_refs:
+    HGNC: '4879'
+    UP: P07686
+  name: HEXB
+  search_term: '"HEXB"'
+  type: gene
+- db_refs:
+    HGNC: '4893'
+    UP: P14210
+  name: HGF
+  search_term: '"HGF"'
+  type: gene
+- db_refs:
+    HGNC: '26527'
+    UP: Q68CP4
+  name: HGSNAT
+  search_term: '"HGSNAT"'
+  type: gene
+- db_refs:
+    HGNC: '14402'
+    UP: Q9H2X6
+  name: HIPK2
+  search_term: '"HIPK2"'
+  type: gene
+- db_refs:
+    HGNC: '18729'
+    UP: Q96QV6
+  name: HIST1H2AA
+  search_term: '"HIST1H2AA"'
+  type: gene
+- db_refs:
+    HGNC: '4734'
+    UP: P04908
+  name: HIST1H2AB
+  search_term: '"HIST1H2AB"'
+  type: gene
+- db_refs:
+    HGNC: '4733'
+    UP: Q93077
+  name: HIST1H2AC
+  search_term: '"HIST1H2AC"'
+  type: gene
+- db_refs:
+    HGNC: '4729'
+    UP: P20671
+  name: HIST1H2AD
+  search_term: '"HIST1H2AD"'
+  type: gene
+- db_refs:
+    HGNC: '4737'
+    UP: P0C0S8
+  name: HIST1H2AG
+  search_term: '"HIST1H2AG"'
+  type: gene
+- db_refs:
+    HGNC: '13671'
+    UP: Q96KK5
+  name: HIST1H2AH
+  search_term: '"HIST1H2AH"'
+  type: gene
+- db_refs:
+    HGNC: '4727'
+    UP: Q99878
+  name: HIST1H2AJ
+  search_term: '"HIST1H2AJ"'
+  type: gene
+- db_refs:
+    HGNC: '18730'
+    UP: Q96A08
+  name: HIST1H2BA
+  search_term: '"HIST1H2BA"'
+  type: gene
+- db_refs:
+    HGNC: '4751'
+    UP: P33778
+  name: HIST1H2BB
+  search_term: '"HIST1H2BB"'
+  type: gene
+- db_refs:
+    HGNC: '4757'
+    UP: P62807
+  name: HIST1H2BC
+  search_term: '"HIST1H2BC"'
+  type: gene
+- db_refs:
+    HGNC: '4747'
+    UP: P58876
+  name: HIST1H2BD
+  search_term: '"HIST1H2BD"'
+  type: gene
+- db_refs:
+    HGNC: '4755'
+    UP: Q93079
+  name: HIST1H2BH
+  search_term: '"HIST1H2BH"'
+  type: gene
+- db_refs:
+    HGNC: '4761'
+    UP: P06899
+  name: HIST1H2BJ
+  search_term: '"HIST1H2BJ"'
+  type: gene
+- db_refs:
+    HGNC: '13954'
+    UP: O60814
+  name: HIST1H2BK
+  search_term: '"HIST1H2BK"'
+  type: gene
+- db_refs:
+    HGNC: '4748'
+    UP: Q99880
+  name: HIST1H2BL
+  search_term: '"HIST1H2BL"'
+  type: gene
+- db_refs:
+    HGNC: '4750'
+    UP: Q99879
+  name: HIST1H2BM
+  search_term: '"HIST1H2BM"'
+  type: gene
+- db_refs:
+    HGNC: '4749'
+    UP: Q99877
+  name: HIST1H2BN
+  search_term: '"HIST1H2BN"'
+  type: gene
+- db_refs:
+    HGNC: '4758'
+    UP: P23527
+  name: HIST1H2BO
+  search_term: '"HIST1H2BO"'
+  type: gene
+- db_refs:
+    HGNC: '4766'
+    UP: P68431
+  name: HIST1H3A
+  search_term: '"HIST1H3A"'
+  type: gene
+- db_refs:
+    HGNC: '4781'
+    UP: P62805
+  name: HIST1H4A
+  search_term: '"HIST1H4A"'
+  type: gene
+- db_refs:
+    HGNC: '4736'
+    UP: Q6FI13
+  name: HIST2H2AA3
+  search_term: '"HIST2H2AA3"'
+  type: gene
+- db_refs:
+    HGNC: '20508'
+    UP: Q8IUE6
+  name: HIST2H2AB
+  search_term: '"HIST2H2AB"'
+  type: gene
+- db_refs:
+    HGNC: '4738'
+    UP: Q16777
+  name: HIST2H2AC
+  search_term: '"HIST2H2AC"'
+  type: gene
+- db_refs:
+    HGNC: '4760'
+    UP: Q16778
+  name: HIST2H2BE
+  search_term: '"HIST2H2BE"'
+  type: gene
+- db_refs:
+    HGNC: '20505'
+    UP: Q71DI3
+  name: HIST2H3A
+  search_term: '"HIST2H3A"'
+  type: gene
+- db_refs:
+    HGNC: '20507'
+    UP: Q7L7L0
+  name: HIST3H2A
+  search_term: '"HIST3H2A"'
+  type: gene
+- db_refs:
+    HGNC: '20514'
+    UP: Q8N257
+  name: HIST3H2BB
+  search_term: '"HIST3H2BB"'
+  type: gene
+- db_refs:
+    HGNC: '25444'
+    UP: Q8NCD3
+  name: HJURP
+  search_term: '"HJURP"'
+  type: gene
+- db_refs:
+    HGNC: '4925'
+    UP: P52790
+  name: HK3
+  search_term: '"HK3"'
+  type: gene
+- db_refs:
+    HGNC: '4931'
+    UP: P30459
+  name: HLA-A
+  search_term: '"HLA-A"'
+  type: gene
+- db_refs:
+    HGNC: '4931'
+    UP: P30453
+  name: HLA-A
+  search_term: '"HLA-A"'
+  type: gene
+- db_refs:
+    HGNC: '4932'
+    UP: P01889
+  name: HLA-B
+  search_term: '"HLA-B"'
+  type: gene
+- db_refs:
+    HGNC: '4933'
+    UP: P10321
+  name: HLA-C
+  search_term: '"HLA-C"'
+  type: gene
+- db_refs:
+    HGNC: '4962'
+    UP: P13747
+  name: HLA-E
+  search_term: '"HLA-E"'
+  type: gene
+- db_refs:
+    HGNC: '4965'
+    UP: P01893
+  name: HLA-H
+  search_term: '"HLA-H"'
+  type: gene
+- db_refs:
+    HGNC: '4983'
+    UP: P09429
+  name: HMGB1
+  search_term: '"HMGB1"'
+  type: gene
+- db_refs:
+    HGNC: '5005'
+    UP: P35914
+  name: HMGCL
+  search_term: '"HMGCL"'
+  type: gene
+- db_refs:
+    HGNC: '5014'
+    UP: P30519
+  name: HMOX2
+  search_term: '"HMOX2"'
+  type: gene
+- db_refs:
+    HGNC: '5141'
+    UP: P00738
+  name: HP
+  search_term: '"HP"'
+  type: gene
+- db_refs:
+    HGNC: '5164'
+    UP: Q9Y251
+  name: HPSE
+  search_term: '"HPSE"'
+  type: gene
+- db_refs:
+    HGNC: '5173'
+    UP: P01112
+  name: HRAS
+  search_term: '"HRAS"'
+  type: gene
+- db_refs:
+    HGNC: '20846'
+    UP: Q86YZ3
+  name: HRNR
+  search_term: '"HRNR"'
+  type: gene
+- db_refs:
+    HGNC: '5213'
+    UP: P51659
+  name: HSD17B4
+  search_term: '"HSD17B4"'
+  type: gene
+- db_refs:
+    HGNC: '5253'
+    UP: P07900
+  name: HSP90AA1
+  search_term: '"HSP90AA1"'
+  type: gene
+- db_refs:
+    HGNC: '5258'
+    UP: P08238
+  name: HSP90AB1
+  search_term: '"HSP90AB1"'
+  type: gene
+- db_refs:
+    HGNC: '5232'
+    UP: P0DMV8
+  name: HSPA1A
+  search_term: '"HSPA1A"'
+  type: gene
+- db_refs:
+    HGNC: '5233'
+    UP: P0DMV9
+  name: HSPA1B
+  search_term: '"HSPA1B"'
+  type: gene
+- db_refs:
+    HGNC: '5239'
+    UP: P17066
+  name: HSPA6
+  search_term: '"HSPA6"'
+  type: gene
+- db_refs:
+    HGNC: '5241'
+    UP: P11142
+  name: HSPA8
+  search_term: '"HSPA8"'
+  type: gene
+- db_refs:
+    HGNC: '5261'
+    UP: P10809
+  name: HSPD1
+  search_term: '"HSPD1"'
+  type: gene
+- db_refs:
+    HGNC: '30892'
+    UP: Q7Z6Z7
+  name: HUWE1
+  search_term: '"HUWE1"'
+  type: gene
+- db_refs:
+    HGNC: '28240'
+    UP: Q96D96
+  name: HVCN1
+  search_term: '"HVCN1"'
+  type: gene
+- db_refs:
+    HGNC: '5345'
+    UP: P13598
+  name: ICAM2
+  search_term: '"ICAM2"'
+  type: gene
+- db_refs:
+    HGNC: '5346'
+    UP: P32942
+  name: ICAM3
+  search_term: '"ICAM3"'
+  type: gene
+- db_refs:
+    HGNC: '5381'
+    UP: P14735
+  name: IDE
+  search_term: '"IDE"'
   type: gene
 - db_refs:
     HGNC: '5382'
+    UP: O75874
   name: IDH1
   search_term: '"IDH1"'
   type: gene
 - db_refs:
-    HGNC: '5383'
-  name: IDH2
-  search_term: '"IDH2"'
+    HGNC: '18363'
+    UP: Q8IU54
+  name: IFNL1
+  search_term: '"IFNL1"'
+  type: gene
+- db_refs:
+    HGNC: '18584'
+    UP: Q8IU57
+  name: IFNLR1
+  search_term: '"IFNLR1"'
+  type: gene
+- db_refs:
+    HGNC: '5464'
+    UP: P05019
+  name: IGF1
+  search_term: '"IGF1"'
+  type: gene
+- db_refs:
+    HGNC: '5465'
+    UP: P08069
+  name: IGF1R
+  search_term: '"IGF1R"'
+  type: gene
+- db_refs:
+    HGNC: '5466'
+    UP: P01344
+  name: IGF2
+  search_term: '"IGF2"'
+  type: gene
+- db_refs:
+    HGNC: '5467'
+    UP: P11717
+  name: IGF2R
+  search_term: '"IGF2R"'
+  type: gene
+- db_refs:
+    HGNC: '5965'
+    UP: Q08334
+  name: IL10RB
+  search_term: '"IL10RB"'
+  type: gene
+- db_refs:
+    HGNC: '5980'
+    UP: Q14005
+  name: IL16
+  search_term: '"IL16"'
+  type: gene
+- db_refs:
+    HGNC: '17616'
+    UP: Q8NFM7
+  name: IL17RD
+  search_term: '"IL17RD"'
   type: gene
 - db_refs:
     HGNC: '16830'
+    UP: P24001
   name: IL32
   search_term: '"IL32"'
   type: gene
 - db_refs:
-    HGNC: '28741'
-  name: ILDR1
-  search_term: '"ILDR1"'
+    HGNC: '28529'
+    UP: Q6ZMJ4
+  name: IL34
+  search_term: '"IL34"'
   type: gene
 - db_refs:
-    HGNC: '14598'
-  name: IMMP2L
-  search_term: '"IMMP2L"'
+    HGNC: '6037'
+    UP: Q12905
+  name: ILF2
+  search_term: '"ILF2"'
   type: gene
 - db_refs:
-    HGNC: '14686'
-  name: JAM2
-  search_term: '"JAM2"'
+    HGNC: '6052'
+    UP: P20839
+  name: IMPDH1
+  search_term: '"IMPDH1"'
   type: gene
 - db_refs:
-    HGNC: '6243'
-  name: KCNE3
-  search_term: '"KCNE3"'
+    HGNC: '6053'
+    UP: P12268
+  name: IMPDH2
+  search_term: '"IMPDH2"'
   type: gene
 - db_refs:
-    HGNC: '6275'
-  name: KCNK13
-  search_term: '"KCNK13"'
+    HGNC: '6063'
+    UP: Q9H160
+  name: ING2
+  search_term: '"ING2"'
+  type: gene
+- db_refs:
+    HGNC: '6081'
+    UP: P01308
+  name: INS
+  search_term: '"INS"'
+  type: gene
+- db_refs:
+    HGNC: '6091'
+    UP: P06213
+  name: INSR
+  search_term: '"INSR"'
+  type: gene
+- db_refs:
+    HGNC: '6110'
+    UP: P46940
+  name: IQGAP1
+  search_term: '"IQGAP1"'
+  type: gene
+- db_refs:
+    HGNC: '6111'
+    UP: Q13576
+  name: IQGAP2
+  search_term: '"IQGAP2"'
+  type: gene
+- db_refs:
+    HGNC: '6125'
+    UP: P35568
+  name: IRS1
+  search_term: '"IRS1"'
+  type: gene
+- db_refs:
+    HGNC: '6126'
+    UP: Q9Y4H2
+  name: IRS2
+  search_term: '"IRS2"'
+  type: gene
+- db_refs:
+    HGNC: '28977'
+    UP: P53990
+  name: IST1
+  search_term: '"IST1"'
+  type: gene
+- db_refs:
+    HGNC: '6138'
+    UP: P08514
+  name: ITGA2B
+  search_term: '"ITGA2B"'
+  type: gene
+- db_refs:
+    HGNC: '6148'
+    UP: P20701
+  name: ITGAL
+  search_term: '"ITGAL"'
+  type: gene
+- db_refs:
+    HGNC: '6149'
+    UP: P11215
+  name: ITGAM
+  search_term: '"ITGAM"'
+  type: gene
+- db_refs:
+    HGNC: '6150'
+    UP: P06756
+  name: ITGAV
+  search_term: '"ITGAV"'
+  type: gene
+- db_refs:
+    HGNC: '6152'
+    UP: P20702
+  name: ITGAX
+  search_term: '"ITGAX"'
+  type: gene
+- db_refs:
+    HGNC: '6155'
+    UP: P05107
+  name: ITGB2
+  search_term: '"ITGB2"'
+  type: gene
+- db_refs:
+    HGNC: '6156'
+    UP: P05106
+  name: ITGB3
+  search_term: '"ITGB3"'
+  type: gene
+- db_refs:
+    HGNC: '6157'
+    UP: Q13352
+  name: ITGB3BP
+  search_term: '"ITGB3BP"'
+  type: gene
+- db_refs:
+    HGNC: '6180'
+    UP: Q14643
+  name: ITPR1
+  search_term: '"ITPR1"'
+  type: gene
+- db_refs:
+    HGNC: '6181'
+    UP: Q14571
+  name: ITPR2
+  search_term: '"ITPR2"'
+  type: gene
+- db_refs:
+    HGNC: '6182'
+    UP: Q14573
+  name: ITPR3
+  search_term: '"ITPR3"'
+  type: gene
+- db_refs:
+    HGNC: '6190'
+    UP: P23458
+  name: JAK1
+  search_term: '"JAK1"'
+  type: gene
+- db_refs:
+    HGNC: '6192'
+    UP: O60674
+  name: JAK2
+  search_term: '"JAK2"'
+  type: gene
+- db_refs:
+    HGNC: '6196'
+    UP: Q92833
+  name: JARID2
+  search_term: '"JARID2"'
+  type: gene
+- db_refs:
+    HGNC: '6204'
+    UP: P05412
+  name: JUN
+  search_term: '"JUN"'
+  type: gene
+- db_refs:
+    HGNC: '6207'
+    UP: P14923
+  name: JUP
+  search_term: '"JUP"'
+  type: gene
+- db_refs:
+    HGNC: '20589'
+    UP: Q9P0J7
+  name: KCMF1
+  search_term: '"KCMF1"'
+  type: gene
+- db_refs:
+    HGNC: '6229'
+    UP: Q13303
+  name: KCNAB2
+  search_term: '"KCNAB2"'
+  type: gene
+- db_refs:
+    HGNC: '22224'
+    UP: Q6ZMT4
+  name: KDM7A
+  search_term: '"KDM7A"'
+  type: gene
+- db_refs:
+    HGNC: '6307'
+    UP: P35968
+  name: KDR
+  search_term: '"KDR"'
+  type: gene
+- db_refs:
+    HGNC: '22219'
+    UP: Q9HCM3
+  name: KIAA1549
+  search_term: '"KIAA1549"'
   type: gene
 - db_refs:
     HGNC: '6342'
+    UP: P10721
   name: KIT
   search_term: '"KIT"'
   type: gene
 - db_refs:
-    HGNC: '6368'
-  name: KLK7
-  search_term: '"KLK7"'
+    HGNC: '15527'
+    UP: Q86Z14
+  name: KLB
+  search_term: '"KLB"'
+  type: gene
+- db_refs:
+    HGNC: '6375'
+    UP: P26717
+  name: KLRC2
+  search_term: '"KLRC2"'
+  type: gene
+- db_refs:
+    HGNC: '6378'
+    UP: Q13241
+  name: KLRD1
+  search_term: '"KLRD1"'
   type: gene
 - db_refs:
     HGNC: '18788'
+    UP: P26718
   name: KLRK1
   search_term: '"KLRK1"'
   type: gene
 - db_refs:
+    HGNC: '24054'
+    UP: Q8NG31
+  name: KNL1
+  search_term: '"KNL1"'
+  type: gene
+- db_refs:
+    HGNC: '6400'
+    UP: Q14974
+  name: KPNB1
+  search_term: '"KPNB1"'
+  type: gene
+- db_refs:
     HGNC: '6407'
+    UP: P01116
   name: KRAS
   search_term: '"KRAS"'
   type: gene
 - db_refs:
-    HGNC: '20525'
-  name: KRTAP10-8
-  search_term: '"KRTAP10-8"'
+    HGNC: '6412'
+    UP: P04264
+  name: KRT1
+  search_term: '"KRT1"'
   type: gene
 - db_refs:
-    HGNC: '16611'
-  name: LCE1B
-  search_term: '"LCE1B"'
+    HGNC: '6465'
+    UP: Q8IVT5
+  name: KSR1
+  search_term: '"KSR1"'
   type: gene
 - db_refs:
-    HGNC: '6913'
-  name: MAX
-  search_term: '"MAX"'
+    HGNC: '18610'
+    UP: Q6VAB6
+  name: KSR2
+  search_term: '"KSR2"'
   type: gene
 - db_refs:
-    HGNC: '6967'
-  name: MDFI
-  search_term: '"MDFI"'
+    HGNC: '6477'
+    UP: Q6GTX8
+  name: LAIR1
+  search_term: '"LAIR1"'
   type: gene
 - db_refs:
-    HGNC: '11473'
-  name: MED21
-  search_term: '"MED21"'
+    HGNC: '6499'
+    UP: P11279
+  name: LAMP1
+  search_term: '"LAMP1"'
   type: gene
 - db_refs:
-    HGNC: '14133'
-  name: MSRB1
-  search_term: '"MSRB1"'
+    HGNC: '6501'
+    UP: P13473
+  name: LAMP2
+  search_term: '"LAMP2"'
   type: gene
 - db_refs:
-    HGNC: '7414'
-  name: MT-ATP6
-  search_term: '"MT-ATP6"'
+    HGNC: '26068'
+    UP: Q6IAA8
+  name: LAMTOR1
+  search_term: '"LAMTOR1"'
   type: gene
 - db_refs:
-    HGNC: '7419'
-  name: MT-CO1
-  search_term: '"MT-CO1"'
+    HGNC: '29796'
+    UP: Q9Y2Q5
+  name: LAMTOR2
+  search_term: '"LAMTOR2"'
   type: gene
 - db_refs:
-    HGNC: '7421'
-  name: MT-CO2
-  search_term: '"MT-CO2"'
+    HGNC: '15606'
+    UP: Q9UHA4
+  name: LAMTOR3
+  search_term: '"LAMTOR3"'
   type: gene
 - db_refs:
-    HGNC: '7422'
-  name: MT-CO3
-  search_term: '"MT-CO3"'
+    HGNC: '6524'
+    UP: P06239
+  name: LCK
+  search_term: '"LCK"'
   type: gene
 - db_refs:
-    HGNC: '7427'
-  name: MT-CYB
-  search_term: '"MT-CYB"'
+    HGNC: '6526'
+    UP: P80188
+  name: LCN2
+  search_term: '"LCN2"'
   type: gene
 - db_refs:
-    HGNC: '7455'
-  name: MT-ND1
-  search_term: '"MT-ND1"'
+    HGNC: '6529'
+    UP: Q13094
+  name: LCP2
+  search_term: '"LCP2"'
   type: gene
 - db_refs:
-    HGNC: '7461'
-  name: MT-ND5
-  search_term: '"MT-ND5"'
+    HGNC: '6563'
+    UP: P17931
+  name: LGALS3
+  search_term: '"LGALS3"'
   type: gene
 - db_refs:
-    HGNC: '7563'
-  name: MYEOV
-  search_term: '"MYEOV"'
+    HGNC: '6604'
+    UP: Q8N6C8
+  name: LILRA3
+  search_term: '"LILRA3"'
   type: gene
 - db_refs:
-    HGNC: '7565'
-  name: MYF5
-  search_term: '"MYF5"'
+    HGNC: '6606'
+    UP: Q8N423
+  name: LILRB2
+  search_term: '"LILRB2"'
   type: gene
 - db_refs:
-    HGNC: '7641'
-  name: NAPA
-  search_term: '"NAPA"'
+    HGNC: '6607'
+    UP: O75022
+  name: LILRB3
+  search_term: '"LILRB3"'
   type: gene
 - db_refs:
-    HGNC: '26742'
-  name: NAT8L
-  search_term: '"NAT8L"'
+    HGNC: '6636'
+    UP: P02545
+  name: LMNA
+  search_term: '"LMNA"'
   type: gene
 - db_refs:
-    HGNC: '33739'
-  name: NCCRP1
-  search_term: '"NCCRP1"'
+    HGNC: '20598'
+    UP: Q86WA8
+  name: LONP2
+  search_term: '"LONP2"'
   type: gene
 - db_refs:
-    HGNC: '7827'
-  name: NIPSNAP1
-  search_term: '"NIPSNAP1"'
+    HGNC: '25718'
+    UP: Q8NF37
+  name: LPCAT1
+  search_term: '"LPCAT1"'
   type: gene
 - db_refs:
-    HGNC: '16789'
-  name: NMNAT2
-  search_term: '"NMNAT2"'
+    HGNC: '29480'
+    UP: P02750
+  name: LRG1
+  search_term: '"LRG1"'
   type: gene
 - db_refs:
-    HGNC: '16454'
-  name: NMUR2
-  search_term: '"NMUR2"'
+    HGNC: '6690'
+    UP: Q12912
+  name: LRMP
+  search_term: '"LRMP"'
   type: gene
 - db_refs:
-    HGNC: '31862'
-  name: NOTCH2NLA
-  search_term: '"NOTCH2NLA"'
+    HGNC: '18531'
+    UP: Q96NW7
+  name: LRRC7
+  search_term: '"LRRC7"'
+  type: gene
+- db_refs:
+    HGNC: '6702'
+    UP: Q32MZ4
+  name: LRRFIP1
+  search_term: '"LRRFIP1"'
+  type: gene
+- db_refs:
+    HGNC: '6710'
+    UP: P09960
+  name: LTA4H
+  search_term: '"LTA4H"'
+  type: gene
+- db_refs:
+    HGNC: '6720'
+    UP: P02788
+  name: LTF
+  search_term: '"LTF"'
+  type: gene
+- db_refs:
+    HGNC: '6735'
+    UP: P07948
+  name: LYN
+  search_term: '"LYN"'
+  type: gene
+- db_refs:
+    HGNC: '6740'
+    UP: P61626
+  name: LYZ
+  search_term: '"LYZ"'
+  type: gene
+- db_refs:
+    HGNC: '28880'
+    UP: Q9H0U3
+  name: MAGT1
+  search_term: '"MAGT1"'
+  type: gene
+- db_refs:
+    HGNC: '6826'
+    UP: O00754
+  name: MAN2B1
+  search_term: '"MAN2B1"'
+  type: gene
+- db_refs:
+    HGNC: '6831'
+    UP: O00462
+  name: MANBA
+  search_term: '"MANBA"'
+  type: gene
+- db_refs:
+    HGNC: '6840'
+    UP: Q02750
+  name: MAP2K1
+  search_term: '"MAP2K1"'
+  type: gene
+- db_refs:
+    HGNC: '6842'
+    UP: P36507
+  name: MAP2K2
+  search_term: '"MAP2K2"'
+  type: gene
+- db_refs:
+    HGNC: '6844'
+    UP: P45985
+  name: MAP2K4
+  search_term: '"MAP2K4"'
+  type: gene
+- db_refs:
+    HGNC: '6847'
+    UP: O14733
+  name: MAP2K7
+  search_term: '"MAP2K7"'
+  type: gene
+- db_refs:
+    HGNC: '6848'
+    UP: Q13233
+  name: MAP3K1
+  search_term: '"MAP3K1"'
+  type: gene
+- db_refs:
+    HGNC: '6850'
+    UP: Q16584
+  name: MAP3K11
+  search_term: '"MAP3K11"'
+  type: gene
+- db_refs:
+    HGNC: '6871'
+    UP: P28482
+  name: MAPK1
+  search_term: '"MAPK1"'
+  type: gene
+- db_refs:
+    HGNC: '6872'
+    UP: P53779
+  name: MAPK10
+  search_term: '"MAPK10"'
+  type: gene
+- db_refs:
+    HGNC: '6873'
+    UP: Q15759
+  name: MAPK11
+  search_term: '"MAPK11"'
+  type: gene
+- db_refs:
+    HGNC: '6874'
+    UP: P53778
+  name: MAPK12
+  search_term: '"MAPK12"'
+  type: gene
+- db_refs:
+    HGNC: '6875'
+    UP: O15264
+  name: MAPK13
+  search_term: '"MAPK13"'
+  type: gene
+- db_refs:
+    HGNC: '6876'
+    UP: Q16539
+  name: MAPK14
+  search_term: '"MAPK14"'
+  type: gene
+- db_refs:
+    HGNC: '6877'
+    UP: P27361
+  name: MAPK3
+  search_term: '"MAPK3"'
+  type: gene
+- db_refs:
+    HGNC: '6881'
+    UP: P45983
+  name: MAPK8
+  search_term: '"MAPK8"'
+  type: gene
+- db_refs:
+    HGNC: '6886'
+    UP: P45984
+  name: MAPK9
+  search_term: '"MAPK9"'
+  type: gene
+- db_refs:
+    HGNC: '6887'
+    UP: P49137
+  name: MAPKAPK2
+  search_term: '"MAPKAPK2"'
+  type: gene
+- db_refs:
+    HGNC: '6888'
+    UP: Q16644
+  name: MAPKAPK3
+  search_term: '"MAPKAPK3"'
+  type: gene
+- db_refs:
+    HGNC: '6897'
+    UP: P27448
+  name: MARK3
+  search_term: '"MARK3"'
+  type: gene
+- db_refs:
+    HGNC: '6916'
+    UP: Q9UIS9
+  name: MBD1
+  search_term: '"MBD1"'
+  type: gene
+- db_refs:
+    HGNC: '27291'
+    UP: Q8IX19
+  name: MCEMP1
+  search_term: '"MCEMP1"'
+  type: gene
+- db_refs:
+    HGNC: '7029'
+    UP: P08581
+  name: MET
+  search_term: '"MET"'
+  type: gene
+- db_refs:
+    HGNC: '24550'
+    UP: Q9H8H3
+  name: METTL7A
+  search_term: '"METTL7A"'
+  type: gene
+- db_refs:
+    HGNC: '7043'
+    UP: O43451
+  name: MGAM
+  search_term: '"MGAM"'
+  type: gene
+- db_refs:
+    HGNC: '7061'
+    UP: P10620
+  name: MGST1
+  search_term: '"MGST1"'
+  type: gene
+- db_refs:
+    HGNC: '7097'
+    UP: P14174
+  name: MIF
+  search_term: '"MIF"'
+  type: gene
+- db_refs:
+    HGNC: '1286'
+    UP: Q9NYP9
+  name: MIS18A
+  search_term: '"MIS18A"'
+  type: gene
+- db_refs:
+    HGNC: '20190'
+    UP: Q6P0N0
+  name: MIS18BP1
+  search_term: '"MIS18BP1"'
+  type: gene
+- db_refs:
+    HGNC: '28973'
+    UP: Q14165
+  name: MLEC
+  search_term: '"MLEC"'
+  type: gene
+- db_refs:
+    HGNC: '7154'
+    UP: P08473
+  name: MME
+  search_term: '"MME"'
+  type: gene
+- db_refs:
+    HGNC: '14246'
+    UP: Q9NPA2
+  name: MMP25
+  search_term: '"MMP25"'
+  type: gene
+- db_refs:
+    HGNC: '7173'
+    UP: P08254
+  name: MMP3
+  search_term: '"MMP3"'
+  type: gene
+- db_refs:
+    HGNC: '7175'
+    UP: P22894
+  name: MMP8
+  search_term: '"MMP8"'
+  type: gene
+- db_refs:
+    HGNC: '7176'
+    UP: P14780
+  name: MMP9
+  search_term: '"MMP9"'
+  type: gene
+- db_refs:
+    HGNC: '7183'
+    UP: P41218
+  name: MNDA
+  search_term: '"MNDA"'
+  type: gene
+- db_refs:
+    HGNC: '28381'
+    UP: Q8NHP6
+  name: MOSPD2
+  search_term: '"MOSPD2"'
+  type: gene
+- db_refs:
+    HGNC: '7218'
+    UP: P05164
+  name: MPO
+  search_term: '"MPO"'
+  type: gene
+- db_refs:
+    HGNC: '30321'
+    UP: Q6WCQ1
+  name: MPRIP
+  search_term: '"MPRIP"'
+  type: gene
+- db_refs:
+    HGNC: '7224'
+    UP: P39210
+  name: MPV17
+  search_term: '"MPV17"'
+  type: gene
+- db_refs:
+    HGNC: '14334'
+    UP: Q969V6
+  name: MRTFA
+  search_term: '"MRTFA"'
+  type: gene
+- db_refs:
+    HGNC: '7317'
+    UP: Q96HJ5
+  name: MS4A3
+  search_term: '"MS4A3"'
+  type: gene
+- db_refs:
+    HGNC: '29535'
+    UP: Q9Y483
+  name: MTF2
+  search_term: '"MTF2"'
+  type: gene
+- db_refs:
+    HGNC: '23282'
+    UP: Q8N307
+  name: MUC20
+  search_term: '"MUC20"'
+  type: gene
+- db_refs:
+    HGNC: '7531'
+    UP: Q14764
+  name: MVP
+  search_term: '"MVP"'
+  type: gene
+- db_refs:
+    HGNC: '7548'
+    UP: P10244
+  name: MYBL2
+  search_term: '"MYBL2"'
+  type: gene
+- db_refs:
+    HGNC: '31104'
+    UP: Q92614
+  name: MYO18A
+  search_term: '"MYO18A"'
+  type: gene
+- db_refs:
+    HGNC: '30450'
+    UP: Q6XQN6
+  name: NAPRT
+  search_term: '"NAPRT"'
+  type: gene
+- db_refs:
+    HGNC: '31928'
+    UP: Q6ZNJ1
+  name: NBEAL2
+  search_term: '"NBEAL2"'
+  type: gene
+- db_refs:
+    HGNC: '7656'
+    UP: P13591
+  name: NCAM1
+  search_term: '"NCAM1"'
+  type: gene
+- db_refs:
+    HGNC: '2465'
+    UP: O14594
+  name: NCAN
+  search_term: '"NCAN"'
+  type: gene
+- db_refs:
+    HGNC: '7658'
+    UP: Q09161
+  name: NCBP1
+  search_term: '"NCBP1"'
+  type: gene
+- db_refs:
+    HGNC: '7659'
+    UP: P52298
+  name: NCBP2
+  search_term: '"NCBP2"'
+  type: gene
+- db_refs:
+    HGNC: '7664'
+    UP: P16333
+  name: NCK1
+  search_term: '"NCK1"'
+  type: gene
+- db_refs:
+    HGNC: '7665'
+    UP: O43639
+  name: NCK2
+  search_term: '"NCK2"'
+  type: gene
+- db_refs:
+    HGNC: '4862'
+    UP: P55160
+  name: NCKAP1L
+  search_term: '"NCKAP1L"'
+  type: gene
+- db_refs:
+    HGNC: '7668'
+    UP: Q15788
+  name: NCOA1
+  search_term: '"NCOA1"'
+  type: gene
+- db_refs:
+    HGNC: '7669'
+    UP: Q15596
+  name: NCOA2
+  search_term: '"NCOA2"'
+  type: gene
+- db_refs:
+    HGNC: '7673'
+    UP: Q9Y618
+  name: NCOR2
+  search_term: '"NCOR2"'
+  type: gene
+- db_refs:
+    HGNC: '17091'
+    UP: Q92542
+  name: NCSTN
+  search_term: '"NCSTN"'
+  type: gene
+- db_refs:
+    HGNC: '25525'
+    UP: Q9BTX1
+  name: NDC1
+  search_term: '"NDC1"'
+  type: gene
+- db_refs:
+    HGNC: '7706'
+    UP: O95298
+  name: NDUFC2
+  search_term: '"NDUFC2"'
+  type: gene
+- db_refs:
+    HGNC: '7739'
+    UP: P07196
+  name: NEFL
+  search_term: '"NEFL"'
+  type: gene
+- db_refs:
+    HGNC: '7758'
+    UP: Q99519
+  name: NEU1
+  search_term: '"NEU1"'
+  type: gene
+- db_refs:
+    HGNC: '7765'
+    UP: P21359
+  name: NF1
+  search_term: '"NF1"'
+  type: gene
+- db_refs:
+    HGNC: '29872'
+    UP: Q8NET5
+  name: NFAM1
+  search_term: '"NFAM1"'
+  type: gene
+- db_refs:
+    HGNC: '29866'
+    UP: O94856
+  name: NFASC
+  search_term: '"NFASC"'
+  type: gene
+- db_refs:
+    HGNC: '7794'
+    UP: P19838
+  name: NFKB1
+  search_term: '"NFKB1"'
+  type: gene
+- db_refs:
+    HGNC: '7808'
+    UP: P01138
+  name: NGF
+  search_term: '"NGF"'
+  type: gene
+- db_refs:
+    HGNC: '33751'
+    UP: Q5JS37
+  name: NHLRC3
+  search_term: '"NHLRC3"'
+  type: gene
+- db_refs:
+    HGNC: '29878'
+    UP: Q9NQR4
+  name: NIT2
+  search_term: '"NIT2"'
+  type: gene
+- db_refs:
+    HGNC: '7850'
+    UP: P22392
+  name: NME2
+  search_term: '"NME2"'
+  type: gene
+- db_refs:
+    HGNC: '7867'
+    UP: P46087
+  name: NOP2
+  search_term: '"NOP2"'
+  type: gene
+- db_refs:
+    HGNC: '7873'
+    UP: P35228
+  name: NOS2
+  search_term: '"NOS2"'
+  type: gene
+- db_refs:
+    HGNC: '14537'
+    UP: P61916
+  name: NPC2
+  search_term: '"NPC2"'
   type: gene
 - db_refs:
     HGNC: '7910'
+    UP: P06748
   name: NPM1
   search_term: '"NPM1"'
   type: gene
 - db_refs:
-    HGNC: '7930'
-  name: NPM2
-  search_term: '"NPM2"'
-  type: gene
-- db_refs:
-    HGNC: '7973'
-  name: NR2E1
-  search_term: '"NR2E1"'
-  type: gene
-- db_refs:
     HGNC: '7989'
+    UP: P01111
   name: NRAS
   search_term: '"NRAS"'
   type: gene
 - db_refs:
-    HGNC: '8010'
-  name: NRXN3
-  search_term: '"NRXN3"'
+    HGNC: '7997'
+    UP: Q02297
+  name: NRG1
+  search_term: '"NRG1"'
   type: gene
 - db_refs:
-    HGNC: '15142'
-  name: OR2AG1
-  search_term: '"OR2AG1"'
+    HGNC: '7998'
+    UP: O14511
+  name: NRG2
+  search_term: '"NRG2"'
   type: gene
 - db_refs:
-    HGNC: '8269'
-  name: OR2M3
-  search_term: '"OR2M3"'
+    HGNC: '7999'
+    UP: P56975
+  name: NRG3
+  search_term: '"NRG3"'
   type: gene
 - db_refs:
-    HGNC: '8283'
-  name: OR3A2
-  search_term: '"OR3A2"'
+    HGNC: '29862'
+    UP: Q8WWG1
+  name: NRG4
+  search_term: '"NRG4"'
   type: gene
 - db_refs:
-    HGNC: '14759'
-  name: OR51L1
-  search_term: '"OR51L1"'
+    HGNC: '8001'
+    UP: P48552
+  name: NRIP1
+  search_term: '"NRIP1"'
   type: gene
 - db_refs:
-    HGNC: '15260'
-  name: OR5AR1
-  search_term: '"OR5AR1"'
+    HGNC: '8007'
+    UP: Q99748
+  name: NRTN
+  search_term: '"NRTN"'
   type: gene
 - db_refs:
-    HGNC: '15299'
-  name: OR5W2
-  search_term: '"OR5W2"'
+    HGNC: '8023'
+    UP: P20783
+  name: NTF3
+  search_term: '"NTF3"'
   type: gene
 - db_refs:
-    HGNC: '15041'
-  name: OR6B2
-  search_term: '"OR6B2"'
+    HGNC: '8024'
+    UP: P34130
+  name: NTF4
+  search_term: '"NTF4"'
   type: gene
 - db_refs:
-    HGNC: '8380'
-  name: OR7D4
-  search_term: '"OR7D4"'
+    HGNC: '8031'
+    UP: P04629
+  name: NTRK1
+  search_term: '"NTRK1"'
   type: gene
 - db_refs:
-    HGNC: '25896'
-  name: ORAI1
-  search_term: '"ORAI1"'
+    HGNC: '8032'
+    UP: Q16620
+  name: NTRK2
+  search_term: '"NTRK2"'
   type: gene
 - db_refs:
-    HGNC: '8541'
-  name: P2RY2
-  search_term: '"P2RY2"'
+    HGNC: '8033'
+    UP: Q16288
+  name: NTRK3
+  search_term: '"NTRK3"'
   type: gene
 - db_refs:
-    HGNC: '8759'
-  name: PDC
-  search_term: '"PDC"'
+    HGNC: '32036'
+    UP: A8MXV4
+  name: NUDT19
+  search_term: '"NUDT19"'
   type: gene
 - db_refs:
-    HGNC: '28194'
-  name: PDCD2L
-  search_term: '"PDCD2L"'
+    HGNC: '8054'
+    UP: P0C024
+  name: NUDT7
+  search_term: '"NUDT7"'
   type: gene
 - db_refs:
-    HGNC: '28860'
-  name: PDCL3
-  search_term: '"PDCL3"'
+    HGNC: '29914'
+    UP: P57740
+  name: NUP107
+  search_term: '"NUP107"'
   type: gene
 - db_refs:
-    HGNC: '20990'
-  name: PHACTR1
-  search_term: '"PHACTR1"'
+    HGNC: '18016'
+    UP: Q8WUM0
+  name: NUP133
+  search_term: '"NUP133"'
   type: gene
 - db_refs:
-    HGNC: '18145'
-  name: PHF6
-  search_term: '"PHF6"'
+    HGNC: '8062'
+    UP: P49790
+  name: NUP153
+  search_term: '"NUP153"'
   type: gene
 - db_refs:
-    HGNC: '25452'
-  name: PIP4P2
-  search_term: '"PIP4P2"'
+    HGNC: '8063'
+    UP: O75694
+  name: NUP155
+  search_term: '"NUP155"'
   type: gene
 - db_refs:
-    HGNC: '9018'
-  name: PKIB
-  search_term: '"PKIB"'
+    HGNC: '18017'
+    UP: Q12769
+  name: NUP160
+  search_term: '"NUP160"'
   type: gene
 - db_refs:
-    HGNC: '9033'
-  name: PLA2G2D
-  search_term: '"PLA2G2D"'
+    HGNC: '17859'
+    UP: Q5SRE5
+  name: NUP188
+  search_term: '"NUP188"'
   type: gene
 - db_refs:
-    HGNC: '9228'
-  name: PLPP1
-  search_term: '"PLPP1"'
+    HGNC: '18658'
+    UP: Q92621
+  name: NUP205
+  search_term: '"NUP205"'
+  type: gene
+- db_refs:
+    HGNC: '30052'
+    UP: Q8TEM1
+  name: NUP210
+  search_term: '"NUP210"'
+  type: gene
+- db_refs:
+    HGNC: '8064'
+    UP: P35658
+  name: NUP214
+  search_term: '"NUP214"'
+  type: gene
+- db_refs:
+    HGNC: '29797'
+    UP: Q8NFH5
+  name: NUP35
+  search_term: '"NUP35"'
+  type: gene
+- db_refs:
+    HGNC: '29929'
+    UP: Q8NFH4
+  name: NUP37
+  search_term: '"NUP37"'
+  type: gene
+- db_refs:
+    HGNC: '21182'
+    UP: Q8NFH3
+  name: NUP43
+  search_term: '"NUP43"'
+  type: gene
+- db_refs:
+    HGNC: '8065'
+    UP: Q9UKX7
+  name: NUP50
+  search_term: '"NUP50"'
+  type: gene
+- db_refs:
+    HGNC: '17359'
+    UP: Q7Z3B4
+  name: NUP54
+  search_term: '"NUP54"'
+  type: gene
+- db_refs:
+    HGNC: '8066'
+    UP: P37198
+  name: NUP62
+  search_term: '"NUP62"'
+  type: gene
+- db_refs:
+    HGNC: '8734'
+    UP: Q9BW27
+  name: NUP85
+  search_term: '"NUP85"'
+  type: gene
+- db_refs:
+    HGNC: '8067'
+    UP: Q99567
+  name: NUP88
+  search_term: '"NUP88"'
+  type: gene
+- db_refs:
+    HGNC: '28958'
+    UP: Q8N1F7
+  name: NUP93
+  search_term: '"NUP93"'
+  type: gene
+- db_refs:
+    HGNC: '17010'
+    UP: O15504
+  name: NUPL2
+  search_term: '"NUPL2"'
+  type: gene
+- db_refs:
+    HGNC: '20300'
+    UP: O43482
+  name: OIP5
+  search_term: '"OIP5"'
+  type: gene
+- db_refs:
+    HGNC: '17190'
+    UP: Q6UX06
+  name: OLFM4
+  search_term: '"OLFM4"'
+  type: gene
+- db_refs:
+    HGNC: '8133'
+    UP: P78380
+  name: OLR1
+  search_term: '"OLR1"'
+  type: gene
+- db_refs:
+    HGNC: '8498'
+    UP: P02763
+  name: ORM1
+  search_term: '"ORM1"'
+  type: gene
+- db_refs:
+    HGNC: '8499'
+    UP: P19652
+  name: ORM2
+  search_term: '"ORM2"'
+  type: gene
+- db_refs:
+    HGNC: '16038'
+    UP: Q8N138
+  name: ORMDL3
+  search_term: '"ORMDL3"'
+  type: gene
+- db_refs:
+    HGNC: '29960'
+    UP: Q8IYS5
+  name: OSCAR
+  search_term: '"OSCAR"'
+  type: gene
+- db_refs:
+    HGNC: '8510'
+    UP: Q92882
+  name: OSTF1
+  search_term: '"OSTF1"'
+  type: gene
+- db_refs:
+    HGNC: '8533'
+    UP: P51575
+  name: P2RX1
+  search_term: '"P2RX1"'
+  type: gene
+- db_refs:
+    HGNC: '8550'
+    UP: Q9UQ80
+  name: PA2G4
+  search_term: '"PA2G4"'
+  type: gene
+- db_refs:
+    HGNC: '18341'
+    UP: Q9Y2J8
+  name: PADI2
+  search_term: '"PADI2"'
+  type: gene
+- db_refs:
+    HGNC: '8575'
+    UP: P68402
+  name: PAFAH1B2
+  search_term: '"PAFAH1B2"'
+  type: gene
+- db_refs:
+    HGNC: '8590'
+    UP: Q13153
+  name: PAK1
+  search_term: '"PAK1"'
+  type: gene
+- db_refs:
+    HGNC: '8591'
+    UP: Q13177
+  name: PAK2
+  search_term: '"PAK2"'
+  type: gene
+- db_refs:
+    HGNC: '20837'
+    UP: Q6QHF9
+  name: PAOX
+  search_term: '"PAOX"'
+  type: gene
+- db_refs:
+    HGNC: '8603'
+    UP: O43252
+  name: PAPSS1
+  search_term: '"PAPSS1"'
+  type: gene
+- db_refs:
+    HGNC: '30130'
+    UP: Q6TCH7
+  name: PAQR3
+  search_term: '"PAQR3"'
+  type: gene
+- db_refs:
+    HGNC: '16369'
+    UP: Q99497
+  name: PARK7
+  search_term: '"PARK7"'
+  type: gene
+- db_refs:
+    HGNC: '30064'
+    UP: Q86U86
+  name: PBRM1
+  search_term: '"PBRM1"'
+  type: gene
+- db_refs:
+    HGNC: '14634'
+    UP: Q13442
+  name: PDAP1
+  search_term: '"PDAP1"'
+  type: gene
+- db_refs:
+    HGNC: '8779'
+    UP: Q13370
+  name: PDE3B
+  search_term: '"PDE3B"'
+  type: gene
+- db_refs:
+    HGNC: '8800'
+    UP: P01127
+  name: PDGFB
+  search_term: '"PDGFB"'
+  type: gene
+- db_refs:
+    HGNC: '8803'
+    UP: P16234
+  name: PDGFRA
+  search_term: '"PDGFRA"'
+  type: gene
+- db_refs:
+    HGNC: '8804'
+    UP: P09619
+  name: PDGFRB
+  search_term: '"PDGFRB"'
+  type: gene
+- db_refs:
+    HGNC: '8816'
+    UP: O15530
+  name: PDPK1
+  search_term: '"PDPK1"'
+  type: gene
+- db_refs:
+    HGNC: '8819'
+    UP: O00764
+  name: PDXK
+  search_term: '"PDXK"'
+  type: gene
+- db_refs:
+    HGNC: '8822'
+    UP: Q15121
+  name: PEA15
+  search_term: '"PEA15"'
+  type: gene
+- db_refs:
+    HGNC: '8630'
+    UP: P30086
+  name: PEBP1
+  search_term: '"PEBP1"'
+  type: gene
+- db_refs:
+    HGNC: '8823'
+    UP: P16284
+  name: PECAM1
+  search_term: '"PECAM1"'
+  type: gene
+- db_refs:
+    HGNC: '18281'
+    UP: Q9BY49
+  name: PECR
+  search_term: '"PECR"'
+  type: gene
+- db_refs:
+    HGNC: '8850'
+    UP: O43933
+  name: PEX1
+  search_term: '"PEX1"'
+  type: gene
+- db_refs:
+    HGNC: '8851'
+    UP: O60683
+  name: PEX10
+  search_term: '"PEX10"'
+  type: gene
+- db_refs:
+    HGNC: '8854'
+    UP: O00623
+  name: PEX12
+  search_term: '"PEX12"'
+  type: gene
+- db_refs:
+    HGNC: '8855'
+    UP: Q92968
+  name: PEX13
+  search_term: '"PEX13"'
+  type: gene
+- db_refs:
+    HGNC: '8856'
+    UP: O75381
+  name: PEX14
+  search_term: '"PEX14"'
+  type: gene
+- db_refs:
+    HGNC: '9717'
+    UP: P28328
+  name: PEX2
+  search_term: '"PEX2"'
+  type: gene
+- db_refs:
+    HGNC: '22965'
+    UP: Q7Z412
+  name: PEX26
+  search_term: '"PEX26"'
+  type: gene
+- db_refs:
+    HGNC: '8859'
+    UP: Q13608
+  name: PEX6
+  search_term: '"PEX6"'
+  type: gene
+- db_refs:
+    HGNC: '8860'
+    UP: O00628
+  name: PEX7
+  search_term: '"PEX7"'
+  type: gene
+- db_refs:
+    HGNC: '8876'
+    UP: P17858
+  name: PFKL
+  search_term: '"PFKL"'
+  type: gene
+- db_refs:
+    HGNC: '8888'
+    UP: P18669
+  name: PGAM1
+  search_term: '"PGAM1"'
+  type: gene
+- db_refs:
+    HGNC: '8904'
+    UP: O75594
+  name: PGLYRP1
+  search_term: '"PGLYRP1"'
+  type: gene
+- db_refs:
+    HGNC: '8905'
+    UP: P36871
+  name: PGM1
+  search_term: '"PGM1"'
+  type: gene
+- db_refs:
+    HGNC: '8906'
+    UP: Q96G03
+  name: PGM2
+  search_term: '"PGM2"'
+  type: gene
+- db_refs:
+    HGNC: '16090'
+    UP: O00264
+  name: PGRMC1
+  search_term: '"PGRMC1"'
+  type: gene
+- db_refs:
+    HGNC: '8912'
+    UP: P35232
+  name: PHB
+  search_term: '"PHB"'
+  type: gene
+- db_refs:
+    HGNC: '8919'
+    UP: O43189
+  name: PHF1
+  search_term: '"PHF1"'
+  type: gene
+- db_refs:
+    HGNC: '24566'
+    UP: Q5T6S3
+  name: PHF19
+  search_term: '"PHF19"'
+  type: gene
+- db_refs:
+    HGNC: '8940'
+    UP: O14832
+  name: PHYH
+  search_term: '"PHYH"'
+  type: gene
+- db_refs:
+    HGNC: '8968'
+    UP: P01833
+  name: PIGR
+  search_term: '"PIGR"'
+  type: gene
+- db_refs:
+    HGNC: '8975'
+    UP: P42336
+  name: PIK3CA
+  search_term: '"PIK3CA"'
+  type: gene
+- db_refs:
+    HGNC: '8976'
+    UP: P42338
+  name: PIK3CB
+  search_term: '"PIK3CB"'
+  type: gene
+- db_refs:
+    HGNC: '8979'
+    UP: P27986
+  name: PIK3R1
+  search_term: '"PIK3R1"'
+  type: gene
+- db_refs:
+    HGNC: '8980'
+    UP: O00459
+  name: PIK3R2
+  search_term: '"PIK3R2"'
+  type: gene
+- db_refs:
+    HGNC: '8981'
+    UP: Q92569
+  name: PIK3R3
+  search_term: '"PIK3R3"'
+  type: gene
+- db_refs:
+    HGNC: '17804'
+    UP: Q9P0Z9
+  name: PIPOX
+  search_term: '"PIPOX"'
+  type: gene
+- db_refs:
+    HGNC: '9021'
+    UP: P14618
+  name: PKM
+  search_term: '"PKM"'
+  type: gene
+- db_refs:
+    HGNC: '9023'
+    UP: Q13835
+  name: PKP1
+  search_term: '"PKP1"'
+  type: gene
+- db_refs:
+    HGNC: '19254'
+    UP: Q9NZF1
+  name: PLAC8
+  search_term: '"PLAC8"'
+  type: gene
+- db_refs:
+    HGNC: '9046'
+    UP: Q9UM63
+  name: PLAGL1
+  search_term: '"PLAGL1"'
+  type: gene
+- db_refs:
+    HGNC: '9052'
+    UP: P00749
+  name: PLAU
+  search_term: '"PLAU"'
+  type: gene
+- db_refs:
+    HGNC: '9053'
+    UP: Q03405
+  name: PLAUR
+  search_term: '"PLAUR"'
+  type: gene
+- db_refs:
+    HGNC: '9065'
+    UP: P19174
+  name: PLCG1
+  search_term: '"PLCG1"'
+  type: gene
+- db_refs:
+    HGNC: '9066'
+    UP: P16885
+  name: PLCG2
+  search_term: '"PLCG2"'
+  type: gene
+- db_refs:
+    HGNC: '9067'
+    UP: Q13393
+  name: PLD1
+  search_term: '"PLD1"'
+  type: gene
+- db_refs:
+    HGNC: '30026'
+    UP: Q8TD55
+  name: PLEKHO2
+  search_term: '"PLEKHO2"'
+  type: gene
+- db_refs:
+    HGNC: '19699'
+    UP: Q9NYY3
+  name: PLK2
+  search_term: '"PLK2"'
+  type: gene
+- db_refs:
+    HGNC: '2154'
+    UP: Q9H4B4
+  name: PLK3
+  search_term: '"PLK3"'
+  type: gene
+- db_refs:
+    HGNC: '7892'
+    UP: P00491
+  name: PNP
+  search_term: '"PNP"'
+  type: gene
+- db_refs:
+    HGNC: '9187'
+    UP: P24928
+  name: POLR2A
+  search_term: '"POLR2A"'
+  type: gene
+- db_refs:
+    HGNC: '9188'
+    UP: P30876
+  name: POLR2B
+  search_term: '"POLR2B"'
+  type: gene
+- db_refs:
+    HGNC: '9189'
+    UP: P19387
+  name: POLR2C
+  search_term: '"POLR2C"'
+  type: gene
+- db_refs:
+    HGNC: '9191'
+    UP: O15514
+  name: POLR2D
+  search_term: '"POLR2D"'
   type: gene
 - db_refs:
     HGNC: '9192'
+    UP: P19388
   name: POLR2E
   search_term: '"POLR2E"'
   type: gene
 - db_refs:
-    HGNC: '9256'
-  name: PPIC
-  search_term: '"PPIC"'
+    HGNC: '9193'
+    UP: P61218
+  name: POLR2F
+  search_term: '"POLR2F"'
+  type: gene
+- db_refs:
+    HGNC: '9194'
+    UP: P62487
+  name: POLR2G
+  search_term: '"POLR2G"'
+  type: gene
+- db_refs:
+    HGNC: '9195'
+    UP: P52434
+  name: POLR2H
+  search_term: '"POLR2H"'
+  type: gene
+- db_refs:
+    HGNC: '9196'
+    UP: P36954
+  name: POLR2I
+  search_term: '"POLR2I"'
+  type: gene
+- db_refs:
+    HGNC: '9197'
+    UP: P52435
+  name: POLR2J
+  search_term: '"POLR2J"'
+  type: gene
+- db_refs:
+    HGNC: '9198'
+    UP: P53803
+  name: POLR2K
+  search_term: '"POLR2K"'
+  type: gene
+- db_refs:
+    HGNC: '9199'
+    UP: P62875
+  name: POLR2L
+  search_term: '"POLR2L"'
+  type: gene
+- db_refs:
+    HGNC: '19702'
+    UP: Q96HA1
+  name: POM121
+  search_term: '"POM121"'
+  type: gene
+- db_refs:
+    HGNC: '34005'
+    UP: A8CG34
+  name: POM121C
+  search_term: '"POM121C"'
+  type: gene
+- db_refs:
+    HGNC: '9237'
+    UP: Q9UBK2
+  name: PPARGC1A
+  search_term: '"PPARGC1A"'
+  type: gene
+- db_refs:
+    HGNC: '9240'
+    UP: P02775
+  name: PPBP
+  search_term: '"PPBP"'
+  type: gene
+- db_refs:
+    HGNC: '9253'
+    UP: P62937
+  name: PPIA
+  search_term: '"PPIA"'
+  type: gene
+- db_refs:
+    HGNC: '9258'
+    UP: Q9UNP9
+  name: PPIE
+  search_term: '"PPIE"'
+  type: gene
+- db_refs:
+    HGNC: '9344'
+    UP: P42785
+  name: PRCP
+  search_term: '"PRCP"'
+  type: gene
+- db_refs:
+    HGNC: '17169'
+    UP: Q13162
+  name: PRDX4
+  search_term: '"PRDX4"'
+  type: gene
+- db_refs:
+    HGNC: '16753'
+    UP: P30041
+  name: PRDX6
+  search_term: '"PRDX6"'
+  type: gene
+- db_refs:
+    HGNC: '9362'
+    UP: P13727
+  name: PRG2
+  search_term: '"PRG2"'
+  type: gene
+- db_refs:
+    HGNC: '9363'
+    UP: Q9Y2Y8
+  name: PRG3
+  search_term: '"PRG3"'
+  type: gene
+- db_refs:
+    HGNC: '9393'
+    UP: P17252
+  name: PRKCA
+  search_term: '"PRKCA"'
+  type: gene
+- db_refs:
+    HGNC: '9395'
+    UP: P05771
+  name: PRKCB
+  search_term: '"PRKCB"'
+  type: gene
+- db_refs:
+    HGNC: '9399'
+    UP: Q05655
+  name: PRKCD
+  search_term: '"PRKCD"'
+  type: gene
+- db_refs:
+    HGNC: '9412'
+    UP: Q05513
+  name: PRKCZ
+  search_term: '"PRKCZ"'
+  type: gene
+- db_refs:
+    HGNC: '10894'
+    UP: O14744
+  name: PRMT5
+  search_term: '"PRMT5"'
+  type: gene
+- db_refs:
+    HGNC: '9449'
+    UP: P04156
+  name: PRNP
+  search_term: '"PRNP"'
+  type: gene
+- db_refs:
+    HGNC: '9483'
+    UP: P07478
+  name: PRSS2
+  search_term: '"PRSS2"'
+  type: gene
+- db_refs:
+    HGNC: '9486'
+    UP: P35030
+  name: PRSS3
+  search_term: '"PRSS3"'
+  type: gene
+- db_refs:
+    HGNC: '9495'
+    UP: P24158
+  name: PRTN3
+  search_term: '"PRTN3"'
+  type: gene
+- db_refs:
+    HGNC: '9498'
+    UP: P07602
+  name: PSAP
+  search_term: '"PSAP"'
+  type: gene
+- db_refs:
+    HGNC: '9508'
+    UP: P49768
+  name: PSEN1
+  search_term: '"PSEN1"'
+  type: gene
+- db_refs:
+    HGNC: '9531'
+    UP: P25787
+  name: PSMA2
+  search_term: '"PSMA2"'
+  type: gene
+- db_refs:
+    HGNC: '9534'
+    UP: P28066
+  name: PSMA5
+  search_term: '"PSMA5"'
+  type: gene
+- db_refs:
+    HGNC: '9537'
+    UP: P20618
+  name: PSMB1
+  search_term: '"PSMB1"'
+  type: gene
+- db_refs:
+    HGNC: '9544'
+    UP: Q99436
+  name: PSMB7
+  search_term: '"PSMB7"'
+  type: gene
+- db_refs:
+    HGNC: '9548'
+    UP: P35998
+  name: PSMC2
+  search_term: '"PSMC2"'
+  type: gene
+- db_refs:
+    HGNC: '9549'
+    UP: P17980
+  name: PSMC3
+  search_term: '"PSMC3"'
+  type: gene
+- db_refs:
+    HGNC: '9554'
+    UP: Q99460
+  name: PSMD1
+  search_term: '"PSMD1"'
+  type: gene
+- db_refs:
+    HGNC: '9556'
+    UP: O00231
+  name: PSMD11
+  search_term: '"PSMD11"'
+  type: gene
+- db_refs:
+    HGNC: '9557'
+    UP: O00232
+  name: PSMD12
+  search_term: '"PSMD12"'
+  type: gene
+- db_refs:
+    HGNC: '9558'
+    UP: Q9UNM6
+  name: PSMD13
+  search_term: '"PSMD13"'
+  type: gene
+- db_refs:
+    HGNC: '16889'
+    UP: O00487
+  name: PSMD14
+  search_term: '"PSMD14"'
+  type: gene
+- db_refs:
+    HGNC: '9559'
+    UP: Q13200
+  name: PSMD2
+  search_term: '"PSMD2"'
+  type: gene
+- db_refs:
+    HGNC: '9560'
+    UP: O43242
+  name: PSMD3
+  search_term: '"PSMD3"'
+  type: gene
+- db_refs:
+    HGNC: '9564'
+    UP: Q15008
+  name: PSMD6
+  search_term: '"PSMD6"'
+  type: gene
+- db_refs:
+    HGNC: '9565'
+    UP: P51665
+  name: PSMD7
+  search_term: '"PSMD7"'
+  type: gene
+- db_refs:
+    HGNC: '9579'
+    UP: O60542
+  name: PSPN
+  search_term: '"PSPN"'
+  type: gene
+- db_refs:
+    HGNC: '9582'
+    UP: P25105
+  name: PTAFR
+  search_term: '"PTAFR"'
+  type: gene
+- db_refs:
+    HGNC: '17822'
+    UP: Q9H7Z7
+  name: PTGES2
+  search_term: '"PTGES2"'
+  type: gene
+- db_refs:
+    HGNC: '9611'
+    UP: Q05397
+  name: PTK2
+  search_term: '"PTK2"'
+  type: gene
+- db_refs:
+    HGNC: '9617'
+    UP: Q13882
+  name: PTK6
+  search_term: '"PTK6"'
   type: gene
 - db_refs:
     HGNC: '9644'
+    UP: Q06124
   name: PTPN11
   search_term: '"PTPN11"'
   type: gene
 - db_refs:
-    HGNC: '20150'
-  name: RAB15
-  search_term: '"RAB15"'
+    HGNC: '9645'
+    UP: Q05209
+  name: PTPN12
+  search_term: '"PTPN12"'
   type: gene
 - db_refs:
-    HGNC: '16523'
-  name: RAB17
-  search_term: '"RAB17"'
+    HGNC: '9658'
+    UP: P29350
+  name: PTPN6
+  search_term: '"PTPN6"'
   type: gene
 - db_refs:
-    HGNC: '14263'
-  name: RAB23
-  search_term: '"RAB23"'
+    HGNC: '9664'
+    UP: P18433
+  name: PTPRA
+  search_term: '"PTPRA"'
   type: gene
 - db_refs:
-    HGNC: '18238'
-  name: RAB25
-  search_term: '"RAB25"'
+    HGNC: '9665'
+    UP: P23467
+  name: PTPRB
+  search_term: '"PTPRB"'
   type: gene
 - db_refs:
-    HGNC: '15870'
-  name: RAB5IF
-  search_term: '"RAB5IF"'
+    HGNC: '9666'
+    UP: P08575
+  name: PTPRC
+  search_term: '"PTPRC"'
   type: gene
 - db_refs:
-    HGNC: '9811'
-  name: RAD21
-  search_term: '"RAD21"'
+    HGNC: '9673'
+    UP: Q12913
+  name: PTPRJ
+  search_term: '"PTPRJ"'
+  type: gene
+- db_refs:
+    HGNC: '9677'
+    UP: Q92932
+  name: PTPRN2
+  search_term: '"PTPRN2"'
+  type: gene
+- db_refs:
+    HGNC: '9683'
+    UP: Q92729
+  name: PTPRU
+  search_term: '"PTPRU"'
+  type: gene
+- db_refs:
+    HGNC: '9685'
+    UP: P23471
+  name: PTPRZ1
+  search_term: '"PTPRZ1"'
+  type: gene
+- db_refs:
+    HGNC: '9692'
+    UP: P26022
+  name: PTX3
+  search_term: '"PTX3"'
+  type: gene
+- db_refs:
+    HGNC: '9718'
+    UP: P49023
+  name: PXN
+  search_term: '"PXN"'
+  type: gene
+- db_refs:
+    HGNC: '16608'
+    UP: Q9ULZ3
+  name: PYCARD
+  search_term: '"PYCARD"'
+  type: gene
+- db_refs:
+    HGNC: '9723'
+    UP: P11216
+  name: PYGB
+  search_term: '"PYGB"'
+  type: gene
+- db_refs:
+    HGNC: '9725'
+    UP: P06737
+  name: PYGL
+  search_term: '"PYGL"'
+  type: gene
+- db_refs:
+    HGNC: '21100'
+    UP: Q96PU8
+  name: QKI
+  search_term: '"QKI"'
+  type: gene
+- db_refs:
+    HGNC: '9753'
+    UP: Q16769
+  name: QPCT
+  search_term: '"QPCT"'
+  type: gene
+- db_refs:
+    HGNC: '9756'
+    UP: O00391
+  name: QSOX1
+  search_term: '"QSOX1"'
+  type: gene
+- db_refs:
+    HGNC: '9759'
+    UP: P61026
+  name: RAB10
+  search_term: '"RAB10"'
+  type: gene
+- db_refs:
+    HGNC: '16524'
+    UP: P61106
+  name: RAB14
+  search_term: '"RAB14"'
+  type: gene
+- db_refs:
+    HGNC: '14244'
+    UP: Q9NP72
+  name: RAB18
+  search_term: '"RAB18"'
+  type: gene
+- db_refs:
+    HGNC: '9765'
+    UP: Q969Q5
+  name: RAB24
+  search_term: '"RAB24"'
+  type: gene
+- db_refs:
+    HGNC: '9766'
+    UP: P51159
+  name: RAB27A
+  search_term: '"RAB27A"'
+  type: gene
+- db_refs:
+    HGNC: '9771'
+    UP: Q13636
+  name: RAB31
+  search_term: '"RAB31"'
+  type: gene
+- db_refs:
+    HGNC: '30268'
+    UP: Q96AX2
+  name: RAB37
+  search_term: '"RAB37"'
+  type: gene
+- db_refs:
+    HGNC: '9777'
+    UP: P20336
+  name: RAB3A
+  search_term: '"RAB3A"'
+  type: gene
+- db_refs:
+    HGNC: '9779'
+    UP: O95716
+  name: RAB3D
+  search_term: '"RAB3D"'
+  type: gene
+- db_refs:
+    HGNC: '21068'
+    UP: Q7Z6P3
+  name: RAB44
+  search_term: '"RAB44"'
+  type: gene
+- db_refs:
+    HGNC: '9782'
+    UP: P61018
+  name: RAB4B
+  search_term: '"RAB4B"'
+  type: gene
+- db_refs:
+    HGNC: '9784'
+    UP: P61020
+  name: RAB5B
+  search_term: '"RAB5B"'
+  type: gene
+- db_refs:
+    HGNC: '9785'
+    UP: P51148
+  name: RAB5C
+  search_term: '"RAB5C"'
+  type: gene
+- db_refs:
+    HGNC: '9786'
+    UP: P20340
+  name: RAB6A
+  search_term: '"RAB6A"'
+  type: gene
+- db_refs:
+    HGNC: '9788'
+    UP: P51149
+  name: RAB7A
+  search_term: '"RAB7A"'
+  type: gene
+- db_refs:
+    HGNC: '14090'
+    UP: Q9NP90
+  name: RAB9B
+  search_term: '"RAB9B"'
+  type: gene
+- db_refs:
+    HGNC: '9801'
+    UP: P63000
+  name: RAC1
+  search_term: '"RAC1"'
+  type: gene
+- db_refs:
+    HGNC: '9828'
+    UP: P78406
+  name: RAE1
+  search_term: '"RAE1"'
+  type: gene
+- db_refs:
+    HGNC: '9829'
+    UP: P04049
+  name: RAF1
+  search_term: '"RAF1"'
+  type: gene
+- db_refs:
+    HGNC: '9839'
+    UP: P11233
+  name: RALA
+  search_term: '"RALA"'
+  type: gene
+- db_refs:
+    HGNC: '9840'
+    UP: P11234
+  name: RALB
+  search_term: '"RALB"'
+  type: gene
+- db_refs:
+    HGNC: '9842'
+    UP: Q12967
+  name: RALGDS
+  search_term: '"RALGDS"'
+  type: gene
+- db_refs:
+    HGNC: '9846'
+    UP: P62826
+  name: RAN
+  search_term: '"RAN"'
+  type: gene
+- db_refs:
+    HGNC: '29285'
+    UP: Q6VN20
+  name: RANBP10
+  search_term: '"RANBP10"'
+  type: gene
+- db_refs:
+    HGNC: '9848'
+    UP: P49792
+  name: RANBP2
+  search_term: '"RANBP2"'
+  type: gene
+- db_refs:
+    HGNC: '13727'
+    UP: Q96S59
+  name: RANBP9
+  search_term: '"RANBP9"'
+  type: gene
+- db_refs:
+    HGNC: '9855'
+    UP: P62834
+  name: RAP1A
+  search_term: '"RAP1A"'
   type: gene
 - db_refs:
     HGNC: '9857'
+    UP: P61224
   name: RAP1B
   search_term: '"RAP1B"'
   type: gene
 - db_refs:
+    HGNC: '9862'
+    UP: P61225
+  name: RAP2B
+  search_term: '"RAP2B"'
+  type: gene
+- db_refs:
+    HGNC: '21165'
+    UP: Q9Y3L5
+  name: RAP2C
+  search_term: '"RAP2C"'
+  type: gene
+- db_refs:
+    HGNC: '4568'
+    UP: Q13905
+  name: RAPGEF1
+  search_term: '"RAPGEF1"'
+  type: gene
+- db_refs:
+    HGNC: '9871'
+    UP: P20936
+  name: RASA1
+  search_term: '"RASA1"'
+  type: gene
+- db_refs:
+    HGNC: '9872'
+    UP: Q15283
+  name: RASA2
+  search_term: '"RASA2"'
+  type: gene
+- db_refs:
+    HGNC: '20331'
+    UP: Q14644
+  name: RASA3
+  search_term: '"RASA3"'
+  type: gene
+- db_refs:
+    HGNC: '23181'
+    UP: O43374
+  name: RASA4
+  search_term: '"RASA4"'
+  type: gene
+- db_refs:
+    HGNC: '9873'
+    UP: O95294
+  name: RASAL1
+  search_term: '"RASAL1"'
+  type: gene
+- db_refs:
+    HGNC: '9874'
+    UP: Q9UJF2
+  name: RASAL2
+  search_term: '"RASAL2"'
+  type: gene
+- db_refs:
+    HGNC: '26129'
+    UP: Q86YV0
+  name: RASAL3
+  search_term: '"RASAL3"'
+  type: gene
+- db_refs:
+    HGNC: '9875'
+    UP: Q13972
+  name: RASGRF1
+  search_term: '"RASGRF1"'
+  type: gene
+- db_refs:
+    HGNC: '9876'
+    UP: O14827
+  name: RASGRF2
+  search_term: '"RASGRF2"'
+  type: gene
+- db_refs:
+    HGNC: '9878'
+    UP: O95267
+  name: RASGRP1
+  search_term: '"RASGRP1"'
+  type: gene
+- db_refs:
+    HGNC: '14545'
+    UP: Q8IV61
+  name: RASGRP3
+  search_term: '"RASGRP3"'
+  type: gene
+- db_refs:
     HGNC: '9887'
+    UP: Q09028
   name: RBBP4
   search_term: '"RBBP4"'
   type: gene
 - db_refs:
-    HGNC: '30325'
-  name: RBKS
-  search_term: '"RBKS"'
+    HGNC: '9890'
+    UP: Q16576
+  name: RBBP7
+  search_term: '"RBBP7"'
   type: gene
 - db_refs:
-    HGNC: '3041'
-  name: RCAN2
-  search_term: '"RCAN2"'
+    HGNC: '9955'
+    UP: Q04206
+  name: RELA
+  search_term: '"RELA"'
   type: gene
 - db_refs:
-    HGNC: '25065'
-  name: REC114
-  search_term: '"REC114"'
+    HGNC: '9956'
+    UP: Q01201
+  name: RELB
+  search_term: '"RELB"'
   type: gene
 - db_refs:
-    HGNC: '9971'
-  name: RFC3
-  search_term: '"RFC3"'
+    HGNC: '20389'
+    UP: Q9HD89
+  name: RETN
+  search_term: '"RETN"'
   type: gene
 - db_refs:
-    HGNC: '10023'
-  name: RIT1
-  search_term: '"RIT1"'
+    HGNC: '20369'
+    UP: Q9H4X1
+  name: RGCC
+  search_term: '"RGCC"'
   type: gene
 - db_refs:
-    HGNC: '10336'
-  name: RPL32
-  search_term: '"RPL32"'
+    HGNC: '667'
+    UP: P61586
+  name: RHOA
+  search_term: '"RHOA"'
   type: gene
 - db_refs:
-    HGNC: '10362'
-  name: RPL6
-  search_term: '"RPL6"'
+    HGNC: '15703'
+    UP: Q9HBH0
+  name: RHOF
+  search_term: '"RHOF"'
   type: gene
 - db_refs:
-    HGNC: '10369'
-  name: RPL9
-  search_term: '"RPL9"'
+    HGNC: '672'
+    UP: P84095
+  name: RHOG
+  search_term: '"RHOG"'
   type: gene
 - db_refs:
-    HGNC: '10421'
-  name: RPS3A
-  search_term: '"RPS3A"'
+    HGNC: '10045'
+    UP: P10153
+  name: RNASE2
+  search_term: '"RNASE2"'
   type: gene
 - db_refs:
-    HGNC: '10471'
-  name: RUNX1
-  search_term: '"RUNX1"'
+    HGNC: '10046'
+    UP: P12724
+  name: RNASE3
+  search_term: '"RNASE3"'
   type: gene
 - db_refs:
-    HGNC: '30362'
-  name: SBSPON
-  search_term: '"SBSPON"'
+    HGNC: '21686'
+    UP: O00584
+  name: RNASET2
+  search_term: '"RNASET2"'
+  type: gene
+- db_refs:
+    HGNC: '10251'
+    UP: Q13464
+  name: ROCK1
+  search_term: '"ROCK1"'
+  type: gene
+- db_refs:
+    HGNC: '10404'
+    UP: P15880
+  name: RPS2
+  search_term: '"RPS2"'
+  type: gene
+- db_refs:
+    HGNC: '10417'
+    UP: P62979
+  name: RPS27A
+  search_term: '"RPS27A"'
+  type: gene
+- db_refs:
+    HGNC: '10434'
+    UP: O75582
+  name: RPS6KA5
+  search_term: '"RPS6KA5"'
+  type: gene
+- db_refs:
+    HGNC: '18118'
+    UP: Q96T23
+  name: RSF1
+  search_term: '"RSF1"'
+  type: gene
+- db_refs:
+    HGNC: '10474'
+    UP: Q9Y265
+  name: RUVBL1
+  search_term: '"RUVBL1"'
+  type: gene
+- db_refs:
+    HGNC: '10488'
+    UP: P31949
+  name: S100A11
+  search_term: '"S100A11"'
+  type: gene
+- db_refs:
+    HGNC: '10489'
+    UP: P80511
+  name: S100A12
+  search_term: '"S100A12"'
+  type: gene
+- db_refs:
+    HGNC: '10497'
+    UP: P31151
+  name: S100A7
+  search_term: '"S100A7"'
+  type: gene
+- db_refs:
+    HGNC: '10498'
+    UP: P05109
+  name: S100A8
+  search_term: '"S100A8"'
+  type: gene
+- db_refs:
+    HGNC: '10499'
+    UP: P06702
+  name: S100A9
+  search_term: '"S100A9"'
+  type: gene
+- db_refs:
+    HGNC: '10504'
+    UP: P25815
+  name: S100P
+  search_term: '"S100P"'
+  type: gene
+- db_refs:
+    HGNC: '10520'
+    UP: Q15424
+  name: SAFB
+  search_term: '"SAFB"'
+  type: gene
+- db_refs:
+    HGNC: '10563'
+    UP: O15126
+  name: SCAMP1
+  search_term: '"SCAMP1"'
+  type: gene
+- db_refs:
+    HGNC: '10606'
+    UP: P22307
+  name: SCP2
+  search_term: '"SCP2"'
+  type: gene
+- db_refs:
+    HGNC: '10658'
+    UP: P18827
+  name: SDC1
+  search_term: '"SDC1"'
+  type: gene
+- db_refs:
+    HGNC: '10662'
+    UP: O00560
+  name: SDCBP
+  search_term: '"SDCBP"'
+  type: gene
+- db_refs:
+    HGNC: '10697'
+    UP: P55735
+  name: SEC13
+  search_term: '"SEC13"'
+  type: gene
+- db_refs:
+    HGNC: '10720'
+    UP: P14151
+  name: SELL
+  search_term: '"SELL"'
+  type: gene
+- db_refs:
+    HGNC: '8941'
+    UP: P01009
+  name: SERPINA1
+  search_term: '"SERPINA1"'
+  type: gene
+- db_refs:
+    HGNC: '16'
+    UP: P01011
+  name: SERPINA3
+  search_term: '"SERPINA3"'
+  type: gene
+- db_refs:
+    HGNC: '3311'
+    UP: P30740
+  name: SERPINB1
+  search_term: '"SERPINB1"'
+  type: gene
+- db_refs:
+    HGNC: '8942'
+    UP: P48595
+  name: SERPINB10
+  search_term: '"SERPINB10"'
+  type: gene
+- db_refs:
+    HGNC: '14220'
+    UP: Q96P63
+  name: SERPINB12
+  search_term: '"SERPINB12"'
+  type: gene
+- db_refs:
+    HGNC: '10569'
+    UP: P29508
+  name: SERPINB3
+  search_term: '"SERPINB3"'
+  type: gene
+- db_refs:
+    HGNC: '8950'
+    UP: P35237
+  name: SERPINB6
+  search_term: '"SERPINB6"'
+  type: gene
+- db_refs:
+    HGNC: '17381'
+    UP: O14492
+  name: SH2B2
+  search_term: '"SH2B2"'
+  type: gene
+- db_refs:
+    HGNC: '29605'
+    UP: Q9UQQ2
+  name: SH2B3
+  search_term: '"SH2B3"'
+  type: gene
+- db_refs:
+    HGNC: '10840'
+    UP: P29353
+  name: SHC1
+  search_term: '"SHC1"'
+  type: gene
+- db_refs:
+    HGNC: '29869'
+    UP: P98077
+  name: SHC2
+  search_term: '"SHC2"'
+  type: gene
+- db_refs:
+    HGNC: '18181'
+    UP: Q92529
+  name: SHC3
+  search_term: '"SHC3"'
+  type: gene
+- db_refs:
+    HGNC: '32926'
+    UP: Q08ET2
+  name: SIGLEC14
+  search_term: '"SIGLEC14"'
+  type: gene
+- db_refs:
+    HGNC: '10874'
+    UP: O15389
+  name: SIGLEC5
+  search_term: '"SIGLEC5"'
+  type: gene
+- db_refs:
+    HGNC: '10878'
+    UP: Q9Y336
+  name: SIGLEC9
+  search_term: '"SIGLEC9"'
+  type: gene
+- db_refs:
+    HGNC: '19353'
+    UP: Q96ST3
+  name: SIN3A
+  search_term: '"SIN3A"'
+  type: gene
+- db_refs:
+    HGNC: '9662'
+    UP: P78324
+  name: SIRPA
+  search_term: '"SIRPA"'
+  type: gene
+- db_refs:
+    HGNC: '15928'
+    UP: O00241
+  name: SIRPB1
+  search_term: '"SIRPB1"'
+  type: gene
+- db_refs:
+    HGNC: '10907'
+    UP: P49279
+  name: SLC11A1
+  search_term: '"SLC11A1"'
+  type: gene
+- db_refs:
+    HGNC: '23090'
+    UP: Q8N697
+  name: SLC15A4
+  search_term: '"SLC15A4"'
+  type: gene
+- db_refs:
+    HGNC: '10996'
+    UP: O14975
+  name: SLC27A2
+  search_term: '"SLC27A2"'
+  type: gene
+- db_refs:
+    HGNC: '11007'
+    UP: P11169
+  name: SLC2A3
+  search_term: '"SLC2A3"'
+  type: gene
+- db_refs:
+    HGNC: '11010'
+    UP: P22732
+  name: SLC2A5
+  search_term: '"SLC2A5"'
+  type: gene
+- db_refs:
+    HGNC: '17292'
+    UP: Q8IWA5
+  name: SLC44A2
+  search_term: '"SLC44A2"'
+  type: gene
+- db_refs:
+    HGNC: '23612'
+    UP: Q6ZQN7
+  name: SLCO4C1
+  search_term: '"SLCO4C1"'
   type: gene
 - db_refs:
     HGNC: '11092'
+    UP: P03973
   name: SLPI
   search_term: '"SLPI"'
   type: gene
 - db_refs:
-    HGNC: '11111'
-  name: SMC1A
-  search_term: '"SMC1A"'
+    HGNC: '11098'
+    UP: P51531
+  name: SMARCA2
+  search_term: '"SMARCA2"'
   type: gene
 - db_refs:
-    HGNC: '2468'
-  name: SMC3
-  search_term: '"SMC3"'
+    HGNC: '11100'
+    UP: P51532
+  name: SMARCA4
+  search_term: '"SMARCA4"'
   type: gene
 - db_refs:
-    HGNC: '30613'
-  name: SPDYA
-  search_term: '"SPDYA"'
+    HGNC: '11101'
+    UP: O60264
+  name: SMARCA5
+  search_term: '"SMARCA5"'
   type: gene
 - db_refs:
-    HGNC: '23173'
-  name: SPRR4
-  search_term: '"SPRR4"'
+    HGNC: '11103'
+    UP: Q12824
+  name: SMARCB1
+  search_term: '"SMARCB1"'
   type: gene
 - db_refs:
-    HGNC: '10783'
-  name: SRSF2
-  search_term: '"SRSF2"'
+    HGNC: '11104'
+    UP: Q92922
+  name: SMARCC1
+  search_term: '"SMARCC1"'
   type: gene
 - db_refs:
-    HGNC: '11328'
-  name: SSSCA1
-  search_term: '"SSSCA1"'
+    HGNC: '11105'
+    UP: Q8TAQ2
+  name: SMARCC2
+  search_term: '"SMARCC2"'
   type: gene
 - db_refs:
-    HGNC: '11355'
-  name: STAG2
-  search_term: '"STAG2"'
+    HGNC: '11106'
+    UP: Q96GM5
+  name: SMARCD1
+  search_term: '"SMARCD1"'
   type: gene
 - db_refs:
-    HGNC: '11374'
-  name: STC2
-  search_term: '"STC2"'
+    HGNC: '11107'
+    UP: Q92925
+  name: SMARCD2
+  search_term: '"SMARCD2"'
+  type: gene
+- db_refs:
+    HGNC: '11108'
+    UP: Q6STE5
+  name: SMARCD3
+  search_term: '"SMARCD3"'
+  type: gene
+- db_refs:
+    HGNC: '11109'
+    UP: Q969G3
+  name: SMARCE1
+  search_term: '"SMARCE1"'
+  type: gene
+- db_refs:
+    HGNC: '11131'
+    UP: O00161
+  name: SNAP23
+  search_term: '"SNAP23"'
+  type: gene
+- db_refs:
+    HGNC: '11132'
+    UP: P60880
+  name: SNAP25
+  search_term: '"SNAP25"'
+  type: gene
+- db_refs:
+    HGNC: '11133'
+    UP: O95721
+  name: SNAP29
+  search_term: '"SNAP29"'
+  type: gene
+- db_refs:
+    HGNC: '30646'
+    UP: Q7KZF4
+  name: SND1
+  search_term: '"SND1"'
+  type: gene
+- db_refs:
+    HGNC: '19383'
+    UP: O15524
+  name: SOCS1
+  search_term: '"SOCS1"'
+  type: gene
+- db_refs:
+    HGNC: '16833'
+    UP: O14544
+  name: SOCS6
+  search_term: '"SOCS6"'
+  type: gene
+- db_refs:
+    HGNC: '11187'
+    UP: Q07889
+  name: SOS1
+  search_term: '"SOS1"'
+  type: gene
+- db_refs:
+    HGNC: '11240'
+    UP: Q9NYA1
+  name: SPHK1
+  search_term: '"SPHK1"'
+  type: gene
+- db_refs:
+    HGNC: '20249'
+    UP: Q7Z699
+  name: SPRED1
+  search_term: '"SPRED1"'
+  type: gene
+- db_refs:
+    HGNC: '17722'
+    UP: Q7Z698
+  name: SPRED2
+  search_term: '"SPRED2"'
+  type: gene
+- db_refs:
+    HGNC: '31041'
+    UP: Q2MJR0
+  name: SPRED3
+  search_term: '"SPRED3"'
+  type: gene
+- db_refs:
+    HGNC: '11272'
+    UP: P02549
+  name: SPTA1
+  search_term: '"SPTA1"'
+  type: gene
+- db_refs:
+    HGNC: '11273'
+    UP: Q13813
+  name: SPTAN1
+  search_term: '"SPTAN1"'
+  type: gene
+- db_refs:
+    HGNC: '11274'
+    UP: P11277
+  name: SPTB
+  search_term: '"SPTB"'
+  type: gene
+- db_refs:
+    HGNC: '11275'
+    UP: Q01082
+  name: SPTBN1
+  search_term: '"SPTBN1"'
+  type: gene
+- db_refs:
+    HGNC: '11276'
+    UP: O15020
+  name: SPTBN2
+  search_term: '"SPTBN2"'
+  type: gene
+- db_refs:
+    HGNC: '14896'
+    UP: Q9H254
+  name: SPTBN4
+  search_term: '"SPTBN4"'
+  type: gene
+- db_refs:
+    HGNC: '15680'
+    UP: Q9NRC6
+  name: SPTBN5
+  search_term: '"SPTBN5"'
+  type: gene
+- db_refs:
+    HGNC: '11283'
+    UP: P12931
+  name: SRC
+  search_term: '"SRC"'
+  type: gene
+- db_refs:
+    HGNC: '11299'
+    UP: P37108
+  name: SRP14
+  search_term: '"SRP14"'
+  type: gene
+- db_refs:
+    HGNC: '11362'
+    UP: P42224
+  name: STAT1
+  search_term: '"STAT1"'
+  type: gene
+- db_refs:
+    HGNC: '11364'
+    UP: P40763
+  name: STAT3
+  search_term: '"STAT3"'
+  type: gene
+- db_refs:
+    HGNC: '11366'
+    UP: P42229
+  name: STAT5A
+  search_term: '"STAT5A"'
+  type: gene
+- db_refs:
+    HGNC: '11367'
+    UP: P51692
+  name: STAT5B
+  search_term: '"STAT5B"'
+  type: gene
+- db_refs:
+    HGNC: '11368'
+    UP: P42226
+  name: STAT6
+  search_term: '"STAT6"'
+  type: gene
+- db_refs:
+    HGNC: '24854'
+    UP: O95210
+  name: STBD1
+  search_term: '"STBD1"'
+  type: gene
+- db_refs:
+    HGNC: '11388'
+    UP: O94804
+  name: STK10
+  search_term: '"STK10"'
+  type: gene
+- db_refs:
+    HGNC: '19184'
+    UP: Q8N1F8
+  name: STK11IP
+  search_term: '"STK11IP"'
+  type: gene
+- db_refs:
+    HGNC: '3383'
+    UP: P27105
+  name: STOM
+  search_term: '"STOM"'
+  type: gene
+- db_refs:
+    HGNC: '11433'
+    UP: Q16623
+  name: STX1A
+  search_term: '"STX1A"'
   type: gene
 - db_refs:
     HGNC: '11438'
+    UP: Q13277
   name: STX3
   search_term: '"STX3"'
   type: gene
 - db_refs:
-    HGNC: '17845'
-  name: SULT1B1
-  search_term: '"SULT1B1"'
+    HGNC: '11439'
+    UP: Q12846
+  name: STX4
+  search_term: '"STX4"'
   type: gene
 - db_refs:
-    HGNC: '11456'
-  name: SULT1C2
-  search_term: '"SULT1C2"'
+    HGNC: '11445'
+    UP: Q15833
+  name: STXBP2
+  search_term: '"STXBP2"'
+  type: gene
+- db_refs:
+    HGNC: '12502'
+    UP: P63165
+  name: SUMO1
+  search_term: '"SUMO1"'
   type: gene
 - db_refs:
     HGNC: '11125'
+    UP: P61956
   name: SUMO2
   search_term: '"SUMO2"'
   type: gene
 - db_refs:
+    HGNC: '11124'
+    UP: P55854
+  name: SUMO3
+  search_term: '"SUMO3"'
+  type: gene
+- db_refs:
+    HGNC: '11476'
+    UP: O15260
+  name: SURF4
+  search_term: '"SURF4"'
+  type: gene
+- db_refs:
     HGNC: '17101'
+    UP: Q15022
   name: SUZ12
   search_term: '"SUZ12"'
   type: gene
 - db_refs:
-    HGNC: '11648'
-  name: TCL1A
-  search_term: '"TCL1A"'
+    HGNC: '25238'
+    UP: Q8NHG7
+  name: SVIP
+  search_term: '"SVIP"'
   type: gene
 - db_refs:
-    HGNC: '11695'
-  name: TCTE3
-  search_term: '"TCTE3"'
+    HGNC: '11491'
+    UP: P43405
+  name: SYK
+  search_term: '"SYK"'
   type: gene
 - db_refs:
-    HGNC: '25941'
-  name: TET2
-  search_term: '"TET2"'
+    HGNC: '11497'
+    UP: Q96PV0
+  name: SYNGAP1
+  search_term: '"SYNGAP1"'
   type: gene
 - db_refs:
-    HGNC: '11741'
-  name: TFAM
-  search_term: '"TFAM"'
+    HGNC: '11498'
+    UP: O43759
+  name: SYNGR1
+  search_term: '"SYNGR1"'
   type: gene
 - db_refs:
-    HGNC: '28558'
-  name: TMCO5A
-  search_term: '"TMCO5A"'
+    HGNC: '37250'
+    UP: B6A8C7
+  name: TARM1
+  search_term: '"TARM1"'
   type: gene
 - db_refs:
-    HGNC: '25257'
-  name: TMEM18
-  search_term: '"TMEM18"'
+    HGNC: '24702'
+    UP: Q8IV04
+  name: TBC1D10C
+  search_term: '"TBC1D10C"'
   type: gene
 - db_refs:
-    HGNC: '37234'
-  name: TMEM231
-  search_term: '"TMEM231"'
+    HGNC: '11647'
+    UP: Q13488
+  name: TCIRG1
+  search_term: '"TCIRG1"'
   type: gene
 - db_refs:
-    HGNC: '18515'
-  name: TMEM47
-  search_term: '"TMEM47"'
+    HGNC: '11652'
+    UP: P20061
+  name: TCN1
+  search_term: '"TCN1"'
   type: gene
 - db_refs:
-    HGNC: '11944'
-  name: TNNC2
-  search_term: '"TNNC2"'
+    HGNC: '11719'
+    UP: P42680
+  name: TEC
+  search_term: '"TEC"'
+  type: gene
+- db_refs:
+    HGNC: '11724'
+    UP: Q02763
+  name: TEK
+  search_term: '"TEK"'
+  type: gene
+- db_refs:
+    HGNC: '16705'
+    UP: Q5XG87
+  name: TENT4A
+  search_term: '"TENT4A"'
+  type: gene
+- db_refs:
+    HGNC: '11742'
+    UP: P05549
+  name: TFAP2A
+  search_term: '"TFAP2A"'
+  type: gene
+- db_refs:
+    HGNC: '11765'
+    UP: P01135
+  name: TGFA
+  search_term: '"TGFA"'
+  type: gene
+- db_refs:
+    HGNC: '17947'
+    UP: Q5T1C6
+  name: THEM4
+  search_term: '"THEM4"'
+  type: gene
+- db_refs:
+    HGNC: '21354'
+    UP: Q86XR7
+  name: TICAM2
+  search_term: '"TICAM2"'
+  type: gene
+- db_refs:
+    HGNC: '11821'
+    UP: P16035
+  name: TIMP2
+  search_term: '"TIMP2"'
+  type: gene
+- db_refs:
+    HGNC: '11845'
+    UP: Q9Y490
+  name: TLN1
+  search_term: '"TLN1"'
+  type: gene
+- db_refs:
+    HGNC: '11848'
+    UP: O60603
+  name: TLR2
+  search_term: '"TLR2"'
+  type: gene
+- db_refs:
+    HGNC: '23410'
+    UP: Q969X1
+  name: TMBIM1
+  search_term: '"TMBIM1"'
+  type: gene
+- db_refs:
+    HGNC: '18021'
+    UP: Q7Z403
+  name: TMC6
+  search_term: '"TMC6"'
+  type: gene
+- db_refs:
+    HGNC: '27962'
+    UP: Q86WV6
+  name: TMEM173
+  search_term: '"TMEM173"'
+  type: gene
+- db_refs:
+    HGNC: '33744'
+    UP: Q7Z7N9
+  name: TMEM179B
+  search_term: '"TMEM179B"'
+  type: gene
+- db_refs:
+    HGNC: '16667'
+    UP: Q9NV96
+  name: TMEM30A
+  search_term: '"TMEM30A"'
+  type: gene
+- db_refs:
+    HGNC: '29118'
+    UP: O94886
+  name: TMEM63A
+  search_term: '"TMEM63A"'
+  type: gene
+- db_refs:
+    HGNC: '11898'
+    UP: P98066
+  name: TNFAIP6
+  search_term: '"TNFAIP6"'
+  type: gene
+- db_refs:
+    HGNC: '11917'
+    UP: P20333
+  name: TNFRSF1B
+  search_term: '"TNFRSF1B"'
+  type: gene
+- db_refs:
+    HGNC: '19081'
+    UP: Q9C0C2
+  name: TNKS1BP1
+  search_term: '"TNKS1BP1"'
+  type: gene
+- db_refs:
+    HGNC: '16476'
+    UP: Q9H0E2
+  name: TOLLIP
+  search_term: '"TOLLIP"'
+  type: gene
+- db_refs:
+    HGNC: '11982'
+    UP: O60784
+  name: TOM1
+  search_term: '"TOM1"'
   type: gene
 - db_refs:
     HGNC: '11998'
+    UP: P04637
   name: TP53
   search_term: '"TP53"'
   type: gene
 - db_refs:
-    HGNC: '24759'
-  name: TPRG1
-  search_term: '"TPRG1"'
+    HGNC: '12017'
+    UP: P12270
+  name: TPR
+  search_term: '"TPR"'
   type: gene
 - db_refs:
-    HGNC: '10781'
-  name: TRA2B
-  search_term: '"TRA2B"'
+    HGNC: '29947'
+    UP: Q9UPV9
+  name: TRAK1
+  search_term: '"TRAK1"'
   type: gene
 - db_refs:
-    HGNC: '19021'
-  name: TRIM48
-  search_term: '"TRIM48"'
+    HGNC: '19894'
+    UP: Q9Y5R8
+  name: TRAPPC1
+  search_term: '"TRAPPC1"'
   type: gene
 - db_refs:
-    HGNC: '20659'
-  name: TSPAN2
-  search_term: '"TSPAN2"'
+    HGNC: '17761'
+    UP: Q9NZC2
+  name: TREM2
+  search_term: '"TREM2"'
   type: gene
 - db_refs:
-    HGNC: '12408'
-  name: TUBA3C
-  search_term: '"TUBA3C"'
+    HGNC: '16228'
+    UP: Q96RU7
+  name: TRIB3
+  search_term: '"TRIB3"'
   type: gene
 - db_refs:
-    HGNC: '12453'
-  name: U2AF1
-  search_term: '"U2AF1"'
+    HGNC: '11812'
+    UP: O15164
+  name: TRIM24
+  search_term: '"TRIM24"'
   type: gene
 - db_refs:
-    HGNC: '19907'
-  name: UBE2R2
-  search_term: '"UBE2R2"'
+    HGNC: '16384'
+    UP: Q13263
+  name: TRIM28
+  search_term: '"TRIM28"'
   type: gene
 - db_refs:
-    HGNC: '15891'
-  name: UQCC1
-  search_term: '"UQCC1"'
+    HGNC: '12339'
+    UP: O94759
+  name: TRPM2
+  search_term: '"TRPM2"'
   type: gene
 - db_refs:
-    HGNC: '30863'
-  name: UQCR10
-  search_term: '"UQCR10"'
+    HGNC: '23303'
+    UP: Q8NG11
+  name: TSPAN14
+  search_term: '"TSPAN14"'
   type: gene
 - db_refs:
-    HGNC: '25792'
-  name: USB1
-  search_term: '"USB1"'
+    HGNC: '12405'
+    UP: P02766
+  name: TTR
+  search_term: '"TTR"'
   type: gene
 - db_refs:
-    HGNC: '17327'
-  name: WAC
-  search_term: '"WAC"'
+    HGNC: '20778'
+    UP: P07437
+  name: TUBB
+  search_term: '"TUBB"'
   type: gene
 - db_refs:
-    HGNC: '12796'
-  name: WT1
-  search_term: '"WT1"'
+    HGNC: '20771'
+    UP: P68371
+  name: TUBB4B
+  search_term: '"TUBB4B"'
   type: gene
 - db_refs:
-    HGNC: '30949'
-  name: ZFP42
-  search_term: '"ZFP42"'
+    HGNC: '30685'
+    UP: P40222
+  name: TXLNA
+  search_term: '"TXLNA"'
   type: gene
 - db_refs:
-    HGNC: '33112'
-  name: ZNF788P
-  search_term: '"ZNF788P"'
+    HGNC: '21073'
+    UP: Q8NBS9
+  name: TXNDC5
+  search_term: '"TXNDC5"'
   type: gene
+- db_refs:
+    HGNC: '12440'
+    UP: P29597
+  name: TYK2
+  search_term: '"TYK2"'
+  type: gene
+- db_refs:
+    HGNC: '12449'
+    UP: O43914
+  name: TYROBP
+  search_term: '"TYROBP"'
+  type: gene
+- db_refs:
+    HGNC: '28531'
+    UP: Q2T9J0
+  name: TYSND1
+  search_term: '"TYSND1"'
+  type: gene
+- db_refs:
+    HGNC: '12458'
+    UP: P62987
+  name: UBA52
+  search_term: '"UBA52"'
+  type: gene
+- db_refs:
+    HGNC: '12463'
+    UP: P0CG47
+  name: UBB
+  search_term: '"UBB"'
+  type: gene
+- db_refs:
+    HGNC: '12468'
+    UP: P0CG48
+  name: UBC
+  search_term: '"UBC"'
+  type: gene
+- db_refs:
+    HGNC: '12474'
+    UP: P51668
+  name: UBE2D1
+  search_term: '"UBE2D1"'
+  type: gene
+- db_refs:
+    HGNC: '12475'
+    UP: P62837
+  name: UBE2D2
+  search_term: '"UBE2D2"'
+  type: gene
+- db_refs:
+    HGNC: '12476'
+    UP: P61077
+  name: UBE2D3
+  search_term: '"UBE2D3"'
+  type: gene
+- db_refs:
+    HGNC: '12485'
+    UP: P63279
+  name: UBE2I
+  search_term: '"UBE2I"'
+  type: gene
+- db_refs:
+    HGNC: '30313'
+    UP: Q5T4S7
+  name: UBR4
+  search_term: '"UBR4"'
+  type: gene
+- db_refs:
+    HGNC: '12556'
+    UP: Q96T88
+  name: UHRF1
+  search_term: '"UHRF1"'
+  type: gene
+- db_refs:
+    HGNC: '23147'
+    UP: Q70J99
+  name: UNC13D
+  search_term: '"UNC13D"'
+  type: gene
+- db_refs:
+    HGNC: '12632'
+    UP: Q93008
+  name: USP9X
+  search_term: '"USP9X"'
+  type: gene
+- db_refs:
+    HGNC: '12643'
+    UP: P63027
+  name: VAMP2
+  search_term: '"VAMP2"'
+  type: gene
+- db_refs:
+    HGNC: '12647'
+    UP: Q9BV40
+  name: VAMP8
+  search_term: '"VAMP8"'
+  type: gene
+- db_refs:
+    HGNC: '12648'
+    UP: Q9P0L0
+  name: VAPA
+  search_term: '"VAPA"'
+  type: gene
+- db_refs:
+    HGNC: '16919'
+    UP: Q99536
+  name: VAT1
+  search_term: '"VAT1"'
+  type: gene
+- db_refs:
+    HGNC: '12657'
+    UP: P15498
+  name: VAV1
+  search_term: '"VAV1"'
+  type: gene
+- db_refs:
+    HGNC: '12658'
+    UP: P52735
+  name: VAV2
+  search_term: '"VAV2"'
+  type: gene
+- db_refs:
+    HGNC: '12659'
+    UP: Q9UKW4
+  name: VAV3
+  search_term: '"VAV3"'
+  type: gene
+- db_refs:
+    HGNC: '12665'
+    UP: P18206
+  name: VCL
+  search_term: '"VCL"'
+  type: gene
+- db_refs:
+    HGNC: '12666'
+    UP: P55072
+  name: VCP
+  search_term: '"VCP"'
+  type: gene
+- db_refs:
+    HGNC: '12705'
+    UP: O95497
+  name: VNN1
+  search_term: '"VNN1"'
+  type: gene
+- db_refs:
+    HGNC: '12726'
+    UP: P04275
+  name: VWF
+  search_term: '"VWF"'
+  type: gene
+- db_refs:
+    HGNC: '12757'
+    UP: P61964
+  name: WDR5
+  search_term: '"WDR5"'
+  type: gene
+- db_refs:
+    HGNC: '29652'
+    UP: Q9BQA1
+  name: WDR77
+  search_term: '"WDR77"'
+  type: gene
+- db_refs:
+    HGNC: '32672'
+    UP: Q9BRX9
+  name: WDR83
+  search_term: '"WDR83"'
+  type: gene
+- db_refs:
+    HGNC: '12833'
+    UP: P13010
+  name: XRCC5
+  search_term: '"XRCC5"'
+  type: gene
+- db_refs:
+    HGNC: '4055'
+    UP: P12956
+  name: XRCC6
+  search_term: '"XRCC6"'
+  type: gene
+- db_refs:
+    HGNC: '12841'
+    UP: P07947
+  name: YES1
+  search_term: '"YES1"'
+  type: gene
+- db_refs:
+    HGNC: '18329'
+    UP: P62699
+  name: YPEL5
+  search_term: '"YPEL5"'
+  type: gene
+- db_refs:
+    HGNC: '12849'
+    UP: P31946
+  name: YWHAB
+  search_term: '"YWHAB"'
+  type: gene
+- db_refs:
+    HGNC: '23721'
+    UP: Q7Z2W4
+  name: ZC3HAV1
+  search_term: '"ZC3HAV1"'
+  type: gene
+- db_refs:
+    HGNC: '30164'
+    UP: Q6FIF0
+  name: ZFAND6
+  search_term: '"ZFAND6"'
+  type: gene
+- db_refs:
+    HGNC: '12989'
+    UP: Q9UBW7
+  name: ZMYM2
+  search_term: '"ZMYM2"'
+  type: gene
+- db_refs:
+    HGNC: '12915'
+    UP: P52739
+  name: ZNF131
+  search_term: '"ZNF131"'
+  type: gene
+- db_refs:
+    HGNC: '16656'
+    UP: Q9GZX5
+  name: ZNF350
+  search_term: '"ZNF350"'
+  type: gene
+- db_refs:
+    HMS-LINCS: '10236'
+    LINCS: LSM-43239
+    PUBCHEM: '151069'
+  name: 17-AAG
+  search_term: '"17-AAG"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:125684
+    HMS-LINCS: '10501'
+    PUBCHEM: '9062'
+  name: 2-deoxyglucose
+  search_term: '"2-deoxyglucose"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10356'
+    LINCS: LSM-43344
+    PUBCHEM: '68810458'
+  name: 5z-7-oxozeaenol
+  search_term: '"5z-7-oxozeaenol"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91351
+    CHEMBL: '379300'
+    HMS-LINCS: '10045'
+    LINCS: LSM-1045
+    PUBCHEM: '10172943'
+  name: A443654
+  search_term: '"A443654"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91449
+    HMS-LINCS: '10203'
+    LINCS: LSM-1204
+    PUBCHEM: '42636535'
+  name: A66
+  search_term: '"A66"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95043
+    HMS-LINCS: '10352'
+    LINCS: LSM-6285
+    PUBCHEM: '3035714'
+  name: ABT-751
+  search_term: '"ABT-751"'
+  type: drug
 - db_refs:
     CHEBI: CHEBI:90217
     HMS-LINCS: '10037'
@@ -993,6 +6408,28 @@ search_terms:
     PUBCHEM: '24889392'
   name: AC220
   search_term: '"AC220"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93757
+    HMS-LINCS: '10239'
+    LINCS: LSM-4262
+    PUBCHEM: '2044'
+  name: AG1024
+  search_term: '"AG1024"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:75404
+    HMS-LINCS: '10223'
+    LINCS: LSM-1224
+    PUBCHEM: '2051'
+  name: AG1478
+  search_term: '"AG1478"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10392'
+    PUBCHEM: '57390074'
+  name: ALK-IN-1
+  search_term: '"ALK-IN-1"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91324
@@ -1011,10 +6448,110 @@ search_terms:
   search_term: '"ALW-II-49-7"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10240'
+    LINCS: LSM-4263
+    PUBCHEM: '56965900'
+  name: AS-252424
+  search_term: '"AS-252424"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91345
+    CHEMBL: '191384'
+    HMS-LINCS: '10034'
+    LINCS: LSM-1034
+    PUBCHEM: '10109823'
+  name: AS601245
+  search_term: '"AS601245"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10054'
+    LINCS: LSM-42784
+    PUBCHEM: '24906273'
+  name: AS605240
+  search_term: '"AS605240"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91467
+    HMS-LINCS: '10224'
+    LINCS: LSM-1225
+    PUBCHEM: '24739943'
+  name: AST1306
+  search_term: '"AST1306"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91326
+    CHEMBL: '445813'
+    HMS-LINCS: '10004'
+    LINCS: LSM-1004
+    PUBCHEM: '11338033'
+  name: AT-7519
+  search_term: '"AT-7519"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:82708
+    HMS-LINCS: '10154'
+    LINCS: LSM-1155
+    PUBCHEM: '11175137'
+  name: AT7867
+  search_term: '"AT7867"'
+  type: drug
+- db_refs:
     HMS-LINCS: '10393'
     PUBCHEM: '11696609'
   name: AT9283
   search_term: '"AT9283"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10458'
+    PUBCHEM: '673481'
+  name: AX20017
+  search_term: '"AX20017"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91354
+    HMS-LINCS: '10050'
+    LINCS: LSM-1050
+    PUBCHEM: '11676786'
+  name: AZ-628
+  search_term: '"AZ-628"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91419
+    HMS-LINCS: '10158'
+    LINCS: LSM-1159
+    PUBCHEM: '16747683'
+  name: AZD 5438
+  search_term: '"AZD 5438"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91406
+    HMS-LINCS: '10139'
+    LINCS: LSM-1140
+    PUBCHEM: '46861588'
+  name: AZD-1480
+  search_term: '"AZD-1480"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91359
+    HMS-LINCS: '10059'
+    LINCS: LSM-1059
+    PUBCHEM: '44137675'
+  name: AZD-6482
+  search_term: '"AZD-6482"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:63453
+    HMS-LINCS: '10289'
+    LINCS: LSM-6308
+    PUBCHEM: '51039095'
+  name: AZD4547
+  search_term: '"AZD4547"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10370'
+    PUBCHEM: '25227436'
+  name: AZD5363
+  search_term: '"AZD5363"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91328
@@ -1025,12 +6562,65 @@ search_terms:
   search_term: '"AZD7762"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91424
+    HMS-LINCS: '10164'
+    LINCS: LSM-1165
+    PUBCHEM: '16666708'
+  name: AZD8330
+  search_term: '"AZD8330"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10390'
+    PUBCHEM: '46220502'
+  name: Abemaciclib
+  search_term: '"Abemaciclib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10133'
+    LINCS: LSM-43226
+    PUBCHEM: '57519523'
+  name: Afatinib
+  search_term: '"Afatinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:125628
+    HMS-LINCS: '10391'
+    PUBCHEM: '24771867'
+  name: Alisertib
+  search_term: '"Alisertib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93752
+    HMS-LINCS: '10233'
+    LINCS: LSM-4256
+    PUBCHEM: '56649450'
+  name: Alpelisib
+  search_term: '"Alpelisib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:47344
+    CHEMBL: '428690'
+    HMS-LINCS: '10011'
+    LINCS: LSM-1011
+    PUBCHEM: '5287969'
+  name: Alvocidib
+  search_term: '"Alvocidib"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91389
     HMS-LINCS: '10118'
     LINCS: LSM-1118
     PUBCHEM: '11282283'
   name: Amuvatinib
   search_term: '"Amuvatinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:2696
+    HMS-LINCS: '10308'
+    LINCS: LSM-6320
+    PUBCHEM: '167551'
+  name: Anacardic acid
+  search_term: '"Anacardic acid"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:94568
@@ -1057,6 +6647,22 @@ search_terms:
   search_term: '"BAY61-3606"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:63451
+    HMS-LINCS: '10183'
+    LINCS: LSM-1184
+    PUBCHEM: '53235510'
+  name: BGJ398
+  search_term: '"BGJ398"'
+  type: drug
+- db_refs:
+    CHEMBL: '513909'
+    HMS-LINCS: '10041'
+    LINCS: LSM-1041
+    PUBCHEM: '11364421'
+  name: BI-2536
+  search_term: '"BI-2536"'
+  type: drug
+- db_refs:
     HMS-LINCS: '10434'
     PUBCHEM: '53246941'
   name: BIX 02565
@@ -1079,12 +6685,43 @@ search_terms:
   search_term: '"BMS-536924"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:88339
+    CHEMBL: '575448'
+    HMS-LINCS: '10290'
+    LINCS: LSM-6218
+    PUBCHEM: '24785538'
+  name: BMS-754807
+  search_term: '"BMS-754807"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91340
+    HMS-LINCS: '10028'
+    LINCS: LSM-1028
+    PUBCHEM: '9813758'
+  name: BMS345541
+  search_term: '"BMS345541"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10427'
+    PUBCHEM: '71576693'
+  name: BMX-IN-1
+  search_term: '"BMX-IN-1"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91357
     HMS-LINCS: '10055'
     LINCS: LSM-1055
     PUBCHEM: '11754511'
   name: BX-912
   search_term: '"BX-912"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91439
+    HMS-LINCS: '10188'
+    LINCS: LSM-1189
+    PUBCHEM: '10077147'
+  name: BX795
+  search_term: '"BX795"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91367
@@ -1094,6 +6731,14 @@ search_terms:
     PUBCHEM: '16007391'
   name: Barasertib
   search_term: '"Barasertib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95341
+    HMS-LINCS: '10354'
+    LINCS: LSM-6709
+    PUBCHEM: '44205240'
+  name: Baricitinib
+  search_term: '"Baricitinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:52717
@@ -1120,12 +6765,124 @@ search_terms:
   search_term: '"Brivanib"'
   type: drug
 - db_refs:
+    CHEMBL: '449158'
+    HMS-LINCS: '10296'
+    LINCS: LSM-43289
+    PUBCHEM: '440577'
+  name: Bryostatin 1
+  search_term: '"Bryostatin 1"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:71954
+    HMS-LINCS: '10147'
+    LINCS: LSM-1148
+    PUBCHEM: '16654980'
+  name: Buparlisib
+  search_term: '"Buparlisib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10306'
+    LINCS: LSM-43281
+    PUBCHEM: '2871948'
+  name: C646
+  search_term: '"C646"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:82701
+    HMS-LINCS: '10204'
+    LINCS: LSM-1205
+    PUBCHEM: '11625818'
+  name: CAL-101
+  search_term: '"CAL-101"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91437
+    HMS-LINCS: '10185'
+    LINCS: LSM-1186
+    PUBCHEM: '10430360'
+  name: CC-401
+  search_term: '"CC-401"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91358
+    HMS-LINCS: '10058'
+    LINCS: LSM-1058
+    PUBCHEM: '57394468'
+  name: CG-930
+  search_term: '"CG-930"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10462'
+    PUBCHEM: '447682'
+  name: CGP-029482
+  search_term: '"CGP-029482"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95342
+    HMS-LINCS: '10355'
+    LINCS: LSM-6711
+    PUBCHEM: '9908173'
+  name: CGP74514A
+  search_term: '"CGP74514A"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10446'
+    PUBCHEM: '66555680'
+  name: CH5183284
+  search_term: '"CH5183284"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91091
+    HMS-LINCS: '10180'
+    LINCS: LSM-1181
+    PUBCHEM: '9956119'
+  name: CHIR-99021
+  search_term: '"CHIR-99021"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:131173
+    HMS-LINCS: '10366'
+    LINCS: LSM-42775
+    PUBCHEM: '10158940'
+  name: CP-673451
+  search_term: '"CP-673451"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10010'
+    LINCS: LSM-42777
+    PUBCHEM: '53401057'
+  name: CP724714
+  search_term: '"CP724714"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95070
+    HMS-LINCS: '10309'
+    LINCS: LSM-6321
+    PUBCHEM: '729859'
+  name: CTB
+  search_term: '"CTB"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10371'
+    PUBCHEM: '54575456'
+  name: CUDC-907
+  search_term: '"CUDC-907"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:72317
     HMS-LINCS: '10194'
     LINCS: LSM-1195
     PUBCHEM: '25102847'
   name: Cabozantinib
   search_term: '"Cabozantinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:61399
+    HMS-LINCS: '10120'
+    LINCS: LSM-1120
+    PUBCHEM: '156414'
+  name: Canertinib
+  search_term: '"Canertinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:94782
@@ -1135,11 +6892,33 @@ search_terms:
   search_term: '"Cediranib"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10117'
+    LINCS: LSM-1117
+    PUBCHEM: '5315765'
+  name: Celastrol
+  search_term: '"Celastrol"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:41423
     HMS-LINCS: '10503'
     PUBCHEM: '2662'
   name: Celecoxib
   search_term: '"Celecoxib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:78432
+    HMS-LINCS: '10394'
+    PUBCHEM: '57379345'
+  name: Ceritinib
+  search_term: '"Ceritinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:78373
+    HMS-LINCS: '10186'
+    LINCS: LSM-1187
+    PUBCHEM: '2703'
+  name: Chelerythrine
+  search_term: '"Chelerythrine"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:64310
@@ -1159,6 +6938,37 @@ search_terms:
   search_term: '"DCC-2036"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:75045
+    HMS-LINCS: '10284'
+    LINCS: LSM-6303
+    PUBCHEM: '44462760'
+  name: Dabrafenib
+  search_term: '"Dabrafenib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10222'
+    LINCS: LSM-42808
+    PUBCHEM: '57519532'
+  name: Dacomitinib
+  search_term: '"Dacomitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:71952
+    HMS-LINCS: '10232'
+    LINCS: LSM-4255
+    PUBCHEM: '11977753'
+  name: Dactolisib
+  search_term: '"Dactolisib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:4312
+    HMS-LINCS: '10324'
+    LINCS: LSM-6329
+    PUBCHEM: '15331'
+  name: Daminozide
+  search_term: '"Daminozide"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:49375
     CHEMBL: '1421'
     HMS-LINCS: '10020'
@@ -1174,6 +6984,13 @@ search_terms:
     PUBCHEM: '451668'
   name: Decitabine
   search_term: '"Decitabine"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:4659
+    HMS-LINCS: '10507'
+    PUBCHEM: '3117'
+  name: Disulfiram
+  search_term: '"Disulfiram"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:40953
@@ -1198,6 +7015,36 @@ search_terms:
   search_term: '"Dovitinib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91468
+    HMS-LINCS: '10227'
+    LINCS: LSM-1228
+    PUBCHEM: '9801969'
+  name: EO1428
+  search_term: '"EO1428"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10447'
+    PUBCHEM: '54766013'
+  name: EW-7197
+  search_term: '"EW-7197"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:4775
+    HMS-LINCS: '10410'
+    PUBCHEM: '5281855'
+  name: Ellagic acid
+  search_term: '"Ellagic acid"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:4778
+    CHEMBL: '221137'
+    HMS-LINCS: '10294'
+    LINCS: LSM-6311
+    PUBCHEM: '3218'
+  name: Embelin
+  search_term: '"Embelin"'
+  type: drug
+- db_refs:
     HMS-LINCS: '10372'
     PUBCHEM: '59473233'
   name: Entospletinib
@@ -1212,6 +7059,14 @@ search_terms:
   search_term: '"Enzastaurin"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:4806
+    HMS-LINCS: '10336'
+    LINCS: LSM-5661
+    PUBCHEM: '65064'
+  name: Epigallocatechin gallate
+  search_term: '"Epigallocatechin gallate"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:114785
     CHEMBL: '553'
     HMS-LINCS: '10097'
@@ -1219,6 +7074,28 @@ search_terms:
     PUBCHEM: '176870'
   name: Erlotinib
   search_term: '"Erlotinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91383
+    HMS-LINCS: '10110'
+    LINCS: LSM-42790
+    PUBCHEM: '11493598'
+  name: FR180204
+  search_term: '"FR180204"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10400'
+    PUBCHEM: '70934541'
+  name: FRAX597
+  search_term: '"FRAX597"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93765
+    HMS-LINCS: '10251'
+    LINCS: LSM-4272
+    PUBCHEM: '73293'
+  name: Fascaplysin
+  search_term: '"Fascaplysin"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91408
@@ -1243,6 +7120,65 @@ search_terms:
   search_term: '"Foretinib"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10181'
+    LINCS: LSM-42801
+    PUBCHEM: '57519545'
+  name: GDC-0879
+  search_term: '"GDC-0879"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93753
+    HMS-LINCS: '10234'
+    LINCS: LSM-4257
+    PUBCHEM: '66694608'
+  name: GDC-0980
+  search_term: '"GDC-0980"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10375'
+    PUBCHEM: '71727581'
+  name: GDC-0994
+  search_term: '"GDC-0994"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:137236
+    HMS-LINCS: '10509'
+    PUBCHEM: '132519'
+  name: GM6001
+  search_term: '"GM6001"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10365'
+    LINCS: LSM-44935
+    PUBCHEM: '59397065'
+  name: GNF-5837
+  search_term: '"GNF-5837"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91337
+    CHEMBL: '483847'
+    HMS-LINCS: '10022'
+    LINCS: LSM-1022
+    PUBCHEM: '5311510'
+  name: GNF2
+  search_term: '"GNF2"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91396
+    HMS-LINCS: '10128'
+    LINCS: LSM-1128
+    PUBCHEM: '16048642'
+  name: GSK 690693
+  search_term: '"GSK 690693"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10172'
+    LINCS: LSM-1173
+    PUBCHEM: '71317162'
+  name: GSK1059615
+  search_term: '"GSK1059615"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91362
     CHEMBL: '1090479'
     HMS-LINCS: '10062'
@@ -1250,6 +7186,45 @@ search_terms:
     PUBCHEM: '46885626'
   name: GSK1070916
   search_term: '"GSK1070916"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93768
+    HMS-LINCS: '10255'
+    LINCS: LSM-4276
+    PUBCHEM: '25182616'
+  name: GSK1838705A
+  search_term: '"GSK1838705A"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91401
+    CHEMBL: '466397'
+    HMS-LINCS: '10134'
+    LINCS: LSM-1134
+    PUBCHEM: '25124816'
+  name: GSK1904529A
+  search_term: '"GSK1904529A"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91465
+    HMS-LINCS: '10221'
+    LINCS: LSM-1222
+    PUBCHEM: '46215815'
+  name: GSK2334470
+  search_term: '"GSK2334470"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10376'
+    PUBCHEM: '56949517'
+  name: GSK2636771
+  search_term: '"GSK2636771"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91332
+    HMS-LINCS: '10012'
+    LINCS: LSM-1012
+    PUBCHEM: '11373846'
+  name: GSK429286A
+  search_term: '"GSK429286A"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91333
@@ -1266,12 +7241,53 @@ search_terms:
   search_term: '"GTPL6019"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10029'
+    LINCS: LSM-1029
+    PUBCHEM: '5034'
+  name: GW-5074
+  search_term: '"GW-5074"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10401'
+    PUBCHEM: '11617559'
+  name: GW2580
+  search_term: '"GW2580"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91334
     HMS-LINCS: '10014'
     LINCS: LSM-1014
     PUBCHEM: '9826308'
   name: GW843682X
   search_term: '"GW843682X"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10374'
+    PUBCHEM: '23624255'
+  name: Ganetespib
+  search_term: '"Ganetespib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10307'
+    LINCS: LSM-6319
+  name: Garcinol
+  search_term: '"Garcinol"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:49668
+    HMS-LINCS: '10098'
+    LINCS: LSM-1098
+    PUBCHEM: '123631'
+  name: Gefitinib
+  search_term: '"Gefitinib"'
+  type: drug
+- db_refs:
+    CHEMBL: '278315'
+    HMS-LINCS: '10108'
+    LINCS: LSM-42789
+    PUBCHEM: '644250'
+  name: Geldanamycin
+  search_term: '"Geldanamycin"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:51913
@@ -1283,12 +7299,90 @@ search_terms:
   search_term: '"Go 6976"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91455
+    CHEMBL: '261491'
+    HMS-LINCS: '10211'
+    LINCS: LSM-1212
+    PUBCHEM: '3499'
+  name: Go-6983
+  search_term: '"Go-6983"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10411'
+    PUBCHEM: '5702541'
+  name: H89
+  search_term: '"H89"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:95092
     HMS-LINCS: '10342'
     LINCS: LSM-6345
     PUBCHEM: '56655374'
   name: HG-14-10-04
   search_term: '"HG-14-10-04"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90943
+    HMS-LINCS: '10341'
+    LINCS: LSM-6344
+    PUBCHEM: '71496458'
+  name: HG-14-8-02
+  search_term: '"HG-14-8-02"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94803
+    HMS-LINCS: '10015'
+    LINCS: LSM-5982
+    PUBCHEM: '25226483'
+  name: HG-5-113-01
+  search_term: '"HG-5-113-01"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94486
+    HMS-LINCS: '10016'
+    LINCS: LSM-5245
+    PUBCHEM: '25226117'
+  name: HG-5-88-01
+  search_term: '"HG-5-88-01"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10017'
+    LINCS: LSM-43248
+  name: HG-6-64-01
+  search_term: '"HG-6-64-01"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:133818
+    HMS-LINCS: '10340'
+    LINCS: LSM-6343
+    PUBCHEM: '78357808'
+  name: HG-9-91-01
+  search_term: '"HG-9-91-01"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:92257
+    HMS-LINCS: '10228'
+    LINCS: LSM-2309
+    PUBCHEM: '9549298'
+  name: IKK16
+  search_term: '"IKK16"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:101355
+    CHEMBL: '472940'
+    HMS-LINCS: '10295'
+    LINCS: LSM-6312
+    PUBCHEM: '521106'
+  name: IPA-3
+  search_term: '"IPA-3"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91397
+    HMS-LINCS: '10129'
+    LINCS: LSM-1129
+    PUBCHEM: '16126651'
+  name: Ibrutinib
+  search_term: '"Ibrutinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:45783
@@ -1300,12 +7394,141 @@ search_terms:
   search_term: '"Imatinib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:95089
+    HMS-LINCS: '10338'
+    LINCS: LSM-6341
+    PUBCHEM: '24788740'
+  name: Ipatasertib
+  search_term: '"Ipatasertib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10332'
+    LINCS: LSM-6336
+  name: Ischemin
+  search_term: '"Ischemin"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10261'
+    LINCS: LSM-43293
+    PUBCHEM: '216344'
+  name: Ixabepilone
+  search_term: '"Ixabepilone"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10467'
+    PUBCHEM: '9797370'
+  name: JNJ-10198409
+  search_term: '"JNJ-10198409"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:124929
+    HMS-LINCS: '10100'
+    LINCS: LSM-36386
+    PUBCHEM: '25222038'
+  name: JNK-9L
+  search_term: '"JNK-9L"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:124926
+    HMS-LINCS: '10477'
+    LINCS: LSM-44526
+    PUBCHEM: '57340689'
+  name: JNK-IN-11
+  search_term: '"JNK-IN-11"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91453
+    HMS-LINCS: '10208'
+    LINCS: LSM-1209
+    PUBCHEM: '766949'
+  name: JNK-IN-5A
+  search_term: '"JNK-IN-5A"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10363'
+    LINCS: LSM-44525
+    PUBCHEM: '76516568'
+  name: JNK-IN-8
+  search_term: '"JNK-IN-8"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94664
+    HMS-LINCS: '10019'
+    LINCS: LSM-5674
+    PUBCHEM: '69923936'
+  name: JW-7-24-1
+  search_term: '"JW-7-24-1"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91374
+    HMS-LINCS: '10092'
+    LINCS: LSM-1092
+    PUBCHEM: '57340671'
+  name: JWE-035
+  search_term: '"JWE-035"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91456
+    CHEMBL: '1242367'
+    HMS-LINCS: '10212'
+    LINCS: LSM-1213
+    PUBCHEM: '24825971'
+  name: KIN001-021
+  search_term: '"KIN001-021"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91457
+    CHEMBL: '197603'
+    HMS-LINCS: '10213'
+    LINCS: LSM-1214
+    PUBCHEM: '9549184'
+  name: KIN001-111
+  search_term: '"KIN001-111"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91459
+    CHEMBL: '373751'
+    HMS-LINCS: '10215'
+    LINCS: LSM-1216
+    PUBCHEM: '11626927'
+  name: KIN001-135
+  search_term: '"KIN001-135"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91373
+    HMS-LINCS: '10081'
+    LINCS: LSM-1081
+    PUBCHEM: '49766501'
+  name: KIN001-244
+  search_term: '"KIN001-244"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91443
     HMS-LINCS: '10195'
     LINCS: LSM-1196
     PUBCHEM: '11654378'
   name: KIN001-269
   search_term: '"KIN001-269"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10413'
+    PUBCHEM: '9549295'
+  name: KRN633
+  search_term: '"KRN633"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91372
+    HMS-LINCS: '10074'
+    LINCS: LSM-1074
+    PUBCHEM: '5278396'
+  name: KU55933
+  search_term: '"KU55933"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10229'
+    LINCS: LSM-1230
+  name: KU63794
+  search_term: '"KU63794"'
   type: drug
 - db_refs:
     HMS-LINCS: '10192'
@@ -1315,12 +7538,94 @@ search_terms:
   search_term: '"KW2449"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10377'
+    PUBCHEM: '23635314'
+  name: KX01
+  search_term: '"KX01"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91438
     HMS-LINCS: '10187'
     LINCS: LSM-1188
     PUBCHEM: '57345770'
   name: Ki20227
   search_term: '"Ki20227"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91442
+    HMS-LINCS: '10193'
+    LINCS: LSM-1194
+    PUBCHEM: '23625762'
+  name: Kin236
+  search_term: '"Kin236"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91386
+    HMS-LINCS: '10113'
+    LINCS: LSM-1113
+    PUBCHEM: '16757524'
+  name: Kin237
+  search_term: '"Kin237"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93773
+    HMS-LINCS: '10262'
+    LINCS: LSM-4283
+    PUBCHEM: '9950176'
+  name: L-779450
+  search_term: '"L-779450"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91387
+    HMS-LINCS: '10115'
+    LINCS: LSM-1115
+    PUBCHEM: '25195294'
+  name: LDN-193189
+  search_term: '"LDN-193189"'
+  type: drug
+- db_refs:
+    CHEMBL: '228043'
+    HMS-LINCS: '10298'
+    LINCS: LSM-6315
+    PUBCHEM: '54686938'
+  name: LFM-A13/DDE-28
+  search_term: '"LFM-A13/DDE-28"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10378'
+    PUBCHEM: '10029385'
+  name: LY2090314
+  search_term: '"LY2090314"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:124917
+    HMS-LINCS: '10362'
+    LINCS: LSM-36359
+    PUBCHEM: '11955855'
+  name: LY2603618
+  search_term: '"LY2603618"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10396'
+    PUBCHEM: '46944259'
+  name: LY2874455
+  search_term: '"LY2874455"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:65329
+    HMS-LINCS: '10510'
+    PUBCHEM: '3973'
+  name: LY294002
+  search_term: '"LY294002"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:49603
+    CHEMBL: '554'
+    HMS-LINCS: '10051'
+    LINCS: LSM-1051
+    PUBCHEM: '208908'
+  name: Lapatinib
+  search_term: '"Lapatinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91471
@@ -1339,6 +7644,68 @@ search_terms:
   search_term: '"Linifanib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91402
+    CHEMBL: '1091644'
+    HMS-LINCS: '10135'
+    LINCS: LSM-1135
+    PUBCHEM: '11640390'
+  name: Linsitinib
+  search_term: '"Linsitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:131167
+    HMS-LINCS: '10402'
+    PUBCHEM: '11552706'
+  name: Losmapimod
+  search_term: '"Losmapimod"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10161'
+    LINCS: LSM-1162
+    PUBCHEM: '53401173'
+  name: Luminespib
+  search_term: '"Luminespib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:75142
+    CHEMBL: '64925'
+    HMS-LINCS: '10107'
+    LINCS: LSM-1107
+    PUBCHEM: '462382'
+  name: MG-132
+  search_term: '"MG-132"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91393
+    HMS-LINCS: '10124'
+    LINCS: LSM-1124
+    PUBCHEM: '24901704'
+  name: MGCD265
+  search_term: '"MGCD265"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91414
+    HMS-LINCS: '10152'
+    LINCS: LSM-1153
+    PUBCHEM: '24856436'
+  name: MK 1775
+  search_term: '"MK 1775"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:67271
+    HMS-LINCS: '10057'
+    LINCS: LSM-1057
+    PUBCHEM: '24964624'
+  name: MK2206
+  search_term: '"MK2206"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10469'
+    PUBCHEM: '108047'
+  name: ML-9
+  search_term: '"ML-9"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91366
     CHEMBL: '259084'
     HMS-LINCS: '10066'
@@ -1348,12 +7715,44 @@ search_terms:
   search_term: '"MLN8054"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91379
+    HMS-LINCS: '10105'
+    LINCS: LSM-1105
+    PUBCHEM: '25195352'
+  name: MPS-1-IN-1
+  search_term: '"MPS-1-IN-1"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:124930
+    HMS-LINCS: '10364'
+    LINCS: LSM-36387
+    PUBCHEM: '44464263'
+  name: MRT67307
+  search_term: '"MRT67307"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:63450
     HMS-LINCS: '10130'
     LINCS: LSM-1130
     PUBCHEM: '10074640'
   name: Masitinib
   search_term: '"Masitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94525
+    HMS-LINCS: '10312'
+    LINCS: LSM-5344
+    PUBCHEM: '9865515'
+  name: Mocetinostat
+  search_term: '"Mocetinostat"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91407
+    HMS-LINCS: '10140'
+    LINCS: LSM-1141
+    PUBCHEM: '25062766'
+  name: Momelotinib
+  search_term: '"Momelotinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:51098
@@ -1370,12 +7769,57 @@ search_terms:
   search_term: '"NMS-1286937"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:91369
+    HMS-LINCS: '10070'
+    LINCS: LSM-1070
+    PUBCHEM: '46843648'
+  name: NPK76-II-72-1
+  search_term: '"NPK76-II-72-1"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:92053
+    HMS-LINCS: '10266'
+    LINCS: LSM-2042
+    PUBCHEM: '379077'
+  name: NSC 663284
+  search_term: '"NSC 663284"'
+  type: drug
+- db_refs:
     CHEMBL: '472004'
     HMS-LINCS: '10297'
     LINCS: LSM-6314
     PUBCHEM: '5357795'
   name: NSC-87877
   search_term: '"NSC-87877"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10267'
+    LINCS: LSM-4287
+    PUBCHEM: '4566'
+  name: NU6102
+  search_term: '"NU6102"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91361
+    CHEMBL: '188678'
+    HMS-LINCS: '10061'
+    LINCS: LSM-1061
+    PUBCHEM: '11327430'
+  name: NU7441
+  search_term: '"NU7441"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10122'
+    LINCS: LSM-44953
+    PUBCHEM: '11476171'
+  name: NVP-AEW541
+  search_term: '"NVP-AEW541"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10349'
+    LINCS: LSM-6710
+  name: NVP-BGT226
+  search_term: '"NVP-BGT226"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91452
@@ -1393,6 +7837,14 @@ search_terms:
     PUBCHEM: '16038120'
   name: NVP-TAE684
   search_term: '"NVP-TAE684"'
+  type: drug
+- db_refs:
+    CHEMBL: '180022'
+    HMS-LINCS: '10018'
+    LINCS: LSM-42778
+    PUBCHEM: '53398697'
+  name: Neratinib
+  search_term: '"Neratinib"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:52172
@@ -1427,12 +7879,121 @@ search_terms:
   search_term: '"OSI-930"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:95088
+    HMS-LINCS: '10337'
+    LINCS: LSM-6340
+    PUBCHEM: '71543332'
+  name: OTSSP167
+  search_term: '"OTSSP167"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95093
+    HMS-LINCS: '10146'
+    LINCS: LSM-1147
+    PUBCHEM: '25167777'
+  name: Omipalisib
+  search_term: '"Omipalisib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:77954
+    HMS-LINCS: '10271'
+    LINCS: LSM-3394
+    PUBCHEM: '4713'
+  name: PD 98059
+  search_term: '"PD 98059"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:88249
+    HMS-LINCS: '10101'
+    LINCS: LSM-1101
+    PUBCHEM: '9826528'
+  name: PD0325901
+  search_term: '"PD0325901"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:63448
+    CHEMBL: '189584'
+    HMS-LINCS: '10026'
+    LINCS: LSM-1026
+    PUBCHEM: '1401'
+  name: PD173074
+  search_term: '"PD173074"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91353
+    HMS-LINCS: '10048'
+    LINCS: LSM-1048
+    PUBCHEM: '6918454'
+  name: PD184352
+  search_term: '"PD184352"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10476'
+    PUBCHEM: '44631903'
+  name: PF 3644022
+  search_term: '"PF 3644022"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91446
+    HMS-LINCS: '10199'
+    LINCS: LSM-1200
+    PUBCHEM: '11612883'
+  name: PF 573228
+  search_term: '"PF 573228"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10383'
+    PUBCHEM: '71731823'
+  name: PF-06463922
+  search_term: '"PF-06463922"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93751
+    HMS-LINCS: '10231'
+    LINCS: LSM-4254
+    PUBCHEM: '25227462'
+  name: PF-3758309
+  search_term: '"PF-3758309"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91425
+    HMS-LINCS: '10165'
+    LINCS: LSM-1166
+    PUBCHEM: '17754438'
+  name: PF04217903
+  search_term: '"PF04217903"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91388
+    HMS-LINCS: '10116'
+    LINCS: LSM-1116
+    PUBCHEM: '11598628'
+  name: PF431396
+  search_term: '"PF431396"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91385
+    HMS-LINCS: '10112'
+    LINCS: LSM-1112
+    PUBCHEM: '16750408'
+  name: PF477736
+  search_term: '"PF477736"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91370
     HMS-LINCS: '10072'
     LINCS: LSM-1072
     PUBCHEM: '11713159'
   name: PF562271
   search_term: '"PF562271"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:82715
+    HMS-LINCS: '10439'
+    LINCS: LSM-36373
+    PUBCHEM: '22049997'
+  name: PH-797804
+  search_term: '"PH-797804"'
   type: drug
 - db_refs:
     CHEMBL: '450786'
@@ -1443,6 +8004,52 @@ search_terms:
   search_term: '"PHA-665752"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:95058
+    HMS-LINCS: '10285'
+    LINCS: LSM-6304
+    PUBCHEM: '11715767'
+  name: PHA-767491
+  search_term: '"PHA-767491"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91371
+    HMS-LINCS: '10073'
+    LINCS: LSM-1073
+    PUBCHEM: '46191454'
+  name: PHA-793887
+  search_term: '"PHA-793887"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90524
+    CHEMBL: '538346'
+    HMS-LINCS: '10126'
+    LINCS: LSM-1126
+    PUBCHEM: '9884685'
+  name: PI103
+  search_term: '"PI103"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:71958
+    HMS-LINCS: '10173'
+    LINCS: LSM-1174
+    PUBCHEM: '49867926'
+  name: PI3K-IN-1
+  search_term: '"PI3K-IN-1"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10190'
+    LINCS: LSM-1191
+    PUBCHEM: '6852167'
+  name: PIK-93
+  search_term: '"PIK-93"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10425'
+    PUBCHEM: '1361334'
+  name: PIM12 kinase inhibitor V
+  search_term: '"PIM12 kinase inhibitor V"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91464
     CHEMBL: '338448'
     HMS-LINCS: '10220'
@@ -1450,6 +8057,14 @@ search_terms:
     PUBCHEM: '16760627'
   name: PKC412
   search_term: '"PKC412"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90295
+    HMS-LINCS: '10049'
+    LINCS: LSM-1049
+    PUBCHEM: '24180719'
+  name: PLX-4720
+  search_term: '"PLX-4720"'
   type: drug
 - db_refs:
     HMS-LINCS: '10405'
@@ -1470,6 +8085,15 @@ search_terms:
   search_term: '"Pacritinib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:85993
+    CHEMBL: '189963'
+    HMS-LINCS: '10071'
+    LINCS: LSM-1071
+    PUBCHEM: '5330286'
+  name: Palbociclib
+  search_term: '"Palbociclib"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:71219
     HMS-LINCS: '10114'
     LINCS: LSM-1114
@@ -1478,12 +8102,56 @@ search_terms:
   search_term: '"Pazopanib"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10159'
+    LINCS: LSM-1160
+    PUBCHEM: '216467'
+  name: Pelitinib
+  search_term: '"Pelitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:65326
+    CHEMBL: '521851'
+    HMS-LINCS: '10047'
+    LINCS: LSM-1047
+    PUBCHEM: '17755052'
+  name: Pictilisib
+  search_term: '"Pictilisib"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:78543
     HMS-LINCS: '10150'
     LINCS: LSM-1151
     PUBCHEM: '24826799'
   name: Ponatinib
   search_term: '"Ponatinib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10397'
+    PUBCHEM: '25127713'
+  name: Poziotinib
+  search_term: '"Poziotinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:47600
+    HMS-LINCS: '10273'
+    LINCS: LSM-3118
+    PUBCHEM: '456214'
+  name: Purvalanol A
+  search_term: '"Purvalanol A"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10075'
+    LINCS: LSM-5803
+  name: QL-X-138
+  search_term: '"QL-X-138"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94815
+    HMS-LINCS: '10077'
+    LINCS: LSM-6019
+    PUBCHEM: '71748056'
+  name: QL-XII-47
+  search_term: '"QL-XII-47"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91348
@@ -1502,6 +8170,43 @@ search_terms:
   search_term: '"RAF 265"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:95041
+    HMS-LINCS: '10302'
+    LINCS: LSM-6283
+    PUBCHEM: '702558'
+  name: RG-108
+  search_term: '"RG-108"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:38912
+    HMS-LINCS: '10407'
+    PUBCHEM: '5083'
+  name: RO 31-8220
+  search_term: '"RO 31-8220"'
+  type: drug
+- db_refs:
+    CHEMBL: '393929'
+    HMS-LINCS: '10104'
+    LINCS: LSM-42788
+    PUBCHEM: '71433937'
+  name: RO-3306
+  search_term: '"RO-3306"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:556075
+    HMS-LINCS: '10480'
+    LINCS: LSM-43318
+    PUBCHEM: '6323491'
+  name: Radicicol
+  search_term: '"Radicicol"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10438'
+    PUBCHEM: '11539025'
+  name: Ralimetinib
+  search_term: '"Ralimetinib"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:68647
     HMS-LINCS: '10225'
     LINCS: LSM-1226
@@ -1518,6 +8223,95 @@ search_terms:
   search_term: '"Resveratrol"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:63580
+    HMS-LINCS: '10516'
+    PUBCHEM: '37542'
+  name: Ribavirin
+  search_term: '"Ribavirin"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10395'
+    PUBCHEM: '44631912'
+  name: Ribociclib
+  search_term: '"Ribociclib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10184'
+    LINCS: LSM-44954
+  name: Rigosertib
+  search_term: '"Rigosertib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10448'
+    PUBCHEM: '23643976'
+  name: Riviciclib
+  search_term: '"Riviciclib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10517'
+    PUBCHEM: '127757'
+  name: Ro 32-0432
+  search_term: '"Ro 32-0432"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:66919
+    HMS-LINCS: '10138'
+    LINCS: LSM-1139
+    PUBCHEM: '25126798'
+  name: Ruxolitinib
+  search_term: '"Ruxolitinib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10385'
+    PUBCHEM: '50878566'
+  name: S-Ruxolitinib
+  search_term: '"S-Ruxolitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90705
+    HMS-LINCS: '10167'
+    LINCS: LSM-1168
+    PUBCHEM: '176155'
+  name: SB 203580
+  search_term: '"SB 203580"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91347
+    HMS-LINCS: '10036'
+    LINCS: LSM-44951
+    PUBCHEM: '5166'
+  name: SB 239063
+  search_term: '"SB 239063"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93782
+    HMS-LINCS: '10274'
+    LINCS: LSM-4293
+    PUBCHEM: '9883002'
+  name: SB-3CT
+  search_term: '"SB-3CT"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:92952
+    HMS-LINCS: '10441'
+    PUBCHEM: '5353940'
+  name: SB202190
+  search_term: '"SB202190"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10046'
+    LINCS: LSM-42746
+    PUBCHEM: '53239990'
+  name: SB590885
+  search_term: '"SB590885"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10442'
+    PUBCHEM: '24866313'
+  name: SCH772984
+  search_term: '"SCH772984"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:95061
     HMS-LINCS: '10288'
     LINCS: LSM-6307
@@ -1526,12 +8320,91 @@ search_terms:
   search_term: '"SGI-1776"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:90624
+    HMS-LINCS: '10123'
+    LINCS: LSM-1123
+    PUBCHEM: '24779724'
+  name: SGX523
+  search_term: '"SGX523"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:92375
+    HMS-LINCS: '10452'
+    PUBCHEM: '753704'
+  name: SKI II
+  search_term: '"SKI II"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91399
+    HMS-LINCS: '10132'
+    LINCS: LSM-1132
+    PUBCHEM: '3025986'
+  name: SNS-032
+  search_term: '"SNS-032"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90695
+    HMS-LINCS: '10162'
+    LINCS: LSM-1163
+    PUBCHEM: '8515'
+  name: SP600125
+  search_term: '"SP600125"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10384'
+    PUBCHEM: '25073775'
+  name: SR-2516
+  search_term: '"SR-2516"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10119'
+    LINCS: LSM-42791
+    PUBCHEM: '53396327'
+  name: SU11274
+  search_term: '"SU11274"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91462
+    CHEMBL: '605003'
+    HMS-LINCS: '10218'
+    LINCS: LSM-1219
+    PUBCHEM: '5309'
+  name: SU6656
+  search_term: '"SU6656"'
+  type: drug
+- db_refs:
     CHEMBL: '217092'
     HMS-LINCS: '10032'
     LINCS: LSM-1032
     PUBCHEM: '10302451'
   name: Saracatinib
   search_term: '"Saracatinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90227
+    HMS-LINCS: '10056'
+    LINCS: LSM-1056
+    PUBCHEM: '10127622'
+  name: Selumetinib
+  search_term: '"Selumetinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:81068
+    CHEMBL: '9470'
+    HMS-LINCS: '10291'
+    LINCS: LSM-6309
+    PUBCHEM: '479503'
+  name: Shikonin
+  search_term: '"Shikonin"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91346
+    CHEMBL: '258844'
+    HMS-LINCS: '10035'
+    LINCS: LSM-1035
+    PUBCHEM: '10196499'
+  name: Sigma A6730
+  search_term: '"Sigma A6730"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:50924
@@ -1543,6 +8416,19 @@ search_terms:
   search_term: '"Sorafenib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:90531
+    HMS-LINCS: '10408'
+    PUBCHEM: '10296883'
+  name: Sotrastaurin
+  search_term: '"Sotrastaurin"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10428'
+    PUBCHEM: '59174488'
+  name: Spebrutinib
+  search_term: '"Spebrutinib"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:15738
     CHEMBL: '388978'
     HMS-LINCS: '10103'
@@ -1552,11 +8438,10 @@ search_terms:
   search_term: '"Staurosporine"'
   type: drug
 - db_refs:
-    CHEBI: CHEBI:95256
-    HMS-LINCS: '10518'
-    PUBCHEM: '5352624'
-  name: Sulindac sulfide
-  search_term: '"Sulindac sulfide"'
+    HMS-LINCS: '10454'
+    PUBCHEM: '3815'
+  name: Staurosporine aglycone
+  search_term: '"Staurosporine aglycone"'
   type: drug
 - db_refs:
     CHEMBL: '535'
@@ -1567,12 +8452,89 @@ search_terms:
   search_term: '"Sunitinib"'
   type: drug
 - db_refs:
+    HMS-LINCS: '10409'
+    PUBCHEM: '46209401'
+  name: TAK-632
+  search_term: '"TAK-632"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91360
+    HMS-LINCS: '10060'
+    LINCS: LSM-1060
+    PUBCHEM: '9952773'
+  name: TAK-715
+  search_term: '"TAK-715"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95102
+    HMS-LINCS: '10276'
+    LINCS: LSM-6362
+    PUBCHEM: '11258443'
+  name: TCS 2312
+  search_term: '"TCS 2312"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91428
+    HMS-LINCS: '10171'
+    LINCS: LSM-1172
+    PUBCHEM: '9907093'
+  name: TGX221
+  search_term: '"TGX221"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91403
+    HMS-LINCS: '10136'
+    LINCS: LSM-1136
+    PUBCHEM: '9903786'
+  name: TPCA-1
+  search_term: '"TPCA-1"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10445'
+    LINCS: LSM-45140
+    PUBCHEM: '51001932'
+  name: Taselisib
+  search_term: '"Taselisib"'
+  type: drug
+- db_refs:
+    CHEMBL: '428647'
+    HMS-LINCS: '10102'
+    LINCS: LSM-1102
+    PUBCHEM: '441276'
+  name: Taxol
+  search_term: '"Taxol"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:91327
     HMS-LINCS: '10005'
     LINCS: LSM-1005
     PUBCHEM: '9911830'
   name: Tivozanib
   search_term: '"Tivozanib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:71200
+    HMS-LINCS: '10226'
+    LINCS: LSM-1227
+    PUBCHEM: '9926791'
+  name: Tofacitinib
+  search_term: '"Tofacitinib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:84327
+    HMS-LINCS: '10079'
+    LINCS: LSM-1079
+    PUBCHEM: '49836027'
+  name: Torin1
+  search_term: '"Torin1"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90682
+    HMS-LINCS: '10080'
+    LINCS: LSM-1080
+    PUBCHEM: '51358113'
+  name: Torin2
+  search_term: '"Torin2"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:91336
@@ -1584,10 +8546,62 @@ search_terms:
   search_term: '"Tozasertib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:75998
+    HMS-LINCS: '10142'
+    LINCS: LSM-1143
+    PUBCHEM: '11707110'
+  name: Trametinib
+  search_term: '"Trametinib"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10279'
+    LINCS: LSM-43005
+  name: Trichostatin A
+  search_term: '"Trichostatin A"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:65310
+    HMS-LINCS: '10280'
+    LINCS: LSM-3810
+    PUBCHEM: '65399'
+  name: Triciribine
+  search_term: '"Triciribine"'
+  type: drug
+- db_refs:
+    CHEMBL: '34704'
+    HMS-LINCS: '10219'
+    LINCS: LSM-42806
+    PUBCHEM: '5637'
+  name: U-0126
+  search_term: '"U-0126"'
+  type: drug
+- db_refs:
     HMS-LINCS: '10453'
     PUBCHEM: '54764565'
   name: URMC-099
   search_term: '"URMC-099"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:95049
+    HMS-LINCS: '10422'
+    PUBCHEM: '11634725'
+  name: VX-11e
+  search_term: '"VX-11e"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:94489
+    HMS-LINCS: '10440'
+    PUBCHEM: '10341154'
+  name: VX-702
+  search_term: '"VX-702"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90528
+    HMS-LINCS: '10168'
+    LINCS: LSM-1169
+    PUBCHEM: '3038525'
+  name: VX-745
+  search_term: '"VX-745"'
   type: drug
 - db_refs:
     CHEBI: CHEBI:49960
@@ -1598,6 +8612,61 @@ search_terms:
   search_term: '"Vandetanib"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:63637
+    HMS-LINCS: '10068'
+    LINCS: LSM-1068
+    PUBCHEM: '42611257'
+  name: Vemurafenib
+  search_term: '"Vemurafenib"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:28445
+    HMS-LINCS: '10488'
+    PUBCHEM: '5978'
+  name: Vincristine
+  search_term: '"Vincristine"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:480999
+    HMS-LINCS: '10281'
+    LINCS: LSM-6302
+    PUBCHEM: '5311497'
+  name: Vinorelbine
+  search_term: '"Vinorelbine"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:45716
+    HMS-LINCS: '10282'
+    LINCS: LSM-3828
+    PUBCHEM: '5311'
+  name: Vorinostat
+  search_term: '"Vorinostat"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10038'
+    LINCS: LSM-5613
+  name: WH-4-023
+  search_term: '"WH-4-023"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10039'
+    LINCS: LSM-44937
+  name: WH-4-025
+  search_term: '"WH-4-025"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10082'
+    LINCS: LSM-5545
+  name: WZ-4-145
+  search_term: '"WZ-4-145"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10083'
+    LINCS: LSM-5749
+  name: WZ-7043
+  search_term: '"WZ-7043"'
+  type: drug
+- db_refs:
     CHEBI: CHEBI:94800
     HMS-LINCS: '10084'
     LINCS: LSM-5970
@@ -1606,8 +8675,98 @@ search_terms:
   search_term: '"WZ3105"'
   type: drug
 - db_refs:
+    CHEBI: CHEBI:61400
+    HMS-LINCS: '10085'
+    LINCS: LSM-1085
+    PUBCHEM: '44607530'
+  name: WZ4002
+  search_term: '"WZ4002"'
+  type: drug
+- db_refs:
     HMS-LINCS: '10388'
     PUBCHEM: '57990869'
   name: XL019
   search_term: '"XL019"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91411
+    HMS-LINCS: '10148'
+    LINCS: LSM-1149
+    PUBCHEM: '52914932'
+  name: XL147
+  search_term: '"XL147"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:124914
+    HMS-LINCS: '10357'
+    LINCS: LSM-36356
+    PUBCHEM: '16123056'
+  name: XL765
+  search_term: '"XL765"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:78413
+    HMS-LINCS: '10086'
+    LINCS: LSM-1086
+    PUBCHEM: '46843906'
+  name: XMD11-50
+  search_term: '"XMD11-50"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10087'
+    LINCS: LSM-5577
+  name: XMD11-85h
+  search_term: '"XMD11-85h"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10091'
+    LINCS: LSM-43287
+  name: XMD16-144
+  search_term: '"XMD16-144"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:93787
+    HMS-LINCS: '10283'
+    LINCS: LSM-4298
+    PUBCHEM: '10339779'
+  name: XRP44X
+  search_term: '"XRP44X"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91431
+    HMS-LINCS: '10176'
+    LINCS: LSM-1177
+    PUBCHEM: '5711'
+  name: Y-27632
+  search_term: '"Y-27632"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91412
+    HMS-LINCS: '10149'
+    LINCS: LSM-1150
+    PUBCHEM: '9810884'
+  name: Y39983
+  search_term: '"Y39983"'
+  type: drug
+- db_refs:
+    HMS-LINCS: '10095'
+    LINCS: LSM-43288
+  name: ZG-10
+  search_term: '"ZG-10"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:91376
+    HMS-LINCS: '10096'
+    LINCS: LSM-1096
+    PUBCHEM: '9914412'
+  name: ZM-447439
+  search_term: '"ZM-447439"'
+  type: drug
+- db_refs:
+    CHEBI: CHEBI:90545
+    HMS-LINCS: '10053'
+    LINCS: LSM-1053
+    PUBCHEM: '11647372'
+  name: ZSTK474
+  search_term: '"ZSTK474"'
   type: drug
