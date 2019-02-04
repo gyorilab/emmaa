@@ -6,10 +6,10 @@ direct implementations of the different services.
 
 General Docs: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
 
-Docs for S3 serivces:
+Docs for the S3 serivce:
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
 
-Docs for cognito services:
+Docs for the cognito services:
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentity.html
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityCredentials.html
@@ -52,7 +52,8 @@ function _getNewStateValue() {
 }
 
 function checkLatestModelsUpdate() {
-  listObjectsInBucketUnAuthenticated('modelUpdate', null, new AWS.S3(), EMMMAA_BUCKET, 'models', 100, '.pkl')
+  //                   mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
+  listObjectsInBucketUnAuthenticated('modelUpdate', null, null, new AWS.S3(), EMMMAA_BUCKET, 'models', 100, '.pkl')
 }
 
 function modelsLastUpdated(keyMapArray, endsWith) {
@@ -124,8 +125,68 @@ function getModels(keyMapArray, endsWith) {
   return models;
 }
 
-function listObjectsInBucketUnAuthenticated(mode, tableBody, s3Interface, bucket, prefix, maxKeys, endsWith) {
-  // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
+function getTestResultJsonToTable(testResultTableBody, jsonKey) {
+  console.log('function getTestResultJsonToTable(testResultTableBody, jsonKey)');
+  console.log(testResultTableBody);
+  console.log('jsonKey: ' + jsonKey);
+  console.log('EMMMAA_BUCKET: ' + EMMMAA_BUCKET);
+  let jsonPromise = getPublicJson(EMMMAA_BUCKET, jsonKey);
+  jsonPromise.then(function(json){
+    populateTestResultTable(testResultTableBody, json);
+  })
+}
+
+function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith) {
+  console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
+  
+  // get array of filtered object keys
+  let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith)
+  let sortedTestJsonsArray = testJsonsArray.sort();
+  
+  // loop the sorted array in reverse alphbetical order (newest first)
+  for (let i = sortedTestJsonsArray.length-1; i >= 0; i--) {
+    var testString = ''
+    if (sortedTestJsonsArray[i].split('/')[2].includes('_')) {
+      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0].split('_')[1];
+    } else {
+      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0];
+    }
+    link = document.createElement('a');
+    link.textContent = testString;
+    link.href = '#Test Result Details'
+    link.value = sortedTestJsonsArray[i]
+    link.onclick = function() { // Attach function call to link
+      getTestResultJsonToTable(testResultTableBody, this.value);
+    }
+
+    let tableRow = addToRow(model, '');
+    tableRow.children[1].innerHTML = null;
+    tableRow.children[1].appendChild(link);
+
+    tableBody.appendChild(tableRow);
+  }
+}
+
+function getArrayOfModelTests(model, keyMapArray, endsWith) {
+  console.log('function getArrayOfModelTests(model, keyMapArray, endsWith)');
+  //  for each object ket
+  //    if key.endswith(endsWith) & correct prefix
+  //      save to list
+  var tests = [];
+  for (object of keyMapArray) {
+    if (object.Key.endsWith(endsWith) & object.Key.split('/')[1] == model & object.Key.split('/').length == 3) {
+      tests.push(object.Key);
+    }
+  }
+  if (tests.length > 0) {
+    console.log('Non-zero array of test jsons resolved')
+    console.log(tests)
+  }
+  return tests;
+}
+
+function listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith) {
+  console.log('listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith)')
   let _maxKeys = 1000
   if (maxKeys & maxKeys < _maxKeys) {
     _maxKeys = maxKeys;
@@ -141,10 +202,16 @@ function listObjectsInBucketUnAuthenticated(mode, tableBody, s3Interface, bucket
       // console.log('List of objects resolved from S3')
       // console.log(data)
       switch (mode) {
+        // Update last time models were updated
         case 'modelUpdate':
           modelsLastUpdated(data.Contents, endsWith)
           break;
-
+        // List tests for selected model on models page
+        case 'listModelTests':
+          // tableBody, testResultTableBody, keyMapArray, model, endsWith
+          console.log('case "listModelTests"')
+          listModelTests(tableBody, testResultTableBody, data.Contents, model, endsWith);
+          break;
         // Default behaviour: just list key,value pairs in table
         default:
           let tableBodyTag = document.getElementById(tableBody);

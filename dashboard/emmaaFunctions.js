@@ -89,8 +89,8 @@ function setModel(ddSelect, model) {
   }      
 }
 
-function selectModel(infoTableBody, testResultsTableBody, ddSelect) {
-  console.log('function selectModel(infoTableBody, testResultsTableBody, ddSelect)')
+function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) {
+  console.log('function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect)')
   // Get selected option
   var model = '';
   for (child of ddSelect.children) {
@@ -99,22 +99,16 @@ function selectModel(infoTableBody, testResultsTableBody, ddSelect) {
       break;
     }
   }
-  if (model == 'test') {
-    let promises = [];
-    // FIXME 
-    testKey = 'results/test/results_2019-01-31-19-44-26.json'; // Replace with funtion return that grabs latest test of 'model'
-    modelKey = 'models/rasmodel/rasmodel_json.json'; // Replace with function return that grabs latest model of 'model' 
-    promises.push(getPublicJson(EMMMAA_BUCKET, modelKey))
-    promises.push(getPublicJson(EMMMAA_BUCKET, testKey))
-    Promise.all(promises).then(function(jsonArray){
-      console.log(jsonArray)
-      populateModelsTable(infoTableBody, JSON.parse(jsonArray[0])) // Parse the jsonstring saved on S3 for the model
-      populateTestResultTable(testResultsTableBody, jsonArray[1][0]) //
-    })
-  } else {
-    modelKey = 'models/' + model + '/' + model + '_model_meta.json';
-    loadModelMetaData(infoTableBody, EMMMAA_BUCKET, modelKey);
-  }
+
+  endsWith = '.json'
+  maxKeys = 1000
+  prefix = 'results';
+
+  // List model info
+  // FIXME add call to list model test
+
+  // Pass tables, model and mode to function that lists the 
+  listObjectsInBucketUnAuthenticated('listModelTests', listTestResultsTableBody, testResultTableBody, new AWS.S3(), EMMMAA_BUCKET, model, prefix, maxKeys, endsWith)
 }
 
 function loadModelMetaData(modelInfoTable, bucket, modelKey) {
@@ -127,8 +121,12 @@ function loadModelMetaData(modelInfoTable, bucket, modelKey) {
 
 function clearTables(arrayOfTableBodys) {
   for (tableBody of arrayOfTableBodys) {
-    tableBody.innerHTML = null;
+    clearTable(tableBody)
   }
+}
+
+function clearTable(tableBody) {
+  tableBody.innerHTML = null;
 }
 
 // Creates a new two-column table row with the key value pair
@@ -149,13 +147,13 @@ function addToRow(col1, col2) {
 function populateModelsTable(metaTableBody, json) {
   console.log('function populateModelsTable(metaTableBody, json)')
   // console.log(json)
-  clearTables(document.getElementsByClassName('table-body'));
+  clearTable(metaTableBody);
 
   // Get english statements from evidence text
   // Link out to restAPI html page with all statements
   let maxOutput = Math.min(json.length, 25)
   for (let i = 0; i < maxOutput; i++) {
-    console.log('Loop ' + i)
+    // console.log('Loop ' + i)
     let plainEnglish = json[i].stmt.evidence[0].text;
     let sourceHash = json[i].stmt.evidence[0].source_hash;
     link = document.createElement('a')
@@ -176,13 +174,21 @@ function populateModelsTable(metaTableBody, json) {
 
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
-  // let tableBody = document.getElementById('modelTestResultBody');
-  clearTables(document.getElementsByClassName('table-body'));
+  console.log('function populateTestResultTable(tableBody, json)')
+  console.log(json)
+  clearTable(tableBody);
 
-  let results = json.result_json;
-
-  tableBody.appendChild(addToRow('Model Name', json.model_name));
-  tableBody.appendChild(addToRow('Test Type', json.test_type));
+  // FIXME handle resultsjsons of length > 1
+  var results = {};
+  if (!json.result_json) {
+    results = json[0].result_json;
+    tableBody.appendChild(addToRow('Model Name', json[0].model_name));
+    tableBody.appendChild(addToRow('Test Type', json[0].test_type));
+  } else {
+    results = json.result_json;
+    tableBody.appendChild(addToRow('Model Name', json.model_name));
+    tableBody.appendChild(addToRow('Test Type', json.test_type));
+  }
 
   // Results contents: 
   // max_path_length: int (e.g. 5)
@@ -216,3 +222,12 @@ function getEnglishByJson(json_stmt_array) {
     });
     return eng_stmt
 };
+
+function sortByCol(arr, colIndex){
+  arr.sort(sortFunction)
+  function sortFunction(a, b) {
+    a = a[colIndex]
+    b = b[colIndex]
+    return (a === b) ? 0 : (a < b) ? -1 : 1
+  }
+}
