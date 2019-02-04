@@ -26,6 +26,7 @@
   <script>
     // Check if user signed in immediately after page load
     $(document).ready(function(){
+      clearTables(document.getElementsByClassName('table-body'))
       console.log('document ready')
       var return_url = window.location.href;
       let url_dict = getDictFromUrl(return_url);
@@ -54,7 +55,7 @@
 
         if (model == 'test') {
           let promises = [];
-          // FIXME 
+          // FIXME: should grab which model is selected and list its latest tests
           testKey = 'results/test/results_2019-01-31-19-44-26.json'; // Replace with funtion return that grabs latest test of 'model'
           modelKey = 'models/rasmodel/rasmodel_json.json'; // Replace with function return that grabs latest model of 'model' 
           promises.push(getPublicJson(EMMMAA_BUCKET, modelKey))
@@ -93,8 +94,13 @@
         <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
         <option value="test">Test Model (test)</option>
       </select>
+      <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
       <div class="input-group-append">
-        <button class="btn btn-outline-secondary" onClick="selectModel(document.getElementById('modelInfoTableBody'), document.getElementById('modelTestResultBody'), this.parentNode.previousElementSibling)" type="button">Load Model</button>
+        <button class="btn btn-outline-secondary" onClick="selectModel(
+        document.getElementById('modelInfoTableBody'), 
+        document.getElementById('modelTestsTableBody'), 
+        document.getElementById('modelTestResultBody'), 
+        this.parentNode.previousElementSibling)" type="button">Load Model</button>
       </div>
     </div>
   </div>
