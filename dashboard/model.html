@@ -80,6 +80,7 @@
     <hr>
   </div>
 
+  <!-- Dropdown -->
   <div class="container">
     <div class="input-group">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
@@ -116,11 +117,11 @@
     </div>
   </div>
 
-  <!-- This table lists the tests -->
+  <!-- This table lists the tests for the selected model -->
   <div class="container" id="modelTestsTable">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Latest Tests</h4>
+        <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Tests</h4>
       </div>
       <div class="card-body">
         <table class="table">
@@ -134,7 +135,7 @@
     </div>
   </div>
 
-  <!-- This table shows the contents of a test json -->
+  <!-- This table shows the contents of a json containning test results for a particular test -->
   <div class="container" id="modelTestResult">
     <div class="card">
       <div class="card-header">
