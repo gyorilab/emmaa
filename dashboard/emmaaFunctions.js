@@ -172,6 +172,14 @@ function populateModelsTable(metaTableBody, json) {
   }
 }
 
+function getTestResultJsonToTable(testResultTableBody, jsonKey) {
+  console.log('function getTestResultJsonToTable(testResultTableBody, jsonKey)');
+  let jsonPromise = getPublicJson(EMMMAA_BUCKET, jsonKey);
+  jsonPromise.then(function(json){
+    populateTestResultTable(testResultTableBody, json);
+  })
+}
+
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
   console.log('function populateTestResultTable(tableBody, json)')
@@ -205,6 +213,125 @@ function populateTestResultTable(tableBody, json) {
   tableBody.appendChild(addToRow('Number of Paths', results.paths.length));
   tableBody.appendChild(addToRow('Results Code', results.result_code));
 }
+
+function modelsLastUpdated(keyMapArray, endsWith) {
+  //  for each model:
+  //    get list of all pickles
+  //    sort list descending, alphabetical, order
+  //    get first (i.e. latest) item
+  //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
+  console.log('Objects in bucket: ')
+  console.log(keyMapArray)
+  let modelsMapArray = getModels(keyMapArray, endsWith)
+  console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
+  console.log(modelsMapArray)
+
+  let modelUpdateTagsArray = document.getElementsByClassName('modelUpdateInfo')
+  for (tag of modelUpdateTagsArray) {
+    let model = tag.getAttribute('id').split('Update')[0]
+    if (model) {
+      lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
+      tag.textContent = 'Last updated: ' + lastUpdated;
+    }
+  }
+}
+
+function getModels(keyMapArray, endsWith) {
+  console.log('function getModels(keyMapArray, endsWith)')
+  var models = {'aml': [],
+                'brca': [],
+                'luad': [],
+                'paad': [],
+                'prad': [],
+                'skcm': [],
+                'rasmodel': [],
+                'test': []}
+  for (keyItem of keyMapArray) {
+    if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
+      let model = keyItem.Key.split('/')[1]
+      switch (model) {
+        case 'aml':
+          models[model].push(keyItem.Key.split('/')[2])
+          break;
+        case 'brca':
+          models[model].push(keyItem.Key.split('/')[2])
+          break;
+        case 'luad':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        case 'paad':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        case 'prad':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        case 'skcm':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        case 'rasmodel':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        case 'test':
+          models[model].push(keyItem.Key.split('/')[2])
+          break
+        default:
+          console.log('Unhandled model ' + model)
+          break
+      }
+    }
+  }
+  return models;
+}
+
+function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith) {
+  console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
+  
+  // get array of filtered object keys
+  let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith)
+  let sortedTestJsonsArray = testJsonsArray.sort();
+  
+  // loop the sorted array in reverse alphbetical order (newest first)
+  for (let i = sortedTestJsonsArray.length-1; i >= 0; i--) {
+    var testString = ''
+    if (sortedTestJsonsArray[i].split('/')[2].includes('_')) {
+      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0].split('_')[1];
+    } else {
+      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0];
+    }
+    link = document.createElement('a');
+    link.textContent = testString;
+    link.href = '#Test Result Details'
+    link.value = sortedTestJsonsArray[i]
+    link.onclick = function() { // Attach function call to link
+      getTestResultJsonToTable(testResultTableBody, this.value);
+    }
+
+    let tableRow = addToRow(model, '');
+    tableRow.children[1].innerHTML = null;
+    tableRow.children[1].appendChild(link);
+
+    tableBody.appendChild(tableRow);
+  }
+}
+
+function getArrayOfModelTests(model, keyMapArray, endsWith) {
+  console.log('function getArrayOfModelTests(model, keyMapArray, endsWith)');
+  //  for each object ket
+  //    if key.endswith(endsWith) & correct prefix
+  //      save to list
+  var tests = [];
+  for (object of keyMapArray) {
+    if (object.Key.endsWith(endsWith) & object.Key.split('/')[1] == model & object.Key.split('/').length == 3) {
+      tests.push(object.Key);
+    }
+  }
+  // if (tests.length > 0) {
+  //   console.log('Non-zero array of test jsons resolved')
+  //   console.log(tests)
+  // }
+  return tests;
+}
+
 
 // CHANGE TEXT
 function notifyUser(outputNode, outputText) {
