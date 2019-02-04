@@ -60,14 +60,19 @@ function _writeCookie(cookieName, value, hours) {
 }
 
 function getDictFromUrl(url) {
+  console.log('function getDictFromUrl(url)')
   // No url provided
   if (!url) return;
+  let returnArray = [];
   var query = {};
+  var usedSplit = '';
   // Check if (authorization) code flow or token (implicit) flow
   if (url.split('#')[1]) {
     query = url.split('#')[1];
+    usedSplit = '#'
   } else if (url.split('?')[1]) {
     query = url.split('?')[1];
+    usedSplit = '?'
   } else return;
   
   var result = {};
@@ -75,7 +80,12 @@ function getDictFromUrl(url) {
     var item = part.split("=");
     result[item[0]] = decodeURIComponent(item[1]);
   });
-  return result;
+
+  returnArray.push(result)
+  returnArray.push(split)
+  console.log('returnArray: ')
+  console.log(returnArray)
+  return returnArray;
 }
 
 function setModel(ddSelect, model) {

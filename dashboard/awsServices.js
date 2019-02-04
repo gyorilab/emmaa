@@ -228,7 +228,7 @@ function checkSignIn() {
   STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
   let return_url = window.location.href;
   console.log('Return url: ' + return_url);
-  url_dict = getDictFromUrl(return_url);
+  url_dict = getDictFromUrl(return_url)[0];
 
   // No dict returned. Probably at first visit to page
   if (!url_dict) return;

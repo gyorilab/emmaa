@@ -29,7 +29,7 @@
       clearTables(document.getElementsByClassName('table-body'))
       console.log('document ready')
       var return_url = window.location.href;
-      let url_dict = getDictFromUrl(return_url);
+      let dict_split = getDictFromUrl(return_url);
 
       // Get access and ID tokens
       // accessTokenString = _readCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME)
@@ -46,8 +46,8 @@
       // verifyUser(accessTokenString, idTokenString);
 
       // If linked from model name: load that model
-      if (url_dict) {
-        let model = url_dict['model'];
+      if (dict_split && dict_split[1] == '?') {
+        let model = dict_split[0]['model'];
         // Set the model to the one that is selected
         setModel(document.getElementById('modelSelectDD'), model);
         var infoTableBody = document.getElementById('modelInfoTableBody');
