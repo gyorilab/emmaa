@@ -4,7 +4,7 @@ import pickle
 from indra.tools.reading.submit_reading_pipeline import wait_for_complete
 
 from emmaa.aws_lambda.script import lambda_handler, QUEUE
-from emmaa.util import make_now_str
+from emmaa.util import make_date_str
 
 RUN_STATI = ['SUBMITTED', 'PENDING', 'RUNNABLE', 'RUNNING']
 DONE_STATI = ['SUCCEEDED', 'FAILED']
@@ -21,7 +21,7 @@ def __get_jobs(batch):
 
 def test_handler():
     """Test the lambda handler locally."""
-    dts = make_now_str()
+    dts = make_date_str()
     key = f'models/test/test_model_{dts}.pkl'
     event = {'Records': [{'s3': {'object': {'key': key}}}]}
     context = None
@@ -52,7 +52,7 @@ def test_s3_response():
     batch = boto3.client('batch')
 
     # Define some fairly random parameters.
-    key = f'models/test/model_{make_now_str()}.pkl'
+    key = f'models/test/model_{make_date_str()}.pkl'
     data = {'test_message': 'Hello world!'}
 
     # This should trigger the lambda to start a batch job.
