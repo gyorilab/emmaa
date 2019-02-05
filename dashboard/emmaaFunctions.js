@@ -21,6 +21,10 @@ function grabJSON (url, callback) {
   return $.ajax({url: url, dataType: "json"});
 };
 
+function grabPlainText (url, callback) {
+  return $.ajax({url: url, dataType: "text"});
+}
+
 function _readCookie(cookieName) {
   console.log('function _readCookie()')
   var nameEQ = cookieName;
@@ -82,7 +86,7 @@ function getDictFromUrl(url) {
   });
 
   returnArray.push(result)
-  returnArray.push(split)
+  returnArray.push(usedSplit)
   console.log('returnArray: ')
   console.log(returnArray)
   return returnArray;
@@ -110,23 +114,24 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
-  endsWith = '.json'
-  maxKeys = 1000
-  prefix = 'results';
+  endsWith = '.json';
+  maxKeys = 1000;
+  resultsPrefix = 'results';
+  modelsPrefix = 'models';
+  let s3Interface = new AWS.S3();
 
   // List model info
-  // FIXME add call to list model test
+  loadModelMetaData(modelInfoTableBody, EMMMAA_BUCKET, model, maxKeys, modelsPrefix, '.pkl')
 
-  // Pass tables, model and mode to function that lists the 
-  listObjectsInBucketUnAuthenticated('listModelTests', listTestResultsTableBody, testResultTableBody, new AWS.S3(), EMMMAA_BUCKET, model, prefix, maxKeys, endsWith)
+  // Pass tables, model and mode to function that lists the latest tests
+  listObjectsInBucketUnAuthenticated('listModelTests', listTestResultsTableBody, testResultTableBody, s3Interface, EMMMAA_BUCKET, model, resultsPrefix, maxKeys, endsWith)
 }
 
-function loadModelMetaData(modelInfoTable, bucket, modelKey) {
-  console.log('function loadModelMetaData(bucket, modelKey)')
-  modelMetaInfoPromise = getPublicJson(bucket, modelKey)
-  modelMetaInfoPromise.then(function(json) {
-    populateModelsTable(modelInfoTable, json);
-  });
+function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith) {
+  console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
+  // wrapper function that can be called selectModel or from pageload of models.html
+  // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
+  listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, prefix, maxKeys, endsWith)
 }
 
 function clearTables(arrayOfTableBodys) {
@@ -224,6 +229,75 @@ function populateTestResultTable(tableBody, json) {
   tableBody.appendChild(addToRow('Results Code', results.result_code));
 }
 
+function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
+  console.log('listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)')
+  // 1. Last updated: get from listing models using already created function
+  // 2. NDEX link-out: read yaml as plain text and reg-exp match your way to the NDEX if
+  // 3. Possibly listing nodes and edges info (Q: from where? A: From the json files that don't exist yet)
+
+  // Get an array of the models for model
+  modelsMapArray = getModels(model, keyMapArray, endsWith)
+  // console.log('modelsMapArray')
+  // console.log(modelsMapArray)
+  var lastUpdated = ''
+  if (modelsMapArray[model].sort()[modelsMapArray[model].length - 1].includes('_')) {
+    lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
+  } else {
+    lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0]
+  }
+  modelInfoTableBody.appendChild(addToRow('Last updated', lastUpdated))
+
+  // Get NDEX id from YAML
+  // let yamlKey = 'models/' + model + '/config.yaml';
+  // console.log('yamlPromise')
+  // console.log(yamlPromise)
+  // yamlPromise.then(function(jsonText){
+  //   console.log('Resovled YAML file as:')
+  //   console.log(jsonText)
+  //   console.log('reg-exp match')
+  //   console.log(jsonText.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1]);
+
+  //   let ndexID = jsonText.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1];
+    
+  //   let link = document.createElement('a')
+  //   link.textContent = ndexID;
+  //   link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
+    
+  //   tableRow = addToRow('Network on NDEX', '')
+  //   tableRow[1].innerHTML = null;
+  //   tableRow[1].appendChild(link)
+    
+  //   modelInfoTableBody.appendChild(tableRow)
+  // })
+
+  console.log('Hello')
+  var yamlURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.yaml';
+  var yamlPromise = $.ajax({
+    url: yamlURL,
+    dataType: "text",
+    success: function(response) {
+      // console.log(response)
+      // console.log(response.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1]);
+      let ndexID = response.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1];
+      let link = document.createElement('a');
+      link.textContent = ndexID;
+      link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
+      
+      tableRow = addToRow('Network on NDEX', '');
+      tableRow.children[1].innerHTML = null;
+      tableRow.children[1].appendChild(link);
+      
+      modelInfoTableBody.appendChild(tableRow);
+      }
+  });
+
+  // List info from json of model
+  // modelMetaInfoPromise = getPublicJson(bucket, modelKey)
+  // modelMetaInfoPromise.then(function(json) {
+  //   populateModelsTable(modelInfoTable, json);
+  // });
+}
+
 function modelsLastUpdated(keyMapArray, endsWith) {
   //  for each model:
   //    get list of all pickles
@@ -232,7 +306,7 @@ function modelsLastUpdated(keyMapArray, endsWith) {
   //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
   console.log('Objects in bucket: ')
   console.log(keyMapArray)
-  let modelsMapArray = getModels(keyMapArray, endsWith)
+  let modelsMapArray = getModels(null, keyMapArray, endsWith)
   console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
   console.log(modelsMapArray)
 
@@ -246,8 +320,8 @@ function modelsLastUpdated(keyMapArray, endsWith) {
   }
 }
 
-function getModels(keyMapArray, endsWith) {
-  console.log('function getModels(keyMapArray, endsWith)')
+function getModels(findModel, keyMapArray, endsWith) {
+  console.log('function getModels(findModel, keyMapArray, endsWith)')
   var models = {'aml': [],
                 'brca': [],
                 'luad': [],
@@ -259,34 +333,16 @@ function getModels(keyMapArray, endsWith) {
   for (keyItem of keyMapArray) {
     if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
       let model = keyItem.Key.split('/')[1]
-      switch (model) {
-        case 'aml':
+      if (!findModel) {
+        // Save all models
+        if (model) {
           models[model].push(keyItem.Key.split('/')[2])
-          break;
-        case 'brca':
+        } else console.log('Unhandled model ' + model)
+      } else {
+        // Save just the model we're interested in
+        if (findModel && findModel == model) {
           models[model].push(keyItem.Key.split('/')[2])
-          break;
-        case 'luad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'paad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'prad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'skcm':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'rasmodel':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'test':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        default:
-          console.log('Unhandled model ' + model)
-          break
+        }
       }
     }
   }

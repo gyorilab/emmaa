@@ -52,8 +52,8 @@ function _getNewStateValue() {
 }
 
 function checkLatestModelsUpdate() {
-  //                   mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
-  listObjectsInBucketUnAuthenticated('modelUpdate', null, null, new AWS.S3(), EMMMAA_BUCKET, 'models', 100, '.pkl')
+  //                               mode, tableBody, testResultTableBody, s3Interface,      bucket, model, prefix, maxKeys, endsWith
+  listObjectsInBucketUnAuthenticated('modelsLastUpdated', null, null, new AWS.S3(), EMMMAA_BUCKET, null, 'models', 1000, '.pkl')
 }
 
 function listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith) {
@@ -73,8 +73,13 @@ function listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody
       // console.log('List of objects resolved from S3')
       // console.log(data)
       switch (mode) {
-        // Update last time models were updated
-        case 'modelUpdate':
+        // get last time a specific model was updated
+        case 'listModelInfo':
+          // Populates the model info table (passed as tableBody)
+          listModelInfo(tableBody, data.Contents, bucket, model, endsWith)
+          break;
+        // List last time models were updated
+        case 'modelsLastUpdated': // was 'modelUpdate'
           modelsLastUpdated(data.Contents, endsWith)
           break;
         // List tests for selected model on models page
@@ -228,15 +233,15 @@ function checkSignIn() {
   STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
   let return_url = window.location.href;
   console.log('Return url: ' + return_url);
-  url_dict = getDictFromUrl(return_url)[0];
+  let dict_split = getDictFromUrl(return_url);
 
   // No dict returned. Probably at first visit to page
-  if (!url_dict) return;
+  if (!dict_split) return;
   // console.log('returned url_dict')
-  // console.log(url_dict)
+  // console.log(dict_split[0])
 
   // State value does not match, do not proceed; Simple first layer security
-  if (url_dict['state'] != STATE_VALUE) {
+  if (dict_split && dict_split[0]['state'] != STATE_VALUE) {
     console.log('State Value does not match');
     let outputNode = document.getElementById(NOTIFY_STRING)
     notifyUser(outputNode, 'State Value does not match');
@@ -244,9 +249,9 @@ function checkSignIn() {
   };
 
   // Check if token flow
-  if (url_dict['access_token']) {
+  if (dict_split && dict_split[0]['access_token']) {
     console.log('token from authorization-endpoint')
-    if (verifyUser(url_dict['access_token'], url_dict['id_token'])) {
+    if (verifyUser(dict_split[0]['access_token'], dict_split[0]['id_token'])) {
       console.log('User verified')
     } else {
       console.log('User could not be verified...')
@@ -310,6 +315,8 @@ function addUserToIdentityCredentials(userIdToken) {
 
 // Can be used when something is public on S3
 function getPublicJson(bucket, key) {
+  console.log('function getPublicJson(bucket, key)')
+  console.log('bukcet: ' + bucket + ', key: ' + key)
   // For production: get list of results and select based on some criteria
   base_url = 'https://s3.amazonaws.com'
   pathString = '/' + bucket + '/' + key;
