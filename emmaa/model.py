@@ -144,7 +144,7 @@ class EmmaaModel(object):
                           Key=fname+'.pkl')
         # Dump as json
         client.put_object(Body=str.encode(json.dumps(stmts_to_json(
-            self.stmts))), Bucket='emmaa', Key=fname+'.json')
+            self.stmts)), encoding='utf8'), Bucket='emmaa', Key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name):
