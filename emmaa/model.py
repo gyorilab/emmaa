@@ -1,4 +1,5 @@
 import yaml
+import json
 import time
 import boto3
 import pickle
@@ -6,6 +7,7 @@ import logging
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
+from indra.statements import stmts_to_json
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from emmaa.priors import SearchTerm
@@ -135,10 +137,14 @@ class EmmaaModel(object):
     def save_to_s3(self):
         """Dump the model state to S3."""
         date_str = make_date_str()
-        fname = f'models/{self.name}/model_{date_str}.pkl'
+        fname = f'models/{self.name}/model_{date_str}'
         client = boto3.client('s3')
+        # Dump as pickle
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
-                          Key=fname)
+                          Key=fname+'.pkl')
+        # Dump as json
+        client.put_object(Body=str.encode(json.dumps(stmts_to_json(
+            self.stmts))), Bucket='emmaa', Key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name):
@@ -190,5 +196,3 @@ class EmmaaModel(object):
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
-
-
