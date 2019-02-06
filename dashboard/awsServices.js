@@ -6,10 +6,10 @@ direct implementations of the different services.
 
 General Docs: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
 
-Docs for S3 serivces:
+Docs for the S3 serivce:
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
 
-Docs for cognito services:
+Docs for the cognito services:
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentity.html
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityCredentials.html
@@ -52,80 +52,12 @@ function _getNewStateValue() {
 }
 
 function checkLatestModelsUpdate() {
-  listObjectsInBucketUnAuthenticated('modelUpdate', null, new AWS.S3(), EMMMAA_BUCKET, 'models', 100, '.pkl')
+  //                               mode, tableBody, testResultTableBody, s3Interface,      bucket, model, prefix, maxKeys, endsWith
+  listObjectsInBucketUnAuthenticated('modelsLastUpdated', null, null, new AWS.S3(), EMMMAA_BUCKET, null, 'models', 1000, '.pkl')
 }
 
-function modelsLastUpdated(keyMapArray, endsWith) {
-  //  for each model:
-  //    get list of all pickles
-  //    sort list descending, alphabetical, order
-  //    get first (i.e. latest) item
-  //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
-  console.log('Objects in bucket: ')
-  console.log(keyMapArray)
-  let modelsMapArray = getModels(keyMapArray, endsWith)
-  console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
-  console.log(modelsMapArray)
-
-  let modelUpdateTagsArray = document.getElementsByClassName('modelUpdateInfo')
-  for (tag of modelUpdateTagsArray) {
-    let model = tag.getAttribute('id').split('Update')[0]
-    if (model) {
-      lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
-      tag.textContent = 'Last updated: ' + lastUpdated;
-    }
-  }
-}
-
-function getModels(keyMapArray, endsWith) {
-  console.log('function getModels(keyMapArray, endsWith)')
-  var models = {'aml': [],
-                'brca': [],
-                'luad': [],
-                'paad': [],
-                'prad': [],
-                'skcm': [],
-                'rasmodel': [],
-                'test': []}
-  for (keyItem of keyMapArray) {
-    if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
-      let model = keyItem.Key.split('/')[1]
-      switch (model) {
-        case 'aml':
-          models[model].push(keyItem.Key.split('/')[2])
-          break;
-        case 'brca':
-          models[model].push(keyItem.Key.split('/')[2])
-          break;
-        case 'luad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'paad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'prad':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'skcm':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'rasmodel':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        case 'test':
-          models[model].push(keyItem.Key.split('/')[2])
-          break
-        default:
-          console.log('Unhandled model ' + model)
-          break
-      }
-    }
-  }
-  return models;
-}
-
-function listObjectsInBucketUnAuthenticated(mode, tableBody, s3Interface, bucket, prefix, maxKeys, endsWith) {
-  // console.log('function listObjectsInBucket(s3Interface, bucket, prefix, maxKeys, endsWith)')
+function listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith) {
+  console.log('listObjectsInBucketUnAuthenticated(mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith)')
   let _maxKeys = 1000
   if (maxKeys & maxKeys < _maxKeys) {
     _maxKeys = maxKeys;
@@ -141,10 +73,21 @@ function listObjectsInBucketUnAuthenticated(mode, tableBody, s3Interface, bucket
       // console.log('List of objects resolved from S3')
       // console.log(data)
       switch (mode) {
-        case 'modelUpdate':
+        // get last time a specific model was updated
+        case 'listModelInfo':
+          // Populates the model info table (passed as tableBody)
+          listModelInfo(tableBody, data.Contents, bucket, model, endsWith)
+          break;
+        // List last time models were updated
+        case 'modelsLastUpdated': // was 'modelUpdate'
           modelsLastUpdated(data.Contents, endsWith)
           break;
-
+        // List tests for selected model on models page
+        case 'listModelTests':
+          // tableBody, testResultTableBody, keyMapArray, model, endsWith
+          console.log('case "listModelTests"')
+          listModelTests(tableBody, testResultTableBody, data.Contents, model, endsWith);
+          break;
         // Default behaviour: just list key,value pairs in table
         default:
           let tableBodyTag = document.getElementById(tableBody);
@@ -235,15 +178,15 @@ function listObjectsInBucket(tableBody, s3Interface, bucket, prefix, maxKeys, en
 };
 
 // FIXME: redirect should be variable: could be index.html or model.html
-function getTokenFromAuthEndpoint() {
-  console.log('function getTokenFromAuthEndpoint()')
+function getTokenFromAuthEndpoint(currentUrl) {
+  console.log('function getTokenFromAuthEndpoint(currentUrl)')
   STATE_VALUE = _getNewStateValue();
   // console.log('current STATE_VALUE: ' + STATE_VALUE)
   _writeCookie(EMMAA_STATE_COOKIE_NAME, STATE_VALUE, 1)
   base_url = AUTH_ENDPOINT_BASE_URL;
   resp_type = 'response_type=token';
   client_id='client_id=' + APP_CLIENT_ID;
-  redirect = 'redirect_uri=http://localhost:5000/index.html';
+  redirect = 'redirect_uri=' + currentUrl;
   state = 'state=' + STATE_VALUE;
   cutom_scope = 'https://s3.console.aws.amazon.com/s3/buckets/emmaa/results.read'
   scope = 'scope=aws.cognito.signin.user.admin+openid+profile+' + cutom_scope;
@@ -290,15 +233,15 @@ function checkSignIn() {
   STATE_VALUE = _readCookie(EMMAA_STATE_COOKIE_NAME);
   let return_url = window.location.href;
   console.log('Return url: ' + return_url);
-  url_dict = getDictFromUrl(return_url);
+  let dict_split = getDictFromUrl(return_url);
 
   // No dict returned. Probably at first visit to page
-  if (!url_dict) return;
+  if (!dict_split) return;
   // console.log('returned url_dict')
-  // console.log(url_dict)
+  // console.log(dict_split[0])
 
   // State value does not match, do not proceed; Simple first layer security
-  if (url_dict['state'] != STATE_VALUE) {
+  if (dict_split && dict_split[0]['state'] != STATE_VALUE) {
     console.log('State Value does not match');
     let outputNode = document.getElementById(NOTIFY_STRING)
     notifyUser(outputNode, 'State Value does not match');
@@ -306,9 +249,9 @@ function checkSignIn() {
   };
 
   // Check if token flow
-  if (url_dict['access_token']) {
+  if (dict_split && dict_split[0]['access_token']) {
     console.log('token from authorization-endpoint')
-    if (verifyUser(url_dict['access_token'], url_dict['id_token'])) {
+    if (verifyUser(dict_split[0]['access_token'], dict_split[0]['id_token'])) {
       console.log('User verified')
     } else {
       console.log('User could not be verified...')
@@ -372,6 +315,8 @@ function addUserToIdentityCredentials(userIdToken) {
 
 // Can be used when something is public on S3
 function getPublicJson(bucket, key) {
+  console.log('function getPublicJson(bucket, key)')
+  console.log('bukcet: ' + bucket + ', key: ' + key)
   // For production: get list of results and select based on some criteria
   base_url = 'https://s3.amazonaws.com'
   pathString = '/' + bucket + '/' + key;

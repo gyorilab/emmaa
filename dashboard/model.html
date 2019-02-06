@@ -26,9 +26,10 @@
   <script>
     // Check if user signed in immediately after page load
     $(document).ready(function(){
+      clearTables(document.getElementsByClassName('table-body'))
       console.log('document ready')
       var return_url = window.location.href;
-      let url_dict = getDictFromUrl(return_url);
+      let dict_split = getDictFromUrl(return_url);
 
       // Get access and ID tokens
       // accessTokenString = _readCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME)
@@ -45,29 +46,17 @@
       // verifyUser(accessTokenString, idTokenString);
 
       // If linked from model name: load that model
-      if (url_dict) {
-        let model = url_dict['model'];
+      if (dict_split && dict_split[1] == '?') {
+        let model = dict_split[0]['model'];
         // Set the model to the one that is selected
-        setModel(document.getElementById('modelSelectDD'), model);
+        var ddSelectTag = document.getElementById('modelSelectDD');
+        setModel(ddSelectTag, model);
         var infoTableBody = document.getElementById('modelInfoTableBody');
+        var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
         var testResultsTableBody = document.getElementById('modelTestResultBody');
 
-        if (model == 'test') {
-          let promises = [];
-          // FIXME 
-          testKey = 'results/test/results_2019-01-31-19-44-26.json'; // Replace with funtion return that grabs latest test of 'model'
-          modelKey = 'models/rasmodel/rasmodel_json.json'; // Replace with function return that grabs latest model of 'model' 
-          promises.push(getPublicJson(EMMMAA_BUCKET, modelKey))
-          promises.push(getPublicJson(EMMMAA_BUCKET, testKey))
-          Promise.all(promises).then(function(jsonArray){
-            console.log(jsonArray)
-            populateModelsTable(infoTableBody, JSON.parse(jsonArray[0])) // Parse the jsonstring saved on S3 for the model
-            populateTestResultTable(testResultsTableBody, jsonArray[1][0]) //
-          })
-        } else {
-          modelKey = 'models/' + model + '/' + model + '_model_meta.json';
-          loadModelMetaData(EMMMAA_BUCKET, modelKey);
-        }
+        // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
+        selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
       }
     });
   </script>
@@ -80,6 +69,7 @@
     <hr>
   </div>
 
+  <!-- Dropdown -->
   <div class="container">
     <div class="input-group">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
@@ -92,8 +82,13 @@
         <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
         <option value="test">Test Model (test)</option>
       </select>
+      <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
       <div class="input-group-append">
-        <button class="btn btn-outline-secondary" onClick="selectModel(document.getElementById('modelInfoTableBody'), document.getElementById('modelTestResultBody'), this.parentNode.previousElementSibling)" type="button">Load Model</button>
+        <button class="btn btn-outline-secondary" onClick="selectModel(
+        document.getElementById('modelInfoTableBody'), 
+        document.getElementById('modelTestsTableBody'), 
+        document.getElementById('modelTestResultBody'), 
+        this.parentNode.previousElementSibling)" type="button">Load Model</button>
       </div>
     </div>
   </div>
@@ -107,8 +102,8 @@
       <div class="card-body">
         <table class="table">
           <thead>
-            <th>Statement</th>
-            <th>Evidence Details</th>
+            <th>Item</th>
+            <th>Details</th>
           </thead>
           <tbody class="table-body" id="modelInfoTableBody"></tbody>
         </table>
@@ -116,11 +111,11 @@
     </div>
   </div>
 
-  <!-- This table lists the tests -->
+  <!-- This table lists the tests for the selected model -->
   <div class="container" id="modelTestsTable">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Latest Tests</h4>
+        <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Tests</h4>
       </div>
       <div class="card-body">
         <table class="table">
@@ -134,7 +129,7 @@
     </div>
   </div>
 
-  <!-- This table shows the contents of a test json -->
+  <!-- This table shows the contents of a json containning test results for a particular test -->
   <div class="container" id="modelTestResult">
     <div class="card">
       <div class="card-header">
