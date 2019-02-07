@@ -22,9 +22,12 @@ class EmmaaStatement(object):
                                    self.date, self.search_terms)
 
     def to_json(self, use_sbo=False):
+        output_json = {'search_terms': self.search_terms,
+                       'date': self.date}
         # Get json representation of statement
         json_stmt = self.stmt.to_json(use_sbo=use_sbo)
         # Stringify source hashes: JavaScript can't handle int's of length > 16
         for ev in json_stmt['evidence']:
             ev['source_hash'] = str(ev['source_hash'])
-        return json_stmt
+        output_json['stmt'] = json_stmt
+        return output_json
