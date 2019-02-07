@@ -1,6 +1,7 @@
 import pickle
 import datetime
 import yaml
+import json
 import boto3
 from indra.statements import *
 from indra.sources import trips
@@ -42,12 +43,16 @@ if __name__ == '__main__':
     model_name = 'test'
     model, config = generate_model(model_name)
     test = generate_test()
-    # Upload model to S3
+    # Upload model to S3 as yaml and json
     model.save_to_s3()
     s3_client = boto3.client('s3')
     config_yaml = yaml.dump(config)
     s3_client.put_object(Body=config_yaml.encode('utf8'),
                          Key='models/%s/config.yaml' % model_name,
+                         Bucket='emmaa')
+    config_json = json.dumps(config)
+    s3_client.put_object(Body=config_json.encode('utf8'),
+                         Key='models/%s/config.json' % model_name,
                          Bucket='emmaa')
     # Upload test to S3
     test_key = 'tests/simple_model_test.pkl'
