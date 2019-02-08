@@ -25,44 +25,6 @@ function grabPlainText (url, callback) {
   return $.ajax({url: url, dataType: "text"});
 }
 
-function _readCookie(cookieName) {
-  console.log('function _readCookie()')
-  var nameEQ = cookieName;
-  var ca = document.cookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) == 0) {
-      console.log('function _readCookie() resolved cookie value ' + c.substring(nameEQ.length, c.length))
-      return c.substring(nameEQ.length, c.length)
-    };
-  }
-  console.log('function _readCookie() did not resolve cookie value')
-  return;
-}
-
-function _writeCookie(cookieName, value, hours) {
-  console.log('function _writeCookie(cookieName, value, hours)')
-  if (hours) {
-    let _hours = 0;
-    maxHours = 12;
-    if (hours > maxHours) {
-      _hours = maxHours;
-    } else {
-      _hours = hours;
-    } 
-    // console.log('hours to expiration: ' + _hours)
-    var date = new Date();
-    date.setTime(date.getTime() + (_hours*60*60*1000))
-    var expires = '; expires=' + date.toGMTString();
-    // console.log('cookie expiration date: ' + date.toGMTString());
-  } else var expires = '';  // No expiration or infinite?
-
-  var cookieString = cookieName + value + expires + '; path=/'
-  // console.log('cookieString: ' + cookieString);
-  document.cookie = cookieString;
-}
-
 function getDictFromUrl(url) {
   console.log('function getDictFromUrl(url)')
   // No url provided
