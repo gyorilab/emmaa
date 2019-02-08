@@ -8,7 +8,7 @@ class EmmaaStatement(object):
     date : datetime
         A datetime object that is attached to the Statement. Typically
         represents the time at which the Statement was created.
-    search_terms
+    search_terms : str
         The set of search terms that lead to the creation of the Statement.
 
     """
@@ -23,7 +23,7 @@ class EmmaaStatement(object):
 
     def to_json(self, use_sbo=False):
         output_json = {'search_terms': self.search_terms,
-                       'date': self.date}
+                       'date': self.date.strftime('%Y-%m-%d-%H-%M-%S')}
         # Get json representation of statement
         json_stmt = self.stmt.to_json(use_sbo=use_sbo)
         # Stringify source hashes: JavaScript can't handle int's of length > 16
