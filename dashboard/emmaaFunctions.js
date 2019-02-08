@@ -17,41 +17,8 @@ var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
                     'rasmodel', // RasModel
                     'test']     // TestModel (only three nodes/two edges)
 
-function grabJSON (url, callback) {
-  return $.ajax({url: url, dataType: "json"});
-};
-
 function grabPlainText (url, callback) {
   return $.ajax({url: url, dataType: "text"});
-}
-
-function getDictFromUrl(url) {
-  console.log('function getDictFromUrl(url)')
-  // No url provided
-  if (!url) return;
-  let returnArray = [];
-  var query = {};
-  var usedSplit = '';
-  // Check if (authorization) code flow or token (implicit) flow
-  if (url.split('#')[1]) {
-    query = url.split('#')[1];
-    usedSplit = '#'
-  } else if (url.split('?')[1]) {
-    query = url.split('?')[1];
-    usedSplit = '?'
-  } else return;
-  
-  var result = {};
-  query.split("&").forEach(function(part) {
-    var item = part.split("=");
-    result[item[0]] = decodeURIComponent(item[1]);
-  });
-
-  returnArray.push(result)
-  returnArray.push(usedSplit)
-  console.log('returnArray: ')
-  console.log(returnArray)
-  return returnArray;
 }
 
 function setModel(ddSelect, model) {
@@ -360,13 +327,6 @@ function getArrayOfModelTests(model, keyMapArray, endsWith) {
   return tests;
 }
 
-
-// CHANGE TEXT
-function notifyUser(outputNode, outputText) {
-  // Add other things here
-  outputNode.textContent = outputText;
-}
-
 function getEnglishByJson(json_stmt_array) {
     eng_stmt = $.ajax({
         url: INDRA_ENGLISH_ASSEMBLY,
@@ -377,12 +337,3 @@ function getEnglishByJson(json_stmt_array) {
     });
     return eng_stmt
 };
-
-function sortByCol(arr, colIndex){
-  arr.sort(sortFunction)
-  function sortFunction(a, b) {
-    a = a[colIndex]
-    b = b[colIndex]
-    return (a === b) ? 0 : (a < b) ? -1 : 1
-  }
-}
