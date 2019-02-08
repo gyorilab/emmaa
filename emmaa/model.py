@@ -30,6 +30,12 @@ class EmmaaModel(object):
 
     Attributes
     ----------
+    name : str
+        A string containing the name of the model
+    stmts : [emmaa.EmmaaStatement]
+        A list of EmmaaStatement objects representing the model
+    search_terms : [emmaa.priors.SearchTerm]
+        A list of SearchTerm objects containing the search terms used in the model
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
     """
