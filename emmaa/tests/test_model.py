@@ -62,5 +62,6 @@ def test_model_json():
 
     assert emmaa_model_json['stmts'][0]['stmt']['evidence'][0]['source_api'] \
         == 'trips'
+    # Need hashes to be strings so that javascript can read them
     assert isinstance(emmaa_model_json['stmts'][0]['stmt']['evidence'][0][
                           'source_hash'], str)
