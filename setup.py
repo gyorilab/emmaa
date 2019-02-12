@@ -23,5 +23,6 @@ setup(name='emmaa',
         'Programming Language :: Python :: 3.7'
         ],
       packages=find_packages(),
-      install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle']
+      install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle', 'kappy'],
+      dependency_links=['git+https://github.com/indralab/indra_db.git']
       )
