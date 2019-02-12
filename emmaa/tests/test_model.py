@@ -1,6 +1,6 @@
 import datetime
-from indra.sources import trips
-from indra.statements import Phosphorylation, Agent, Evidence
+from indra.statements import Activation, ActivityCondition, Phosphorylation, \
+    Agent, Evidence
 from emmaa.model import EmmaaModel
 from emmaa.statements import EmmaaStatement
 
@@ -24,9 +24,15 @@ def test_model_extend():
 
 
 def test_model_json():
-    tp = trips.process_text('BRAF activates MAP2K1. '
-                            'Active MAP2K1 activates MAPK1.')
-    indra_stmts = tp.statements
+    indra_stmts = \
+        [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
+                    Agent('MAP2K1'),
+                    evidence=[Evidence(text='BRAF activates MAP2K1.')]),
+         Activation(Agent('MAP2K1',
+                          activity=ActivityCondition('activity', True)),
+                    Agent('MAPK1'),
+                    evidence=[Evidence(text='Active MAP2K1 activates MAPK1.')])
+         ]
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1')
                     for stmt in indra_stmts]
     config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
@@ -60,8 +66,6 @@ def test_model_json():
     assert emmaa_model_json['stmts'][1]['stmt']['subj']['name'] == 'MAP2K1'
     assert emmaa_model_json['stmts'][1]['stmt']['obj']['name'] == 'MAPK1'
 
-    assert emmaa_model_json['stmts'][0]['stmt']['evidence'][0]['source_api'] \
-        == 'trips'
     # Need hashes to be strings so that javascript can read them
     assert isinstance(emmaa_model_json['stmts'][0]['stmt']['evidence'][0][
                           'source_hash'], str)
