@@ -2,6 +2,7 @@ import datetime
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.model import EmmaaModel
+from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
 
 
@@ -33,7 +34,8 @@ def test_model_json():
                     Agent('MAPK1'),
                     evidence=[Evidence(text='Active MAP2K1 activates MAPK1.')])
          ]
-    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1')
+    st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
+    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
                     for stmt in indra_stmts]
     config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
                    'search_terms': [{'db_refs': {'HGNC': '20974'},

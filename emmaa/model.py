@@ -32,9 +32,9 @@ class EmmaaModel(object):
     ----------
     name : str
         A string containing the name of the model
-    stmts : [emmaa.EmmaaStatement]
+    stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
-    search_terms : [emmaa.priors.SearchTerm]
+    search_terms : list[emmaa.priors.SearchTerm]
         A list of SearchTerm objects containing the search terms used in the model
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
@@ -204,10 +204,9 @@ class EmmaaModel(object):
         """Convert the model into a json dumpable dictionary"""
         json_output = {'name': self.name,
                        'ndex_network': self.ndex_network,
-                       'search_terms': [
-                           st.to_json() for st in self.search_terms
-                       ],
-                       'stmts': stmts_to_json(self.stmts)}
+                       'search_terms': [st.to_json() for st
+                                        in self.search_terms],
+                       'stmts': [st.to_json() for st in self.stmts]}
         return json_output
 
     def __repr__(self):
