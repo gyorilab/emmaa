@@ -24,5 +24,5 @@ setup(name='emmaa',
         ],
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle', 'kappy'],
-      dependency_links=['git+https://github.com/indralab/indra_db.git']
+      extras_require={'test': ['nose', 'coverage', 'python-coveralls']}
       )

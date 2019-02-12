@@ -2,8 +2,8 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install nose coverage python-coveralls
-  - pip install .
+  - pip install git+https://github.com/indralab/indra_db.git
+  - pip install .[test]
 script:
   - nosetests emmaa -v --with-coverage --cover-inclusive --cover-package=emmaa
 after_success:
