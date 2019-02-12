@@ -1,7 +1,11 @@
 language: python
+cache:
+  directories:
+    - $HOME/.cache/pip
 python:
   - "3.6"
 install:
+  - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
   - pip install .[test]
 script:
