@@ -24,6 +24,4 @@ def get_estatements_by_pmid(pmids):
         for stmt in stmts:
             estmts.append(es)
             es = EmmaaStatement(stmt, date, pmid_search_terms[pmid])
-    return estmts
-
-print(get_estatements_by_pmid["14461663", "14461663"])    
+    return estmts 
