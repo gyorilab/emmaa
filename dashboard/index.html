@@ -23,7 +23,7 @@
   <script>
     // Check if user signed in immediately after page load
     $(document).ready(function(){
-      checkSignIn() // Check if user is signed in
+      checkSignIn() // Check if user is signed in; set arg to 'true' to force login
       checkLatestModelsUpdate() // Check latest models listed on S3
     })
   </script>
@@ -42,6 +42,10 @@
   </style>
 
 <body>
+  <!-- To load asap -->
+  <script type="text/javascript">
+    setEnv('emmaa') // Set environment for AWS functionalities
+  </script>
   <!-- Page Header -->
   <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
     <h5 class="my-0 mr-md-auto font-weight-normal">EMMAA Dashboard</h5>
