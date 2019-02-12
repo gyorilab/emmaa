@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.6"
+install:
+  - pip install nose coverage python-coveralls
+  - pip install .
+script:
+  - nosetests emmaa -v --with-coverage --cover-inclusive --cover-package=emmaa
+after_success:
+  - coveralls
