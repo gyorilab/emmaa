@@ -30,6 +30,12 @@ class EmmaaModel(object):
 
     Attributes
     ----------
+    name : str
+        A string containing the name of the model
+    stmts : list[emmaa.EmmaaStatement]
+        A list of EmmaaStatement objects representing the model
+    search_terms : list[emmaa.priors.SearchTerm]
+        A list of SearchTerm objects containing the search terms used in the model
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
     """
@@ -143,8 +149,9 @@ class EmmaaModel(object):
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname+'.pkl')
         # Dump as json
-        client.put_object(Body=str.encode(json.dumps(stmts_to_json(
-            self.stmts)), encoding='utf8'), Bucket='emmaa', Key=fname+'.json')
+        client.put_object(Body=str.encode(json.dumps(self.to_json()),
+                                          encoding='utf8'),
+                          Bucket='emmaa', Key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name):
@@ -192,6 +199,15 @@ class EmmaaModel(object):
         pa.add_statements(stmts)
         pysb_model = pa.make_model()
         return pysb_model
+
+    def to_json(self):
+        """Convert the model into a json dumpable dictionary"""
+        json_output = {'name': self.name,
+                       'ndex_network': self.ndex_network,
+                       'search_terms': [st.to_json() for st
+                                        in self.search_terms],
+                       'stmts': [st.to_json() for st in self.stmts]}
+        return json_output
 
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
