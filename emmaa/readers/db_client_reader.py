@@ -3,7 +3,7 @@ from indra_db.client.statements import get_statements_by_paper
 from emmaa.statements import EmmaaStatement
 
 def read_db_pmid_search_terms(pmid_search_terms):
-    """Return extracted EmmaaStatements from INDRA database given a 
+    """Return extracted EmmaaStatements from INDRA database given a
     PMID-search term dict.
 
     Parameters
