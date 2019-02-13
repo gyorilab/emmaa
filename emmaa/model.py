@@ -90,8 +90,8 @@ class EmmaaModel(object):
         """
         term_to_pmids = {}
         for term in self.search_terms:
-            pmids = pubmed_client.get_ids(term, reldate=date_limit)
-            logger.info(f'{len(pmids)} PMIDs found for {term}')
+            pmids = pubmed_client.get_ids(term.search_term, reldate=date_limit)
+            logger.info(f'{len(pmids)} PMIDs found for {term.search_term}')
             term_to_pmids[term] = pmids
             time.sleep(0.5)
         pmid_to_terms = {}
@@ -103,9 +103,9 @@ class EmmaaModel(object):
                     pmid_to_terms[pmid] = [term]
         return pmid_to_terms
 
-    def get_new_readings(self, run_reading=False):
+    def get_new_readings(self, run_reading=False, date_limit=10):
         """Search new literature, read, and add to model statements"""
-        pmid_to_terms = self.search_literature(date_limit=10)
+        pmid_to_terms = self.search_literature(date_limit=date_limit)
         if run_reading:
             estmts = read_pmid_search_terms(pmid_to_terms)
         else:
