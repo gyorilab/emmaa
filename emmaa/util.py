@@ -30,7 +30,7 @@ def make_date_str(date=None):
     return date.strftime(FORMAT)
 
 
-def find_latest_s3_file(bucket, prefix):
+def find_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with latest date string on an S3 path"""
     def process_key(key):
         fname_with_extension = os.path.basename(key)
@@ -40,6 +40,8 @@ def find_latest_s3_file(bucket, prefix):
     client = boto3.client('s3')
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
     files = resp.get('Contents', [])
+    if extension:
+        files = [file for file in files if file['Key'].endswith(extension)]
     files = sorted(files, key=lambda f: process_key(f['Key']), reverse=True)
     latest = files[0]['Key']
     return latest
