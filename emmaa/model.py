@@ -176,7 +176,8 @@ class EmmaaModel(object):
         """
         base_key = f'models/{model_name}'
         config_key = f'{base_key}/config.yaml'
-        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
+        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
+                                               extension='.pkl')
         client = boto3.client('s3')
         logger.info(f'Loading model config from {config_key}')
         obj = client.get_object(Bucket='emmaa', Key=config_key)
