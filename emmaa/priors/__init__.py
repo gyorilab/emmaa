@@ -28,6 +28,10 @@ class SearchTerm(object):
     def __repr__(self):
         return str(self)
 
+    def __hash__(self):
+        return hash((self.type, self.name, tuple(sorted(self.db_refs.items())),
+                     self.search_term))
+
     def to_json(self):
         """Return search term as JSON."""
         jd = {'type': self.type,

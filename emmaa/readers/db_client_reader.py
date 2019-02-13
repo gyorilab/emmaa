@@ -21,8 +21,11 @@ def read_db_pmid_search_terms(pmid_search_terms):
     date = datetime.datetime.utcnow()
     pmid_stmts = {}
     for pmid in pmids:
-        pmid_stmts[pmid] = get_statements_by_paper(
+        stmts = get_statements_by_paper(
             pmid, id_type='pmid', preassembled=False)
+        if stmts is None:
+            stmts = []
+        pmid_stmts[pmid] = stmts
     estmts = []
     for pmid, stmts in pmid_stmts.items():
         for stmt in stmts:
