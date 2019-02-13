@@ -3,6 +3,7 @@ from emmaa.priors import SearchTerm
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 
 def test_read_db_pmid_search_terms():
+    """Check read_db_pmid_search_terms() function with different inputs."""
     search_terms = [SearchTerm('gene', 'AKT2', {'HGNC':'392', 'UP':'P31751'},
         'AKT2'), SearchTerm('gene', 'ACOX2', {'HGNC':'120', 'UP':'Q99424'},
         'ACOX2')]
