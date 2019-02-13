@@ -25,6 +25,7 @@ def test_model_extend():
 
 
 def test_model_json():
+    """Test the json structure and content of EmmaaModel.to_json() output"""
     indra_stmts = \
         [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
                     Agent('MAP2K1'),
