@@ -2,6 +2,14 @@ from indra.explanation.model_checker import PathResult
 from emmaa.model_tests import (StatementCheckingTest, run_model_tests_from_s3,
                                load_tests_from_s3, TestManager)
 
+# Tell nose to not run tests in the imported modules
+StatementCheckingTest.__test__ = False
+run_model_tests_from_s3.__test__ = False
+load_tests_from_s3.__test__ = False
+TestManager.__test__ = False
+PathResult.__test__ = False
+
+
 def test_load_tests_from_s3():
     tests = load_tests_from_s3('simple_model_test.pkl')
     assert isinstance(tests, list)
@@ -12,7 +20,7 @@ def test_load_tests_from_s3():
 
 def test_run_tests_from_s3():
     tm = run_model_tests_from_s3('test', 'simple_model_test.pkl',
-                                      upload_results=False)
+                                 upload_results=False)
     assert isinstance(tm, TestManager)
     assert len(tm.pairs_to_test) == 1
     assert len(tm.test_results) == 1
