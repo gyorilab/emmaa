@@ -1,5 +1,6 @@
 import boto3
 import pickle
+import unittest
 
 from indra.tools.reading.submit_reading_pipeline import wait_for_complete
 
@@ -45,6 +46,7 @@ def test_handler():
     assert s3_res, s3_res
 
 
+@unittest.skip('Unfinished test. See comments in code')
 def test_s3_response():
     """Change a file on s3 and check for the correct response."""
     # This will be a white-box test. We will check progress at various stages.
@@ -57,3 +59,8 @@ def test_s3_response():
 
     # This should trigger the lambda to start a batch job.
     s3.put_object(Bucket='emmaa', Key=key, Body=pickle.dumps(data))
+
+    # TODO
+    #  1. verify that lambda has started a batch job
+    #  2. kill batch job
+    #  3. delete uploaded pickle
