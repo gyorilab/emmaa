@@ -13,6 +13,7 @@ from indra.assemblers.pysb import PysbAssembler
 from emmaa.priors import SearchTerm
 from emmaa.util import make_date_str, find_latest_s3_file
 from emmaa.readers.aws_reader import read_pmid_search_terms
+from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 
 
 logger = logging.getLogger(__name__)
@@ -102,10 +103,13 @@ class EmmaaModel(object):
                     pmid_to_terms[pmid] = [term]
         return pmid_to_terms
 
-    def get_new_readings(self):
+    def get_new_readings(self, run_reading=False):
         """Search new literature, read, and add to model statements"""
         pmid_to_terms = self.search_literature(date_limit=10)
-        estmts = read_pmid_search_terms(pmid_to_terms)
+        if run_reading:
+            estmts = read_pmid_search_terms(pmid_to_terms)
+        else:
+            estmts = read_db_pmid_search_terms(pmid_to_terms)
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
