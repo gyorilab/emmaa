@@ -12,7 +12,7 @@ script:
   # Create dir ~/.aws only if it doesn't exist
   - sudo mkdir -p ~/.aws
   # Set region in ~/.aws/config using append in case file already exists
-  - if [ ! -f `echo ~/.aws/config` ]; then echo '[default]' > ~/.aws/config; echo 'region=us-east-1' >> ~/.aws/config; fi
+  - if [ ! -f `echo ~/.aws/config` ]; then sudo echo '[default]' > ~/.aws/config; sudo echo 'region=us-east-1' >> ~/.aws/config; fi
   - export AWS_REGION='us-east-1'
   - nosetests -v --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
 after_success:
