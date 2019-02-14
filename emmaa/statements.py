@@ -31,3 +31,12 @@ class EmmaaStatement(object):
             ev['source_hash'] = str(ev['source_hash'])
         output_json['stmt'] = json_stmt
         return output_json
+
+
+def to_emmaa_stmts(stmt_list, date, search_terms):
+    """Make EMMAA statements from INDRA Statements with the given metadata."""
+    emmaa_stmts = []
+    for indra_stmt in stmt_list:
+        es = EmmaaStatement(indra_stmt, date, search_terms)
+        emmaa_stmts.append(es)
+    return emmaa_stmts

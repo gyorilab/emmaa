@@ -1,7 +1,6 @@
 import os
 import boto3
 from datetime import datetime
-from emmaa.statements import EmmaaStatement
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
@@ -44,12 +43,3 @@ def find_latest_s3_file(bucket, prefix):
     files = sorted(files, key=lambda f: process_key(f['Key']), reverse=True)
     latest = files[0]['Key']
     return latest
-
-
-def to_emmaa_stmts(stmt_list, date, search_terms):
-    """Make EMMAA statements from INDRA Statements with the given metadata."""
-    emmaa_stmts = []
-    for indra_stmt in stmt_list:
-        es = EmmaaStatement(indra_stmt, date, search_terms)
-        emmaa_stmts.append(es)
-    return emmaa_stmts
