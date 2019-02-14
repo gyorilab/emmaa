@@ -1,11 +1,12 @@
 """This module implements the object model for EMMAA model testing."""
 import json
+import boto3
 import pickle
 import logging
 import datetime
 import itertools
-import boto3
 import jsonpickle
+from botocore.handlers import disable_signing
 from indra.explanation.model_checker import ModelChecker
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str
@@ -142,6 +143,7 @@ def load_tests_from_s3(test_name):
         List of EmmaaTest objects loaded from S3.
     """
     client = boto3.client('s3')
+    client.meta.events.register('chooser-signer.s3.*', disable_signing)
     test_key = f'tests/{test_name}'
     logger.info(f'Loading tests from {test_key}')
     obj = client.get_object(Bucket='emmaa', Key=test_key)
@@ -182,6 +184,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     # Optionally upload test results to S3
     if upload_results:
         s3_client = boto3.client('s3')
+        s3_client.meta.events.register('chooser-signer.s3.*', disable_signing)
         date_str = make_date_str(datetime.datetime.now())
         result_key = f'results/{model_name}/results_{date_str}.json'
         logger.info(f'Uploading test results to {result_key}')
