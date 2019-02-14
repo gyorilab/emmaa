@@ -9,7 +9,11 @@ install:
   - pip install git+https://github.com/indralab/indra_db.git
   - pip install .[test]
 script:
-  # test
+  # Create dir ~/.aws only if it doesn't exist
+  - sudo mkdir -p ~/.aws
+  # Set region in ~/.aws/config using append in case file already exists
+  - sudo if [ ! -f `echo ~/.aws/config` ]; then echo '[default]' > ~/.aws/config; echo 'region=us-east-1' >> ~/.aws/config; fi
+  - sudo export AWS_REGION='us-east-1'
   - nosetests -v --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
 after_success:
   - coveralls
