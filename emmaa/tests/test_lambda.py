@@ -1,7 +1,8 @@
 import boto3
 import pickle
 import unittest
-
+from botocore import UNSIGNED
+from botocore.client import Config
 from indra.tools.reading.submit_reading_pipeline import wait_for_complete
 
 from emmaa.aws_lambda.script import lambda_handler, QUEUE
@@ -40,7 +41,7 @@ def test_handler():
     assert job_id in [job_def['jobId'] for job_def in results['succeeded']], \
         results['failed']
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     s3_res = s3.list_objects(Bucket='emmaa', Prefix='results/test/' + dts[:10])
     print(s3_res.keys())
     assert s3_res, s3_res
@@ -50,6 +51,7 @@ def test_handler():
 def test_s3_response():
     """Change a file on s3 and check for the correct response."""
     # This will be a white-box test. We will check progress at various stages.
+    # s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     s3 = boto3.client('s3')
     batch = boto3.client('batch')
 
