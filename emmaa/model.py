@@ -4,7 +4,8 @@ import time
 import boto3
 import pickle
 import logging
-from botocore.handlers import disable_signing
+from botocore import UNSIGNED
+from botocore.client import Config
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
@@ -149,8 +150,7 @@ class EmmaaModel(object):
         """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}'
-        client = boto3.client('s3')
-        client.meta.events.register('chooser-signer.s3.*', disable_signing)
+        client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         # Dump as pickle
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname+'.pkl')
@@ -180,8 +180,7 @@ class EmmaaModel(object):
         config_key = f'{base_key}/config.yaml'
         latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
                                                extension='.pkl')
-        client = boto3.client('s3')
-        client.meta.events.register('chooser-signer.s3.*', disable_signing)
+        client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         logger.info(f'Loading model config from {config_key}')
         obj = client.get_object(Bucket='emmaa', Key=config_key)
         config = yaml.load(obj['Body'].read().decode('utf8'))

@@ -1,7 +1,8 @@
 import os
 import boto3
 from datetime import datetime
-from botocore.handlers import disable_signing
+from botocore import UNSIGNED
+from botocore.client import Config
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
@@ -38,8 +39,7 @@ def find_latest_s3_file(bucket, prefix, extension=None):
         fname = os.path.splitext(fname_with_extension)[0]
         date_str = fname.split('_')[1]
         return get_date_from_str(date_str)
-    client = boto3.client('s3')
-    client.meta.events.register('chooser-signer.s3.*', disable_signing)
+    client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
     files = resp.get('Contents', [])
     if extension:
