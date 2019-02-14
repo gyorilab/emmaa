@@ -10,10 +10,7 @@ in this directory.
 """
 
 import boto3
-
-# Note that all non-standard imports will need to be added to the update script
-# including secondary, tertiary, and so forth imports.
-from emmaa.util import make_date_str
+from datetime import datetime
 
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
@@ -80,7 +77,8 @@ def lambda_handler(event, context):
                         '--project', PROJECT, '--purpose', PURPOSE,
                         core_command]
             }
-        ret = batch.submit_job(jobName=f'{model_name}_{make_date_str()}',
+        now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        ret = batch.submit_job(jobName=f'{model_name}_{now_str}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
