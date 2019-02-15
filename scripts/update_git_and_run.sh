@@ -22,7 +22,7 @@ IFS='//'; remote=($branch); unset IFS;
 echo $branch
 echo $remote
 echo $command
-# git fetch $remote
-# git reset --hard $branch
-# command=$2
-# $command
+git fetch $remote
+git reset --hard $branch
+command=$2
+$command
