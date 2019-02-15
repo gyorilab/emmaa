@@ -1,7 +1,11 @@
+import unittest
 from emmaa.statements import EmmaaStatement
 from emmaa.priors import SearchTerm
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 
+
+# FIXME Test should only run if tests are run locally, not by Travis
+@unittest.skip('Test not run by Travis')
 def test_read_db_pmid_search_terms():
     """Check read_db_pmid_search_terms() function with different inputs."""
     search_terms = [SearchTerm('gene', 'AKT2', {'HGNC': '392', 'UP': 'P31751'},

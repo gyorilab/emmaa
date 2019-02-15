@@ -23,5 +23,7 @@ setup(name='emmaa',
         'Programming Language :: Python :: 3.7'
         ],
       packages=find_packages(),
-      install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle']
+      install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle', 'kappy',
+                        'pygraphviz'],
+      extras_require={'test': ['nose', 'coverage', 'python-coveralls']}
       )

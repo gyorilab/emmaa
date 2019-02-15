@@ -11,9 +11,9 @@ from indra.statements import stmts_to_json
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from emmaa.priors import SearchTerm
-from emmaa.util import make_date_str, find_latest_s3_file
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
+from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client
 
 
 logger = logging.getLogger(__name__)
@@ -148,7 +148,7 @@ class EmmaaModel(object):
         """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}'
-        client = boto3.client('s3')
+        client = get_s3_client()
         # Dump as pickle
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname+'.pkl')
@@ -176,8 +176,9 @@ class EmmaaModel(object):
         """
         base_key = f'models/{model_name}'
         config_key = f'{base_key}/config.yaml'
-        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_')
-        client = boto3.client('s3')
+        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
+                                               extension='.pkl')
+        client = get_s3_client()
         logger.info(f'Loading model config from {config_key}')
         obj = client.get_object(Bucket='emmaa', Key=config_key)
         config = yaml.load(obj['Body'].read().decode('utf8'))
