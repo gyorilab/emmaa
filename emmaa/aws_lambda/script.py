@@ -66,7 +66,7 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-        core_command = 'bash scripts/update_git_and_run.sh'
+        core_command = 'bash scripts/git_and_run.sh'
         if BRANCH is not None:
             core_command += f' --branch {BRANCH}'
         core_command += (' python scripts/run_model_tests_from_s3.py'
