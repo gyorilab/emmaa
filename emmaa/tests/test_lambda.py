@@ -21,6 +21,7 @@ def __get_jobs(batch):
     return job_ids
 
 
+@unittest.skip('Local test without starting up batch job not yet implemented')
 def test_handler():
     """Test the lambda handler locally."""
     dts = make_date_str()
