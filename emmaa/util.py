@@ -39,7 +39,7 @@ def find_latest_s3_file(bucket, prefix, extension=None):
         fname = os.path.splitext(fname_with_extension)[0]
         date_str = fname.split('_')[1]
         return get_date_from_str(date_str)
-    client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    client = get_s3_client()
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
     files = resp.get('Contents', [])
     if extension:
@@ -47,3 +47,23 @@ def find_latest_s3_file(bucket, prefix, extension=None):
     files = sorted(files, key=lambda f: process_key(f['Key']), reverse=True)
     latest = files[0]['Key']
     return latest
+
+
+def get_s3_client(unsigned=True):
+    """Return a boto3 S3 client with optional unsigned config.
+
+    Parameters
+    ----------
+    unsigned : Optional[bool]
+        If True, the client will be using unsigned mode in which public
+        resources can be accessed without credentials. Default: True
+
+    Returns
+    -------
+    botocore.client.S3
+        A client object to AWS S3.
+    """
+    if unsigned:
+        return boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    else:
+        return boto3.client('s3')
