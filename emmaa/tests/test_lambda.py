@@ -41,7 +41,8 @@ def test_handler():
     assert job_id in [job_def['jobId'] for job_def in results['succeeded']], \
         results['failed']
 
-    s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    # s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+    s3 = boto3.client('s3')
     s3_res = s3.list_objects(Bucket='emmaa', Prefix='results/test/' + dts[:10])
     print(s3_res.keys())
     assert s3_res, s3_res
