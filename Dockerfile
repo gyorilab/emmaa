@@ -6,7 +6,7 @@ ENV DIRPATH /sw
 WORKDIR $DIRPATH
 
 # Get EMMAA repo.
-RUN pip install git+https://github.com/indralab/indra_db.git \
+RUN pip install git+https://github.com/indralab/indra_db.git && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
     cd emmaa && \
     git checkout $BUILD_BRANCH && \
