@@ -1,7 +1,7 @@
 """The AWS Lambda emmaa-model-update definition.
 
-This file contains the function that will be run daily and start model update 
-cycle. It must be placed on AWS Lambda, which can either be done manually (not 
+This file contains the function that will be run daily and start model update
+cycle. It must be placed on AWS Lambda, which can either be done manually (not
 recommended) or by running:
 
 $ python update.py
@@ -20,27 +20,17 @@ BRANCH = 'indralab/master'
 
 
 def lambda_handler(event, context):
-    """Initial batch jobs for any changed models or tests.
+    """Create a batch job to update models on s3 and NDEx.
 
-    This function is designed to be placed on lambda, taking the event and
-    context arguments that are passed, and extracting the names of the
-    uploaded (which includes changed) model or test definitions on s3.
-    Lambda is configured to be triggered by any such changes, and will
-    automatically run this script.
+    This function is designed to be placed on AWS Lambda, taking the event and
+    context arguments that are passed. Note that this function must always have
+    the same parameters, even if any or all of them are unused, because we do
+    not have control over what Lambda sends as parameters. Parameters are
+    unused in this function.
+
+    Lambda is configured to automatically run this script every day at 12pm GMT.
 
     See the top of the page for the Lambda update procedure.
-
-    Note that this function must always have the same parameters, even if any
-    or all of them are unused, because we do not have control over what Lambda
-    sends as parameters. For more information on the context parameter, see
-    here:
-
-      https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
-
-    And for more informationn about AWS Lambda handlers, see here:
-
-      https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model-handler-types.html
-
 
     Parameters
     ----------
@@ -53,8 +43,8 @@ def lambda_handler(event, context):
     Returns
     -------
     ret : dict
-        A dict containing 'statusCode', with a valid HTTP status code, and any
-        other data to be returned to Lambda.
+        A dict containing 'statusCode', with a valid HTTP status code, 'result',
+        and 'job_id' to be returned to Lambda.
     """
     batch = boto3.client('batch')
     core_command = 'bash scripts/git_and_run.sh'
@@ -69,8 +59,8 @@ def lambda_handler(event, context):
         }
     now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
     ret = batch.submit_job(jobName=f'model_update_{now_str}',
-                            jobQueue=QUEUE, jobDefinition=JOB_DEF,
-                            containerOverrides=cont_overrides)
+                           jobQueue=QUEUE, jobDefinition=JOB_DEF,
+                           containerOverrides=cont_overrides)
     job_id = ret['jobId']
 
     return {'statusCode': 200, 'result': 'SUCCESS', 'job_id': job_id}
