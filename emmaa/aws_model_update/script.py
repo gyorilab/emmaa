@@ -1,8 +1,8 @@
-"""The AWS Lambda update definition.
+"""The AWS Lambda emmaa-model-update definition.
 
-This file contains the function that will be run when Lambda is triggered. It
-must be placed on s3, which can either be done manually (not recommended) or
-by running:
+This file contains the function that will be run daily and start model update 
+cycle. It must be placed on AWS Lambda, which can either be done manually (not 
+recommended) or by running:
 
 $ python update.py
 
@@ -16,7 +16,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-models'
-BRANCH = None
+BRANCH = 'indralab/master'
 
 
 def lambda_handler(event, context):

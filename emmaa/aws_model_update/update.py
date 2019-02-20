@@ -9,7 +9,7 @@ def upload_function():
     """Upload the lambda function by pushing a zip file to Lambda.
 
     This function pre-supposes you are running from the same directory that
-    contains the lambda script, which should be named: `lambda_script.py`.
+    contains the lambda script, which should be named: `script.py`.
     """
     lamb = boto3.client('lambda')
     with ZipFile(path.join(HERE, 'lambda.zip'), 'w') as zf:
