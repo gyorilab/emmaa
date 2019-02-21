@@ -20,6 +20,7 @@ if ! [ -z "$branch" ]; then
     # First verify branch actually exists
     echo "Attempting to change to branch $branch"
     git rev-parse --verify $branch >/dev/null 2>/dev/null
+    echo "$?"
     if ! [ "$?" -eq 0 ]; then
 	echo "Error: Branch $branch could not be found"
 	exit 1
