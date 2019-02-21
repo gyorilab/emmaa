@@ -25,7 +25,7 @@ if ! [ -z "$branch" ]; then
 	exit 1
     fi
     # If branch is remote we will need to fetch
-    remote=$(basename $branch)
+    remote=$(dirname $branch)
     if [ $remote != "$branch" ]; then
 	echo "Fetching from remote $remote"
 	git fetch $remote
