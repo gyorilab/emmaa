@@ -7,11 +7,18 @@ HERE = path.dirname(path.abspath(__file__))
 script_name = sys.argv[1]
 function_name = sys.argv[2]
 
-def upload_function():
+def upload_function(script_name, function_name):
     """Upload the lambda function by pushing a zip file to Lambda.
 
     This function pre-supposes you are running from the same directory that
-    contains the lambda script, which should be named: `lambda_script.py`.
+    contains the lambda script. 
+    
+    Parameters
+    ----------
+    script_name : str
+        Name of a script containing lambda function. 
+    function_name : object
+        Name of a lambda function as specified on AWS Lambda.
     """
     lamb = boto3.client('lambda')
     with ZipFile(path.join(HERE, 'lambda.zip'), 'w') as zf:
@@ -30,4 +37,4 @@ def upload_function():
 
 
 if __name__ == '__main__':
-    upload_function()
+    upload_function(script_name, function_name)
