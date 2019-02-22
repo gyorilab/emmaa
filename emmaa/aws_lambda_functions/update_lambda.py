@@ -4,8 +4,7 @@ from os import path
 from zipfile import ZipFile
 
 HERE = path.dirname(path.abspath(__file__))
-script_name = sys.argv[1]
-function_name = sys.argv[2]
+
 
 def upload_function(script_name, function_name):
     """Upload the lambda function by pushing a zip file to Lambda.
@@ -35,6 +34,10 @@ def upload_function(script_name, function_name):
         print(ret)
     return
 
+def main():
+    script_name = sys.argv[1]
+    function_name = sys.argv[2]
+    upload_function(script_name, function_name)
 
 if __name__ == '__main__':
-    upload_function(script_name, function_name)
+    main()
