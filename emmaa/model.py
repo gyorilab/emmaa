@@ -120,7 +120,7 @@ class EmmaaModel(object):
             if estmt.stmt.get_hash(shallow=False) not in source_hashes:
                 self.stmts.append(estmt)
 
-    def run_assembly(self):
+    def run_assembly(self, belief_cutoff=None, filter_ungrounded=False):
         """Run INDRA's assembly pipeline on the Statements.
 
         Returns
@@ -129,11 +129,16 @@ class EmmaaModel(object):
             The list of assembled INDRA Statements.
         """
         stmts = self.get_indra_stmts()
+        if filter_ungrounded:
+            stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
         stmts = ac.map_sequence(stmts)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        if belief_cutoff is not None:
+            stmts = ac.filter_belief(stmts, belief_cutoff)
+        stmts = ac.filter_top_level(stmts)
         return stmts
 
     def upload_to_ndex(self):
@@ -197,11 +202,13 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self):
+    def assemble_pysb(self, belief_cutoff=0.8):
         """Assemble the model into PySB and return the assembled model."""
-        stmts = self.get_indra_stmts()
+        assembled_stmts = \
+            self.run_assembly(belief_cutoff=belief_cutoff,
+                              filter_ungrounded=True)
         pa = PysbAssembler()
-        pa.add_statements(stmts)
+        pa.add_statements(assembled_stmts)
         pysb_model = pa.make_model()
         return pysb_model
 
