@@ -23,9 +23,9 @@ def upload_function(script_name, function_name):
     lamb = boto3.client('lambda')
     with ZipFile(path.join(HERE, 'lambda.zip'), 'w') as zf:
         zf.write(path.join(HERE, script_name),
-                 'emmaa/{0}/{1}'.format(path.basename(HERE), script_name))
+                 f'emmaa/{path.basename(HERE)}/{script_name}')
         zf.write(path.join(HERE, '__init__.py'),
-                 'emmaa/%s/__init__.py' % path.basename(HERE))
+                 f'emmaa/{path.basename(HERE)}/__init__.py')
         zf.write(path.join(HERE, path.pardir, '__init__.py'),
                  'emmaa/__init__.py')
 
