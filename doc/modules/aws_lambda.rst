@@ -1,22 +1,14 @@
-AWS model update pipeline (:py:mod:`emmaa.aws_model_update`)
-============================================================
+AWS model update and testing pipeline (:py:mod:`emmaa.aws_lambda_functions`)
+============================================================================
 
-.. automodule:: emmaa.aws_model_update.script
+.. automodule:: emmaa.aws_lambda_functions.model_updates
     :members:
     :show-inheritance:
 
-.. automodule:: emmaa.aws_model_update.update
+.. automodule:: emmaa.aws_lambda_functions.analyze_changes_on_s3
     :members:
     :show-inheritance:
 
- 
-AWS model testing pipeline (:py:mod:`emmaa.aws_lambda`)
-=======================================================
-
-.. automodule:: emmaa.aws_lambda.script
-    :members:
-    :show-inheritance:
-
-.. automodule:: emmaa.aws_lambda.update
+.. automodule:: emmaa.aws_lambda_functions.update_lambda
     :members:
     :show-inheritance:

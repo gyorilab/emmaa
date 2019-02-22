@@ -1,10 +1,10 @@
 """The AWS Lambda emmaa-model-update definition.
 
-This file contains the function that will be run daily and start model update
-cycle. It must be placed on AWS Lambda, which can either be done manually (not
-recommended) or by running:
+This file contains the function that starts model update cycle. It must be 
+placed on AWS Lambda, which can either be done manually (not recommended) or by 
+running:
 
-$ python update.py
+$ python update_lambda.py model_updates.py emmaa-model-update
 
 in this directory.
 """
@@ -16,7 +16,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'run_db_lite_queue'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-models'
-BRANCH = 'indralab/master'
+BRANCH = None
 
 
 def lambda_handler(event, context):

@@ -4,7 +4,7 @@ This file contains the function that will be run when Lambda is triggered. It
 must be placed on s3, which can either be done manually (not recommended) or
 by running:
 
-$ python update_lambda.py
+$ python update_lambda.py analyze_changes_on_s3.py emmaa-analysis
 
 in this directory.
 """
@@ -70,7 +70,7 @@ def lambda_handler(event, context):
         if BRANCH is not None:
             core_command += f' --branch {BRANCH}'
         core_command += (' python scripts/run_model_tests_from_s3.py'
-                         f'--model {model_name} --test simple_model_test.pkl')
+                         f' --model {model_name} --test small_corpus_tests.pkl')
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
