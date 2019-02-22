@@ -13,7 +13,7 @@ import boto3
 from datetime import datetime
 
 JOB_DEF = 'emmaa_jobdef'
-QUEUE = 'run_db_lite_queue'
+QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-models'
 BRANCH = None
