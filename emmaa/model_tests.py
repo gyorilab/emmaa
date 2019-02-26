@@ -14,6 +14,19 @@ from emmaa.util import make_date_str, get_s3_client
 
 logger = logging.getLogger(__name__)
 
+class ModelManager(object):
+    def __init__(self, model):
+        self.model = model
+        self.pysb_model = self.model.assemble_pysb()
+        self.entities = self.model.get_entities()
+        self.applicable_tests = []
+        self.test_results = []
+    
+    def add_test(self, test):
+        self.applicable_tests.append(test)
+
+    def add_result(self, result):
+        self.test_results.append(result)
 
 class TestManager(object):
     """Manager to generate and run a set of tests on a set of models.
@@ -28,14 +41,6 @@ class TestManager(object):
     def __init__(self, models, tests):
         self.models = models
         self.tests = tests
-        # self.pairs_to_test = []
-        # self.test_results = []
-        self.model_entities = {model: model.get_entities() for model in 
-                               self.models}
-        self.test_entities = {test: test.get_entities() for test in self.tests}
-        self.model_to_tests = defaultdict(list)
-        self.test_to_results = defaultdict(list)
-        # model to results or test to results?
 
     def make_tests(self, test_connector):
         """Generate a list of model-test pairs with a given test connector
@@ -48,17 +53,17 @@ class TestManager(object):
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
                     f'{len(self.models)} models')
         for model, test in itertools.product(self.models, self.tests):
+            logger.info(f'Checking applicability of tests for {model.model.name}')
             logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model, test):
-                # self.pairs_to_test.append((model, test))
-                self.model_to_tests[model].append(test)
+                model.add_test(test)
                 logger.info(f'Test {test.stmt} is applicable')
             else:
                 logger.info(f'Test {test.stmt} is not applicable')
-        # logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
-        logger.info(f'Created tests for {len(self.model_to_tests)} models.')
-        for model in self.model_to_tests.keys():
-            logger.info(f'Created {len(self.model_to_tests[model])} tests for {model.name} model.')
+        logger.info(f'Created tests for {len(self.models)} models.')
+        for model in self.models:
+            logger.info(f'Created {len(model.applicable_tests)} tests for'
+                        f'{model.model.name} model.')
 
     # def run_tests(self):
     #     """Run tests for a list of model-test pairs"""
@@ -67,11 +72,9 @@ class TestManager(object):
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
-        for model in self.model_to_tests.keys():
-            pysb_model = model.assemble_pysb()
-            # model to results or test to results?
-            for test in self.model_to_tests[model]:
-                self.test_to_results[test].append(test.check(pysb_model))
+        for model in self.models:
+            for test in model.applicable_tests:
+                model.add_result(test.check(model.pysb_model))
 
     def results_to_json(self):
         # TODO
@@ -113,8 +116,8 @@ class ScopeTestConnector(TestConnector):
     @staticmethod
     def applicable(model, test):
         """Return True of all test entities are in the set of model entities"""
-        model_entities = model.get_entities()
-        test_entities = test.get_entities()
+        model_entities = model.entities
+        test_entities = test.entities
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
     @staticmethod
@@ -148,6 +151,7 @@ class StatementCheckingTest(EmmaaTest):
 
     def __init__(self, stmt):
         self.stmt = stmt
+        self.entities = self.get_entities()
 
     def check(self, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
