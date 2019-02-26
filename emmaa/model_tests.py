@@ -28,6 +28,18 @@ class ModelManager(object):
     def add_result(self, result):
         self.test_results.append(result)
 
+    def results_to_json(self):
+        pickler = jsonpickle.pickler.Pickler()
+        results_json = []        
+        for ix, test in enumerate(self.applicable_tests):
+            results_json.append({
+                   'model_name': self.model.name,
+                   'test_type': test.__class__.__name__,
+                   'test_json': test.to_json(),
+                   'result_json': pickler.flatten(self.test_results[ix])})            
+        return results_json
+
+
 class TestManager(object):
     """Manager to generate and run a set of tests on a set of models.
 
@@ -53,7 +65,6 @@ class TestManager(object):
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
                     f'{len(self.models)} models')
         for model, test in itertools.product(self.models, self.tests):
-            logger.info(f'Checking applicability of tests for {model.model.name}')
             logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model, test):
                 model.add_test(test)
@@ -62,7 +73,7 @@ class TestManager(object):
                 logger.info(f'Test {test.stmt} is not applicable')
         logger.info(f'Created tests for {len(self.models)} models.')
         for model in self.models:
-            logger.info(f'Created {len(model.applicable_tests)} tests for'
+            logger.info(f'Created {len(model.applicable_tests)} tests for '
                         f'{model.model.name} model.')
 
     # def run_tests(self):
@@ -77,26 +88,9 @@ class TestManager(object):
                 model.add_result(test.check(model.pysb_model))
 
     def results_to_json(self):
-        # TODO
-        # also convert this into using model_to_tests dict
-        # problem - current indexing works only for cases when we have just one model
-        # possible solutions - make test_results also a dict
-        pickler = jsonpickle.pickler.Pickler()
         results_json = []
-        for model, tests in self.model_to_tests.items():
-            # model to test to result
-            for ix, test in enumerate(tests):
-                results_json.append({
-                   'model_name': model.name,
-                   'test_type': test.__class__.__name__,
-                   'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_to_results[test][ix])})
-        # for ix, (model, test) in enumerate(self.pairs_to_test):
-        #     results_json.append({
-        #            'model_name': model.name,
-        #            'test_type': test.__class__.__name__,
-        #            'test_json': test.to_json(),
-        #            'result_json': pickler.flatten(self.test_results[ix])})
+        for model in self.models:
+            results_json += model.results_to_json()
         return results_json
 
 
@@ -117,7 +111,7 @@ class ScopeTestConnector(TestConnector):
     def applicable(model, test):
         """Return True of all test entities are in the set of model entities"""
         model_entities = model.entities
-        test_entities = test.entities
+        test_entities = test.get_entities()
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
     @staticmethod
@@ -217,7 +211,8 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
-    tm = TestManager([model], tests)
+    mm = ModelManager(model)
+    tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     results_json_dict = tm.results_to_json()
