@@ -6,6 +6,7 @@ import logging
 import datetime
 import itertools
 import jsonpickle
+from collections import defaultdict
 from indra.explanation.model_checker import ModelChecker
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
@@ -27,8 +28,14 @@ class TestManager(object):
     def __init__(self, models, tests):
         self.models = models
         self.tests = tests
-        self.pairs_to_test = []
-        self.test_results = []
+        # self.pairs_to_test = []
+        # self.test_results = []
+        self.model_entities = {model: model.get_entities() for model in 
+                               self.models}
+        self.test_entities = {test: test.get_entities() for test in self.tests}
+        self.model_to_tests = defaultdict(list)
+        self.test_to_results = defaultdict(list)
+        # model to results or test to results?
 
     def make_tests(self, test_connector):
         """Generate a list of model-test pairs with a given test connector
@@ -43,27 +50,50 @@ class TestManager(object):
         for model, test in itertools.product(self.models, self.tests):
             logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model, test):
-                self.pairs_to_test.append((model, test))
+                # self.pairs_to_test.append((model, test))
+                self.model_to_tests[model].append(test)
                 logger.info(f'Test {test.stmt} is applicable')
             else:
                 logger.info(f'Test {test.stmt} is not applicable')
+        # logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
+        logger.info(f'Created tests for {len(self.model_to_tests)} models.')
+        for model in self.model_to_tests.keys():
+            logger.info(f'Created {len(self.model_to_tests[model])} tests for {model.name} model.')
 
-        logger.info(f'Created {len(self.pairs_to_test)} model-test pairs.')
+    # def run_tests(self):
+    #     """Run tests for a list of model-test pairs"""
+    #     for (model, test) in self.pairs_to_test:
+    #         self.test_results.append(test.check(model))
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
-        for (model, test) in self.pairs_to_test:
-            self.test_results.append(test.check(model))
+        for model in self.model_to_tests.keys():
+            pysb_model = model.assemble_pysb()
+            # model to results or test to results?
+            for test in self.model_to_tests[model]:
+                self.test_to_results[test].append(test.check(pysb_model))
 
     def results_to_json(self):
+        # TODO
+        # also convert this into using model_to_tests dict
+        # problem - current indexing works only for cases when we have just one model
+        # possible solutions - make test_results also a dict
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
-        for ix, (model, test) in enumerate(self.pairs_to_test):
-            results_json.append({
+        for model, tests in self.model_to_tests.items():
+            # model to test to result
+            for ix, test in enumerate(tests):
+                results_json.append({
                    'model_name': model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix])})
+                   'result_json': pickler.flatten(self.test_to_results[test][ix])})
+        # for ix, (model, test) in enumerate(self.pairs_to_test):
+        #     results_json.append({
+        #            'model_name': model.name,
+        #            'test_type': test.__class__.__name__,
+        #            'test_json': test.to_json(),
+        #            'result_json': pickler.flatten(self.test_results[ix])})
         return results_json
 
 
@@ -106,12 +136,21 @@ class EmmaaTest(object):
 class StatementCheckingTest(EmmaaTest):
     """Represent an EMMAA test condition that checks a PySB-assembled model
     against an INDRA Statement."""
+    # def __init__(self, stmt):
+    #     self.stmt = stmt
+
+    # def check(self, model):
+    #     """Use a model checker to check if a given model satisfies the test."""
+    #     pysb_model = model.assemble_pysb()
+    #     mc = ModelChecker(pysb_model, [self.stmt])
+    #     res = mc.check_statement(self.stmt)
+    #     return res
+
     def __init__(self, stmt):
         self.stmt = stmt
 
-    def check(self, model):
+    def check(self, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
-        pysb_model = model.assemble_pysb()
         mc = ModelChecker(pysb_model, [self.stmt])
         res = mc.check_statement(self.stmt)
         return res
