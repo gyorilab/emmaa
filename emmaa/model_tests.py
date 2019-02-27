@@ -21,6 +21,10 @@ class ModelManager(object):
         self.entities = self.model.get_entities()
         self.applicable_tests = []
         self.test_results = []
+        self.mc = ModelChecker(self.pysb_model)
+
+    def get_im(self):
+        self.mc.get_im(self.pysb_model)
     
     def add_test(self, test):
         self.applicable_tests.append(test)
@@ -79,8 +83,14 @@ class TestManager(object):
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
         for model in self.models:
-            for test in model.applicable_tests:
-                model.add_result(test.check(model.pysb_model))
+            model.mc.add_statements(
+                [test.stmt for test in model.applicable_tests])
+            model.get_im()
+            results = model.mc.check_model()
+            for result in results:
+                model.add_result(result[1])  
+            # for test in model.applicable_tests:
+            #     model.add_result(test.check(model.pysb_model))
 
     def results_to_json(self):
         results_json = []
