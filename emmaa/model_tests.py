@@ -33,11 +33,16 @@ class ModelManager(object):
         self.test_results.append(result)
 
     def run_tests(self):
-        mc.add_statements([test.stmt for test in model.applicable_tests])
+        self.mc.add_statements([test.stmt for test in self.applicable_tests])
         self.get_im()
-        results = mc.check_model()
+        results = self.mc.check_model()
         for (stmt, result) in results:
-            model.add_result(result)
+            self.add_result(result)
+        # second version:
+        # self.mc.add_statements([test.stmt for test in self.applicable_tests])
+        # self.get_im()
+        # for test in self.applicable_tests:
+        #   self.add_result(test.check(self.mc, self.pysb_model))  
 
     def results_to_json(self):
         pickler = jsonpickle.pickler.Pickler()
@@ -91,8 +96,6 @@ class TestManager(object):
         """Run tests for a list of model-test pairs"""
         for model in self.models:
             model.run_tests()
-            # for test in model.applicable_tests:
-            #     model.add_result(test.check(model.pysb_model))
 
     def results_to_json(self):
         results_json = []
@@ -149,10 +152,10 @@ class StatementCheckingTest(EmmaaTest):
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
 
-    def check(self, pysb_model):
+    # probably won't need this method
+    def check(self, model_checker, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
-        mc = ModelChecker(pysb_model, [self.stmt])
-        res = mc.check_statement(self.stmt)
+        res = model_checker.check_statement(self.stmt)
         return res
 
     def get_entities(self):
