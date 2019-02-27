@@ -112,6 +112,9 @@ class ScopeTestConnector(TestConnector):
         """Return True of all test entities are in the set of model entities"""
         model_entities = model.entities
         test_entities = test.get_entities()
+        # TODO
+        # After adding entities as a property to StatementCheckingTest(), use
+        # test_entities = test.entities
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
     @staticmethod
@@ -145,7 +148,9 @@ class StatementCheckingTest(EmmaaTest):
 
     def __init__(self, stmt):
         self.stmt = stmt
-        self.entities = self.get_entities()
+        # TODO
+        # Add entities as a property if we can reload tests on s3.
+        # self.entities = self.get_entities()
 
     def check(self, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
