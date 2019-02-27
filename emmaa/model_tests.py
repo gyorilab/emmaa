@@ -32,6 +32,13 @@ class ModelManager(object):
     def add_result(self, result):
         self.test_results.append(result)
 
+    def run_tests(self):
+        mc.add_statements([test.stmt for test in model.applicable_tests])
+        self.get_im()
+        results = mc.check_model()
+        for (stmt, result) in results:
+            model.add_result(result)
+
     def results_to_json(self):
         pickler = jsonpickle.pickler.Pickler()
         results_json = []        
@@ -83,12 +90,7 @@ class TestManager(object):
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
         for model in self.models:
-            model.mc.add_statements(
-                [test.stmt for test in model.applicable_tests])
-            model.get_im()
-            results = model.mc.check_model()
-            for result in results:
-                model.add_result(result[1])  
+            model.run_tests()
             # for test in model.applicable_tests:
             #     model.add_result(test.check(model.pysb_model))
 
