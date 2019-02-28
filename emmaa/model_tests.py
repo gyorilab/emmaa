@@ -14,45 +14,74 @@ from emmaa.util import make_date_str, get_s3_client
 
 logger = logging.getLogger(__name__)
 
+
 class ModelManager(object):
+    """Manager to generate and store properties of a model and relevant tests.
+
+    Parameters
+    ----------
+    model : emmaa.model.EmmaaModel
+        EMMAA model
+
+    Attributes
+    ----------
+    pysb_model : emmaa.model.EmmaaModel
+        PySB model assembled from EMMAA model
+    entities : list[indra.statements.agent.Agent]
+        A list of entities of EMMAA model
+    applicable_tests : list[emmaa.model_tests.EmmaaTest]
+        A list of EMMAA tests applicable for given EMMAA model
+    test_results : list[indra.explanation.model_checker.PathResult]
+        A list of EMMAA test results
+    model_checker : indra.explanation.model_checker.ModelChecker
+        A ModelChecker to check PySB model
+    """
     def __init__(self, model):
         self.model = model
         self.pysb_model = self.model.assemble_pysb()
         self.entities = self.model.get_entities()
         self.applicable_tests = []
         self.test_results = []
-        self.mc = ModelChecker(self.pysb_model)
+        self.model_checker = ModelChecker(self.pysb_model)
 
     def get_im(self):
-        self.mc.get_im(self.pysb_model)
-    
+        """Get the influence map for the model."""
+        self.model_checker.get_im(self.pysb_model)
+
     def add_test(self, test):
+        """Add a test to a list of applicable tests."""
         self.applicable_tests.append(test)
 
     def add_result(self, result):
+        """Add a result to a list of results."""
         self.test_results.append(result)
 
+    def run_one_test(self, test):
+        """
+        Run one test. Recommended for testing only. 
+        Use run_tests() to run all tests.
+        """
+        return test.check(self.model_checker, self.pysb_model)
+
     def run_tests(self):
-        self.mc.add_statements([test.stmt for test in self.applicable_tests])
+        """Run all applicable tests for the model."""
+        self.model_checker.add_statements([test.stmt for test in
+                                           self.applicable_tests])
         self.get_im()
-        results = self.mc.check_model()
+        results = self.model_checker.check_model()
         for (stmt, result) in results:
             self.add_result(result)
-        # second version:
-        # self.mc.add_statements([test.stmt for test in self.applicable_tests])
-        # self.get_im()
-        # for test in self.applicable_tests:
-        #   self.add_result(test.check(self.mc, self.pysb_model))  
 
     def results_to_json(self):
+        """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
-        results_json = []        
+        results_json = []
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
                    'model_name': self.model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix])})            
+                   'result_json': pickler.flatten(self.test_results[ix])})
         return results_json
 
 
@@ -61,17 +90,19 @@ class TestManager(object):
 
     Parameters
     ----------
-    models : list[emmaa.model.EmmaaModel]
-        A list of EMMAA models
+    model_managers : list[emmaa.model_tests.ModelManager]
+        A list of ModelManager objects
     tests : list[emmaa.model_tests.EmmaaTest]
         A list of EMMAA tests
     """
-    def __init__(self, models, tests):
-        self.models = models
+    def __init__(self, model_managers, tests):
+        self.model_managers = model_managers
         self.tests = tests
 
     def make_tests(self, test_connector):
-        """Generate a list of model-test pairs with a given test connector
+        """
+        Generate a list of applicable tests for each model with a given test 
+        connector.
 
         Parameters
         ----------
@@ -79,28 +110,28 @@ class TestManager(object):
             A TestConnector object to use for connecting models to tests.
         """
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
-                    f'{len(self.models)} models')
-        for model, test in itertools.product(self.models, self.tests):
+                    f'{len(self.model_managers)} models')
+        for model_manager, test in itertools.product(self.model_managers, self.tests):
             logger.info(f'Checking applicability of test {test.stmt}')
-            if test_connector.applicable(model, test):
-                model.add_test(test)
+            if test_connector.applicable(model_manager, test):
+                model_manager.add_test(test)
                 logger.info(f'Test {test.stmt} is applicable')
             else:
                 logger.info(f'Test {test.stmt} is not applicable')
-        logger.info(f'Created tests for {len(self.models)} models.')
-        for model in self.models:
-            logger.info(f'Created {len(model.applicable_tests)} tests for '
-                        f'{model.model.name} model.')
+        logger.info(f'Created tests for {len(self.model_managers)} models.')
+        for model_manager in self.model_managers:
+            logger.info(f'Created {len(model_manager.applicable_tests)} tests for '
+                        f'{model_manager.model.name} model.')
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
-        for model in self.models:
-            model.run_tests()
+        for model_manager in self.model_managers:
+            model_manager.run_tests()
 
     def results_to_json(self):
         results_json = []
-        for model in self.models:
-            results_json += model.results_to_json()
+        for model_manager in self.model_managers:
+            results_json += model_manager.results_to_json()
         return results_json
 
 
@@ -231,4 +262,3 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
         client.put_object(Bucket='emmaa', Key=result_key,
                           Body=results_json_str.encode('utf8'))
     return tm
-
