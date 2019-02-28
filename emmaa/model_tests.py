@@ -155,7 +155,7 @@ class ScopeTestConnector(TestConnector):
         model_entities = model.entities
         test_entities = test.get_entities()
         # TODO
-        # After adding entities as a property to StatementCheckingTest(), use
+        # After adding entities as an attribute to StatementCheckingTest(), use
         # test_entities = test.entities
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
