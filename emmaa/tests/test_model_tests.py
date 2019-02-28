@@ -22,7 +22,6 @@ def test_run_tests_from_s3():
     tm = run_model_tests_from_s3('test', 'simple_model_test.pkl',
                                  upload_results=False)
     assert isinstance(tm, TestManager)
-    assert len(tm.pairs_to_test) == 1
-    assert len(tm.test_results) == 1
-    assert isinstance(tm.test_results[0], PathResult)
-
+    assert len(tm.model_managers[0].applicable_tests) == 1
+    assert len(tm.model_managers[0].test_results) == 1
+    assert isinstance(tm.model_managers.test_results[0], PathResult)
