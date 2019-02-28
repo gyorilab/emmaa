@@ -24,4 +24,4 @@ def test_run_tests_from_s3():
     assert isinstance(tm, TestManager)
     assert len(tm.model_managers[0].applicable_tests) == 1
     assert len(tm.model_managers[0].test_results) == 1
-    assert isinstance(tm.model_managers.test_results[0], PathResult)
+    assert isinstance(tm.model_managers[0].test_results[0], PathResult)
