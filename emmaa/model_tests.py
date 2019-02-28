@@ -101,7 +101,7 @@ class TestManager(object):
 
     def make_tests(self, test_connector):
         """
-        Generate a list of applicable tests for each model with a given test 
+        Generate a list of applicable tests for each model with a given test
         connector.
 
         Parameters
@@ -111,7 +111,8 @@ class TestManager(object):
         """
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
                     f'{len(self.model_managers)} models')
-        for model_manager, test in itertools.product(self.model_managers, self.tests):
+        for model_manager, test in itertools.product(self.model_managers,
+                                                     self.tests):
             logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model_manager, test):
                 model_manager.add_test(test)
@@ -120,8 +121,8 @@ class TestManager(object):
                 logger.info(f'Test {test.stmt} is not applicable')
         logger.info(f'Created tests for {len(self.model_managers)} models.')
         for model_manager in self.model_managers:
-            logger.info(f'Created {len(model_manager.applicable_tests)} tests for '
-                        f'{model_manager.model.name} model.')
+            logger.info(f'Created {len(model_manager.applicable_tests)} tests '
+                        f'for {model_manager.model.name} model.')
 
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
@@ -183,7 +184,6 @@ class StatementCheckingTest(EmmaaTest):
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
 
-    # probably won't need this method
     def check(self, model_checker, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
         res = model_checker.check_statement(self.stmt)
