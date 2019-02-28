@@ -6,32 +6,33 @@
 # dangerous is only intended to be run in temporary environments. It will overwrite
 # unstaged changes with git reset --hard
 
-TEMP=`getopt -o b: --long branch: -- "$@"`
-eval set -- "$TEMP"
-
 while true; do
     case "$1" in
 	-b | --branch)
 	    branch=$2
 	    shift 2; break ;;
-	-- ) shift 2; break ;;
-	* ) shift; break ;;
+	* ) break ;;
     esac
 done
 
-if [[ $branch ]]; then
+
+if ! [ -z "$branch" ]; then
     # First verify branch actually exists
+    echo "Attempting to change to branch $branch"
     git rev-parse --verify $branch >/dev/null 2>/dev/null
-    if [["$?" != 0 ]]; then
+    echo "$?"
+    if ! [ "$?" -eq 0 ]; then
 	echo "Error: Branch $branch could not be found"
 	exit 1
     fi
     # If branch is remote we will need to fetch
-    remote=$(basename $branch)
-    if [[ $remote != "$branch" ]]; then
+    remote=$(dirname $branch)
+    if [ $remote != "$branch" ]; then
+	echo "Fetching from remote $remote"
 	git fetch $remote
     fi
+    echo "HEAD originally at "$(git log --oneline -1)
     git reset --hard $branch
 fi
-
-${@:$OPTIND+1}
+echo "Running command \"$@\""
+$@
