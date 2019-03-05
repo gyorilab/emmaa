@@ -16,7 +16,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-results'
-BRANCH = None
+BRANCH = 'origin/master'
 
 
 def lambda_handler(event, context):
