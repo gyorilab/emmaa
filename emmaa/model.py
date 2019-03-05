@@ -129,12 +129,12 @@ class EmmaaModel(object):
             The list of assembled INDRA Statements.
         """
         stmts = self.get_indra_stmts()
-        if filter_ungrounded:
-            stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
-        stmts = ac.map_sequence(stmts)
+        if filter_ungrounded:
+            stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_human_only(stmts)
+        stmts = ac.map_sequence(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)

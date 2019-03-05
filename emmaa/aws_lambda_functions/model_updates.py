@@ -1,7 +1,7 @@
 """The AWS Lambda emmaa-model-update definition.
 
-This file contains the function that starts model update cycle. It must be 
-placed on AWS Lambda, which can either be done manually (not recommended) or by 
+This file contains the function that starts model update cycle. It must be
+placed on AWS Lambda, which can either be done manually (not recommended) or by
 running:
 
 $ python update_lambda.py model_updates.py emmaa-model-update
@@ -16,7 +16,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-models'
-BRANCH = None
+BRANCH = 'origin/master'
 
 
 def lambda_handler(event, context):
