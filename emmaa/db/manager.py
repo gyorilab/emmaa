@@ -1,3 +1,5 @@
+__all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
+
 import logging
 
 from sqlalchemy import create_engine
@@ -16,8 +18,9 @@ class EmmaaDatabaseError(Exception):
 class EmmaaDatabaseManager(object):
     table_order = ['user', 'query', 'user_query', 'result']
 
-    def __init__(self, host):
+    def __init__(self, host, label=None):
         self.host = host
+        self.label = label
         self.engine = create_engine(host)
         self.tables = {tbl.__tablename__: tbl
                        for tbl in EmmaaTable.__subclasses__()}
