@@ -129,12 +129,6 @@ class TestManager(object):
         for model_manager in self.model_managers:
             model_manager.run_tests()
 
-    def results_to_json(self):
-        results_json = []
-        for model_manager in self.model_managers:
-            results_json += model_manager.results_to_json()
-        return results_json
-
 
 class TestConnector(object):
     """Determines if a given test is applicable to a given model."""
@@ -251,7 +245,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
-    results_json_dict = tm.results_to_json()
+    results_json_dict = mm.results_to_json()
     results_json_str = json.dumps(results_json_dict)
     # Optionally upload test results to S3
     if upload_results:
