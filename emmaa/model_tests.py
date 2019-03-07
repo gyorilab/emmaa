@@ -8,6 +8,8 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from indra.explanation.model_checker import ModelChecker
+from indra.explanation.reporting import stmts_from_path
+from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 
@@ -72,6 +74,20 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(result)
 
+    def make_english_result(self, result):
+        stmts = stmts_from_path(result.paths[0], self.pysb_model, 
+                                self.model.assembled_stmts)
+        ea = EnglishAssembler(stmts)
+        return ea.make_model()
+
+    def has_path(self, result):
+        return result.path_found
+
+    def get_english_result(self, result):
+        if self.has_path(result):
+            return self.make_english_result(result)
+        return ''
+
     def results_to_json(self):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
@@ -81,7 +97,9 @@ class ModelManager(object):
                    'model_name': self.model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix])})
+                   'result_json': pickler.flatten(self.test_results[ix])
+                   'english_result': self.get_english_result(
+                                     self.test_results[ix])})
         return results_json
 
 
