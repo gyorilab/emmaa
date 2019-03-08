@@ -8,7 +8,8 @@ HERE = path.dirname(path.abspath(__file__))
 
 DB_CONFIG_DIR = path.expanduser('~/.config/emmaa')
 DB_CONFIG_PATH = path.join(DB_CONFIG_DIR, 'db_config.ini')
-DEFAULT_DB_CONFIG_PATH = path.join(HERE, 'resources/default_db_config.ini')
+DEFAULT_DB_CONFIG_PATH = path.join(HERE, path.pardir,
+                                   'resources/default_db_config.ini')
 
 DB_STR_FMT = "{prefix}://{username}{password}{host}{port}/{name}"
 ENV_PREFIX = 'EMMAADB'
@@ -23,7 +24,7 @@ if not path.exists(DB_CONFIG_DIR):
         makedirs(DB_CONFIG_DIR)
     except Exception as e:
         CONFIG_EXISTS = False
-        logger.warning("Unable to copy config dir: %s" % e)
+        logger.warning("Unable to create config dir: %s" % e)
 
 
 if not path.exists(DB_CONFIG_PATH) and CONFIG_EXISTS:
