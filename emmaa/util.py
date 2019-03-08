@@ -32,8 +32,11 @@ def make_date_str(date=None):
     return date.strftime(FORMAT)
 
 
-def find_latest_s3_file(bucket, prefix, extension=None):
-    """Return the key of the file with latest date string on an S3 path"""
+def sort_s3_files_by_date(bucket, prefix, extension=None):
+    """
+    Return the list of keys of the files on an S3 path sorted by date starting
+    with the most recent one.
+    """
     def process_key(key):
         fname_with_extension = os.path.basename(key)
         fname = os.path.splitext(fname_with_extension)[0]
@@ -45,8 +48,27 @@ def find_latest_s3_file(bucket, prefix, extension=None):
     if extension:
         files = [file for file in files if file['Key'].endswith(extension)]
     files = sorted(files, key=lambda f: process_key(f['Key']), reverse=True)
+    return files
+
+
+def find_latest_s3_file(bucket, prefix, extension=None):
+    """Return the key of the file with latest date string on an S3 path"""
+    files = sort_s3_files_by_date(bucket, prefix, extension)
     latest = files[0]['Key']
     return latest
+
+
+def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
+    """
+    Return the keys of the specified number of files with latest date strings
+    on an S3 path.
+    """
+    files = sort_s3_files_by_date(bucket, prefix, extension)
+    keys = []
+    for ix in range(number_of_files):
+        keys.append(files[ix]['Key'])
+    keys.reverse()
+    return keys
 
 
 def get_s3_client(unsigned=True):
