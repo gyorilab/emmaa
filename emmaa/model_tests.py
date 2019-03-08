@@ -60,7 +60,7 @@ class ModelManager(object):
 
     def run_one_test(self, test):
         """
-        Run one test. Recommended for testing only. 
+        Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
         return test.check(self.model_checker, self.pysb_model)
@@ -75,15 +75,21 @@ class ModelManager(object):
             self.add_result(result)
 
     def make_english_result(self, result):
-        stmts = stmts_from_path(result.paths[0], self.pysb_model, 
+        """Create an English description of a path."""
+        stmts = stmts_from_path(result.paths[0], self.pysb_model,
                                 self.model.assembled_stmts)
         ea = EnglishAssembler(stmts)
         return ea.make_model()
 
     def has_path(self, result):
+        """Check if a path was found."""
         return result.path_found
 
     def get_english_result(self, result):
+        """
+        Get English description of a path if it was found.
+        Return an empty string otherwise.
+        """
         if self.has_path(result):
             return self.make_english_result(result)
         return ''
@@ -97,7 +103,7 @@ class ModelManager(object):
                    'model_name': self.model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix])
+                   'result_json': pickler.flatten(self.test_results[ix]),
                    'english_result': self.get_english_result(
                                      self.test_results[ix])})
         return results_json
