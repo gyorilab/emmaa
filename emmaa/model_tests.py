@@ -78,8 +78,11 @@ class ModelManager(object):
         """Create an English description of a path."""
         stmts = stmts_from_path(result.paths[0], self.pysb_model,
                                 self.model.assembled_stmts)
-        ea = EnglishAssembler(stmts)
-        return ea.make_model()
+        sentences = []
+        for stmt in stmts:
+            ea = EnglishAssembler([stmt])
+            sentences.append(ea.make_model())
+        return sentences
 
     def has_path(self, result):
         """Check if a path was found."""
@@ -92,7 +95,7 @@ class ModelManager(object):
         """
         if self.has_path(result):
             return self.make_english_result(result)
-        return ''
+        return []
 
     def results_to_json(self):
         """Put test results to json format."""
