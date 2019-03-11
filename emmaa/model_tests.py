@@ -104,6 +104,7 @@ class ModelManager(object):
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
                    'model_name': self.model.name,
+                   'number_of_statements': self.model.assembled_stmts
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
                    'result_json': pickler.flatten(self.test_results[ix]),
