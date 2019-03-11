@@ -58,6 +58,13 @@ def find_latest_s3_file(bucket, prefix, extension=None):
     return latest
 
 
+def find_second_latest_s3_file(bucket, prefix, extension=None):
+    """Return the key of the file with second latest date string on an S3 path"""
+    files = sort_s3_files_by_date(bucket, prefix, extension)
+    latest = files[1]['Key']
+    return latest
+
+
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
     """
     Return the keys of the specified number of files with latest date strings
@@ -69,6 +76,14 @@ def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
         keys.append(files[ix]['Key'])
     keys.reverse()
     return keys
+
+
+def load_test_results_from_s3(key):
+    client = get_s3_client()
+    logger.info(f'Loading test results from {key}')
+    obj = client.get_object(Bucket='emmaa', Key=key)
+    test_results = json.loads(obj['Body'].read().decode('utf8'))
+    return test_results
 
 
 def get_s3_client(unsigned=True):
