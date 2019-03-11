@@ -1,7 +1,8 @@
 import json
 import logging
 from collections import defaultdict
-from util import find_latest_s3_files, load_test_results_from_s3
+from util import (find_latest_s3_files, find_latest_s3_file,
+                  find_second_latest_s3_file, load_test_results_from_s3)
 from indra.statements.statements import Statement
 
 
@@ -9,6 +10,24 @@ class TestRound():
     def __init__(self, key):
         self.key = key
         self.test_results = load_test_results_from_s3(key)
+
+    def get_statements(self):
+        return self.test_results[0]['statements']
+
+    def get_statement_types(self):
+        statement_types = defaultdict(int)
+        for stmt in self.get_statements():
+            statement_types[stmt['type']] += 1
+        return statement_types
+
+    def get_agents(self):
+        # add agent count
+
+    def get_support(self):
+        stmts_evidence = {}
+        for stmt in self.get_statements():
+            stmts_evidence[stmt['id']] = len(stmt.evidence)
+        return stmts_evidence
 
     def has_path(self, result):
         return result['result_json']['path_found']
@@ -29,22 +48,19 @@ class TestRound():
     def get_number_statements(self):
         return self.test_results[0]['number_of_statements']
 
-    def get_statements(self):
-        return self.test_results[0]['statements']
-
     def get_passed_tests(self):
-        # change to english!
         passed_tests = []
         for result in self.test_results[1:]:
             if self.has_path(result):
-                passed_tests.append(Statement._from_json(res['test_json']))
+                passed_tests.append(result['english_test'])
         return passed_tests
 
     def get_path_descriptions(self):
         path_descriptions = []
-        for res in self.test_results[1:]:
-            if res['result_json']['path_found']:
-                path_descriptions.append(res['english_result'])
+        for result in self.test_results[1:]:
+            if self.has_path(result):
+                path_descriptions.append(result['english_result'])
+        return path_descriptions
 
     def find_numeric_delta(self, other_round, one_round_numeric_func):
         return self.one_round_func() - other_round.one_round_numeric_func()
@@ -71,4 +87,12 @@ def run_for_multiple_rounds(number_of_tests, model_name, one_round_func):
         data.append(current_data)
     return data
 
-# def find_delta()
+
+def get_deltas(model_name):
+    latest_key = find_latest_s3_file('emmaa', f'results/{model_name}/results_',
+                                     extension='.json')
+    previous_key = find_second_latest_s3_file('emmaa',
+                                              f'results/{model_name}/results_',
+                                              extension='.json')
+    latest_round = TestRound(latest_key)
+    previous_round = TestRound(previous_key)
