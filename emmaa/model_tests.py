@@ -109,6 +109,7 @@ class ModelManager(object):
             results_json.append({
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
+                   'english_test': test.get_english_description(),
                    'result_json': pickler.flatten(self.test_results[ix]),
                    'english_result': self.get_english_result(
                                      self.test_results[ix])})
@@ -216,6 +217,11 @@ class StatementCheckingTest(EmmaaTest):
     def get_entities(self):
         """Return a list of entities that the test checks for."""
         return self.stmt.agent_list()
+
+    def get_english_description(self):
+        """Return an English representation of a statement."""
+        ea = EnglishAssembler(self.stmt)
+        return ea.make_model()
 
     def to_json(self):
         return self.stmt.to_json()
