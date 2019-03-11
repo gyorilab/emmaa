@@ -97,13 +97,20 @@ class ModelManager(object):
             return self.make_english_result(result)
         return []
 
+    def assembled_stmts_to_json(self):
+        """Put assembled statements to JSON format."""
+        stmts = []
+        for stmt in self.model.assembled_stmts:
+            stmts.append(stmt.to_json())
+        return stmts
+
     def results_to_json(self):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
         results_json.append({                   
             'model_name': self.model.name,
-            'statements': self.model.assembled_stmts,
+            'statements': self.assembled_stmts_to_json(),
             'number_of_statements': len(self.model.assembled_stmts)})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
@@ -219,7 +226,7 @@ class StatementCheckingTest(EmmaaTest):
         return self.stmt.agent_list()
 
     def get_english_description(self):
-        """Return an English representation of a statement."""
+        """Return an English representation of a test."""
         ea = EnglishAssembler(self.stmt)
         return ea.make_model()
 
