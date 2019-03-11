@@ -101,10 +101,12 @@ class ModelManager(object):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
+        results_json.append({                   
+            'model_name': self.model.name,
+            'statements': self.model.assembled_stmts,
+            'number_of_statements': len(self.model.assembled_stmts)})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
-                   'model_name': self.model.name,
-                   'number_of_statements': self.model.assembled_stmts
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
                    'result_json': pickler.flatten(self.test_results[ix]),
