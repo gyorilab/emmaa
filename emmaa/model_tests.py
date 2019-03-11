@@ -8,6 +8,8 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from indra.explanation.model_checker import ModelChecker
+from indra.explanation.reporting import stmts_from_path
+from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 
@@ -58,7 +60,7 @@ class ModelManager(object):
 
     def run_one_test(self, test):
         """
-        Run one test. Recommended for testing only. 
+        Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
         return test.check(self.model_checker, self.pysb_model)
@@ -72,6 +74,29 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(result)
 
+    def make_english_result(self, result):
+        """Create an English description of a path."""
+        stmts = stmts_from_path(result.paths[0], self.pysb_model,
+                                self.model.assembled_stmts)
+        sentences = []
+        for stmt in stmts:
+            ea = EnglishAssembler([stmt])
+            sentences.append(ea.make_model())
+        return sentences
+
+    def has_path(self, result):
+        """Check if a path was found."""
+        return result.path_found
+
+    def get_english_result(self, result):
+        """
+        Get English description of a path if it was found.
+        Return an empty string otherwise.
+        """
+        if self.has_path(result):
+            return self.make_english_result(result)
+        return []
+
     def results_to_json(self):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
@@ -81,7 +106,9 @@ class ModelManager(object):
                    'model_name': self.model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix])})
+                   'result_json': pickler.flatten(self.test_results[ix]),
+                   'english_result': self.get_english_result(
+                                     self.test_results[ix])})
         return results_json
 
 
@@ -128,12 +155,6 @@ class TestManager(object):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
             model_manager.run_tests()
-
-    def results_to_json(self):
-        results_json = []
-        for model_manager in self.model_managers:
-            results_json += model_manager.results_to_json()
-        return results_json
 
 
 class TestConnector(object):
@@ -251,7 +272,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
-    results_json_dict = tm.results_to_json()
+    results_json_dict = mm.results_to_json()
     results_json_str = json.dumps(results_json_dict)
     # Optionally upload test results to S3
     if upload_results:

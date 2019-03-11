@@ -46,6 +46,7 @@ class EmmaaModel(object):
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
+        self.assembled_stmts = []
 
     def add_statements(self, stmts):
         """"Add a set of EMMAA Statements to the model
@@ -139,7 +140,7 @@ class EmmaaModel(object):
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
         stmts = ac.filter_top_level(stmts)
-        return stmts
+        self.assembled_stmts = stmts
 
     def upload_to_ndex(self):
         """Upload the assembled model as CX to NDEx"""
@@ -204,11 +205,9 @@ class EmmaaModel(object):
 
     def assemble_pysb(self, belief_cutoff=0.8):
         """Assemble the model into PySB and return the assembled model."""
-        assembled_stmts = \
-            self.run_assembly(belief_cutoff=belief_cutoff,
-                              filter_ungrounded=True)
+        self.run_assembly(belief_cutoff=belief_cutoff, filter_ungrounded=True)
         pa = PysbAssembler()
-        pa.add_statements(assembled_stmts)
+        pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
         return pysb_model
 
