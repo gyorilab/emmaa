@@ -5,8 +5,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable
-
+from .schema import EmmaaTable, User
 
 logger = logging.getLogger(__name__)
 
@@ -52,3 +51,13 @@ class EmmaaDatabaseManager(object):
                     logger.warning(f"Table {tbl_name} already exists! "
                                    f"No action taken.")
         return
+
+    def add_user(self, email):
+        try:
+            new_user = User(email)
+            self.session.add(new_user)
+        except Exception:
+            self.session.rollback()
+            logger.warning(f"A user with email {email} already exists.")
+        self.session.commit()
+        return new_user.id
