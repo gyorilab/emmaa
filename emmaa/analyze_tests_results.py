@@ -11,6 +11,7 @@ class TestRound():
         self.key = key
         self.test_results = load_test_results_from_s3(key)
 
+    # Model Summary
     def get_statements(self):
         return self.test_results[0]['statements']
 
@@ -21,7 +22,20 @@ class TestRound():
         return statement_types
 
     def get_agents(self):
-        # add agent count
+        agent_count = defaultdict(int)
+        agent_types = ['subj', 'obj', 'sub', 'enz', 'agent']
+
+        def get_agent_name(stmt, agent_type):
+            return stmt[agent_type]['name']
+
+        for stmt in self.get_statements():
+            for agent_type in agent_types:
+                if agent_type in stmt.keys():
+                    agent_count[get_agent_name(stmt, agent_type)] += 1
+            if 'members' in stmt.keys():
+                for member in stmt['members']:
+                    agent_count[member['name']] += 1
+        return agent_count
 
     def get_support(self):
         stmts_evidence = {}
@@ -29,6 +43,7 @@ class TestRound():
             stmts_evidence[stmt['id']] = len(stmt.evidence)
         return stmts_evidence
 
+    # Test Summary
     def has_path(self, result):
         return result['result_json']['path_found']
 
@@ -62,6 +77,7 @@ class TestRound():
                 path_descriptions.append(result['english_result'])
         return path_descriptions
 
+    # Deltas
     def find_numeric_delta(self, other_round, one_round_numeric_func):
         return self.one_round_func() - other_round.one_round_numeric_func()
 
