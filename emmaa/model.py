@@ -144,8 +144,9 @@ class EmmaaModel(object):
 
     def upload_to_ndex(self):
         """Upload the assembled model as CX to NDEx"""
-        assembled_stmts = self.run_assembly()
-        cxa = CxAssembler(assembled_stmts, network_name=self.name)
+        if not self.assembled_stmts:
+            self.run_assembly()
+        cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
         cxa.make_model()
         cx_str = cxa.print_cx()
         ndex_client.update_network(cx_str, self.ndex_network)
