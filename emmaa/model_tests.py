@@ -227,7 +227,7 @@ class StatementCheckingTest(EmmaaTest):
 
     def get_english_description(self):
         """Return an English representation of a test."""
-        ea = EnglishAssembler(self.stmt)
+        ea = EnglishAssembler([self.stmt])
         return ea.make_model()
 
     def to_json(self):
