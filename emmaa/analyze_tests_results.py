@@ -24,7 +24,7 @@ class TestRound(object):
     def get_stmt_id(self, stmt):
         return str(stmt['id'])
 
-    def get_number_statements(self):
+    def get_total_statements(self):
         return self.test_results[0]['number_of_statements']
 
     def get_statements(self):
@@ -190,14 +190,14 @@ class StatsGenerator(object):
         self.number_of_rounds = number_of_rounds
         self.latest_round = TestRound(find_latest_s3_file(
             'emmaa', f'results/{model_name}/results_', extension='.json'))
-        self.previous_round = TestRound(ind_second_latest_s3_file('emmaa',
-            f'results/{model_name}/results_', extension='.json'))
+        self.previous_round = TestRound(find_second_latest_s3_file(
+            'emmaa', f'results/{model_name}/results_', extension='.json'))
         self.json_stats = {}
 
     def make_model_summary(self):
         json_stats['model_summary'] = {
             'model_name': model_name,
-            'number_of_statements': self.latest_round.get_number_statements(),
+            'number_of_statements': self.latest_round.get_total_statements(),
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
@@ -211,16 +211,16 @@ class StatsGenerator(object):
             'passed_ratio': self.latest_round.passed_over_total(),
             'tests_by_id': self.latest_round.get_english_test_by_id(),
             'passed_tests': self.latest_round.get_passed_test_ids(),
-            'paths': self.latest_round.get_path_descriptions_by_test_id()
+            'paths': self.latest_round.get_path_descriptions()
         }
 
     def make_model_delta(self):
         json_stats['model_delta'] = {
             'number_of_statements_delta': self.latest_round.find_numeric_delta(
-                self.previous_round, 'get_number_statements'),
-            'statements_delta': self.latest_round.find_stmts_delta(
-                                self.previous_round),
-       }
+                self.previous_round, 'get_total_statements'),
+            'statements_delta': self.latest_round.find_content_delta(
+                self.previous_round, 'statements')
+        }
 
     def make_tests_delta(self):
         json_stats['tests_delta'] = {
@@ -230,18 +230,10 @@ class StatsGenerator(object):
                 self.previous_round, 'get_number_passed_tests'),
             'passed_ratio_delta': self.latest_round.find_numeric_delta(
                 self.previous_round, 'passed_over_total'),
-            'applied_tests_delta'
-            'pass_fail_delta'
-            'new_paths'
+            'applied_tests_delta': self.latest_round.find_content_delta(
+                self.previous_round, 'applied_tests')
+            'pass_fail_delta': self.latest_round.find_content_delta(
+                self.previous_round, 'passed_tests'),
+            'new_paths': self.latest_round.find_content_delta(
+                self.previous_round, 'paths')
         }
-
-def run_for_multiple_rounds(number_of_rounds, model_name, one_round_func):
-    keys = find_latest_s3_files(
-           number_of_rounds, 'emmaa',
-           f'results/{model_name}results_', extension='.json')
-    data = []
-    for key in keys:
-        tr = TestRound(key)
-        current_data = tr.one_round_func()
-        data.append(current_data)
-    return data
