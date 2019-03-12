@@ -12,10 +12,13 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'passed_tests': ('get_passed_test_ids', 'get_english_test_by_id'),
     'paths': ('get_passed_test_ids', 'get_path_by_id')
 }
+
+
 class TestRound(object):
     def __init__(self, key):
         self.key = key
         self.test_results = load_test_results_from_s3(key)
+        self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
     # Model Summary
     def get_stmt_id(self, stmt):
@@ -120,46 +123,65 @@ class TestRound(object):
         return getattr(self, one_round_numeric_func)()
                        - getattr(other_round, one_round_numeric_func)()
 
-    def find_stmts_delta(self, other_round):
-        latest_ids = self.get_stmt_ids()
-        previous_ids = other_round.get_stmt_ids()
+    # def find_stmts_delta(self, other_round):
+    #     latest_ids = self.get_stmt_ids()
+    #     previous_ids = other_round.get_stmt_ids()
+    #     added_ids = list(set(latest_ids) - set(previous_ids))
+    #     removed_ids = list(set(previous_ids) - set(latest_ids))
+    #     added_stmts = [self.get_english_statement_by_id(stmt_id) 
+    #                    for stmt_id in added_ids]
+    #     removed_stmts = [other_round.get_english_statement_by_id(stmt_id)
+    #                      for stmt_id in removed_ids]
+    #     return {'added_stmts': added_stmts, 'removed_stmts': removed_stmts}
+
+    # def find_applied_tests_delta(self, other_round):
+    #     latest_test_ids = self.get_applied_test_ids()
+    #     previous_test_ids = other_round.get_applied_test_ids()
+    #     added_test_ids = list(set(latest_test_ids) - set(previous_test_ids))
+    #     removed_test_ids = list(set(previous_test_ids) - set(latest_test_ids))
+    #     added_tests = [self.get_english_test_by_id(test_id)
+    #                    for test_id in added_test_ids]
+    #     removed_tests = [other_round.get_english_test_by_id(test_id)
+    #                      for test_id in removed_test_ids]
+    #     return {'added_tests': added_tests, 'removed_tests': removed_tests}
+
+    # def find_pass_fail_delta(self, other_round):
+    #     latest_passed_ids = self.get_passed_test_ids()
+    #     previous_passed_ids = other_round.get_passed_test_ids()
+    #     new_passed_ids = list(set(latest_passed_ids) - set(previous_passed_ids))
+    #     new_failed_ids = list(set(previous_passed_ids) - set(latest_passed_ids))
+    #     new_passed_tests = [self.get_english_test_by_id(test_id)
+    #                         for test_id in new_passed_ids]
+    #     new_failed_tests = [other_round.get_english_test_by_id(test_id)
+    #                         for test_id in new_failed_ids]
+    #     return {'new_passed_tests': new_passed_tests, 
+    #             'new_failed_tests': new_failed_tests}
+
+    # def find_new_paths(self, other_round):
+    #     latest_passed_ids = self.get_passed_test_ids()
+    #     previous_passed_ids = other_round.get_passed_test_ids()
+    #     new_passed_ids = list(set(latest_passed_ids) - set(previous_passed_ids))
+    #     new_failed_ids = list(set(previous_passed_ids) - set(latest_passed_ids))
+    #     new_paths = [self.get_path_by_id(test_id) for test_id in new_passed_ids]
+    #     old_paths_for_now_failed_tests = 
+    #         [other_round.get_path_by_id(test_id) for test_id in new_failed_ids]
+
+    def find_content_delta(self, other_round, content_type):
+        """content_type: statements, applied_tests, passed_tests, paths
+        """
+        latest_ids = getattr(self, self.function_mapping[content_type][0])()
+        previous_ids = getattr(other_round,
+                               other_round.function_mapping[content_type][0])()
         added_ids = list(set(latest_ids) - set(previous_ids))
         removed_ids = list(set(previous_ids) - set(latest_ids))
-        added_stmts = [self.get_english_statement_by_id(stmt_id) 
-                       for stmt_id in added_ids]
-        removed_stmts = [other_round.get_english_statement_by_id(stmt_id)
-                         for stmt_id in removed_ids]
-        return {'added_stmts': added_stmts, 'removed_stmts': removed_stmts}
-
-    def find_applied_tests_delta(self, other_round):
-        latest_test_ids = self.get_applied_test_ids()
-        previous_test_ids = other_round.get_applied_test_ids()
-        added_test_ids = list(set(latest_test_ids) - set(previous_test_ids))
-        removed_test_ids = list(set(previous_test_ids) - set(latest_test_ids))
-        added_tests = [self.get_english_test_by_id(test_id)
-                       for test_id in added_test_ids]
-        removed_tests = [other_round.get_english_test_by_id(test_id)
-                         for test_id in removed_test_ids]
-        return {'added_tests': added_tests, 'removed_tests': removed_tests}
-
-    def find_pass_fail_delta(self, other_round):
-        latest_passed_ids = self.get_passed_test_ids()
-        previous_passed_ids = other_round.get_passed_test_ids()
-        new_passed_ids = list(set(latest_passed_ids) - set(previous_passed_ids))
-        new_failed_ids = list(set(previous_passed_ids) - set(latest_passed_ids))
-        new_passed_tests = [self.get_english_test_by_id(test_id)
-                            for test_id in new_passed_ids]
-        new_failed_tests = [other_round.get_english_test_by_id(test_id)
-                            for test_id in new_failed_ids]
-        return {'new_passed_tests': new_passed_tests, 
-                'new_failed_tests': new_failed_tests}
-
-    def find
-    def find_content_delta(self, other_round, content_type):
-        """content_type: statements, applied_tests, passed_tests, paths?
-        get_ids: statements - get_stmt_ids()
-        """
-        
+        added_items = [getattr(
+            self, self.function_mapping[content_type][1])(item_id)
+            for item_id in added_ids]
+        removed_items = [getattr(
+            other_round,
+            other_round.function_mapping[content_type][1])(item_id)
+            for item_id in removed_ids]
+        return {'added': added_items, 'removed': removed_items}
 
 
 class StatsGenerator(object):
