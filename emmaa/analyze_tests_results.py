@@ -155,16 +155,28 @@ class TestRound(object):
 
 
 class StatsGenerator(object):
-    def __init__(self, model_name):
+    def __init__(self, model_name, latest_round=None, previous_round=None):
         self.model_name = model_name
-        self.latest_round = TestRound.load_from_s3_key(
-            find_latest_s3_file(
-                'emmaa', f'results/{model_name}/results_', extension='.json'))
-        self.previous_round = TestRound.load_from_s3_key(
-            find_second_latest_s3_file(
-                'emmaa', f'results/{model_name}/results_', extension='.json'))
+        if not latest_round:
+            self.latest_round = self._get_latest_round()
+        else:
+            self.latest_round = latest_round
+        if not previous_round:
+            self.previous_round = self._get_previous_round()
+        else:
+            self.previous_round = previous_round
         self.json_stats = {}
 
+    def _get_latest_round(self):
+        tr = TestRound.load_from_s3_key(find_latest_s3_file(
+            'emmaa', f'results/{self.model_name}/results_', extension='.json'))
+        return tr
+
+    def _get_previous_round(self):
+        tr = TestRound.load_from_s3_key(find_second_latest_s3_file(
+            'emmaa', f'results/{self.model_name}/results_', extension='.json'))
+        return tr
+        
     def make_model_summary(self):
         json_stats['model_summary'] = {
             'model_name': self.model_name,
