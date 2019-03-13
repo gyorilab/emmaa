@@ -1,10 +1,14 @@
 import json
 import logging
 from collections import defaultdict
-from util import (find_latest_s3_files, find_latest_s3_file,
-                  find_second_latest_s3_file, load_test_results_from_s3)
+from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
+                        get_s3_client)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
+
+
+logger = logging.getLogger(__name__)
+
 
 CONTENT_TYPE_FUNCTION_MAPPING = {
     'statements': ('get_stmt_ids', 'get_english_statement_by_id'),
@@ -15,10 +19,18 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
 
 
 class TestRound(object):
-    def __init__(self, key):
-        self.key = key
-        self.test_results = load_test_results_from_s3(key)
+    def __init__(self, test_results):
+        self.test_results = test_results
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
+
+    @classmethod
+    def load_from_s3_key(cls, key):
+        client = get_s3_client()
+        logger.info(f'Loading test results from {key}')
+        obj = client.get_object(Bucket='emmaa', Key=key)
+        test_results = json.loads(obj['Body'].read().decode('utf8'))
+        test_round = cls(test_results)
+        return test_round
 
     # Model Summary
     def get_stmt_id(self, stmt):
@@ -86,7 +98,7 @@ class TestRound(object):
         return len(self.test_results)-1
 
     def get_number_passed_tests(self):
-        return len(self.get_passed_test_ids)
+        return len(self.get_passed_test_ids())
 
     def passed_over_total(self):
         return self.get_number_passed_tests()/self.get_total_applied_tests()
@@ -98,7 +110,7 @@ class TestRound(object):
         return tests_by_id
 
     def get_english_test_by_id(self, test_id):
-        return self.get_english_tests[test_id]
+        return self.get_english_tests()[test_id]
 
     def get_passed_test_ids(self):
         passed_tests = []
@@ -115,56 +127,14 @@ class TestRound(object):
         return paths
 
     def get_path_by_id(self, test_id):
-        return self.get_path_descriptions[test_id]
+        return self.get_path_descriptions()[test_id]
 
     # Deltas
     def find_numeric_delta(self, other_round, one_round_numeric_func):
         # return self.one_round_func() - other_round.one_round_numeric_func()
-        return getattr(self, one_round_numeric_func)()
-                       - getattr(other_round, one_round_numeric_func)()
-
-    # def find_stmts_delta(self, other_round):
-    #     latest_ids = self.get_stmt_ids()
-    #     previous_ids = other_round.get_stmt_ids()
-    #     added_ids = list(set(latest_ids) - set(previous_ids))
-    #     removed_ids = list(set(previous_ids) - set(latest_ids))
-    #     added_stmts = [self.get_english_statement_by_id(stmt_id) 
-    #                    for stmt_id in added_ids]
-    #     removed_stmts = [other_round.get_english_statement_by_id(stmt_id)
-    #                      for stmt_id in removed_ids]
-    #     return {'added_stmts': added_stmts, 'removed_stmts': removed_stmts}
-
-    # def find_applied_tests_delta(self, other_round):
-    #     latest_test_ids = self.get_applied_test_ids()
-    #     previous_test_ids = other_round.get_applied_test_ids()
-    #     added_test_ids = list(set(latest_test_ids) - set(previous_test_ids))
-    #     removed_test_ids = list(set(previous_test_ids) - set(latest_test_ids))
-    #     added_tests = [self.get_english_test_by_id(test_id)
-    #                    for test_id in added_test_ids]
-    #     removed_tests = [other_round.get_english_test_by_id(test_id)
-    #                      for test_id in removed_test_ids]
-    #     return {'added_tests': added_tests, 'removed_tests': removed_tests}
-
-    # def find_pass_fail_delta(self, other_round):
-    #     latest_passed_ids = self.get_passed_test_ids()
-    #     previous_passed_ids = other_round.get_passed_test_ids()
-    #     new_passed_ids = list(set(latest_passed_ids) - set(previous_passed_ids))
-    #     new_failed_ids = list(set(previous_passed_ids) - set(latest_passed_ids))
-    #     new_passed_tests = [self.get_english_test_by_id(test_id)
-    #                         for test_id in new_passed_ids]
-    #     new_failed_tests = [other_round.get_english_test_by_id(test_id)
-    #                         for test_id in new_failed_ids]
-    #     return {'new_passed_tests': new_passed_tests, 
-    #             'new_failed_tests': new_failed_tests}
-
-    # def find_new_paths(self, other_round):
-    #     latest_passed_ids = self.get_passed_test_ids()
-    #     previous_passed_ids = other_round.get_passed_test_ids()
-    #     new_passed_ids = list(set(latest_passed_ids) - set(previous_passed_ids))
-    #     new_failed_ids = list(set(previous_passed_ids) - set(latest_passed_ids))
-    #     new_paths = [self.get_path_by_id(test_id) for test_id in new_passed_ids]
-    #     old_paths_for_now_failed_tests = 
-    #         [other_round.get_path_by_id(test_id) for test_id in new_failed_ids]
+        delta = (getattr(self, one_round_numeric_func)()
+                 - getattr(other_round, one_round_numeric_func)())
+        return delta
 
     def find_content_delta(self, other_round, content_type):
         """content_type: statements, applied_tests, passed_tests, paths
@@ -185,18 +155,19 @@ class TestRound(object):
 
 
 class StatsGenerator(object):
-    def __init__(self, model_name, number_of_rounds=10):
+    def __init__(self, model_name):
         self.model_name = model_name
-        self.number_of_rounds = number_of_rounds
-        self.latest_round = TestRound(find_latest_s3_file(
-            'emmaa', f'results/{model_name}/results_', extension='.json'))
-        self.previous_round = TestRound(find_second_latest_s3_file(
-            'emmaa', f'results/{model_name}/results_', extension='.json'))
+        self.latest_round = TestRound.load_from_s3_key(
+            find_latest_s3_file(
+                'emmaa', f'results/{model_name}/results_', extension='.json'))
+        self.previous_round = TestRound.load_from_s3_key(
+            find_second_latest_s3_file(
+                'emmaa', f'results/{model_name}/results_', extension='.json'))
         self.json_stats = {}
 
     def make_model_summary(self):
         json_stats['model_summary'] = {
-            'model_name': model_name,
+            'model_name': self.model_name,
             'number_of_statements': self.latest_round.get_total_statements(),
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
@@ -209,7 +180,7 @@ class StatsGenerator(object):
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'number_passed_tests': self.latest_round.get_number_passed_tests(),
             'passed_ratio': self.latest_round.passed_over_total(),
-            'tests_by_id': self.latest_round.get_english_test_by_id(),
+            'tests_by_id': self.latest_round.get_english_tests(),
             'passed_tests': self.latest_round.get_passed_test_ids(),
             'paths': self.latest_round.get_path_descriptions()
         }
@@ -231,7 +202,7 @@ class StatsGenerator(object):
             'passed_ratio_delta': self.latest_round.find_numeric_delta(
                 self.previous_round, 'passed_over_total'),
             'applied_tests_delta': self.latest_round.find_content_delta(
-                self.previous_round, 'applied_tests')
+                self.previous_round, 'applied_tests'),
             'pass_fail_delta': self.latest_round.find_content_delta(
                 self.previous_round, 'passed_tests'),
             'new_paths': self.latest_round.find_content_delta(
