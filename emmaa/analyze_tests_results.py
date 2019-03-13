@@ -179,27 +179,27 @@ class StatsGenerator(object):
         return tr
         
     def make_model_summary(self):
-        json_stats['model_summary'] = {
+        self.json_stats['model_summary'] = {
             'model_name': self.model_name,
             'number_of_statements': self.latest_round.get_total_statements(),
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
-            'english_stmts': self.latest_round.get_english_statements()
+            'english_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
     def make_test_summary(self):
-        json_stats['test_round_summary'] = {
+        self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'number_passed_tests': self.latest_round.get_number_passed_tests(),
             'passed_ratio': self.latest_round.passed_over_total(),
             'tests_by_id': self.latest_round.get_english_tests(),
-            'passed_tests': self.latest_round.get_passed_test_ids(),
+            'passed_tests': self.latest_round.get_passed_test_hashes(),
             'paths': self.latest_round.get_path_descriptions()
         }
 
     def make_model_delta(self):
-        json_stats['model_delta'] = {
+        self.json_stats['model_delta'] = {
             'number_of_statements_delta': self.latest_round.find_numeric_delta(
                 self.previous_round, 'get_total_statements'),
             'statements_delta': self.latest_round.find_content_delta(
@@ -207,7 +207,7 @@ class StatsGenerator(object):
         }
 
     def make_tests_delta(self):
-        json_stats['tests_delta'] = {
+        self.json_stats['tests_delta'] = {
             'number_applied_tests_delta': self.latest_round.find_numeric_delta(
                 self.previous_round, 'get_total_applied_tests'),
             'number_passed_tests_delta': self.latest_round.find_numeric_delta(
