@@ -110,8 +110,7 @@ class ModelManager(object):
         results_json = []
         results_json.append({                   
             'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json(),
-            'number_of_statements': len(self.model.assembled_stmts)})
+            'statements': self.assembled_stmts_to_json()})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
                    'test_type': test.__class__.__name__,
