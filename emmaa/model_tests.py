@@ -278,9 +278,9 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
 
     Returns
     -------
-    emmaa.model_tests.TestManager
-        Instance of TestManager containing the model/test pairs and the
-        test results.
+    emmaa.model_tests.ModelManager
+        Instance of ModelManager containing the model data, list of applied
+        tests and the test results.
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
@@ -298,4 +298,4 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,
                           Body=results_json_str.encode('utf8'))
-    return tm
+    return mm
