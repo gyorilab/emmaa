@@ -1,5 +1,6 @@
 import json
 import logging
+import jsonpickle
 from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         get_s3_client)
@@ -11,16 +12,19 @@ logger = logging.getLogger(__name__)
 
 
 CONTENT_TYPE_FUNCTION_MAPPING = {
-    'statements': ('get_stmt_ids', 'get_english_statement_by_id'),
-    'applied_tests': ('get_applied_test_ids', 'get_english_test_by_id'),
-    'passed_tests': ('get_passed_test_ids', 'get_english_test_by_id'),
-    'paths': ('get_passed_test_ids', 'get_path_by_id')
+    'statements': ('get_stmt_hashes', 'get_english_statement_by_hash'),
+    'applied_tests': ('get_applied_test_hashes', 'get_english_test_by_hash'),
+    'passed_tests': ('get_passed_test_hashes', 'get_english_test_by_hash'),
+    'paths': ('get_passed_test_hashes', 'get_path_by_hash')
 }
 
 
 class TestRound(object):
-    def __init__(self, test_results):
-        self.test_results = test_results
+    def __init__(self, json_results):
+        self.json_results = json_results
+        self.statements = self._get_statements()
+        self.test_results = self._get_results()
+        self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
     @classmethod
@@ -28,106 +32,103 @@ class TestRound(object):
         client = get_s3_client()
         logger.info(f'Loading test results from {key}')
         obj = client.get_object(Bucket='emmaa', Key=key)
-        test_results = json.loads(obj['Body'].read().decode('utf8'))
-        test_round = cls(test_results)
+        json_results = json.loads(obj['Body'].read().decode('utf8'))
+        test_round = TestRound(json_results)
         return test_round
 
+    def _get_statements(self):
+        serialized_stmts = self.json_results[0]['statements']
+        return [Statement._from_json(stmt) for stmt in serialized_stmts]
+
+    def _get_results(self):
+        unpickler = jsonpickle.unpickler.Unpickler()
+        test_results = [unpickler.restore(result['result_json'])
+                        for result in self.json_results[1:]]
+        return test_results
+
+    def _get_tests(self):
+        tests = [Statement._from_json(res['test_json'])
+                 for res in self.json_results[1:]]
+        return tests
+
     # Model Summary
-    def get_stmt_id(self, stmt):
-        return str(stmt['id'])
-
     def get_total_statements(self):
-        return self.test_results[0]['number_of_statements']
+        return len(self.statements)
 
-    def get_statements(self):
-        return self.test_results[0]['statements']
-
-    def get_stmt_ids(self):
-        return [self.get_stmt_id(stmt) for stmt in self.get_statements()]
+    def get_stmt_hashes(self):
+        return [stmt.get_hash() for stmt in self.statements]
 
     def get_statement_types(self):
         statement_types = defaultdict(int)
-        for stmt in self.get_statements():
-            statement_types[stmt['type']] += 1
+        for stmt in self.statements:
+            statement_types[type(stmt).__name__] += 1
         return sorted(statement_types.items(), key=lambda x: x[1], reverse=True)
 
     def get_agent_distribution(self):
         agent_count = defaultdict(int)
-        agent_types = ['subj', 'obj', 'sub', 'enz', 'agent']
-
-        def get_agent_name(stmt, agent_type):
-            return stmt[agent_type]['name']
-
-        for stmt in self.get_statements():
-            for agent_type in agent_types:
-                if agent_type in stmt.keys():
-                    agent_count[get_agent_name(stmt, agent_type)] += 1
-            if 'members' in stmt.keys():
-                for member in stmt['members']:
-                    agent_count[member['name']] += 1
+        for stmt in self.statements:
+            for agent in stmt.agent_list():
+                if agent is not None:
+                    agent_count[agent.name] += 1
         return sorted(agent_count.items(), key=lambda x: x[1], reverse=True)
 
     def get_statements_by_evidence(self):
         stmts_evidence = {}
-        for stmt in self.get_statements():
-            stmts_evidence[self.get_stmt_id(stmt)] = len(stmt.evidence)
+        for stmt in self.statements:
+            stmts_evidence[stmt.get_hash()] = len(stmt.evidence)
         return sorted(stmts_evidence.items(), key=lambda x: x[1], reverse=True)
 
-    def get_english_statements(self):
-        stmts_by_id = {}
-        for stmt in self.get_statements():
-            standard_stmt = Statement._from_json(stmt)
-            ea = EnglishAssembler([standard_stmt])
-            stmts_by_id[self.get_stmt_id(stmt)] = ea.make_model()
-        return stmts_by_id
+    def get_english_statement(self, stmt):
+        ea = EnglishAssembler([stmt])
+        return ea.make_model()
 
-    def get_english_statement_by_id(self, stmt_id):
-        return self.get_english_statements[stmt_id]
+    def get_english_statements_by_hash(self):
+        stmts_by_hash = {}
+        for stmt in self.statements:
+            stmts_by_hash[stmt.get_hash()] = self.get_english_statement(stmt)
+        return stmts_by_hash
+
+    def get_english_statement_by_hash(self, stmt_hash):
+        return self.get_english_statements_by_hash()[stmt_hash]
 
     # Test Summary
-    def has_path(self, result):
-        return result['result_json']['path_found']
+    def get_applied_test_hashes(self):
+        return [test.get_hash() for test in self.tests]
 
-    def get_test_id(self, result):
-        return str(result['test_json']['id'])
-
-    def get_applied_test_ids(self):
-        return [self.get_test_id for result in self.test_results[1:]]
+    def get_passed_test_hashes(self):
+        passed_tests = []
+        for ix, result in enumerate(self.test_results):
+            if result.path_found:
+                passed_tests.append(self.tests[ix].get_hash())
+        return passed_tests
 
     def get_total_applied_tests(self):
-        return len(self.test_results)-1
+        return len(self.tests)
 
     def get_number_passed_tests(self):
-        return len(self.get_passed_test_ids())
+        return len(self.get_passed_test_hashes())
 
     def passed_over_total(self):
         return self.get_number_passed_tests()/self.get_total_applied_tests()
 
     def get_english_tests(self):
-        tests_by_id = {}
-        for result in self.test_results[1:]:
-            tests_by_id[self.get_test_id(result)] = result['english_test']
-        return tests_by_id
+        tests_by_hash = {}
+        for test in self.tests:
+            tests_by_hash[test.get_hash()] = self.get_english_statement(test)
+        return tests_by_hash
 
-    def get_english_test_by_id(self, test_id):
-        return self.get_english_tests()[test_id]
-
-    def get_passed_test_ids(self):
-        passed_tests = []
-        for result in self.test_results[1:]:
-            if self.has_path(result):
-                passed_tests.append(self.get_test_id(result))
-        return passed_tests
+    def get_english_test_by_hash(self, test_hash):
+        return self.get_english_tests()[test_hash]
 
     def get_path_descriptions(self):
         paths = {}
-        for result in self.test_results[1:]:
-            if self.has_path(result):
-                paths[self.get_test_id(result)] = result['english_result']
+        for ix, result in enumerate(self.test_results):
+            if result.path_found:
+                paths[self.tests[ix].get_hash()] = self.json_results[ix+1]['english_result']
         return paths
 
-    def get_path_by_id(self, test_id):
-        return self.get_path_descriptions()[test_id]
+    def get_path_by_hash(self, test_hash):
+        return self.get_path_descriptions()[test_hash]
 
     # Deltas
     def find_numeric_delta(self, other_round, one_round_numeric_func):
