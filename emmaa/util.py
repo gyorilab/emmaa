@@ -78,14 +78,6 @@ def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
     return keys
 
 
-def load_test_results_from_s3(key):
-    client = get_s3_client()
-    logger.info(f'Loading test results from {key}')
-    obj = client.get_object(Bucket='emmaa', Key=key)
-    test_results = json.loads(obj['Body'].read().decode('utf8'))
-    return test_results
-
-
 def get_s3_client(unsigned=True):
     """Return a boto3 S3 client with optional unsigned config.
 
