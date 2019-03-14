@@ -3,7 +3,8 @@ import logging
 import jsonpickle
 from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
-                        get_s3_client)
+                        find_latest_s3_files, find_number_of_files_on_s3,
+                        make_date_str, get_s3_client)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 
@@ -124,7 +125,8 @@ class TestRound(object):
         paths = {}
         for ix, result in enumerate(self.test_results):
             if result.path_found:
-                paths[self.tests[ix].get_hash()] = self.json_results[ix+1]['english_result']
+                paths[self.tests[ix].get_hash()] = (
+                    self.json_results[ix+1]['english_result'])
         return paths
 
     def get_path_by_hash(self, test_hash):
@@ -167,6 +169,7 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
+        self.earlier_json_stats = _get_earlier_json_stats()
 
     def _get_latest_round(self):
         tr = TestRound.load_from_s3_key(find_latest_s3_file(
@@ -177,7 +180,22 @@ class StatsGenerator(object):
         tr = TestRound.load_from_s3_key(find_second_latest_s3_file(
             'emmaa', f'results/{self.model_name}/results_', extension='.json'))
         return tr
-        
+
+    def _get_earlier_json_stats(self):
+        earlier_json_stats = []
+        number_of_files = find_number_of_files_on_s3(
+            'emmaa', f'stats/{self.model_name}/stats_' extension='.json')
+        keys = find_latest_s3_files(
+            number_of_files, 'emmaa', f'stats/{self.model_name}/stats_',
+            extension='.json')
+        client = get_s3_client()
+        for key in keys:
+            logger.info(f'Loading earlier statistics from {key}')
+            obj = client.get_object(Bucket='emmaa', Key=key)
+            json_stats = json.loads(obj['Body'].read().decode('utf8'))
+            earlier_json_stats.append(json_stats)
+        return earlier_json_stats
+
     def make_model_summary(self):
         self.json_stats['model_summary'] = {
             'model_name': self.model_name,
@@ -185,7 +203,10 @@ class StatsGenerator(object):
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
-            'english_stmts': self.latest_round.get_english_statements_by_hash()
+            'english_stmts': self.latest_round.get_english_statements_by_hash(),
+            'earlier_number_of_statements': [
+                stats['model_summary']['number_of_statements']
+                for stats in self.earlier_json_stats]
         }
 
     def make_test_summary(self):
@@ -195,7 +216,16 @@ class StatsGenerator(object):
             'passed_ratio': self.latest_round.passed_over_total(),
             'tests_by_id': self.latest_round.get_english_tests(),
             'passed_tests': self.latest_round.get_passed_test_hashes(),
-            'paths': self.latest_round.get_path_descriptions()
+            'paths': self.latest_round.get_path_descriptions(),
+            'earlier_applied_tests': [
+                stats['test_round_summary']['number_applied_tests']
+                for stats in self.earlier_json_stats],
+            'earlier_passed_tests': [
+                stats['test_round_summary']['number_passed_tests']
+                for stats in self.earlier_json_stats],
+            'earlier_passed_ratio': [
+                stats['test_round_summary']['passed_ratio']
+                for stats in self.earlier_json_stats]
         }
 
     def make_model_delta(self):
@@ -221,3 +251,11 @@ class StatsGenerator(object):
             'new_paths': self.latest_round.find_content_delta(
                 self.previous_round, 'paths')
         }
+
+    def save_to_s3(self):
+        client = get_s3_client()
+        date_str = make_date_str(datetime.datetime.now())
+        stats_key = f'stats/{self.model_name}/stats_{date_str}.json'
+        logger.info(f'Uploading test round statistics to {stats_key}')
+        client.put_object(Bucket='emmaa', Key=stats_key,
+                          Body=self.json_stats.encode('utf8'))
