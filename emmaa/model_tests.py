@@ -59,8 +59,7 @@ class ModelManager(object):
         self.test_results.append(result)
 
     def run_one_test(self, test):
-        """
-        Run one test. Recommended for testing only.
+        """Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
         return test.check(self.model_checker, self.pysb_model)
@@ -89,8 +88,7 @@ class ModelManager(object):
         return result.path_found
 
     def get_english_result(self, result):
-        """
-        Get English description of a path if it was found.
+        """Get English description of a path if it was found.
         Return an empty string otherwise.
         """
         if self.has_path(result):
@@ -136,8 +134,7 @@ class TestManager(object):
         self.tests = tests
 
     def make_tests(self, test_connector):
-        """
-        Generate a list of applicable tests for each model with a given test
+        """Generate a list of applicable tests for each model with a given test
         connector.
 
         Parameters
