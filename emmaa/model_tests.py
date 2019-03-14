@@ -12,6 +12,7 @@ from indra.explanation.reporting import stmts_from_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
+from emmaa.analyze_tests_results import TestRound, StatsGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -249,7 +250,8 @@ def load_tests_from_s3(test_name):
     return tests
 
 
-def run_model_tests_from_s3(model_name, test_name, upload_results=True):
+def run_model_tests_from_s3(
+        model_name, test_name, upload_results=True, upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -288,4 +290,11 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,
                           Body=results_json_str.encode('utf8'))
+    tr = TestRound(results_json_dict)
+    sg = StatsGenerator(model_name, latest_round=tr)
+    sg.make_stats()
+    stats_json_dict = sg.json_stats
+    # Optionally upload statistics to S3
+    if upload_stats:
+        sg.save_to_s3()
     return mm
