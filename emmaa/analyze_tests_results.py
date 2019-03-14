@@ -69,7 +69,7 @@ class TestRound(object):
 
     def get_stmt_hashes(self):
         """Return a list of hashes for all statements in a model."""
-        return [stmt.get_hash() for stmt in self.statements]
+        return [str(stmt.get_hash()) for stmt in self.statements]
 
     def get_statement_types(self):
         """Return a sorted list of tuples containing a statement type and a 
@@ -93,16 +93,16 @@ class TestRound(object):
     def get_statements_by_evidence(self):
         """Return a sorted list of tuples containing a statement hash and a
         number of times this statement occured in a model."""
-        stmts_evhasheence = {}
+        stmts_evidence = {}
         for stmt in self.statements:
-            stmts_evhasheence[stmt.get_hash()] = len(stmt.evhasheence)
-        return sorted(stmts_evhasheence.items(), key=lambda x: x[1], reverse=True)
+            stmts_evidence[str(stmt.get_hash())] = len(stmt.evidence)
+        return sorted(stmts_evidence.items(), key=lambda x: x[1], reverse=True)
 
     def get_english_statements_by_hash(self):
         """Return a dictionary mapping a statement and its English description."""
         stmts_by_hash = {}
         for stmt in self.statements:
-            stmts_by_hash[stmt.get_hash()] = self.get_english_statement(stmt)
+            stmts_by_hash[str(stmt.get_hash())] = self.get_english_statement(stmt)
         return stmts_by_hash
 
     def get_english_statement(self, stmt):
@@ -115,14 +115,14 @@ class TestRound(object):
     # Test Summary Methods
     def get_applied_test_hashes(self):
         """Return a list of hashes for all applied tests."""
-        return [test.get_hash() for test in self.tests]
+        return [str(test.get_hash()) for test in self.tests]
 
     def get_passed_test_hashes(self):
         """Return a list of hashes for passed tests."""
         passed_tests = []
         for ix, result in enumerate(self.test_results):
             if result.path_found:
-                passed_tests.append(self.tests[ix].get_hash())
+                passed_tests.append(str(self.tests[ix].get_hash()))
         return passed_tests
 
     def get_total_applied_tests(self):
@@ -141,7 +141,7 @@ class TestRound(object):
         """Return a dictionary mapping a test hash and its English description."""
         tests_by_hash = {}
         for test in self.tests:
-            tests_by_hash[test.get_hash()] = self.get_english_statement(test)
+            tests_by_hash[str(test.get_hash())] = self.get_english_statement(test)
         return tests_by_hash
 
     def get_path_descriptions(self):
@@ -150,7 +150,7 @@ class TestRound(object):
         paths = {}
         for ix, result in enumerate(self.test_results):
             if result.path_found:
-                paths[self.tests[ix].get_hash()] = (
+                paths[str(self.tests[ix].get_hash())] = (
                     self.json_results[ix+1]['english_result'])
         return paths
 
@@ -287,7 +287,7 @@ class StatsGenerator(object):
             return
         self.make_model_delta()
         self.make_tests_delta()
-        
+
     def make_model_summary(self):
         """Add latest model state summary to json_stats."""
         self.json_stats['model_summary'] = {
@@ -295,7 +295,7 @@ class StatsGenerator(object):
             'number_of_statements': self.latest_round.get_total_statements(),
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
-            'stmts_by_evhasheence': self.latest_round.get_statements_by_evidence(),
+            'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
             'english_stmts': self.latest_round.get_english_statements_by_hash(),
             'earlier_number_of_statements': [
                 stats['model_summary']['number_of_statements']
@@ -308,7 +308,7 @@ class StatsGenerator(object):
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'number_passed_tests': self.latest_round.get_number_passed_tests(),
             'passed_ratio': self.latest_round.passed_over_total(),
-            'tests_by_hashe': self.latest_round.get_english_tests(),
+            'tests_by_hash': self.latest_round.get_english_tests(),
             'passed_tests': self.latest_round.get_passed_test_hashes(),
             'paths': self.latest_round.get_path_descriptions(),
             'earlier_applied_tests': [
