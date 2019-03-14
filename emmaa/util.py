@@ -54,15 +54,21 @@ def sort_s3_files_by_date(bucket, prefix, extension=None):
 def find_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with latest date string on an S3 path"""
     files = sort_s3_files_by_date(bucket, prefix, extension)
-    latest = files[0]['Key']
-    return latest
+    try:
+        latest = files[0]['Key']
+        return latest
+    except IndexError:
+        print('File is not found.')
 
 
 def find_second_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with second latest date string on an S3 path"""
     files = sort_s3_files_by_date(bucket, prefix, extension)
-    latest = files[1]['Key']
-    return latest
+    try:
+        latest = files[1]['Key']
+        return latest
+    except IndexError:
+        print("File is not found.")
 
 
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
