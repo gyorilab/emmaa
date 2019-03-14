@@ -68,7 +68,7 @@ def find_second_latest_s3_file(bucket, prefix, extension=None):
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
     """
     Return the keys of the specified number of files with latest date strings
-    on an S3 path.
+    on an S3 path sorted by date starting with the earliest one.
     """
     files = sort_s3_files_by_date(bucket, prefix, extension)
     keys = []
@@ -76,6 +76,11 @@ def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
         keys.append(files[ix]['Key'])
     keys.reverse()
     return keys
+
+
+def find_number_of_files_on_s3(bucket, prefix, extension=None):
+    files = sort_s3_files_by_date(bucket, prefix, extension)
+    return len(files)
 
 
 def get_s3_client(unsigned=True):
