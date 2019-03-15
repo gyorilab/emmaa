@@ -1,11 +1,13 @@
 import os
 import boto3
+import logging
 from datetime import datetime
 from botocore import UNSIGNED
 from botocore.client import Config
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
+logger = logging.getLogger(__name__)
 
 
 def get_date_from_str(date_str):
@@ -58,7 +60,7 @@ def find_latest_s3_file(bucket, prefix, extension=None):
         latest = files[0]['Key']
         return latest
     except IndexError:
-        print('File is not found.')
+        logger.info('File is not found.')
 
 
 def find_second_latest_s3_file(bucket, prefix, extension=None):
@@ -68,7 +70,7 @@ def find_second_latest_s3_file(bucket, prefix, extension=None):
         latest = files[1]['Key']
         return latest
     except IndexError:
-        print("File is not found.")
+        logger.info("File is not found.")
 
 
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
