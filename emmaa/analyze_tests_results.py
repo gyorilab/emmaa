@@ -163,7 +163,7 @@ class TestRound(object):
     # Methods to find delta
     def find_numeric_delta(self, other_round, one_round_numeric_func):
         """Find a numeric delta between two rounds using a passed function.
-        
+
         Parameters
         ----------
         other_round : emmaa.analyze_tests_results.TestRound
@@ -269,7 +269,7 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
-        self.earlier_json_stats = self._get_earlier_json_stats()
+        self.previous_json_stats = self._get_previous_json_stats()
 
     def make_stats(self):
         """Check if two latest test rounds were found and add statistics to
@@ -287,6 +287,7 @@ class StatsGenerator(object):
             return
         self.make_model_delta()
         self.make_tests_delta()
+        self.make_changes_over_time()
 
     def make_model_summary(self):
         """Add latest model state summary to json_stats."""
@@ -296,10 +297,7 @@ class StatsGenerator(object):
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
-            'english_stmts': self.latest_round.get_english_statements_by_hash(),
-            'earlier_number_of_statements': [
-                stats['model_summary']['number_of_statements']
-                for stats in self.earlier_json_stats]
+            'english_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
     def make_test_summary(self):
@@ -310,16 +308,7 @@ class StatsGenerator(object):
             'passed_ratio': self.latest_round.passed_over_total(),
             'tests_by_hash': self.latest_round.get_english_tests(),
             'passed_tests': self.latest_round.get_passed_test_hashes(),
-            'paths': self.latest_round.get_path_descriptions(),
-            'earlier_applied_tests': [
-                stats['test_round_summary']['number_applied_tests']
-                for stats in self.earlier_json_stats],
-            'earlier_passed_tests': [
-                stats['test_round_summary']['number_passed_tests']
-                for stats in self.earlier_json_stats],
-            'earlier_passed_ratio': [
-                stats['test_round_summary']['passed_ratio']
-                for stats in self.earlier_json_stats]
+            'paths': self.latest_round.get_path_descriptions()
         }
 
     def make_model_delta(self):
@@ -347,6 +336,26 @@ class StatsGenerator(object):
             'new_paths': self.latest_round.find_content_delta(
                 self.previous_round, 'paths')
         }
+
+    def make_changes_over_time(self):
+        """Add changes to model and tests over time to json_stats."""
+        self.json_stats['changes_over_time'] = {
+            'number_of_statements': self.get_over_time(
+                'model_summary', 'number_of_statements'),
+            'number_applied_tests': self.get_over_time(
+                'test_round_summary', 'number_applied_tests'),
+            'number_passed_tests': self.get_over_time(
+                'test_round_summary', 'number_passed_tests'),
+            'passed_ratio': self.get_over_time(
+                'test_round_summary', 'passed_ratio')
+        }
+
+    def get_over_time(self, section, metrics):
+        if not self.previous_json_stats:
+            return []
+        previous_data = self.previous_json_stats['changes_over_time'][metrics]
+        updated = previous_data.append(self.json_stats[section][metrics])
+        return updated
 
     def save_to_s3(self):
         client = get_s3_client()
@@ -376,17 +385,15 @@ class StatsGenerator(object):
         tr = TestRound.load_from_s3_key(previous_key)
         return tr
 
-    def _get_earlier_json_stats(self):
-        earlier_json_stats = []
-        number_of_files = find_number_of_files_on_s3(
+    def _get_previous_json_stats(self):
+        key = find_latest_s3_file(
             'emmaa', f'stats/{self.model_name}/stats_', extension='.json')
-        keys = find_latest_s3_files(
-            number_of_files, 'emmaa', f'stats/{self.model_name}/stats_',
-            extension='.json')
+        if key is None:
+            logger.info(f'Could not find a key to the previous statistics '
+                        f'for {self.model_name} model.')
+            return
         client = get_s3_client()
-        for key in keys:
-            logger.info(f'Loading earlier statistics from {key}')
-            obj = client.get_object(Bucket='emmaa', Key=key)
-            json_stats = json.loads(obj['Body'].read().decode('utf8'))
-            earlier_json_stats.append(json_stats)
-        return earlier_json_stats
+        logger.info(f'Loading earlier statistics from {key}')
+        obj = client.get_object(Bucket='emmaa', Key=key)
+        previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
+        return previous_json_stats
