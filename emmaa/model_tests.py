@@ -39,9 +39,9 @@ class ModelManager(object):
     model_checker : indra.explanation.model_checker.ModelChecker
         A ModelChecker to check PySB model
     """
-    def __init__(self, model):
+    def __init__(self, model, belief_cutoff=None):
         self.model = model
-        self.pysb_model = self.model.assemble_pysb()
+        self.pysb_model = self.model.assemble_pysb(belief_cutoff=belief_cutoff)
         self.entities = self.model.get_entities()
         self.applicable_tests = []
         self.test_results = []
@@ -250,8 +250,8 @@ def load_tests_from_s3(test_name):
     return tests
 
 
-def run_model_tests_from_s3(
-        model_name, test_name, upload_results=True, upload_stats=True):
+def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
+                            upload_results=True, upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -273,10 +273,12 @@ def run_model_tests_from_s3(
     emmaa.model_tests.ModelManager
         Instance of ModelManager containing the model data, list of applied
         tests and the test results.
+    emmaa.analyze_test_results.StatsGenerator
+        Instance of StatsGenerator containing statistics about model and test.
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
-    mm = ModelManager(model)
+    mm = ModelManager(model, belief_cutoff=belief_cutoff)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
@@ -297,4 +299,4 @@ def run_model_tests_from_s3(
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
-    return mm
+    return (mm, sg)
