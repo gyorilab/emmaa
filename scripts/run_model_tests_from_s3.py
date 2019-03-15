@@ -12,5 +12,6 @@ if __name__ == '__main__':
                              'runs all available tests against the model.')
     args = parser.parse_args()
 
-    run_model_tests_from_s3(args.model, args.test, upload_results=True)
+    run_model_tests_from_s3(
+        args.model, args.test, upload_results=True, upload_stats=True)
 

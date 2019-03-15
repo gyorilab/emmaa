@@ -28,7 +28,7 @@ class TestRound(object):
     json_results : list[dict]
         A list of JSON formatted dictionaries to store information about the
         test results. The first dictionary contains information about the model.
-        Each consequent dictionary contains information about a single test
+        Each consecutive dictionary contains information about a single test
         applied to the model and test results.
 
     Attributes
