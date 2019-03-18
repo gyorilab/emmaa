@@ -1,6 +1,7 @@
 import json
 import logging
 import jsonpickle
+import datetime
 from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         find_latest_s3_files, find_number_of_files_on_s3,
@@ -352,18 +353,21 @@ class StatsGenerator(object):
 
     def get_over_time(self, section, metrics):
         if not self.previous_json_stats:
-            return []
-        previous_data = self.previous_json_stats['changes_over_time'][metrics]
-        updated = previous_data.append(self.json_stats[section][metrics])
-        return updated
+            previous_data = []
+        else:
+            previous_data = (
+                self.previous_json_stats['changes_over_time'][metrics])
+        previous_data.append(self.json_stats[section][metrics])
+        return previous_data
 
     def save_to_s3(self):
+        json_stats_str = json.dumps(self.json_stats, indent=1)
         client = get_s3_client()
         date_str = make_date_str(datetime.datetime.now())
         stats_key = f'stats/{self.model_name}/stats_{date_str}.json'
         logger.info(f'Uploading test round statistics to {stats_key}')
         client.put_object(Bucket='emmaa', Key=stats_key,
-                          Body=self.json_stats.encode('utf8'))
+                          Body=json_stats_str.encode('utf8'))
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
