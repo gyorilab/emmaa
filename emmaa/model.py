@@ -39,6 +39,8 @@ class EmmaaModel(object):
         A list of SearchTerm objects containing the search terms used in the model
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
+    assembled_stmts : list[indra.statements.Statement]
+        A list of assembled INDRA Statements
     """
     def __init__(self, name, config):
         self.name = name

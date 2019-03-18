@@ -12,6 +12,7 @@ from indra.explanation.reporting import stmts_from_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
+from emmaa.analyze_tests_results import TestRound, StatsGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -38,9 +39,9 @@ class ModelManager(object):
     model_checker : indra.explanation.model_checker.ModelChecker
         A ModelChecker to check PySB model
     """
-    def __init__(self, model):
+    def __init__(self, model, belief_cutoff=None):
         self.model = model
-        self.pysb_model = self.model.assemble_pysb()
+        self.pysb_model = self.model.assemble_pysb(belief_cutoff=belief_cutoff)
         self.entities = self.model.get_entities()
         self.applicable_tests = []
         self.test_results = []
@@ -59,8 +60,7 @@ class ModelManager(object):
         self.test_results.append(result)
 
     def run_one_test(self, test):
-        """
-        Run one test. Recommended for testing only.
+        """Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
         return test.check(self.model_checker, self.pysb_model)
@@ -89,21 +89,29 @@ class ModelManager(object):
         return result.path_found
 
     def get_english_result(self, result):
-        """
-        Get English description of a path if it was found.
+        """Get English description of a path if it was found.
         Return an empty string otherwise.
         """
         if self.has_path(result):
             return self.make_english_result(result)
         return []
 
+    def assembled_stmts_to_json(self):
+        """Put assembled statements to JSON format."""
+        stmts = []
+        for stmt in self.model.assembled_stmts:
+            stmts.append(stmt.to_json())
+        return stmts
+
     def results_to_json(self):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
+        results_json.append({                   
+            'model_name': self.model.name,
+            'statements': self.assembled_stmts_to_json()})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
-                   'model_name': self.model.name,
                    'test_type': test.__class__.__name__,
                    'test_json': test.to_json(),
                    'result_json': pickler.flatten(self.test_results[ix]),
@@ -127,8 +135,7 @@ class TestManager(object):
         self.tests = tests
 
     def make_tests(self, test_connector):
-        """
-        Generate a list of applicable tests for each model with a given test
+        """Generate a list of applicable tests for each model with a given test
         connector.
 
         Parameters
@@ -243,7 +250,8 @@ def load_tests_from_s3(test_name):
     return tests
 
 
-def run_model_tests_from_s3(model_name, test_name, upload_results=True):
+def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
+                            upload_results=True, upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -262,13 +270,15 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
 
     Returns
     -------
-    emmaa.model_tests.TestManager
-        Instance of TestManager containing the model/test pairs and the
-        test results.
+    emmaa.model_tests.ModelManager
+        Instance of ModelManager containing the model data, list of applied
+        tests and the test results.
+    emmaa.analyze_test_results.StatsGenerator
+        Instance of StatsGenerator containing statistics about model and test.
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
-    mm = ModelManager(model)
+    mm = ModelManager(model, belief_cutoff=belief_cutoff)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
@@ -282,4 +292,11 @@ def run_model_tests_from_s3(model_name, test_name, upload_results=True):
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,
                           Body=results_json_str.encode('utf8'))
-    return tm
+    tr = TestRound(results_json_dict)
+    sg = StatsGenerator(model_name, latest_round=tr)
+    sg.make_stats()
+    stats_json_dict = sg.json_stats
+    # Optionally upload statistics to S3
+    if upload_stats:
+        sg.save_to_s3()
+    return (mm, sg)
