@@ -206,7 +206,17 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self, belief_cutoff=0.8):
+    def get_assembled_entities(self, belief_cutoff=None):
+        """Return a list of Agent objects that the assembled model contains."""
+        if not self.assembled_stmts:
+            self.run_assembly(
+                belief_cutoff=belief_cutoff, filter_ungrounded=True)
+        agents = []
+        for stmt in self.assembled_stmts:
+            agents += [a for a in stmt.agent_list() if a is not None]
+        return agents
+
+    def assemble_pysb(self, belief_cutoff=None):
         """Assemble the model into PySB and return the assembled model."""
         self.run_assembly(belief_cutoff=belief_cutoff, filter_ungrounded=True)
         pa = PysbAssembler()

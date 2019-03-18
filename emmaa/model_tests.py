@@ -42,7 +42,8 @@ class ModelManager(object):
     def __init__(self, model, belief_cutoff=None):
         self.model = model
         self.pysb_model = self.model.assemble_pysb(belief_cutoff=belief_cutoff)
-        self.entities = self.model.get_entities()
+        self.entities = self.model.get_assembled_entities(
+            belief_cutoff=belief_cutoff)
         self.applicable_tests = []
         self.test_results = []
         self.model_checker = ModelChecker(self.pysb_model)
