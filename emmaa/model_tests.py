@@ -86,6 +86,43 @@ class ModelManager(object):
             sentences.append(ea.make_model())
         return sentences
 
+    # Answering queries. I assume that a query will have a query.stmt (INDRA
+    # statement) or a query.test (StatementCheckingTest) and query.id or
+    # query.hash (unique identifier for a query).
+    def answer_query(self, stmt):
+        """Answer user query with a path if it is found."""
+        test = StatementCheckingTest(stmt)
+        if ScopeTestConnector.applicable(self, test):
+            result = self.run_one_test(test)
+            if result.path_found:
+                return self.make_english_result(result)
+            else:
+                return result.result_code
+        else:
+            return 'Query is not applicable for this model.'
+
+    def answer_queries(self, stmts):
+        """Answer all queries registered for this model."""
+        responses = {}
+        applicable_queries = []
+        for stmt in stmts:
+            test = StatementCheckingTest(stmt)
+            if ScopeTestConnector.applicable(self, test):
+                applicable_queries.append(test)
+            else:
+                responses[stmt.get_hash()] = (
+                    'Query is not applicable for this model.')
+        self.model_checker.add_statements([test.stmt for test in
+                                           applicable_queries])
+        self.get_im()
+        results = self.model_checker.check_model()
+        for (stmt, result) in results:
+            if result.path_found:
+                responses[stmt.get_hash()] = self.make_english_result(result)
+            else:
+                responses[stmt.get_hash()] = result.result_code
+        return responses
+
     def has_path(self, result):
         """Check if a path was found."""
         return result.path_found
@@ -306,3 +343,39 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     if upload_stats:
         sg.save_to_s3()
     return (mm, sg)
+
+
+def answer_immediate_query(stmt, model_names):
+    """Run user query in the scope of given models.
+
+    Parameters
+    ----------
+    stmt : indra.statements.statements.Statement
+        An INDRA statement corresponding to user query.
+    model_names : list[str]
+        A list of EMMAA model names to run the query for.
+
+    Returns
+    -------
+    results : dict
+        A dictionary containing results of running a query for each model. If a
+        query is applicable and a path is found, it will conrain an English
+        descriptio of a path. If a query is applicable but the path is not
+        found, it will contain a result code. If a query is not applicable, it
+        will notify a user that it is not applicable.
+    """
+    results = {}
+    for model_name in model_names:
+        model = EmmaaModel.load_from_s3(model_name)
+        mm = ModelManager(model)
+        results[model_name] = mm.answer_query(stmt)
+    return results
+
+
+def answer_registered_queries(model_to_stmts):
+    results = {}
+    for model_name in model_to_stmts.keys():
+        model = EmmaaModel.load_from_s3(model_name)
+        mm = ModelManager(model)
+        results[model_name] = mm.answer_queries(model_to_stmts[model_name])
+    return results
