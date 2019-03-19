@@ -44,8 +44,7 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
   }
 
   endsWith = '.json';
-  maxKeys = 1000;
-  resultsPrefix = 'results';
+  maxKeys = 1000;  resultsPrefix = 'stats';
   modelsPrefix = 'models';
   let s3Interface = new AWS.S3();
 
@@ -337,3 +336,33 @@ function getEnglishByJson(json_stmt_array) {
     });
     return eng_stmt
 };
+
+/* c3 chart functions
+Found here:
+
+https://c3js.org/
+*/
+
+function generateBar(chartDivId, dataParams, ticksLabels) {
+  console.log('function generateBar(chartDivId, dataParams)')
+  console.log(chartDivId)
+  console.log(dataParams)
+  var barChart = c3.generate({
+    bindto: chartDivId,
+    data: dataParams,
+    bar:  {
+      width: {
+        ratio: 0.5 // this makes bar width 50% of length between ticks
+      }
+    },
+    axis: {
+      rotated: true,
+      x: {
+        tick: {
+          ticksLabels
+        }
+      }
+    }
+  });
+  return barChart;
+}
