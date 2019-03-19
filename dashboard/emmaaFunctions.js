@@ -129,32 +129,26 @@ function populateTestResultTable(tableBody, json) {
   console.log(json)
   clearTable(tableBody);
 
-  // FIXME handle resultsjsons of length > 1
-  var results = {};
-  if (!json.result_json) {
-    results = json[0].result_json;
-    tableBody.appendChild(addToRow('Model Name', json[0].model_name));
-    tableBody.appendChild(addToRow('Test Type', json[0].test_type));
-  } else {
-    results = json.result_json;
-    tableBody.appendChild(addToRow('Model Name', json.model_name));
-    tableBody.appendChild(addToRow('Test Type', json.test_type));
-  }
+  var stmt_type_array = ['x']
+  var stmt_freq_array = ['count']
 
-  // Results contents: 
-  // max_path_length: int (e.g. 5)
-  // max_paths: int (e.g. 1)
-  // path_found: bool (e.g. false)
-  // path_metrics: Array []
-  // paths: Array []
-  // py/object: str (e.g. "indra.explanation.model_checker.PathResult")
-  // result_code: str (e.g. "NO_PATHS_FOUND")
-  tableBody.appendChild(addToRow('Max Path Length', results.max_path_length));
-  tableBody.appendChild(addToRow('Max Paths', results.max_paths));
-  tableBody.appendChild(addToRow('Path Found', results.path_found));
-  tableBody.appendChild(addToRow('Number of Path Metrics', results.path_metrics.length));
-  tableBody.appendChild(addToRow('Number of Paths', results.paths.length));
-  tableBody.appendChild(addToRow('Results Code', results.result_code));
+  for (pair of json.model_summary.stmts_type_distr) {
+    stmt_type_array.push(pair[0])
+    stmt_freq_array.push(pair[1])
+  }
+  // See example at: https://c3js.org/samples/axes_x_tick_format.html
+  console.log('stmt_type_array: ' + stmt_type_array)
+  console.log('stmt_freq_array: ' + stmt_freq_array)
+  dataParams = {
+    x: 'x',
+    columns: [
+      stmt_freq_array
+    ],
+    type: 'bar'
+  }
+  console.log('dataParams:')
+  console.log(dataParams)
+  let barChart = generateBar(tableBody, dataParams, stmt_type_array)
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
