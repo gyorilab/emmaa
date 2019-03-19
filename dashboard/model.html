@@ -39,19 +39,8 @@
       var return_url = window.location.href;
       let dict_split = getDictFromUrl(return_url);
 
-      // Get access and ID tokens
-      // accessTokenString = _readCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME)
-      // idTokenString = _readCookie(EMMAA_IDTOKEN_COOKIE_NAME)
-
-      // if (!accessTokenString | !idTokenString) {
-      //   console.log('Could not read either idToken or accessToken!')
-      //   notifyUser(document.getElementId('status-notify'), 'Could not read either idToken or accessToken!')
-      //   // Send user to be logged in again
-      //   window.location.replace()
-      // }
-
-      // // Verify user
-      // verifyUser(accessTokenString, idTokenString);
+      // Check sign-in
+      checkSignIn()
 
       // If linked from model name: load that model
       if (dict_split && dict_split[1] == '?') {
