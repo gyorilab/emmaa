@@ -400,3 +400,22 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   });
   return barChart;
 }
+
+function generateLine(chartId, dataParams) {
+  var lineChart = c3.generate({
+    bindto: chartId,
+    data: dataParams,
+    axis: {
+      x: {
+        type: 'timeseries',
+        tick: {
+          rotate: -45,
+          format: '%Y-%m-%d-%H-%M-%S'
+        }
+      }
+    },
+    title: {
+      text: 'Passed Ratio'
+    }
+  });
+}
