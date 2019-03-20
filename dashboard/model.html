@@ -94,58 +94,69 @@
     </div>
   </div>
 
-  <!-- This table displays model data -->
-  <div class="container" id="modelInfoTable">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Info</h4>
-      </div>
-      <div class="card-body">
-        <table class="table">
-          <thead>
-            <th>Item</th>
-            <th>Details</th>
-          </thead>
-          <tbody class="table-body" id="modelInfoTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  <!-- Tabs -->
+  <nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
+    <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+  </div>    
+  </nav>
+  <div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+      <!-- Model stuff goes here -->
 
-  <!-- This table lists the tests for the selected model -->
-  <div class="container" id="modelTestsTable">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Tests</h4>
+      <!-- This table displays model data -->
+      <div class="container" id="modelInfoTable">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Model Info</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Item</th>
+                <th>Details</th>
+              </thead>
+              <tbody class="table-body" id="modelInfoTableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <table class="table">
-          <thead>
-            <th>Test ID</th>
-            <th>Date</th>
-          </thead>
-          <tbody class="table-body" id="modelTestsTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 
-  <!-- This table shows the contents of a json containning test results for a particular test -->
-  <div class="container" id="modelTestResult">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Test Result Details</h4>
+    </div>
+    <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+      <!-- Test stuff goes here -->
+
+      <!-- This table lists the tests for the selected model -->
+<!--       <div class="container" id="modelTestsTable">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Test</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test ID</th>
+                <th>Date</th>
+              </thead>
+              <tbody class="table-body" id="modelTestsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- This table shows the contents of a json containning test results for a particular test -->
+      <div class="container" id="modelTestResult">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Test Result Details</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="modelTestResultBody"></div>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-<!--         <table class="table">
-          <thead>
-            <th>Key</th>
-            <th>Value</th>
-          </thead>
-          <tbody class="table-body" id="modelTestResultBody"></tbody>
-        </table> -->
-        <div class="container" id="modelTestResultBody"></div>
-      </div>
+
     </div>
   </div>
 
