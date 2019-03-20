@@ -134,6 +134,7 @@ function populateTestResultTable(tableBody, json) {
   console.log(json)
   clearTable(tableBody);
 
+  // Bar graph 
   var stmt_type_array = []
   var stmt_freq_array = ['count']
 
@@ -144,16 +145,46 @@ function populateTestResultTable(tableBody, json) {
   // See example at: https://c3js.org/samples/axes_x_tick_format.html
   console.log('stmt_type_array: ' + stmt_type_array)
   console.log('stmt_freq_array: ' + stmt_freq_array)
-  dataParams = {
+  barDataParams = {
     // x: 'x',
     columns: [
       stmt_freq_array
     ],
     type: 'bar'
   }
-  console.log('dataParams:')
-  console.log(dataParams)
-  let barChart = generateBar(tableBody, dataParams, stmt_type_array, 'Statement Types Distribution')
+  console.log('barDataParams:')
+  console.log(barDataParams)
+  let barChart = generateBar(tableBody, barDataParams, stmt_type_array, 'Statement Types Distribution')
+
+  // // Line graph
+  // passedRatio = json.changes_over_time.passed_ratio
+  // passedRatio.unshift('Passed Ratio')
+  // lineDataParams = {
+  //   x: 'x',
+  //   columns: [
+  //     ['x', '2019-03-18', '2019-03-19'],
+  //     passedRatio
+  //   ]
+  // }
+
+  // var lineChart = c3.generate({
+  //   bindto: tableBody,
+  //   data: lineDataParams,
+  //   axis: {
+  //     x: {
+  //       type: 'timeseries',
+  //       tick: {
+  //         rotate: -45,
+  //         format: '%Y-%m-%d'
+  //       }
+  //     }
+  //   },
+  //   title: {
+  //     text: 'Passed Ratio'
+  //   }
+  // });
+
+  console.log('Done')
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
