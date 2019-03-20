@@ -43,6 +43,11 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
+  if (model == 'brca') {
+    alert('BRCA Model Currently Unavailable')
+    return;
+  }
+
   endsWith = '.json';
   maxKeys = 1000;  resultsPrefix = 'stats';
   modelsPrefix = 'models';
