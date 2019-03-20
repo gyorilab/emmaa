@@ -129,7 +129,7 @@ function populateTestResultTable(tableBody, json) {
   console.log(json)
   clearTable(tableBody);
 
-  var stmt_type_array = ['x']
+  var stmt_type_array = []
   var stmt_freq_array = ['count']
 
   for (pair of json.model_summary.stmts_type_distr) {
@@ -140,7 +140,7 @@ function populateTestResultTable(tableBody, json) {
   console.log('stmt_type_array: ' + stmt_type_array)
   console.log('stmt_freq_array: ' + stmt_freq_array)
   dataParams = {
-    x: 'x',
+    // x: 'x',
     columns: [
       stmt_freq_array
     ],
@@ -352,9 +352,8 @@ function generateBar(chartDivId, dataParams, ticksLabels) {
     axis: {
       rotated: true,
       x: {
-        tick: {
-          ticksLabels
-        }
+          type: 'category',
+          categories: ticksLabels
       }
     }
   });
