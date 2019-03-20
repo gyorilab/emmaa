@@ -121,38 +121,35 @@
             </table>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="modelTestResultBody"></div>
+          </div>
+        </div>
       </div>
-
+    
     </div>
     <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
       <!-- Test stuff goes here -->
 
-      <!-- This table lists the tests for the selected model -->
-<!--       <div class="container" id="modelTestsTable">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Test</h4>
-          </div>
-          <div class="card-body">
-            <table class="table">
-              <thead>
-                <th>Test ID</th>
-                <th>Date</th>
-              </thead>
-              <tbody class="table-body" id="modelTestsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- This table shows the contents of a json containning test results for a particular test -->
       <div class="container" id="modelTestResult">
         <div class="card">
           <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Test Result Details</h4>
+            <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
           </div>
           <div class="card-body">
-            <div class="container" id="modelTestResultBody"></div>
+            <div class="container" id="passedRatio"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="passedApplied"></div>
           </div>
         </div>
       </div>
