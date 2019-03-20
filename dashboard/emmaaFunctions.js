@@ -148,7 +148,7 @@ function populateTestResultTable(tableBody, json) {
   }
   console.log('dataParams:')
   console.log(dataParams)
-  let barChart = generateBar(tableBody, dataParams, stmt_type_array)
+  let barChart = generateBar(tableBody, dataParams, stmt_type_array, 'Statement Types Distribution')
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
@@ -337,7 +337,7 @@ Found here:
 https://c3js.org/
 */
 
-function generateBar(chartDivId, dataParams, ticksLabels) {
+function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   console.log('function generateBar(chartDivId, dataParams)')
   console.log(chartDivId)
   console.log(dataParams)
@@ -355,6 +355,9 @@ function generateBar(chartDivId, dataParams, ticksLabels) {
           type: 'category',
           categories: ticksLabels
       }
+    },
+    title: {
+      text: chartTitle
     }
   });
   return barChart;
