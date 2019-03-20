@@ -348,7 +348,8 @@ class StatsGenerator(object):
             'number_passed_tests': self.get_over_time(
                 'test_round_summary', 'number_passed_tests'),
             'passed_ratio': self.get_over_time(
-                'test_round_summary', 'passed_ratio')
+                'test_round_summary', 'passed_ratio'),
+            'dates': self.get_dates()
         }
 
     def get_over_time(self, section, metrics):
@@ -359,6 +360,18 @@ class StatsGenerator(object):
                 self.previous_json_stats['changes_over_time'][metrics])
         previous_data.append(self.json_stats[section][metrics])
         return previous_data
+
+    def get_dates(self):
+        if not self.previous_json_stats:
+            previous_dates = []
+        else:
+            try:
+                previous_dates = (
+                    self.previous_json_stats['changes_over_time']['dates'])
+            except KeyError:
+                previous_dates = ['2019-03-18-22-55-53', '2019-03-19-17-27-05']
+        previous_dates.append(make_date_str(datetime.datetime.now()))
+        return previous_dates
 
     def save_to_s3(self):
         json_stats_str = json.dumps(self.json_stats, indent=1)
