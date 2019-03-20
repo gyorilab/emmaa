@@ -313,29 +313,31 @@ function listModelTests(tableBody, testResultTableBody, keyMapArray, model, ends
   // get array of filtered object keys
   let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith)
   let sortedTestJsonsArray = testJsonsArray.sort();
+
+  getTestResultJsonToTable(testResultTableBody, sortedTestJsonsArray[sortedTestJsonsArray.length-1]);
   
-  // loop the sorted array in reverse alphbetical order (newest first)
-  for (let i = sortedTestJsonsArray.length-1; i >= 0; i--) {
-    var testString = ''
-    if (sortedTestJsonsArray[i].split('/')[2].includes('_')) {
-      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0].split('_')[1];
-    } else {
-      testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0];
-    }
-    link = document.createElement('a');
-    link.textContent = testString;
-    link.href = '#Test Result Details'
-    link.value = sortedTestJsonsArray[i]
-    link.onclick = function() { // Attach function call to link
-      getTestResultJsonToTable(testResultTableBody, this.value);
-    }
+  // // loop the sorted array in reverse alphbetical order (newest first)
+  // for (let i = sortedTestJsonsArray.length-1; i >= 0; i--) {
+  //   var testString = ''
+  //   if (sortedTestJsonsArray[i].split('/')[2].includes('_')) {
+  //     testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0].split('_')[1];
+  //   } else {
+  //     testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0];
+  //   }
+  //   link = document.createElement('a');
+  //   link.textContent = testString;
+  //   link.href = '#Test Result Details'
+  //   link.value = sortedTestJsonsArray[i]
+  //   link.onclick = function() { // Attach function call to link
+  //     getTestResultJsonToTable(testResultTableBody, this.value);
+  //   }
 
-    let tableRow = addToRow(model, '');
-    tableRow.children[1].innerHTML = null;
-    tableRow.children[1].appendChild(link);
+  //   let tableRow = addToRow(model, '');
+  //   tableRow.children[1].innerHTML = null;
+  //   tableRow.children[1].appendChild(link);
 
-    tableBody.appendChild(tableRow);
-  }
+  //   tableBody.appendChild(tableRow);
+  // }
 }
 
 function getArrayOfModelTests(model, keyMapArray, endsWith) {
