@@ -131,8 +131,12 @@ function getTestResultJsonToTable(testResultTableBody, jsonKey) {
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
   console.log('function populateTestResultTable(tableBody, json)')
+  console.log(tableBody)
   console.log(json)
-  clearTable(tableBody);
+
+  // IDs
+  let stmtTypDistId = '#modelTestResultBody'
+  let pasRatId = '#passedRatio'
 
   // Bar graph 
   var stmt_type_array = []
@@ -154,37 +158,25 @@ function populateTestResultTable(tableBody, json) {
   }
   console.log('barDataParams:')
   console.log(barDataParams)
-  let barChart = generateBar(tableBody, barDataParams, stmt_type_array, 'Statement Types Distribution')
+  let barChart = generateBar(stmtTypDistId, barDataParams, stmt_type_array, 'Statement Types Distribution')
 
-  // // Line graph
-  // passedRatio = json.changes_over_time.passed_ratio
-  // passedRatio.unshift('Passed Ratio')
-  // lineDataParams = {
-  //   x: 'x',
-  //   columns: [
-  //     ['x', '2019-03-18', '2019-03-19'],
-  //     passedRatio
-  //   ]
-  // }
+  // Line graph
+  passedRatio = json.changes_over_time.passed_ratio
+  passedRatio.unshift('Passed Ratio')
+  passedDates = json.changes_over_time.dates
+  passedDates.unshift('x')
 
-  // var lineChart = c3.generate({
-  //   bindto: tableBody,
-  //   data: lineDataParams,
-  //   axis: {
-  //     x: {
-  //       type: 'timeseries',
-  //       tick: {
-  //         rotate: -45,
-  //         format: '%Y-%m-%d'
-  //       }
-  //     }
-  //   },
-  //   title: {
-  //     text: 'Passed Ratio'
-  //   }
-  // });
+  lineDataParams = {
+    x: 'x',
+    xFormat: '%Y-%m-%d-%H-%M-%S',
+    columns: [
+      passedDates,
+      passedRatio
+    ]
+  }
 
-  console.log('Done')
+  let lineChart = generateLine(pasRatId, lineDataParams)
+  console.log(lineChart)
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
