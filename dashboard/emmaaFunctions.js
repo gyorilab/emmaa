@@ -210,6 +210,10 @@ function populateTestResultTable(tableBody, json) {
 
   // Passed ratio line graph
   passedRatio = json.changes_over_time.passed_ratio
+  passedRatio = passedRatio.map(function(element) {
+    return (element*100).toFixed(2);
+  })
+  console.log('ratio %' + passedRatio)
   passedRatio.unshift('Passed Ratio')
 
   lineDataParams = {
