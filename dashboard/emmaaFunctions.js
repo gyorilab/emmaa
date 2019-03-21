@@ -139,6 +139,8 @@ function populateTestResultTable(tableBody, json) {
   let pasRatId = '#passedRatio'
   let pasAppId = '#passedApplied'
   let agDist = '#agentDistr'
+  let stmtEv = '#stmtEvidence'
+  let stmtTime = '#stmtsOverTime'
 
   // Dates
   dates = json.changes_over_time.dates
@@ -184,6 +186,23 @@ function populateTestResultTable(tableBody, json) {
   }
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
+
+  // Statements by Evidence Table
+
+  // Statements over Time line graph
+  stmtsOverTime = json.changes_over_time.number_of_statements
+  stmtsOverTime.unshift('Statements')
+
+  stmtsCountDataParams = {
+    x: 'x',
+    xFormat: '%Y-%m-%d-%H-%M-%S',
+    columns: [
+      dates,
+      stmtsOverTime
+    ]
+  }
+
+  let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
   // Tests Tab
 
   // Passed ratio line graph
