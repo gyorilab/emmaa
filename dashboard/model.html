@@ -145,7 +145,7 @@
             <table class="table">
               <thead>
                 <th>Statement</th>
-                <th>Evidence</th>
+                <th>Evidence Count</th>
               </thead>
               <tbody class="table-body" id="stmtEvidence"></tbody>
             </table>
@@ -159,8 +159,21 @@
             <div class="container" id="stmtsOverTime"></div>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Added Statements</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Statement</th>
+              </thead>
+              <tbody class="table-body" id="addedStmts"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    
+      
     </div>
     <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
       <!-- Test stuff goes here -->
@@ -180,6 +193,33 @@
           </div>
           <div class="card-body">
             <div class="container" id="passedApplied"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Applied Tests</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test</th>
+              </thead>
+              <tbody class="table-body" id="newAppliedTests"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test</th>
+                <th>Path Found</th>
+              </thead>
+              <tbody class="table-body" id="newPassedTests"></tbody>
+            </table>
           </div>
         </div>
       </div>

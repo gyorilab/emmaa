@@ -141,7 +141,10 @@ function populateTestResultTable(tableBody, json) {
   let agDist = '#agentDistr'
   let stmtEv = '#stmtEvidence'
   let stmtTime = '#stmtsOverTime'
-
+  let newStmt = '#addedStmts'
+  let newApp = '#newAppliedTests'
+  let newPass = '#newPassedTests'
+  
   // Dates
   dates = json.changes_over_time.dates
   dates.unshift('x')
