@@ -137,8 +137,13 @@ function populateTestResultTable(tableBody, json) {
   // IDs
   let stmtTypDistId = '#modelTestResultBody'
   let pasRatId = '#passedRatio'
+  let pasAppId = '#passedApplied'
 
-  // Bar graph 
+  // Dates
+  dates = json.changes_over_time.dates
+  dates.unshift('x')
+
+  // Stmt type distribution bar graph 
   var stmt_type_array = []
   var stmt_freq_array = ['count']
 
@@ -160,23 +165,40 @@ function populateTestResultTable(tableBody, json) {
   console.log(barDataParams)
   let barChart = generateBar(stmtTypDistId, barDataParams, stmt_type_array, 'Statement Types Distribution')
 
-  // Line graph
+  // Passed ratio line graph
   passedRatio = json.changes_over_time.passed_ratio
   passedRatio.unshift('Passed Ratio')
-  passedDates = json.changes_over_time.dates
-  passedDates.unshift('x')
 
   lineDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
     columns: [
-      passedDates,
+      dates,
       passedRatio
     ]
   }
 
-  let lineChart = generateLine(pasRatId, lineDataParams)
+  let lineChart = generateLineArea(pasRatId, lineDataParams, 'Passed Ratio')
   console.log(lineChart)
+
+  // Applied/passed area graph
+  appliedTests = json.changes_over_time.number_applied_tests
+  appliedTests.unshift('Applied Tests')
+  passedTests = json.changes_over_time.number_passed_tests
+  passedTests.unshift('Passed Tests')
+
+  passedAppliedParams = {
+    x: 'x',
+    xFormat: '%Y-%m-%d-%H-%M-%S',
+    columns: [
+      dates,
+      passedTests,
+      appliedTests
+    ],
+    type: 'area'
+  }
+
+  let areaChart = generateLineArea(pasAppId, passedAppliedParams, 'Number of Applied and Passed Tests')
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
@@ -393,9 +415,12 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   return barChart;
 }
 
-function generateLine(chartId, dataParams) {
+function generateLineArea(chartDivId, dataParams, chartTitle) {
+  console.log('function generateLine(chartId, dataparams)')
+  console.log(chartDivId)
+  console.log(dataParams)
   var lineChart = c3.generate({
-    bindto: chartId,
+    bindto: chartDivId,
     data: dataParams,
     axis: {
       x: {
@@ -407,7 +432,7 @@ function generateLine(chartId, dataParams) {
       }
     },
     title: {
-      text: 'Passed Ratio'
+      text: chartTitle
     }
   });
 }
