@@ -14,7 +14,7 @@
   <!-- Optional theme -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
-  <!-- Latest compiled and minified JavaScript -->
+  <!-- bootstrap 4.1.3 -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 
   <!-- AWS SDK -->
@@ -31,12 +31,76 @@
   <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
   <script src="./emmaaFunctions.js"></script>
 
+  <!-- User query JS -->
+  <script>
+    // EMMAA rest API
+    var EMMAA_API = 'https://somewhere.on.aws/submit/'
+
+    function postQuery(ddElement) {
+      // Get user info
+      userInfo = {
+        name: 'testUser',
+        slack_id: '123456abcdef',
+        email: 'test_user@emmaa.com'
+      }
+
+      // Collect model query
+      let querySel = collectQuery(ddElement)
+
+      submitQuery({
+        user: userInfo,
+        query: querySel
+      })
+    }
+
+    function collectQuery(ddElement) {
+      let selections = ddElement.getElementsByClassName('custom-select')
+
+      querySelections = {};
+      for (selection of selections) {
+        selId = selection.id;
+        querySelections[selId] = selection.options[selection.selectedIndex].value;
+      }
+
+      return querySelections;
+    }
+
+    function submitQuery(queryDict) {
+      // submit POST to emmaa user db
+      let response = $.ajax({
+        url: EMMAA_API,
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(queryDict),
+        complete: function function_name(xhr, statusText) {
+          switch (xhr.status) {
+            case 200:
+              console.log('200 response')
+              break;
+            case 400:
+              console.log('400 response')
+              break;
+            case 401:
+              console.log('401 response')
+              break;
+            case 404:
+              console.log('404 response')
+              break;
+            default:
+              console.log('Unhandled server response')
+          }
+        }
+      })
+    }
+  </script>
+
   </head>
 
   <body>
-    <div class="container">
+    <div class="container" id="dropdown-container">
       <div class="dropdown" style="display:inline-block;">
-        <select class="custom-select" id="modelSelectDD">
+        <select class="custom-select" id="modelSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select model</option>
           <option value="aml">Acute myeloid leukemia (AML)</option>
           <option value="brca" disabled="disabled">Breast cancer (BRCA) (Unavailable)</option>
@@ -47,24 +111,27 @@
         </select>
       </div>
       <div class="dropdown" style="display:inline-block;">
-        <select class="custom-select" id="typeSelectDD">
+        <select class="custom-select" id="typeSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
           <option value="activation">Activation</option>
           <option value="phosphorylation">Phosphorylation</option>
         </select>
       </div>
       <div class="dropdown" style="display:inline-block;">
-        <select class="custom-select" id="subjectSelectDD">
+        <select class="custom-select" id="subjectSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select subject</option>
           <option value="brca1">BRCA1</option>
         </select>
       </div>
       <div class="dropdown" style="display:inline-block;">
-        <select class="custom-select" id="objectSelectDD">
+        <select class="custom-select" id="objectSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select object</option>
           <option value="brca2">BRCA2</option>
         </select>
       </div>
+    </div>
+    <div class="container" id="button-container">
+      <button class="btn btn-outline-primary" id="status-notify" onClick="postQuery(document.getElementById('dropdown-container'))">Submit query</button>
     </div>
   </body>
 
