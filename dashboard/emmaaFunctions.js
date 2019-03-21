@@ -138,10 +138,13 @@ function populateTestResultTable(tableBody, json) {
   let stmtTypDistId = '#modelTestResultBody'
   let pasRatId = '#passedRatio'
   let pasAppId = '#passedApplied'
+  let agDist = '#agentDistr'
 
   // Dates
   dates = json.changes_over_time.dates
   dates.unshift('x')
+
+  //  Model Tab
 
   // Stmt type distribution bar graph 
   var stmt_type_array = []
@@ -154,16 +157,34 @@ function populateTestResultTable(tableBody, json) {
   // See example at: https://c3js.org/samples/axes_x_tick_format.html
   console.log('stmt_type_array: ' + stmt_type_array)
   console.log('stmt_freq_array: ' + stmt_freq_array)
-  barDataParams = {
+  stmtTypeDataParams = {
     // x: 'x',
     columns: [
       stmt_freq_array
     ],
     type: 'bar'
   }
-  console.log('barDataParams:')
-  console.log(barDataParams)
-  let barChart = generateBar(stmtTypDistId, barDataParams, stmt_type_array, 'Statement Types Distribution')
+
+  let stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '')
+
+  // Top agents bar graph
+  var top_agents_array = []
+  var agent_freq_array = ['count']
+
+  for (pair of json.model_summary.agent_distr.slice(0, 10)) {
+    top_agents_array.push(pair[0])
+    agent_freq_array.push(pair[1])
+  }
+
+  agentDataParams = {
+    columns: [
+      agent_freq_array
+    ],
+    type: 'bar'
+  }
+
+  let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
+  // Tests Tab
 
   // Passed ratio line graph
   passedRatio = json.changes_over_time.passed_ratio
@@ -178,7 +199,7 @@ function populateTestResultTable(tableBody, json) {
     ]
   }
 
-  let lineChart = generateLineArea(pasRatId, lineDataParams, 'Passed Ratio')
+  let lineChart = generateLineArea(pasRatId, lineDataParams, '')
   console.log(lineChart)
 
   // Applied/passed area graph
@@ -198,7 +219,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'area'
   }
 
-  let areaChart = generateLineArea(pasAppId, passedAppliedParams, 'Number of Applied and Passed Tests')
+  let areaChart = generateLineArea(pasAppId, passedAppliedParams, '')
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
