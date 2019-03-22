@@ -413,7 +413,7 @@ class StatsGenerator(object):
     def save_to_s3(self):
         json_stats_str = json.dumps(self.json_stats, indent=1)
         client = get_s3_client()
-        date_str = make_date_str(datetime.datetime.now())
+        date_str = make_date_str()
         stats_key = f'stats/{self.model_name}/stats_{date_str}.json'
         logger.info(f'Uploading test round statistics to {stats_key}')
         client.put_object(Bucket='emmaa', Key=stats_key,
