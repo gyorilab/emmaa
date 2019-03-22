@@ -122,61 +122,93 @@
     <div class="container" id="query-container">
 
       <!-- checkboxes -->
-      <div class="checkbox-container" id="model-select" style="display: inline-block; vertical-align: top;">
-        <div class="checkbox">
-          <input type="checkbox" name="aml" id="aml"><label for="aml">Acute myeloid leukemia (AML)</label>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Model Queries</h4>
         </div>
-        <div class="checkbox">
-          <input type="checkbox" name="brca" id="brca" disabled><label for="brca">Breast cancer (BRCA) (Unavailable)</label>
+        <div class="card-body">
+
+          <div class="checkbox-container" id="model-select">
+            <div class="checkbox">
+              <label for="aml">
+                <input type="checkbox" name="aml" id="aml">AML
+              </label>
+              <label for="brca">
+                <input type="checkbox" name="brca" id="brca" disabled>BRCA (Unavailable)
+              </label>
+              <label for="luad">
+                <input type="checkbox" name="luad" id="luad">LUAD
+              </label>
+              <label for="paad">
+                <input type="checkbox" name="paad" id="paad">PAAD
+              </label>
+              <label for="prad">
+                <input type="checkbox" name="prad" id="prad">PRAD
+              </label>
+              <label for="skcm">
+                <input type="checkbox" name="skcm" id="skcm">SKCM
+              </label>
+            </div>
+          </div>
+          <!-- stmt type select -->
+          <div class="dropdown" style="display: inline-block; vertical-align: top;">
+            <select class="custom-select" id="typeSelection">
+              <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+              <option value="activation">Activation</option>
+              <option value="phosphorylation">Phosphorylation</option>
+            </select>
+          </div>
+          <!-- subject select -->
+          <div class="dropdown" style="display: inline-block; vertical-align: top;">
+            <select class="custom-select" id="subjectSelection">
+              <option value="" selected="selected" disabled="disabled" hidden="hidden">select subject</option>
+              <option value="brca1">BRCA1</option>
+            </select>
+          </div>
+          <!-- object select -->
+          <div class="dropdown" style="display: inline-block; vertical-align: top;">
+            <select class="custom-select" id="objectSelection">
+              <option value="" selected="selected" disabled="disabled" hidden="hidden">select object</option>
+              <option value="brca2">BRCA2</option>
+            </select>
+          </div>
+          <!-- register query -->
+          <div class="register-container">
+            <div class="checkbox">
+              <input type="checkbox" name="register" id="register-query"><label for="register">Register Query</label>
+            </div>
+          </div>
         </div>
-        <div class="checkbox">
-          <input type="checkbox" name="luad" id="luad"><label for="luad">Lung adenocarcinoma (LUAD)</label>
+
+        <!-- submit button -->
+        <div class="container" id="button-container" style="margin: auto;">
+          <button class="btn btn-outline-primary" id="status-notify" onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
         </div>
-        <div class="checkbox">
-          <input type="checkbox" name="paad" id="paad"><label for="paad">Pancreas adenocarcinoma (PAAD)</label>
-        </div>
-        <div class="checkbox">
-          <input type="checkbox" name="prad" id="prad"><label for="prad">Prostate adenocarcinoma (PRAD)</label>
-        </div>
-        <div class="checkbox">
-          <input type="checkbox" name="skcm" id="skcm"><label for="skcm">Skin cutaneous melanoma (SKCM)</label>
-        </div>
+
       </div>
-      <!-- stmt type select -->
-      <div class="dropdown" style="display: inline-block; vertical-align: top;">
-        <select class="custom-select" id="typeSelection">
-          <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-          <option value="activation">Activation</option>
-          <option value="phosphorylation">Phosphorylation</option>
-        </select>
-      </div>
-      <!-- subject select -->
-      <div class="dropdown" style="display: inline-block; vertical-align: top;">
-        <select class="custom-select" id="subjectSelection">
-          <option value="" selected="selected" disabled="disabled" hidden="hidden">select subject</option>
-          <option value="brca1">BRCA1</option>
-        </select>
-      </div>
-      <!-- object select -->
-      <div class="dropdown" style="display: inline-block; vertical-align: top;">
-        <select class="custom-select" id="objectSelection">
-          <option value="" selected="selected" disabled="disabled" hidden="hidden">select object</option>
-          <option value="brca2">BRCA2</option>
-        </select>
-      </div>
-      <!-- register query -->
-      <div class="register-container" style="display: inline-block; vertical-align: top;">
-        <div class="checkbox">
-          <input type="checkbox" name="register" id="register-query"><label for="register">Register Query</label>
+    </div>
+
+    <!-- Query results -->
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Results</h4>
+        </div>
+        <div class="card-body" id="query-results">
         </div>
       </div>
     </div>
 
-    <!-- submit button -->
-    <div class="container" id="button-container" style="margin: auto;">
-      <button class="btn btn-outline-primary" id="status-notify" onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
+    <!-- List user queries -->
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Your previous queries</h4>
+        </div>
+        <div class="card-body" id="user-queries">
+        </div>
+      </div>
     </div>
-
   </body>
 
 </html>
