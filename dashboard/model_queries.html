@@ -36,8 +36,8 @@
     // EMMAA rest API
     var EMMAA_API = 'https://somewhere.on.aws/submit/'
 
-    function postQuery(ddElement) {
-      console.log('function postQuery(ddElement)')
+    function postQuery(queryContainer) {
+      console.log('function postQuery(queryContainer)')
       // Get user info
       userInfo = {
         name: 'testUser',
@@ -46,7 +46,7 @@
       }
 
       // Collect model query
-      let querySel = collectQuery(ddElement)
+      let querySel = collectQuery(queryContainer)
 
       submitQuery({
         user: userInfo,
@@ -54,17 +54,28 @@
       })
     }
 
-    function collectQuery(ddElement) {
-      console.log('function collectQuery(ddElement)')
-      let selections = ddElement.getElementsByClassName('custom-select')
+    function collectQuery(queryContainer) {
+      console.log('function collectQuery(queryContainer)')
+      let dropdownSelections = queryContainer.getElementsByClassName('custom-select')
 
-      querySelections = {};
-      for (selection of selections) {
+      query = {};
+      checkboxes = []
+
+      // Get checked models
+      for (box of queryContainer.getElementsByTagName('input')) {
+        if (!box.disabled) {
+          checkboxes.push(box.name)
+        }
+      }
+      query['models'] = checkboxes;
+
+      //  Collect dropdown selections
+      for (selection of dropdownSelections) {
         selId = selection.id;
-        querySelections[selId] = selection.options[selection.selectedIndex].value;
+        query[selId] = selection.options[selection.selectedIndex].value;
       }
 
-      return querySelections;
+      return query;
     }
 
     function submitQuery(queryDict) {
