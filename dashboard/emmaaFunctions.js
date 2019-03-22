@@ -77,21 +77,19 @@ function clearTable(tableBody) {
   tableBody.innerHTML = null;
 }
 
-// Creates a new two-column table row with the key value pair
-function addToRow(col1, col2) {
+// Creates a new table row given an array of values
+
+function addToRow(col_values) {
   let tableRow = document.createElement('tr');
 
-  column1 = document.createElement('td');
-  column1.textContent = col1;
-  tableRow.appendChild(column1);
+  for (col of col_values) {
+    column = document.createElement('td');
+    column.textContent = col;
+    tableRow.appendChild(column);
+  }
 
-  column2 = document.createElement('td');
-  column2.textContent = col2;
-  tableRow.appendChild(column2);
-  
   return tableRow;
 }
-
 function populateModelsTable(metaTableBody, json) {
   console.log('function populateModelsTable(metaTableBody, json)')
   // console.log(json)
@@ -193,7 +191,7 @@ function populateTestResultTable(tableBody, json) {
   var stmtByEv = json.model_summary.stmts_by_evidence
 
   for (pair of stmtByEv.slice(0,10)) {
-    let rowEl = addToRow(english_stmts[pair[0]], pair[1])
+    let rowEl = addToRow([english_stmts[pair[0]], pair[1]])
     stEvTable.appendChild(rowEl)
   }
 
@@ -218,7 +216,7 @@ function populateTestResultTable(tableBody, json) {
   var new_stmts = json.model_delta.statements_delta.added
   console.log(new_stmts)
   for (stmt of new_stmts) {
-    let rowEl = addToRow(stmt, '')
+    let rowEl = addToRow([stmt])
     newStTable.appendChild(rowEl)
   }
   // Tests Tab
@@ -267,20 +265,33 @@ function populateTestResultTable(tableBody, json) {
   clearTable(newAppliedTable)
   var newAppTests = json.tests_delta.applied_tests_delta.added
 
-  for (test of newAppTests) {
-    let rowEl = addToRow(test, '')
+  for (pair of newAppTests) {
+    let rowEl = addToRow(pair)
     newAppliedTable.appendChild(rowEl)
   }
-  // Tests De;ta - New Passeed Tests
+  // Tests Delta - New Passeed Tests
   let newPassedTable = document.getElementById('newPassedTests')
   clearTable(newPassedTable)
   var newPasTests = json.tests_delta.pass_fail_delta.added
   var newPaths = json.tests_delta.new_paths.added
 
   for (i = 0; i < newPasTests.length; i++) {
-    let rowEl = addToRow(newPasTests[i], newPaths[i])
+    let rowEl = addToRow([newPasTests[i], newPaths[i]])
     newPassedTable.appendChild(rowEl)
   }
+
+  // All Tests Results
+  let allTestsTable = document.getElementById('allTestResults')
+  clearTable(allTestsTable)
+  var testResults = json.test_round_summary.tests_by_hash
+  var resultValues = Object.values(testResults)
+  console.log(resultValues)
+
+  for (val of resultValues) {
+    let rowEl = addToRow(val)
+    allTestsTable.appendChild(rowEl)
+  }
+
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
@@ -300,7 +311,7 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
   } else {
     lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0]
   }
-  modelInfoTableBody.appendChild(addToRow('Last updated', lastUpdated))
+  modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
 
   // Get NDEX id from YAML
   // let yamlKey = 'models/' + model + '/config.yaml';
