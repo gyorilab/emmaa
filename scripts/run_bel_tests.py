@@ -1,36 +1,36 @@
 import os
-import sys
 import indra
 import pickle
+import argparse
 from indra.sources import bel
-from indra.assemblers.english import EnglishAssembler
+from indra.tools import assemble_corpus as ac
 from emmaa.model import EmmaaModel
 from emmaa.model_tests import TestManager, ScopeTestConnector, \
     StatementCheckingTest
 
 
-def get_indirect_stmts():
-    lcpath = os.path.join(indra.__path__[0], os.pardir, 'data',
-                          'small_corpus.bel')
-    bp = bel.process_belscript(lcpath)
+def get_indirect_stmts(corpus):
+    cpath = os.path.join(indra.__path__[0], os.pardir, 'data',
+                         f'{corpus}_corpus.bel')
+    bp = bel.process_belscript(cpath)
     indirect_stmts = [st for st in bp.statements
                       if not st.evidence[0].epistemics.get('direct')]
-    return indirect_stmts
+    stmts = ac.run_preassembly(indirect_stmts, return_toplevel=False)
+    return stmts
 
 
 if __name__ == '__main__':
-    usage = "Usage: %s dump|run" % sys.argv[0]
-    if len(sys.argv) < 2 or sys.argv[1] not in ('dump', 'run'):
-        print(usage)
-        sys.exit(1)
-    mode = sys.argv[1]
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--corpus', default='large')
+    parser.add_argument('--mode', default='dump')
+    args = parser.parse_args()
 
-    indirect_stmts = get_indirect_stmts()
+    indirect_stmts = get_indirect_stmts(args.corpus)
     tests = [StatementCheckingTest(stmt) for stmt in indirect_stmts]
-    if mode == 'dump':
-        with open('small_corpus_tests.pkl', 'wb') as f:
+    if args.mode == 'dump':
+        with open(f'{args.corpus}_corpus_tests.pkl', 'wb') as f:
             pickle.dump(tests, f)
-    elif mode == 'run':
+    elif args.mode == 'run':
         ctypes = ['rasmodel']
         models = [EmmaaModel(ctype) for ctype in ctypes]
         tm = TestManager(models, tests)
