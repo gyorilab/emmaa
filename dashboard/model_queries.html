@@ -48,9 +48,13 @@
       // Collect model query
       let querySel = collectQuery(queryContainer)
 
+      // Check if user wants to register query
+      let reg = document.getElementById('register-query').checked
+
       submitQuery({
         user: userInfo,
-        query: querySel
+        query: querySel,
+        register: reg
       })
     }
 
@@ -62,8 +66,9 @@
       checkboxes = []
 
       // Get checked models
-      for (box of queryContainer.getElementsByTagName('input')) {
-        if (!box.disabled) {
+      for (box of document.getElementById('model-select').getElementsByTagName('input')) {
+        console.log(box.name)
+        if (!box.disabled && box.checked) {
           checkboxes.push(box.name)
         }
       }
@@ -117,7 +122,7 @@
     <div class="container" id="query-container">
 
       <!-- checkboxes -->
-      <div class="checkbox-container" style="display: inline-block; vertical-align: top;">
+      <div class="checkbox-container" id="model-select" style="display: inline-block; vertical-align: top;">
         <div class="checkbox">
           <input type="checkbox" name="aml" id="aml"><label for="aml">Acute myeloid leukemia (AML)</label>
         </div>
@@ -160,7 +165,7 @@
         </select>
       </div>
       <!-- register query -->
-      <div class="checkbox-container" style="display: inline-block; vertical-align: top;">
+      <div class="register-container" style="display: inline-block; vertical-align: top;">
         <div class="checkbox">
           <input type="checkbox" name="register" id="register-query"><label for="register">Register Query</label>
         </div>
