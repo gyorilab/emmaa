@@ -138,11 +138,30 @@ class TestRound(object):
         """Return a ratio of passed over total tests."""
         return self.get_number_passed_tests()/self.get_total_applied_tests()
 
-    def get_english_tests(self):
-        """Return a dictionary mapping a test hash and its English description."""
+    def get_applied_tests_results(self):
+        """Return a dictionary mapping a test hash and a list containing its
+        English description, result in Pass/Fail form and either a path if it
+        was found or a result code if it was not."""
         tests_by_hash = {}
-        for test in self.tests:
-            tests_by_hash[str(test.get_hash())] = self.get_english_statement(test)
+
+        def get_pass_fail(res):
+            if res.path_found:
+                return 'Pass'
+            else:
+                return 'Fail'
+
+        for ix, test in enumerate(self.tests):
+            test_hash = str(test.get_hash())
+            result = self.test_results[ix]
+            tests_by_hash[test_hash] = [
+                self.get_english_statement(test),
+                get_pass_fail(result)]
+            if result.path_found:
+                tests_by_hash[test_hash].append(
+                    self.get_path_by_hash(test_hash))
+            else:
+                tests_by_hash[test_hash].append(result.result_code)
+
         return tests_by_hash
 
     def get_path_descriptions(self):
@@ -156,7 +175,10 @@ class TestRound(object):
         return paths
 
     def get_english_test_by_hash(self, test_hash):
-        return self.get_english_tests()[test_hash]
+        return self.get_applied_tests_results()[test_hash][0]
+    
+    def get_pass_fail_by_hash(self, test_hash):
+        return self.get_applied_tests_results()[test_hash][1]
 
     def get_path_by_hash(self, test_hash):
         return self.get_path_descriptions()[test_hash]
@@ -186,7 +208,7 @@ class TestRound(object):
                  - getattr(other_round, one_round_numeric_func)())
         return delta
 
-    def find_content_delta(self, other_round, content_type):
+    def find_content_delta(self, other_round, content_type, add_result=False):
         """Return a dictionary of changed items of a given content type. This
         method makes use of self.function_mapping dictionary.
 
@@ -197,27 +219,42 @@ class TestRound(object):
         content_type : str
             A type of the content to find delta. Accepted values:
             - statements
-            - appied_tests
+            - applied_tests
             - passed_tests
             - paths
+        add_result : boolean
+            Optionally add a Pass/Fail format result to a test.
 
         Returns
         -------
             A dictionary containing lists of added and removed items of a given
-            content type between two test rounds.
+            content type between two test rounds. If add_result is set to True,
+            a dictionary will contain lists of tuples where each tuple has an
+            item and a result in Pass/Fail format.
         """
         latest_hashes = getattr(self, self.function_mapping[content_type][0])()
         previous_hashes = getattr(
             other_round, other_round.function_mapping[content_type][0])()
         added_hashes = list(set(latest_hashes) - set(previous_hashes))
         removed_hashes = list(set(previous_hashes) - set(latest_hashes))
-        added_items = [getattr(
-            self, self.function_mapping[content_type][1])(item_hash)
-            for item_hash in added_hashes]
-        removed_items = [getattr(
-            other_round,
-            other_round.function_mapping[content_type][1])(item_hash)
-            for item_hash in removed_hashes]
+
+        def get_item(tr, item_hash):
+            return getattr(
+                    tr, tr.function_mapping[content_type][1])(item_hash)
+
+        if add_result:
+            added_items = [(get_item(self, item_hash),
+                            self.get_pass_fail_by_hash(item_hash))
+                           for item_hash in added_hashes]
+            removed_items = [(get_item(other_round, item_hash),
+                              other_round.get_pass_fail_by_hash(item_hash))
+                             for item_hash in removed_hashes]
+        else:
+            added_items = [
+                get_item(self, item_hash) for item_hash in added_hashes]
+            removed_items = [
+                get_item(other_round, item_hash) for item_hash in
+                removed_hashes]
         return {'added': added_items, 'removed': removed_items}
 
     # Helping methods
@@ -307,7 +344,7 @@ class StatsGenerator(object):
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'number_passed_tests': self.latest_round.get_number_passed_tests(),
             'passed_ratio': self.latest_round.passed_over_total(),
-            'tests_by_hash': self.latest_round.get_english_tests(),
+            'tests_by_hash': self.latest_round.get_applied_tests_results(),
             'passed_tests': self.latest_round.get_passed_test_hashes(),
             'paths': self.latest_round.get_path_descriptions()
         }
@@ -331,7 +368,7 @@ class StatsGenerator(object):
             'passed_ratio_delta': self.latest_round.find_numeric_delta(
                 self.previous_round, 'passed_over_total'),
             'applied_tests_delta': self.latest_round.find_content_delta(
-                self.previous_round, 'applied_tests'),
+                self.previous_round, 'applied_tests', add_result=True),
             'pass_fail_delta': self.latest_round.find_content_delta(
                 self.previous_round, 'passed_tests'),
             'new_paths': self.latest_round.find_content_delta(
