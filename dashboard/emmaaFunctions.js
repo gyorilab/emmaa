@@ -139,12 +139,8 @@ function populateTestResultTable(tableBody, json) {
   let pasRatId = '#passedRatio'
   let pasAppId = '#passedApplied'
   let agDist = '#agentDistr'
-  let stmtEv = '#stmtEvidence'
   let stmtTime = '#stmtsOverTime'
-  let newStmt = '#addedStmts'
-  let newApp = '#newAppliedTests'
-  let newPass = '#newPassedTests'
-  
+
   // Dates
   dates = json.changes_over_time.dates
   dates.unshift('x')
@@ -191,6 +187,15 @@ function populateTestResultTable(tableBody, json) {
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
 
   // Statements by Evidence Table
+  let stEvTable = document.getElementById('stmtEvidence')
+  clearTable(stEvTable)
+  var english_stmts = json.model_summary.english_stmts
+  var stmtByEv = json.model_summary.stmts_by_evidence
+
+  for (pair of stmtByEv.slice(0,10)) {
+    let rowEl = addToRow(english_stmts[pair[0]], pair[1])
+    stEvTable.appendChild(rowEl)
+  }
 
   // Statements over Time line graph
   stmtsOverTime = json.changes_over_time.number_of_statements
@@ -206,6 +211,16 @@ function populateTestResultTable(tableBody, json) {
   }
 
   let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
+
+  // Model Delta - New statements
+  let newStTable = document.getElementById('addedStmts')
+  clearTable(newStTable)
+  var new_stmts = json.model_delta.statements_delta.added
+  console.log(new_stmts)
+  for (stmt of new_stmts) {
+    let rowEl = addToRow(stmt, '')
+    newStTable.appendChild(rowEl)
+  }
   // Tests Tab
 
   // Passed ratio line graph
@@ -246,6 +261,26 @@ function populateTestResultTable(tableBody, json) {
   }
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '')
+
+  // Tests Delta - New Applied Tests
+  let newAppliedTable = document.getElementById('newAppliedTests')
+  clearTable(newAppliedTable)
+  var newAppTests = json.tests_delta.applied_tests_delta.added
+
+  for (test of newAppTests) {
+    let rowEl = addToRow(test, '')
+    newAppliedTable.appendChild(rowEl)
+  }
+  // Tests De;ta - New Passeed Tests
+  let newPassedTable = document.getElementById('newPassedTests')
+  clearTable(newPassedTable)
+  var newPasTests = json.tests_delta.passed_tests_delta.added
+  var newPaths = json.tests_delta.new_paths.added
+
+  for (i = 0; i < newPasTests.length; i++) {
+    let rowEl = addToRow(newPasTests[i], newPaths[i])
+    newAppliedTable.appendChild(rowEl)
+  }
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
@@ -258,6 +293,7 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
   modelsMapArray = getModels(model, keyMapArray, endsWith)
   // console.log('modelsMapArray')
   // console.log(modelsMapArray)
+  clearTable(modelInfoTableBody)
   var lastUpdated = ''
   if (modelsMapArray[model].sort()[modelsMapArray[model].length - 1].includes('_')) {
     lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
