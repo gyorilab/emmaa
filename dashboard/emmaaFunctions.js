@@ -274,12 +274,12 @@ function populateTestResultTable(tableBody, json) {
   // Tests De;ta - New Passeed Tests
   let newPassedTable = document.getElementById('newPassedTests')
   clearTable(newPassedTable)
-  var newPasTests = json.tests_delta.passed_tests_delta.added
+  var newPasTests = json.tests_delta.pass_fail_delta.added
   var newPaths = json.tests_delta.new_paths.added
 
   for (i = 0; i < newPasTests.length; i++) {
     let rowEl = addToRow(newPasTests[i], newPaths[i])
-    newAppliedTable.appendChild(rowEl)
+    newPassedTable.appendChild(rowEl)
   }
 }
 
