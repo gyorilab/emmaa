@@ -103,41 +103,58 @@
   </head>
 
   <body>
-    <div class="container" id="dropdown-container">
-      <div class="dropdown" style="display:inline-block;">
-        <select class="custom-select" id="modelSelection">
-          <option value="" selected="selected" disabled="disabled" hidden="hidden">select model</option>
-          <option value="aml">Acute myeloid leukemia (AML)</option>
-          <option value="brca" disabled="disabled">Breast cancer (BRCA) (Unavailable)</option>
-          <option value="luad">Lung adenocarcinoma (LUAD)</option>
-          <option value="paad">Pancreas adenocarcinoma (PAAD)</option>
-          <option value="prad">Prostate adenocarcinoma (PRAD)</option>
-          <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
-        </select>
+    <div class="container" id="query-container">
+
+      <!-- checkboxes -->
+      <div class="checkbox-container" style="display: inline-block; vertical-align: top;">
+        <div class="checkbox">
+          <input type="checkbox" name="aml" id="aml"><label for="aml">Acute myeloid leukemia (AML)</label>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" name="brca" id="brca" disabled><label for="brca">Breast cancer (BRCA) (Unavailable)</label>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" name="luad" id="luad"><label for="luad">Lung adenocarcinoma (LUAD)</label>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" name="paad" id="paad"><label for="paad">Pancreas adenocarcinoma (PAAD)</label>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" name="prad" id="prad"><label for="prad">Prostate adenocarcinoma (PRAD)</label>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" name="skcm" id="skcm"><label for="skcm">Skin cutaneous melanoma (SKCM)</label>
+        </div>
       </div>
-      <div class="dropdown" style="display:inline-block;">
+      <!-- stmt type select -->
+      <div class="dropdown" style="display: inline-block; vertical-align: top;">
         <select class="custom-select" id="typeSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
           <option value="activation">Activation</option>
           <option value="phosphorylation">Phosphorylation</option>
         </select>
       </div>
-      <div class="dropdown" style="display:inline-block;">
+      <!-- subject select -->
+      <div class="dropdown" style="display: inline-block; vertical-align: top;">
         <select class="custom-select" id="subjectSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select subject</option>
           <option value="brca1">BRCA1</option>
         </select>
       </div>
-      <div class="dropdown" style="display:inline-block;">
+      <!-- object select -->
+      <div class="dropdown" style="display: inline-block; vertical-align: top;">
         <select class="custom-select" id="objectSelection">
           <option value="" selected="selected" disabled="disabled" hidden="hidden">select object</option>
           <option value="brca2">BRCA2</option>
         </select>
       </div>
     </div>
-    <div class="container" id="button-container">
-      <button class="btn btn-outline-primary" id="status-notify" onClick="postQuery(document.getElementById('dropdown-container'))">Submit query</button>
+
+    <!-- submit button -->
+    <div class="container" id="button-container" style="margin: auto;">
+      <button class="btn btn-outline-primary" id="status-notify" onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
     </div>
+
   </body>
 
 </html>
