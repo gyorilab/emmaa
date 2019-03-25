@@ -29,9 +29,7 @@ INDEX = _load_template('index.html')
 MODEL = _load_template('model.html')
 
 
-@app.route('/')
-@app.route('/home')
-def get_home():
+def _get_models():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
@@ -45,12 +43,20 @@ def get_home():
             continue
         meta_json = json.loads(resp['Body'].read())
         model_data.append((model_id, meta_json))
+    return model_data
+
+
+@app.route('/')
+@app.route('/home')
+def get_home():
+    model_data = _get_models()
     return INDEX.render(model_data=model_data)
 
 
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
-    return MODEL.render(model=model)
+    model_data = _get_models()
+    return MODEL.render(model=model, model_data=model_data)
 
 
 if __name__ == '__main__':

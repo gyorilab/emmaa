@@ -71,13 +71,9 @@
     <div class="input-group">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
-        <option value="aml">Acute myeloid leukemia (AML)</option>
-        <option value="brca">Breast cancer (BRCA) <i>Currently Unavailable</i></option>
-        <option value="luad">Lung adenocarcinoma (LUAD)</option>
-        <option value="paad">Pancreas adenocarcinoma (PAAD)</option>
-        <option value="prad">Prostate adenocarcinoma (PRAD)</option>
-        <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
-        <option value="test">Test Model (test)</option>
+        {% for model_id, model_meta in model_data %}
+        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }}</option>
+        {% endfor %}
       </select>
       <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
       <div class="input-group-append">
