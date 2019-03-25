@@ -285,7 +285,7 @@ function populateTestResultTable(tableBody, json) {
   clearTable(allTestsTable)
   var testResults = json.test_round_summary.tests_by_hash
   var resultValues = Object.values(testResults)
-  console.log(resultValues)
+  resultValues.sort(function(a,b){return a[1]<b[1];});
 
   for (val of resultValues) {
     let rowEl = addToRow(val)
