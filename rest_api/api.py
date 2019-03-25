@@ -2,10 +2,13 @@ import json
 from os import path
 
 import boto3
+import logging
+from botocore.exceptions import ClientError
 from flask import Flask, render_template
 from jinja2 import Template
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 
 HERE = path.dirname(path.abspath(__file__))
@@ -33,11 +36,13 @@ def get_home():
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
-        print(pref)
         model_id = pref['Prefix'].split('/')[1]
         meta_key = f'models/{model_id}/{model_id}_model_meta.json'
-        print(meta_key)
-        resp = s3.get_object(Bucket='emmaa', Key=meta_key)
+        try:
+            resp = s3.get_object(Bucket='emmaa', Key=meta_key)
+        except ClientError:
+            logger.warning(f"Model {model_id} has no metadata. Skipping...")
+            continue
         meta_json = json.loads(resp['Body'].read())
         model_data.append((model_id, meta_json))
     return INDEX.render(model_data=model_data)
