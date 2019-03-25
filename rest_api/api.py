@@ -67,4 +67,5 @@ def get_query_page():
 
 
 if __name__ == '__main__':
+    print(app.url_map)  # Get all avilable urls and link them
     app.run()
