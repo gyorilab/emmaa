@@ -27,7 +27,7 @@ def _load_template(fname):
 
 INDEX = _load_template('index.html')
 MODEL = _load_template('model.html')
-QUERIES = _load_template('model_queries.html')
+QUERIES = _load_template('query.html')
 
 
 def _get_models():
@@ -60,7 +60,7 @@ def get_model_dashboard(model):
     return MODEL.render(model=model, model_data=model_data)
 
 
-@app.route('/dashboard/queries')
+@app.route('/dashboard/query')
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     return QUERIES.render()
