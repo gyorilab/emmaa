@@ -72,7 +72,7 @@
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
         {% for model_id, model_meta in model_data %}
-        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }}</option>
+        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
         {% endfor %}
       </select>
       <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
