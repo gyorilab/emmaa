@@ -41,19 +41,15 @@
 
       // Check sign-in
       checkSignIn()
+      let model = {{ model }}
+      var ddSelectTag = document.getElementById('modelSelectDD');
+      setModel(ddSelectTag, model);
+      var infoTableBody = document.getElementById('modelInfoTableBody');
+      var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
+      var testResultsTableBody = document.getElementById('modelTestResultBody');
 
-      // If linked from model name: load that model
-      if (dict_split && dict_split[1] == '?') {
-        let model = dict_split[0]['model'];
-        // Set the model to the one that is selected
-        var ddSelectTag = document.getElementById('modelSelectDD');
-        setModel(ddSelectTag, model);
-        var infoTableBody = document.getElementById('modelInfoTableBody');
-        var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
-        var testResultsTableBody = document.getElementById('modelTestResultBody');
-
-        // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
-        selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
+      // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
+      selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
       }
     });
   </script>

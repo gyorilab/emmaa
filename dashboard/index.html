@@ -65,147 +65,28 @@
     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button>
   </div>
 
-  <!-- Leukemia model -->
   <div class="container">
     <div class="row card-deck mb-3 text-center">
+      {% for model_id, model_meta in model_data %}
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Acute myeloid leukemia</h4>
+            <h4 class="my-0 font-weight-normal">{{ model_meta['human_readable_name'] }}</h4>
           </div>
           <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/aml_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
-            <p class="card-text">Short model description of acute myeloid leukemia</p>
+            <p class="card-text">Short model description of {{ model_meta['human_readable_name'].lower() }}</p>
             <p class="card-text modelUpdateInfo" id="amlUpdate">Last updated</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=aml">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
+                <a class="btn btn-sm btn-outline-secondary" href="./model/{{ model_id }}">Details</a>
+                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/{{ model_meta['ndex_uuid'] }}">View on NDEX</a>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Breast cancer model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Breast Cancer</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/brca_netwrok_1step_RB1.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of breast cancer</p>
-            <p class="card-text modelUpdateInfo" id="brcaUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=brca">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/a16b5ca0-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Lung cancer model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Lung adenocarcinoma</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/luad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of lung adenocarcinoma</p>
-            <p class="card-text modelUpdateInfo" id="luadUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=luad">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/b56642b3-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pancreas cancer model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Pancreas adenocarcinoma</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/paad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of pancreas adenocarcinoma</p>
-            <p class="card-text modelUpdateInfo" id="paadUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=paad">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/8d1330ca-f6a2-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Prostate cancer model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Prostate adenocarcinoma</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/prad_network_1step_KRAS.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of prostate adenocarcinoma</p>
-            <p class="card-text modelUpdateInfo" id="pradUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=prad">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/caa8c3f6-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Melanoma model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Skin cutaneous melanoma</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/skcm_network_1step_CDKN2A.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of skin cutaneous melanoma</p>
-            <p class="card-text modelUpdateInfo" id="skcmUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=skcm">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/da832549-f6a3-11e8-aaa6-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Test model -->
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Test model</h4>
-          </div>
-          <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" src="images/test_network.png" data-holder-rendered="true" style="height: 225px; width: 100%; display: block;">
-          <div class="card-body">
-            <p class="card-text">Short model description of the test model</p>
-            <p class="card-text modelUpdateInfo" id="testUpdate">Last updated</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a class="btn btn-sm btn-outline-secondary" href="./model.html?model=test">Details</a>
-                <a class="btn btn-sm btn-outline-secondary" href="http://www.ndexbio.org/#/network/a08479d1-24ce-11e9-bb6a-0ac135e8bacf">View on NDEX</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
 
     </div>
   </div>
