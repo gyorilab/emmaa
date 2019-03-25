@@ -18,6 +18,18 @@ from emmaa.analyze_tests_results import TestRound, StatsGenerator
 logger = logging.getLogger(__name__)
 
 
+RESULT_CODES = {
+    'STATEMENT_TYPE_NOT_HANDLED': 'The provided statement type is not handled',
+    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not found in model',
+    'OBSERVABLES_NOT_FOUND': 'Statement has no associated observable',
+    'NO_PATHS_FOUND': 'Statement has no path for any observable',
+    'MAX_PATH_LENGTH_EXCEEDED': 'Statement has no path len <= MAX_PATH_LENGTH',
+    'PATHS_FOUND': 'Statement has path len <= MAX_PATH_LENGTH',
+    'INPUT_RULES_NOT_FOUND': 'No rules with Statement subject found',
+    'MAX_PATHS_ZERO': 'Path found but MAX_PATHS is set to zero',
+}
+
+
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
 
@@ -76,28 +88,29 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(result)
 
-    def make_english_result(self, result):
+    def make_english_path(self, result):
         """Create an English description of a path."""
         stmts = stmts_from_path(result.paths[0], self.pysb_model,
                                 self.model.assembled_stmts)
-        sentences = []
-        for stmt in stmts:
-            ea = EnglishAssembler([stmt])
-            sentences.append(ea.make_model())
-        return sentences
+        ea = EnglishAssembler(stmts)
+        return ea.make_model()
+        # sentences = []
+        # for stmt in stmts:
+        #     ea = EnglishAssembler([stmt])
+        #     sentences.append(ea.make_model())
+        # return sentences
 
-    # Answering queries. I assume that a query will have a query.stmt (INDRA
-    # statement) or a query.test (StatementCheckingTest) and query.id or
-    # query.hash (unique identifier for a query).
+    def make_english_result_code(self, result):
+        """Get an English explanation of a result code."""
+        result_code = result.result_code
+        return RESULT_CODES[result_code]
+
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
         test = StatementCheckingTest(stmt)
         if ScopeTestConnector.applicable(self, test):
             result = self.run_one_test(test)
-            if result.path_found:
-                return self.make_english_result(result)
-            else:
-                return result.result_code
+            return self.get_english_result(result)
         else:
             return 'Query is not applicable for this model.'
 
@@ -123,21 +136,13 @@ class ModelManager(object):
                 responses[stmt.get_hash()] = result.result_code
         return responses
 
-    def has_path(self, result):
-        """Check if a path was found."""
-        return result.path_found
-
     def get_english_result(self, result):
         """Get English description of a path if it was found.
-        Return an empty string otherwise.
+        Return a result code otherwise.
         """
-        if self.has_path(result):
-            if result.result_code == 'MAX_PATH_LENGTH_EXCEEDED':
-                return [f'Maximum path length ({result.max_path_length}) '
-                         'exceeded.']
-            else:
-                return self.make_english_result(result)
-        return []
+        if result.paths:
+            return self.make_english_result(result)
+        return self.make_english_result_code
 
     def assembled_stmts_to_json(self):
         """Put assembled statements to JSON format."""
@@ -293,8 +298,15 @@ def load_tests_from_s3(test_name):
     return tests
 
 
+def save_model_manager_to_s3(model_name, model_manager):
+    client = get_s3_client()
+    client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
+                      Key=f'models/{model_name}/latest_model_manager.pkl')
+
+
 def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
-                            upload_results=True, upload_stats=True):
+                            upload_mm=True, upload_results=True,
+                            upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -322,6 +334,8 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
     mm = ModelManager(model, belief_cutoff=belief_cutoff)
+    if upload_mm:
+        save_model_manager_to_s3(model_name, mm)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
