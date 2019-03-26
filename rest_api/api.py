@@ -7,6 +7,8 @@ from botocore.exceptions import ClientError
 from flask import abort, Flask, redirect, render_template, request, Response
 from jinja2 import Template
 
+from emmaa.answer_queries import answer_immediate_query
+
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 
@@ -90,15 +92,19 @@ def process_query():
     else:
         if request.json.get('query'):
             models = request.json.get('query').get('models')
-            subj = request.json.get('query').get('subj')
-            obj = request.json.get('query').get('obj')
-            stmt_type = request.json.get('query').get('')
+            subj = request.json.get('query').get('subjectSelection')
+            obj = request.json.get('query').get('objectSelection')
+            stmt_type = request.json.get('query').get('typeSelection')
 
         if all([models, subj, obj, stmt_type]):
+            query_dict = request.json.copy()
+            assert 'test' not in request.json
+
             # submit to emmaa query db
-            query_hash = '123456789'  # reference id to query in db
             logger.info('Query submitted')
-            res = {'result': 'success', 'ref': {'query_hash': query_hash}}
+            result = answer_immediate_query(query_dict)
+            logger.info('Answer to query received, responding to client.')
+            res = {'result': result}
         else:
             # send error
             logger.info('Invalid query')
