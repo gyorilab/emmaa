@@ -76,6 +76,7 @@ def process_query():
     is_test = 'test' in request.args or 'test' == request.json.get('tag')
 
     if is_test:
+        logger.info('Test passed')
         res = {'result': 'test passed', 'ref': None}
 
     else:
@@ -88,11 +89,14 @@ def process_query():
         if all([models, subj, obj, stmt_type]):
             # submit to emmaa query db
             query_hash = '123456789'  # reference id to query in db
+            logger.info('Query submitted')
             res = {'result': 'success', 'ref': {'query_hash': query_hash}}
         else:
             # send error
+            logger.info('Invalid query')
             abort(Response('Invalid query', 400))
 
+    logger.info('Result: %s' % str(res))
     return Response(json.dumps(res), mimetype='application/json')
 
 
