@@ -4,7 +4,7 @@ from os import path
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from flask import Flask, render_template
+from flask import abort, Flask, redirect, render_template, request, Response
 from jinja2 import Template
 
 app = Flask(__name__)
@@ -64,6 +64,36 @@ def get_model_dashboard(model):
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     return QUERIES.render()
+
+
+@app.route('/query/submit', methods=['POST'])
+def process_query():
+    logger.info('Got model query')
+    models = []
+    subj = ''
+    obj = ''
+    stmt_type = ''
+    is_test = 'test' in request.args or 'test' == request.json.get('tag')
+
+    if is_test:
+        res = {'result': 'test passed', 'ref': None}
+
+    else:
+        if request.json.get('query'):
+            models = request.json.get('query').get('models')
+            subj = request.json.get('query').get('subj')
+            obj = request.json.get('query').get('obj')
+            stmt_type = request.json.get('query').get('')
+
+        if all([models, subj, obj, stmt_type]):
+            # submit to emmaa query db
+            query_hash = '123456789'  # reference id to query in db
+            res = {'result': 'success', 'ref': {'query_hash': query_hash}}
+        else:
+            # send error
+            abort(Response('Invalid query', 400))
+
+    return Response(json.dumps(res), mimetype='application/json')
 
 
 if __name__ == '__main__':
