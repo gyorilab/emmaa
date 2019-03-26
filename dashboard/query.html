@@ -79,7 +79,7 @@
         user: userInfo,
         query: querySel,
         register: reg
-      }, true)
+      }, null)
      
       console.log("ajax response from submission: ");
       console.log(ajax_response);
@@ -104,6 +104,7 @@
       //  Collect dropdown selections
       for (selection of dropdownSelections) {
         selId = selection.id;
+        // Use the IDs of the select tags as keys in the query json
         query[selId] = selection.options[selection.selectedIndex].value;
       }
 
@@ -232,7 +233,10 @@
         </div>
         <!-- stmt type select -->
         <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <select class="custom-select" id="type_sel">
+          <!-- WARNING: The id of the select tag goes into the query
+          dictionary, do NOT change it unless it is changed in the rest API
+          and query handling -->
+          <select class="custom-select" id="typeSelection">
             <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
             <option value="complex">Binds (Complex)</option>
             <option value="self_modification">SelfModification</option>
