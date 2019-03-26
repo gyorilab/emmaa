@@ -77,6 +77,9 @@ class ModelManager(object):
         """Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
+        self.model_checker.statements = []
+        self.model_checker.add_statements([test.stmt])
+        self.get_im()
         return test.check(self.model_checker, self.pysb_model)
 
     def run_tests(self):
@@ -90,15 +93,14 @@ class ModelManager(object):
 
     def make_english_path(self, result):
         """Create an English description of a path."""
-        stmts = stmts_from_path(result.paths[0], self.pysb_model,
-                                self.model.assembled_stmts)
-        ea = EnglishAssembler(stmts)
-        return ea.make_model()
-        # sentences = []
-        # for stmt in stmts:
-        #     ea = EnglishAssembler([stmt])
-        #     sentences.append(ea.make_model())
-        # return sentences
+        sentences = []
+        if self.has_path(result):
+            stmts = stmts_from_path(result.paths[0], self.pysb_model,
+                                    self.model.assembled_stmts)
+            for stmt in stmts:
+                ea = EnglishAssembler([stmt])
+                sentences.append(ea.make_model())
+        return sentences
 
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
@@ -110,7 +112,7 @@ class ModelManager(object):
         test = StatementCheckingTest(stmt)
         if ScopeTestConnector.applicable(self, test):
             result = self.run_one_test(test)
-            return self.get_english_result(result)
+            return self.process_response(result)
         else:
             return 'Query is not applicable for this model.'
 
@@ -136,13 +138,13 @@ class ModelManager(object):
                 responses[stmt.get_hash()] = result.result_code
         return responses
 
-    def get_english_result(self, result):
+    def process_response(self, result):
         """Get English description of a path if it was found.
         Return a result code otherwise.
         """
-        if result.paths:
-            return self.make_english_result(result)
-        return self.make_english_result_code
+        if results.paths:
+            return ' '.join(self.make_english_path(result))
+        return self.make_english_result_code(result)
 
     def assembled_stmts_to_json(self):
         """Put assembled statements to JSON format."""
@@ -160,11 +162,13 @@ class ModelManager(object):
             'statements': self.assembled_stmts_to_json()})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
-                   'test_type': test.__class__.__name__,
-                   'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix]),
-                   'english_result': self.get_english_result(
-                                     self.test_results[ix])})
+                    'test_type': test.__class__.__name__,
+                    'test_json': test.to_json(),
+                    'result_json': pickler.flatten(self.test_results[ix]),
+                    'english_path': self.get_english_path(
+                        self.test_results[ix])
+                    'english_code': self.make_english_result_code(
+                        self.test_results[ix])}),
         return results_json
 
 
@@ -262,6 +266,9 @@ class StatementCheckingTest(EmmaaTest):
 
     def check(self, model_checker, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
+        # model_checker.statements = []
+        # model_checker.add_statements([self.stmt])
+        # model_checker.get_im(force_update=True)
         res = model_checker.check_statement(self.stmt)
         return res
 
@@ -300,6 +307,7 @@ def load_tests_from_s3(test_name):
 
 def save_model_manager_to_s3(model_name, model_manager):
     client = get_s3_client()
+    logger.info(f'Saving a model manager for {model_name} model to S3.')
     client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
                       Key=f'models/{model_name}/latest_model_manager.pkl')
 
@@ -357,39 +365,3 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     if upload_stats:
         sg.save_to_s3()
     return (mm, sg)
-
-
-def answer_immediate_query(stmt, model_names):
-    """Run user query in the scope of given models.
-
-    Parameters
-    ----------
-    stmt : indra.statements.statements.Statement
-        An INDRA statement corresponding to user query.
-    model_names : list[str]
-        A list of EMMAA model names to run the query for.
-
-    Returns
-    -------
-    results : dict
-        A dictionary containing results of running a query for each model. If a
-        query is applicable and a path is found, it will conrain an English
-        descriptio of a path. If a query is applicable but the path is not
-        found, it will contain a result code. If a query is not applicable, it
-        will notify a user that it is not applicable.
-    """
-    results = {}
-    for model_name in model_names:
-        model = EmmaaModel.load_from_s3(model_name)
-        mm = ModelManager(model)
-        results[model_name] = mm.answer_query(stmt)
-    return results
-
-
-def answer_registered_queries(model_to_stmts):
-    results = {}
-    for model_name in model_to_stmts.keys():
-        model = EmmaaModel.load_from_s3(model_name)
-        mm = ModelManager(model)
-        results[model_name] = mm.answer_queries(model_to_stmts[model_name])
-    return results
