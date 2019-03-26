@@ -16,6 +16,40 @@ from emmaa.util import get_s3_client
 logger = logging.getLogger(__name__)
 
 
+def answer_immediate_query(query_dict):
+    stmt = get_statement_by_query(query_dict)
+    model_names = get_model_list(query_dict)
+    results = {}
+    for model_name in model_names:
+        mm = load_model_manager_from_s3(model_name)
+        response = mm.answer_query(stmt)
+        results[model_name] = response
+    return results
+
+
+def answer_registered_queries(model_name, model_manager=None):
+    # This function should be added to run_model_tests_from_s3
+    if not model_manager:
+        model_manager = load_model_manager_from_s3(model_name)
+    query_dict_by_id = get_query_dict_by_id_from_db(model_name) # not implemented function
+    stmts_by_query_id = get_stmts_by_query_id(query_dict_by_id)
+    responses = model_manager.answer_queries(stmts_by_query_id)
+    results = {'model_name': model_name, 'responses': responses}
+    return results
+
+
+def show_queries_results():
+    # get info from db and display the results
+    pass
+
+
+def get_stmts_by_query_id(query_dict_by_id):
+    stmts_by_query_id = []
+    for (query_id, query_dict) in query_dict_by_id:
+        stmts_by_query_id.append((query_id, get_statement_by_query))
+    return stmts_by_query_id
+
+
 def get_statement_by_query(query_dict):
     """Get an INDRA Statement object given a query dictionary"""
     stmt_type = query_dict['query']['typeSelection']
@@ -28,17 +62,6 @@ def get_statement_by_query(query_dict):
 
 def get_model_list(query_dict):
     return query_dict['query']['models']
-
-
-def answer_immediate_query(query_dict):
-    stmt = get_statement_by_query(query_dict)
-    model_names = get_model_list(query_dict)
-    results = {}
-    for model_name in model_names:
-        mm = load_model_manager_from_s3(model_name)
-        response = mm.answer_query(stmt)
-        results[model_name] = response
-    return results
 
 
 def load_model_manager_from_s3(model_name):
