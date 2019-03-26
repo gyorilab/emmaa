@@ -51,6 +51,7 @@ class ModelManager(object):
     def get_im(self):
         """Get the influence map for the model."""
         self.model_checker.get_im(self.pysb_model)
+        self.model_checker.prune_influence_map()
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
