@@ -130,27 +130,40 @@ class ModelManager(object):
         else:
             return 'Query is not applicable for this model.'
 
-    def answer_queries(self, stmts):
-        """Answer all queries registered for this model."""
+    def answer_queries(self, stmts_by_query_id):
+        """Answer all queries registered for this model.
+
+        Parameters
+        ----------
+        stmts_by_query_id : list[tuple(int,
+                                indra.statements.statements.Statement)]
+            A list of tuples query IDs and INDRA statement generated from
+            queries.
+
+        Returns
+        -------
+        responses : dict
+            A dictionary mapping a query_id to a response.
+        """
         responses = {}
+        applicable_ids = []
         applicable_queries = []
         for stmt in stmts:
             test = StatementCheckingTest(stmt,
                 self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
+                applicable_ids.append(query_id)
                 applicable_queries.append(test)
             else:
-                responses[stmt.get_hash()] = (
+                responses[query_id] = (
                     'Query is not applicable for this model.')
+        self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_queries])
         self.get_im()
         results = self.model_checker.check_model()
-        for (stmt, result) in results:
-            if result.path_found:
-                responses[stmt.get_hash()] = self.make_english_result(result)
-            else:
-                responses[stmt.get_hash()] = result.result_code
+        for ix, (_, result) in enumerate(results):
+            responses[applicable_ids[ix]] = self.process_response(result)
         return responses
 
     def process_response(self, result):
@@ -348,9 +361,15 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
         Name of EmmaaModel to load from S3.
     test_name : str
         Name of test file to load from S3.
+    belief_cutoff : float
+        A belief cutoff to assemble a model.
+    upload_mm : bool
+        Whether to upload a model manager instance to S3 as a pickle file.
     upload_results : bool
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests.
+    upload_stats : bool
+        Whether to upload latest statistics about model and a test
 
     Returns
     -------
