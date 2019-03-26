@@ -37,7 +37,7 @@
   <!-- User query JS -->
   <script>
     // EMMAA rest API
-    var EMMAA_API = 'https://somewhere.on.aws/submit/'
+    var EMMAA_API = 'http://localhost:5000/query/submit'
     var NAMESPACE_OPTIONS = [
       ['HGNC', 'HGNC'], 
       ['UniProt', 'UP'], 
@@ -75,11 +75,14 @@
       // Check if user wants to register query
       let reg = document.getElementById('register-query').checked
 
-      submitQuery({
+      let ajax_response = submitQuery({
         user: userInfo,
         query: querySel,
         register: reg
-      })
+      }, true)
+     
+      console.log("ajax response from submission: ");
+      console.log(ajax_response);
     }
 
     function collectQuery(queryContainer) {
@@ -111,10 +114,13 @@
       return query;
     }
 
-    function submitQuery(queryDict) {
+    function submitQuery(queryDict, test) {
       console.log('function submitQuery(queryDict)')
       console.log('Submitting data to query DB')
       console.log(queryDict)
+
+      if (test) queryDict['test'] = true;
+
       // submit POST to emmaa user db
       let response = $.ajax({
         url: EMMAA_API,
@@ -122,7 +128,10 @@
         dataType: 'json',
         contentType: 'application/json',
         data: JSON.stringify(queryDict),
-        complete: function function_name(xhr, statusText) {
+        complete: function(xhr, statusText) {
+          console.log('responseJSON')
+          console.log(xhr.responseJSON)
+          console.log(statusText)
           switch (xhr.status) {
             case 200:
               console.log('200 response')
@@ -141,6 +150,7 @@
           }
         }
       })
+      return response;
     }
 
     function fillNamespaceOptions() {
