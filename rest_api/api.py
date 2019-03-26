@@ -69,11 +69,19 @@ def get_query_page():
 @app.route('/query/submit', methods=['POST'])
 def process_query():
     logger.info('Got model query')
+    print("Args -----------")
+    print(request.args)
+    print("Json -----------")
+    print(str(request.json))
+    print("------------------")
     models = []
     subj = ''
     obj = ''
     stmt_type = ''
-    is_test = 'test' in request.args or 'test' == request.json.get('tag')
+    user_info = request.json.get('user')
+    register = 'true' == request.json.get('register') if \
+        request.args.get('register') else False
+    is_test = 'test' in request.json or 'test' == request.json.get('tag')
 
     if is_test:
         logger.info('Test passed')
