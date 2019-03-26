@@ -108,8 +108,8 @@
       }
 
       // Collect subject/object from forms
-      query['subj'] = document.getElementById('subjectInput').value;
-      query['obj'] = document.getElementById('objectInput').value;
+      query['subjectSelection'] = document.getElementById('subjectInput').value;
+      query['objectSelection'] = document.getElementById('objectInput').value;
 
       return query;
     }
@@ -234,9 +234,9 @@
           <select class="custom-select" id="type_sel">
             <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
             <option value="complex">Binds (Complex)</option>
-            <option value="modification">Modification</option>
             <option value="self_modification">SelfModification</option>
-            <option value="regulate_acitivity">RegulateActivity</option>
+            <option value="activation">Activation</option>
+            <option value="deactivation">Deactivation</option>
             <option value="regulate_amount">RegulateAmount</option>
             <option value="active_form">ActiveForm</option>
             <option value="translocation">Translocation</option>
