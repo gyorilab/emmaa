@@ -135,6 +135,7 @@
           switch (xhr.status) {
             case 200:
               console.log('200 response')
+              populateQueryResults(xhr.responseJSON)
               break;
             case 400:
               console.log('400 response')
@@ -146,7 +147,7 @@
               console.log('404 response')
               break;
             default:
-              console.log('Unhandled server response')
+              console.log('Unhandled server response: ' + xhr.status)
           }
         }
       })
