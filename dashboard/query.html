@@ -38,6 +38,27 @@
   <script>
     // EMMAA rest API
     var EMMAA_API = 'https://somewhere.on.aws/submit/'
+    var NAMESPACE_OPTIONS = [
+      ['HGNC', 'HGNC'], 
+      ['UniProt', 'UP'], 
+      ['Entrez', 'EGID'], 
+      ['FamPlex', 'FPLX'], 
+      ['InterPro', 'IP'], 
+      ['Pfam', 'PF'], 
+      ['NextProt family', 'NXPFA'], 
+      ['ChEBI', 'CHEBI'], 
+      ['PubChem', 'PUBCHEM'], 
+      ['LINCS/HMS-LINCS', 'LINCS'], 
+      ['HMDB', 'HMDB'], 
+      ['GO', 'GO'], 
+      ['MeSH', 'MESH'], 
+      ['NCIT', 'NCIT'], 
+      ['Raw text', 'TEXT']
+    ]
+
+    $(document).ready(function() {
+      fillNamespaceOptions()
+    })
 
     function postQuery(queryContainer) {
       console.log('function postQuery(queryContainer)')
@@ -83,6 +104,10 @@
         query[selId] = selection.options[selection.selectedIndex].value;
       }
 
+      // Collect subject/object from forms
+      query['subj'] = document.getElementById('subjectInput').value;
+      query['obj'] = document.getElementById('objectInput').value;
+
       return query;
     }
 
@@ -116,6 +141,19 @@
           }
         }
       })
+    }
+
+    function fillNamespaceOptions() {
+      for (nsDD of document.getElementsByClassName('namespace-dropdown')) {
+        console.log(nsDD)
+        for (n_v of NAMESPACE_OPTIONS) {
+          let optionTag = document.createElement('option');
+          optionTag.value = n_v[1];
+          optionTag.textContent = n_v[0];
+          console.log(optionTag.textContent)
+          nsDD.appendChild(optionTag);
+        }
+      }
     }
   </script>
 
@@ -168,9 +206,12 @@
             </label>
           </div>
         </div>
+        <div class="text-container">
+          To read more about statement types and namespaces used, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA docs</a>.
+        </div>
         <!-- stmt type select -->
         <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <select class="custom-select" id="typeSelection">
+          <select class="custom-select" id="type_sel">
             <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
             <option value="complex">Binds (Complex)</option>
             <option value="modification">Modification</option>
@@ -210,20 +251,35 @@
             <option value="transphosphorylation">Transphosphorylation</option>
           </select>
         </div>
-        <!-- subject select -->
-        <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <select class="custom-select" id="subjectSelection">
-            <option value="" selected="selected" disabled="disabled" hidden="hidden">select subject</option>
-            <option value="brca1">BRCA1</option>
-          </select>
+
+        <!-- subject -->
+        <div class="subject-container">
+          <div class="text" style="display: inline-block; vertical-align: top;">
+            <form>
+              <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
+            </form>
+          </div>
+          <div class="dropdown" style="display: inline-block; vertical-align: top;">
+            <select class="custom-select namespace-dropdown" id="subject_ns">
+              <option value="" selected="selected" disabled="disabled" hidden="hidden">subject namespace</option>
+            </select>
+          </div>
         </div>
+
         <!-- object select -->
-        <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <select class="custom-select" id="objectSelection">
-            <option value="" selected="selected" disabled="disabled" hidden="hidden">select object</option>
-            <option value="brca2">BRCA2</option>
-          </select>
+        <div class="object-container">
+          <div class="text" style="display: inline-block; vertical-align: top;">
+            <form>
+              <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
+            </form>
+          </div>
+          <div class="dropdown" style="display: inline-block; vertical-align: top;">
+            <select class="custom-select namespace-dropdown" id="object_ns">
+              <option value="" selected="selected" disabled="disabled" hidden="hidden">object namespace</option>
+            </select>
+          </div>
         </div>
+
         <!-- register query -->
         <div class="register-container">
           <div class="checkbox">
