@@ -153,6 +153,16 @@
       return response;
     }
 
+    function populateQueryResults(json) {
+      console.log('function populateQueryResults(json)')
+      console.log(json)
+      let qrTable = document.getElementById('queryResults');
+      clearTable(qrTable)
+      for (model in json.result) {
+        qrTable.appendChild(addToRow([model, json.result[model]]));
+      }
+    }
+
     function fillNamespaceOptions() {
       for (nsDD of document.getElementsByClassName('namespace-dropdown')) {
         console.log(nsDD)
@@ -217,7 +227,7 @@
           </div>
         </div>
         <div class="text-container">
-          To read more about statement types and namespaces used, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA docs</a>.
+          To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
         </div>
         <!-- stmt type select -->
         <div class="dropdown" style="display: inline-block; vertical-align: top;">
@@ -305,6 +315,13 @@
         <h4 class="my-0 font-weight-normal">Results</h4>
       </div>
       <div class="card-body" id="query-results">
+        <table class="table">
+          <thead>
+            <th>Model</th>
+            <th>Result</th>
+          </thead>
+          <tbody class="table-body" id="queryResults"></tbody>
+        </table>
       </div>
     </div>
   </div>
