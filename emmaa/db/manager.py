@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query
+from .schema import EmmaaTable, User, Query, Base
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,44 @@ class EmmaaDatabaseManager(object):
                     logger.warning(f"Table {tbl_name} already exists! "
                                    f"No action taken.")
         return
+
+    def drop_tables(self, tables=None, force=False):
+        """Drop the tables from the EMMAA database given in `tables`.
+
+        If `tables` is None, all tables will be dropped. Note that if `force`
+        is False, a warning prompt will be raised to asking for confirmation,
+        as this action will remove all data from that table.
+        """
+        if not force:
+            # Build the message
+            if tables is None:
+                msg = ("Do you really want to clear the %s database? [y/N]: "
+                       % self.label)
+            else:
+                msg = "You are going to clear the following tables:\n"
+                msg += str([tbl.__tablename__ for tbl in tables]) + '\n'
+                msg += ("Do you really want to clear these tables from %s? "
+                        "[y/N]: " % self.label)
+
+            # Check to make sure.
+            resp = input(msg)
+            if resp != 'y' and resp != 'yes':
+                logger.info('Aborting drop.')
+                return False
+
+        if tables is None:
+            logger.info("Removing all tables...")
+            Base.metadata.drop_all(self.engine)
+            logger.debug("All tables removed.")
+        else:
+            for tbl in tables:
+                logger.info("Removing %s..." % tbl.__tablename__)
+                if tbl.__table__.exists(self.engine):
+                    tbl.__table__.drop(self.engine)
+                    logger.debug("Table removed.")
+                else:
+                    logger.debug("Table doesn't exist.")
+        return True
 
     def add_user(self, email):
         try:
