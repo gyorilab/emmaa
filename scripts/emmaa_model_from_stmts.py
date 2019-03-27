@@ -11,7 +11,23 @@ from emmaa.priors import SearchTerm
 from emmaa.statements import to_emmaa_stmts
 
 
-def create_upload_model(model_name, indra_stmts, ndex_id=None):
+def create_upload_model(model_name, full_name, indra_stmts, ndex_id=None):
+    """Make and upload an EMMAA model from a list of INDRA Statements.
+
+    Parameters
+    ----------
+    short_name : str
+        Short name of the model to use on S3.
+    full_name : str
+        Human-readable model name to use in EMMAA dashboard.
+    indra_stmts : list of indra.statement
+        INDRA Statements to be used to populate the EMMAA model.
+    ndex_id : str
+        UUID of the network corresponding to the model on NDex. If provided,
+        the NDex network will be updated with the latest model content.
+        If None (default), a new network will be created and the UUID stored
+        in the model config files on S3.
+    """
     emmaa_stmts = to_emmaa_stmts(indra_stmts, datetime.datetime.now(), [])
     # Get updated CX content for the INDRA Statements
     cxa = CxAssembler(indra_stmts)
@@ -41,9 +57,10 @@ def create_upload_model(model_name, indra_stmts, ndex_id=None):
                          Key='models/%s/config.json' % model_name,
                          Bucket='emmaa')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-            description='Create and upload an EMMAA model from INDRA Statements.')
+         description='Create and upload an EMMAA model from INDRA Statements.')
     parser.add_argument('-m', '--model_name', help='Model name', required=True)
     parser.add_argument('-s', '--stmt_pkl', help='Statement pickle file',
                         required=True)
