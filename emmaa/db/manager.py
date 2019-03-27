@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User
+from .schema import EmmaaTable, User, Query
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +26,14 @@ class EmmaaDatabaseManager(object):
         self.session = None
         return
 
-    def grab_session(self):
-        if self.session is None or not self.session.is_active:
-            logger.debug(f"Grabbing a session to {self.host}...")
-            DBSession = sessionmaker(bind=self.engine)
-            logger.debug("Session grabbed.")
-            self.session = DBSession()
-            if self.session is None:
-                raise EmmaaDatabaseError("Could not acquire session.")
+    def get_session(self):
+        logger.debug(f"Grabbing a session to {self.host}...")
+        DBSession = sessionmaker(bind=self.engine)
+        logger.debug("Session grabbed.")
+        session = DBSession()
+        if session is None:
+            raise EmmaaDatabaseError("Could not acquire session.")
+        return session
 
     def create_tables(self, tables=None):
         if tables is None:
