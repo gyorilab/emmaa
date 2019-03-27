@@ -12,7 +12,7 @@ class EmmaaApiTest(unittest.TestCase):
     def test_query_endpoint(self):
         """Test if we can submit a simple model query
 
-        NOTE: only tests that the query was recieved by the API and that it
+        NOTE: only tests that the query was received by the API and that it
         was properly formatted.
         """
 
