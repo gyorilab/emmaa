@@ -94,7 +94,7 @@ class ModelManager(object):
     def make_english_path(self, result):
         """Create an English description of a path."""
         sentences = []
-        if self.has_path(result):
+        if result.paths:
             stmts = stmts_from_path(result.paths[0], self.pysb_model,
                                     self.model.assembled_stmts)
             for stmt in stmts:
@@ -142,7 +142,7 @@ class ModelManager(object):
         """Get English description of a path if it was found.
         Return a result code otherwise.
         """
-        if results.paths:
+        if result.paths:
             return ' '.join(self.make_english_path(result))
         return self.make_english_result_code(result)
 
