@@ -101,6 +101,14 @@ function generatePassFail(rowEl, col) {
     itag.className = 'fas fa-check';
     rowEl.children[col].innerHTML = null;
     rowEl.children[col].appendChild(itag);
+    let passedTestsCol = rowEl.children[col+1]
+
+    if (passedTestsCol.textContent.split('.').length > 2) {
+      console.log('Adding line breaks for "' + passedTestsCol.textContent + '"')
+      let breakText = passedTestsCol.textContent.replace(/\./g, '.<br>')
+      passedTestsCol.innerHTML = null;
+      passedTestsCol.innerHTML = breakText.substr(0, breakText.length-4);
+    }
   } else if (string.toLowerCase() == 'fail') {
     itag.className = 'fas fa-times';
     rowEl.children[col].innerHTML = null;
@@ -333,7 +341,7 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
     lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0]
   }
   modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
-  
+
   var yamlURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.json';
   console.log('Loading model json from ' + yamlURL)
   var yamlPromise = $.ajax({
