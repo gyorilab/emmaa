@@ -1,3 +1,5 @@
+from fnvhash import fnv1a_32
+
 __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
 
 import logging
@@ -23,7 +25,6 @@ class EmmaaDatabaseManager(object):
         self.engine = create_engine(host)
         self.tables = {tbl.__tablename__: tbl
                        for tbl in EmmaaTable.__subclasses__()}
-        self.session = None
         return
 
     def get_session(self):
@@ -121,3 +122,19 @@ class EmmaaDatabaseManager(object):
 
     def get_results(self, user_id):
         pass
+
+
+def sorted_json_string(json_thing):
+    if isinstance(json_thing, str):
+        return json_thing
+    elif isinstance(json_thing, list):
+        return '[%s]' % (','.join(sorted_json_string(s) for s in json_thing))
+    elif isinstance(json_thing, dict):
+        return '{%s}' % (','.join(k + sorted_json_string(v)
+                                 for k, v in json_thing.items()))
+    else:
+        raise TypeError(f"Invalid type: {type(json_thing)}")
+
+
+def hash_query(query_json):
+    return fnv1a_32(sorted_json_string(query_json).encode('utf-8'))
