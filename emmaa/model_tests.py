@@ -95,7 +95,11 @@ class ModelManager(object):
         Return an empty string otherwise.
         """
         if self.has_path(result):
-            return self.make_english_result(result)
+            if result.result_code == 'MAX_PATH_LENGTH_EXCEEDED':
+                return [f'Maximum path length ({result.max_path_length}) '
+                         'exceeded.']
+            else:
+                return self.make_english_result(result)
         return []
 
     def assembled_stmts_to_json(self):
@@ -109,7 +113,7 @@ class ModelManager(object):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
-        results_json.append({                   
+        results_json.append({
             'model_name': self.model.name,
             'statements': self.assembled_stmts_to_json()})
         for ix, test in enumerate(self.applicable_tests):

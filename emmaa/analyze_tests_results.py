@@ -320,13 +320,10 @@ class StatsGenerator(object):
             return
         self.make_model_summary()
         self.make_test_summary()
-        if not self.previous_round:
-            logger.info(f'Previous round for {self.model_name} is not found.')
-            return
         self.make_model_delta()
         self.make_tests_delta()
         self.make_changes_over_time()
-
+        
     def make_model_summary(self):
         """Add latest model state summary to json_stats."""
         self.json_stats['model_summary'] = {
@@ -351,29 +348,48 @@ class StatsGenerator(object):
 
     def make_model_delta(self):
         """Add model delta between two latest model states to json_stats."""
-        self.json_stats['model_delta'] = {
-            'number_of_statements_delta': self.latest_round.find_numeric_delta(
-                self.previous_round, 'get_total_statements'),
-            'statements_delta': self.latest_round.find_content_delta(
-                self.previous_round, 'statements')
-        }
+        if not self.previous_round:
+            self.json_stats['model_delta'] = {
+                'number_of_statements_delta': 0,
+                'statements_delta': {'added': [], 'removed': []}
+            }
+        else:
+            self.json_stats['model_delta'] = {
+                'number_of_statements_delta': (
+                    self.latest_round.find_numeric_delta(
+                        self.previous_round, 'get_total_statements')),
+                'statements_delta': self.latest_round.find_content_delta(
+                    self.previous_round, 'statements')
+            }
 
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
-        self.json_stats['tests_delta'] = {
-            'number_applied_tests_delta': self.latest_round.find_numeric_delta(
-                self.previous_round, 'get_total_applied_tests'),
-            'number_passed_tests_delta': self.latest_round.find_numeric_delta(
-                self.previous_round, 'get_number_passed_tests'),
-            'passed_ratio_delta': self.latest_round.find_numeric_delta(
-                self.previous_round, 'passed_over_total'),
-            'applied_tests_delta': self.latest_round.find_content_delta(
-                self.previous_round, 'applied_tests', add_result=True),
-            'pass_fail_delta': self.latest_round.find_content_delta(
-                self.previous_round, 'passed_tests'),
-            'new_paths': self.latest_round.find_content_delta(
-                self.previous_round, 'paths')
-        }
+        if not self.previous_round:
+            self.json_stats['tests_delta'] = {
+                'number_applied_tests_delta': 0,
+                'number_passed_tests_delta': 0,
+                'passed_ratio_delta': 0,
+                'applied_tests_delta': {'added': [], 'removed': []},
+                'pass_fail_delta': {'added': [], 'removed': []},
+                'new_paths': {'added': [], 'removed': []}
+            }
+        else:
+            self.json_stats['tests_delta'] = {
+                'number_applied_tests_delta': (
+                    self.latest_round.find_numeric_delta(
+                        self.previous_round, 'get_total_applied_tests')),
+                'number_passed_tests_delta': (
+                    self.latest_round.find_numeric_delta(
+                        self.previous_round, 'get_number_passed_tests')),
+                'passed_ratio_delta': self.latest_round.find_numeric_delta(
+                    self.previous_round, 'passed_over_total'),
+                'applied_tests_delta': self.latest_round.find_content_delta(
+                    self.previous_round, 'applied_tests', add_result=True),
+                'pass_fail_delta': self.latest_round.find_content_delta(
+                    self.previous_round, 'passed_tests'),
+                'new_paths': self.latest_round.find_content_delta(
+                    self.previous_round, 'paths')
+            }
 
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
@@ -402,12 +418,9 @@ class StatsGenerator(object):
         if not self.previous_json_stats:
             previous_dates = []
         else:
-            try:
-                previous_dates = (
-                    self.previous_json_stats['changes_over_time']['dates'])
-            except KeyError:
-                previous_dates = ['2019-03-18-22-55-53', '2019-03-19-17-27-05']
-        previous_dates.append(make_date_str(datetime.datetime.now()))
+            previous_dates = (
+                self.previous_json_stats['changes_over_time']['dates'])
+        previous_dates.append(make_date_str())
         return previous_dates
 
     def save_to_s3(self):
