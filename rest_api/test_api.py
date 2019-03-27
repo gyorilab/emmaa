@@ -1,6 +1,4 @@
 import unittest
-import json
-import sys
 
 from .api import app
 
@@ -28,9 +26,6 @@ class EmmaaApiTest(unittest.TestCase):
                       'register': 'false',
                       'test': 'true'}
 
-        data = json.dumps(test_query)
-
-        resp = self.app.post('/query/submit', data=data)
+        resp = self.app.post('/query/submit', json=test_query)
 
         assert resp.status_code == 200
-
