@@ -24,3 +24,16 @@ def test_put_queries():
         queries = sess.query(Query).all()
     assert len(queries) == 2, len(queries)
 
+
+def test_get_queries():
+    db = _test_db()
+    test_queries = [{'objectSelection': 'ERK',
+                     'subjectSelection': 'BRAF',
+                     'typeSelection': 'activation'},
+                    {'objectSelection': 'MEK',
+                     'subjectSelection': 'ERK',
+                     'typeSelection': 'phosphorylation'}]
+    for query in test_queries:
+        db.put_queries(query, ['aml', 'luad'])
+    queries = db.get_queries('aml')
+    assert len(queries) == 2, len(queries)
