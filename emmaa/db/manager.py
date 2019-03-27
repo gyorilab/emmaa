@@ -129,7 +129,6 @@ class EmmaaDatabaseManager(object):
         queries = []
         for model_id in model_ids:
             qh = hash_query(query_json, model_id)
-            print(sorted_json_string(query_json), model_id, qh)
             queries.append(Query(model_id=model_id, json=query_json.copy(),
                                  hash=qh))
 
