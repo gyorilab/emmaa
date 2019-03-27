@@ -61,3 +61,14 @@ class EmmaaDatabaseManager(object):
             logger.warning(f"A user with email {email} already exists.")
         self.session.commit()
         return new_user.id
+
+    def put_queries(self, query_json, model_ids):
+        # TODO: Handle case where queries already exist
+        queries = []
+        for model_id in model_ids:
+            queries.append({'model_id': model_id, 'json': query_json.copy()})
+
+        with self.get_session() as sess:
+            sess.add_all(queries)
+        return
+
