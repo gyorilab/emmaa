@@ -125,7 +125,8 @@ class EmmaaDatabaseManager(object):
         # TODO: Handle case where queries already exist
         queries = []
         for model_id in model_ids:
-            queries.append({'model_id': model_id, 'json': query_json.copy()})
+            queries.append(Query(model_id=model_id, json=query_json.copy(),
+                                 hash=hash_query(query_json, model_id)))
 
         with self.get_session() as sess:
             sess.add_all(queries)
