@@ -10,6 +10,7 @@ from indra.literature import pubmed_client
 from indra.statements import stmts_to_json
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
+from indra.mechlinker import MechLinker
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -36,7 +37,8 @@ class EmmaaModel(object):
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
     search_terms : list[emmaa.priors.SearchTerm]
-        A list of SearchTerm objects containing the search terms used in the model
+        A list of SearchTerm objects containing the search terms used in the
+        model.
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
     assembled_stmts : list[indra.statements.Statement]
@@ -123,7 +125,16 @@ class EmmaaModel(object):
             if estmt.stmt.get_hash(shallow=False) not in source_hashes:
                 self.stmts.append(estmt)
 
-    def run_assembly(self, belief_cutoff=None, filter_ungrounded=False):
+    def eliminate_copies(self):
+        """Filter out exact copies of the same Statement."""
+        logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
+        self.stmts = {estmt.stmt.get_hash(shallow=False): estmt
+                      for estmt in self.stmts}.values()
+        logger.info(('Continuing with %d raw EmmaaStatements'
+                     ' that are not exact copies') % len(self.stmts))
+
+    def run_assembly(self, belief_cutoff=None, filter_ungrounded=False,
+                     **kwargs):
         """Run INDRA's assembly pipeline on the Statements.
 
         Returns
@@ -131,6 +142,7 @@ class EmmaaModel(object):
         stmts : list[indra.statements.Statement]
             The list of assembled INDRA Statements.
         """
+        self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
@@ -142,6 +154,24 @@ class EmmaaModel(object):
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
         stmts = ac.filter_top_level(stmts)
+
+        if kwargs.get('filter_direct', False):
+            stmts = ac.filter_direct(stmts)
+            stmts = ac.filter_enzyme_kinase(stmts)
+            stmts = ac.filter_mod_nokinase(stmts)
+            stmts = ac.filter_transcription_factor(stmts)
+
+        if kwargs.get('mechanism_linking', False):
+            ml = MechLinker(stmts)
+            ml.gather_explicit_activities()
+            ml.reduce_activities()
+            ml.gather_modifications()
+            ml.reduce_modifications()
+            ml.gather_explicit_activities()
+            ml.replace_activations()
+            ml.require_active_forms()
+            stmts = ml.statements
+
         self.assembled_stmts = stmts
 
     def upload_to_ndex(self):
