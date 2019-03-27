@@ -154,7 +154,12 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_results(self, user_id):
-        pass
+        with self.get_session() as sess:
+            q = (sess.query(Query.model_id, Query.json,
+                            Result.string, Result.date)
+                 .filter(Query.hash == Result.query_hash))
+            ret = [tuple(res) for res in q.all()]
+        return ret
 
 
 def sorted_json_string(json_thing):
