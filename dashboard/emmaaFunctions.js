@@ -78,7 +78,6 @@ function clearTable(tableBody) {
 }
 
 // Creates a new table row given an array of values
-
 function addToRow(col_values) {
   let tableRow = document.createElement('tr');
 
@@ -90,6 +89,21 @@ function addToRow(col_values) {
 
   return tableRow;
 }
+
+function generatePassFail(string) {
+  // See more at:
+  // https://fontawesome.com/icons?d=gallery
+  // Pass: <i class="fas fa-check"></i>
+  // Fail: <i class="fas fa-times"></i>
+  let itag = document.createElement('i');
+  if (string.toLowerCase() == 'pass') {
+    itag.className = 'fas fa-check';
+  } else if (string.toLowerCase() == 'fail') {
+    itag.className = 'fas fa-times';
+  }
+  return itag;
+}
+
 function populateModelsTable(metaTableBody, json) {
   console.log('function populateModelsTable(metaTableBody, json)')
   // console.log(json)
@@ -267,6 +281,9 @@ function populateTestResultTable(tableBody, json) {
 
   for (pair of newAppTests) {
     let rowEl = addToRow(pair)
+    let passSpan = generatePassFail(rowEl.children[1].textContent)
+    rowEl.children[1].innerHTML = null;
+    rowEl.children[1].appendChild(passSpan)
     newAppliedTable.appendChild(rowEl)
   }
   // Tests Delta - New Passeed Tests
@@ -289,6 +306,9 @@ function populateTestResultTable(tableBody, json) {
 
   for (val of resultValues) {
     let rowEl = addToRow(val)
+    let passSpan = generatePassFail(rowEl.children[1].textContent)
+    rowEl.children[1].innerHTML = null;
+    rowEl.children[1].appendChild(passSpan)
     allTestsTable.appendChild(rowEl)
   }
 
