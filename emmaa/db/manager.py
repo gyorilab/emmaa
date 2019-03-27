@@ -7,7 +7,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base
+from .schema import EmmaaTable, User, Query, Base, Result
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +125,7 @@ class EmmaaDatabaseManager(object):
         if not isinstance(model_ids, list):
             raise TypeError("Invalid type: %s" % type(model_ids))
         # TODO: Handle case where queries already exist
+        # TODO: Unclude user info
         queries = []
         for model_id in model_ids:
             queries.append(Query(model_id=model_id, json=query_json.copy(),
@@ -140,8 +141,14 @@ class EmmaaDatabaseManager(object):
             result = q.all()
         return result
 
-    def put_results(self, model_id, results):
-        pass
+    def put_results(self, query_results):
+        results = []
+        for query_hash, result_string in query_results.items():
+            results.append(Result(query_hash=query_hash, string=result_string))
+
+        with self.get_session() as sess:
+            sess.add_all(results)
+        return
 
     def get_results(self, user_id):
         pass
@@ -154,7 +161,7 @@ def sorted_json_string(json_thing):
         return '[%s]' % (','.join(sorted_json_string(s) for s in json_thing))
     elif isinstance(json_thing, dict):
         return '{%s}' % (','.join(k + sorted_json_string(v)
-                                 for k, v in json_thing.items()))
+                                  for k, v in json_thing.items()))
     else:
         raise TypeError(f"Invalid type: {type(json_thing)}")
 

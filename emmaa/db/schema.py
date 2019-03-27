@@ -67,5 +67,6 @@ class Result(Base, EmmaaTable):
     __tablename__ = 'result'
     id = Column(Integer, primary_key=True)
     query_hash = Column(BigInteger, ForeignKey('query.hash'), nullable=False)
+    query = relationship(Query)
     date = Column(DateTime, default=func.now())
-    json = Column(JSONB, nullable=False)
+    string = Column(String, nullable=False)
