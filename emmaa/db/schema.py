@@ -45,6 +45,7 @@ class User(Base, EmmaaTable):
 class Query(Base, EmmaaTable):
     __tablename__ = 'query'
     hash = Column(BigInteger, primary_key=True)
+    model_id = Column(String(5))
     json = Column(JSONB, nullable=False)
 
 
