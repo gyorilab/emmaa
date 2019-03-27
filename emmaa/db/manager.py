@@ -72,3 +72,14 @@ class EmmaaDatabaseManager(object):
             sess.add_all(queries)
         return
 
+    def get_queries(self, model_id):
+        with self.get_session() as sess:
+            q = sess.query(Query.json).filter(Query.model_id == model_id)
+            result = q.all()
+        return result
+
+    def put_results(self, model_id, results):
+        pass
+
+    def get_results(self, user_id):
+        pass
