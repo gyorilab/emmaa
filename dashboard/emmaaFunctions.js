@@ -29,7 +29,7 @@ function setModel(ddSelect, model) {
       child.selected = 'selected';
       break;
     }
-  }      
+  }
 }
 
 function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) {
@@ -90,18 +90,25 @@ function addToRow(col_values) {
   return tableRow;
 }
 
-function generatePassFail(string) {
+function generatePassFail(rowEl, col) {
   // See more at:
   // https://fontawesome.com/icons?d=gallery
   // Pass: <i class="fas fa-check"></i>
   // Fail: <i class="fas fa-times"></i>
+  let string = rowEl.children[col].textContent;
   let itag = document.createElement('i');
   if (string.toLowerCase() == 'pass') {
     itag.className = 'fas fa-check';
+    rowEl.children[col].innerHTML = null;
+    rowEl.children[col].appendChild(itag);
   } else if (string.toLowerCase() == 'fail') {
     itag.className = 'fas fa-times';
+    rowEl.children[col].innerHTML = null;
+    rowEl.children[col].appendChild(itag);
+  } else {
+    console.log('pass/fail not in column' + col)
   }
-  return itag;
+  return rowEl;
 }
 
 function populateModelsTable(metaTableBody, json) {
@@ -281,10 +288,7 @@ function populateTestResultTable(tableBody, json) {
 
   for (pair of newAppTests) {
     let rowEl = addToRow(pair)
-    let passSpan = generatePassFail(rowEl.children[1].textContent)
-    rowEl.children[1].innerHTML = null;
-    rowEl.children[1].appendChild(passSpan)
-    newAppliedTable.appendChild(rowEl)
+    newAppliedTable.appendChild(generatePassFail(rowEl, 1))
   }
   // Tests Delta - New Passeed Tests
   let newPassedTable = document.getElementById('newPassedTests')
@@ -306,10 +310,7 @@ function populateTestResultTable(tableBody, json) {
 
   for (val of resultValues) {
     let rowEl = addToRow(val)
-    let passSpan = generatePassFail(rowEl.children[1].textContent)
-    rowEl.children[1].innerHTML = null;
-    rowEl.children[1].appendChild(passSpan)
-    allTestsTable.appendChild(rowEl)
+    allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
 }
