@@ -128,8 +128,10 @@ class EmmaaDatabaseManager(object):
         # TODO: Unclude user info
         queries = []
         for model_id in model_ids:
+            qh = hash_query(query_json, model_id)
+            print(sorted_json_string(query_json), model_id, qh)
             queries.append(Query(model_id=model_id, json=query_json.copy(),
-                                 hash=hash_query(query_json, model_id)))
+                                 hash=qh))
 
         with self.get_session() as sess:
             sess.add_all(queries)
@@ -138,12 +140,13 @@ class EmmaaDatabaseManager(object):
     def get_queries(self, model_id):
         with self.get_session() as sess:
             q = sess.query(Query.json).filter(Query.model_id == model_id)
-            result = q.all()
-        return result
+            queries = [q for q, in q.all()]
+        return queries
 
-    def put_results(self, query_results):
+    def put_results(self, model_id, query_results):
         results = []
-        for query_hash, result_string in query_results.items():
+        for query_json, result_string in query_results:
+            query_hash = hash_query(query_json, model_id)
             results.append(Result(query_hash=query_hash, string=result_string))
 
         with self.get_session() as sess:
@@ -158,10 +161,11 @@ def sorted_json_string(json_thing):
     if isinstance(json_thing, str):
         return json_thing
     elif isinstance(json_thing, list):
-        return '[%s]' % (','.join(sorted_json_string(s) for s in json_thing))
+        return '[%s]' % (','.join(sorted(sorted_json_string(s)
+                                         for s in json_thing)))
     elif isinstance(json_thing, dict):
-        return '{%s}' % (','.join(k + sorted_json_string(v)
-                                  for k, v in json_thing.items()))
+        return '{%s}' % (','.join(sorted(k + sorted_json_string(v)
+                                         for k, v in json_thing.items())))
     else:
         raise TypeError(f"Invalid type: {type(json_thing)}")
 
