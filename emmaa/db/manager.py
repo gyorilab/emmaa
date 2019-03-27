@@ -16,6 +16,32 @@ class EmmaaDatabaseError(Exception):
     pass
 
 
+class EmmaaDatabaseSessionManager(object):
+    def __init__(self, host, engine):
+        logger.debug(f"Grabbing a session to {host}...")
+        DBSession = sessionmaker(bind=engine)
+        logger.debug("Session grabbed.")
+        self.session = DBSession()
+        if self.session is None:
+            raise EmmaaDatabaseError("Could not acquire session.")
+        return
+
+    def __enter__(self):
+        return self.session
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        if exception_type:
+            logger.exception(exception_value)
+            logger.info("Got exception: rolling back.")
+            self.session.rollback()
+        else:
+            logger.debug("Committing changes...")
+            self.session.commit()
+
+        # Close the session.
+        self.session.close()
+
+
 class EmmaaDatabaseManager(object):
     table_order = ['user', 'query', 'user_query', 'result']
 
@@ -25,16 +51,11 @@ class EmmaaDatabaseManager(object):
         self.engine = create_engine(host)
         self.tables = {tbl.__tablename__: tbl
                        for tbl in EmmaaTable.__subclasses__()}
+        self.session = None
         return
 
     def get_session(self):
-        logger.debug(f"Grabbing a session to {self.host}...")
-        DBSession = sessionmaker(bind=self.engine)
-        logger.debug("Session grabbed.")
-        session = DBSession()
-        if session is None:
-            raise EmmaaDatabaseError("Could not acquire session.")
-        return session
+        return EmmaaDatabaseSessionManager(self.host, self.engine)
 
     def create_tables(self, tables=None):
         if tables is None:
@@ -94,11 +115,10 @@ class EmmaaDatabaseManager(object):
     def add_user(self, email):
         try:
             new_user = User(email)
-            self.session.add(new_user)
+            with self.get_session() as sess:
+                sess.add(new_user)
         except Exception:
-            self.session.rollback()
             logger.warning(f"A user with email {email} already exists.")
-        self.session.commit()
         return new_user.id
 
     def put_queries(self, query_json, model_ids):
