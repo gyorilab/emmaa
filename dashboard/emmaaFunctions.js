@@ -333,56 +333,27 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
     lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0]
   }
   modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
-
-  // Get NDEX id from YAML
-  // let yamlKey = 'models/' + model + '/config.yaml';
-  // console.log('yamlPromise')
-  // console.log(yamlPromise)
-  // yamlPromise.then(function(jsonText){
-  //   console.log('Resovled YAML file as:')
-  //   console.log(jsonText)
-  //   console.log('reg-exp match')
-  //   console.log(jsonText.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1]);
-
-  //   let ndexID = jsonText.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1];
-    
-  //   let link = document.createElement('a')
-  //   link.textContent = ndexID;
-  //   link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
-    
-  //   tableRow = addToRow('Network on NDEX', '')
-  //   tableRow[1].innerHTML = null;
-  //   tableRow[1].appendChild(link)
-    
-  //   modelInfoTableBody.appendChild(tableRow)
-  // })
-
-  console.log('Hello')
-  var yamlURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.yaml';
+  
+  var yamlURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.json';
+  console.log('Loading model json from ' + yamlURL)
   var yamlPromise = $.ajax({
     url: yamlURL,
-    dataType: "text",
-    success: function(response) {
-      // console.log(response)
-      // console.log(response.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1]);
-      let ndexID = response.match(/ndex\: \{network\: ([a-z0-9\-]+)\}/)[1];
+    dataType: "json",
+    success: function(json) {
+      console.log('success! Here is your model json ndex id: ')
+      console.log(json.ndex.network)
+      let ndexID = json.ndex.network;
       let link = document.createElement('a');
       link.textContent = ndexID;
       link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
       
-      tableRow = addToRow('Network on NDEX', '');
+      tableRow = addToRow(['Network on NDEX', '']);
       tableRow.children[1].innerHTML = null;
       tableRow.children[1].appendChild(link);
       
       modelInfoTableBody.appendChild(tableRow);
       }
   });
-
-  // List info from json of model
-  // modelMetaInfoPromise = getPublicJson(bucket, modelKey)
-  // modelMetaInfoPromise.then(function(json) {
-  //   populateModelsTable(modelInfoTable, json);
-  // });
 }
 
 function modelsLastUpdated(keyMapArray, endsWith) {
