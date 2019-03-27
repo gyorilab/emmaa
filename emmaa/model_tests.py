@@ -352,7 +352,7 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     # Optionally upload test results to S3
     if upload_results:
         client = get_s3_client()
-        date_str = make_date_str(datetime.datetime.now())
+        date_str = make_date_str()
         result_key = f'results/{model_name}/results_{date_str}.json'
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,
