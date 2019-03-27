@@ -136,5 +136,6 @@ def sorted_json_string(json_thing):
         raise TypeError(f"Invalid type: {type(json_thing)}")
 
 
-def hash_query(query_json):
-    return fnv1a_32(sorted_json_string(query_json).encode('utf-8'))
+def hash_query(query_json, model_id):
+    unique_string = model_id + ':' + sorted_json_string(query_json)
+    return fnv1a_32(unique_string.encode('utf-8'))
