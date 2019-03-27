@@ -165,8 +165,8 @@ class ModelManager(object):
                     'test_type': test.__class__.__name__,
                     'test_json': test.to_json(),
                     'result_json': pickler.flatten(self.test_results[ix]),
-                    'english_path': self.get_english_path(
-                        self.test_results[ix]),
+                    'english_path': self.make_english_path(
+                                                self.test_results[ix]),
                     'english_code': self.make_english_result_code(
                         self.test_results[ix])})
         return results_json
