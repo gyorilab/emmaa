@@ -122,6 +122,8 @@ class EmmaaDatabaseManager(object):
         return new_user.id
 
     def put_queries(self, query_json, model_ids):
+        if not isinstance(model_ids, list):
+            raise TypeError("Invalid type: %s" % type(model_ids))
         # TODO: Handle case where queries already exist
         queries = []
         for model_id in model_ids:
