@@ -45,8 +45,11 @@ class User(Base, EmmaaTable):
 class Query(Base, EmmaaTable):
     __tablename__ = 'query'
     hash = Column(BigInteger, primary_key=True)
-    model_id = Column(String(5))
+    model_id = Column(String(5), nullable=False)
     json = Column(JSONB, nullable=False)
+    __table_args__ = (
+        UniqueConstraint('model_id', 'json', name='query-uniqueness'),
+        )
 
 
 class UserQuery(Base, EmmaaTable):
