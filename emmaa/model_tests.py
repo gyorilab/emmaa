@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 RESULT_CODES = {
-    'STATEMENT_TYPE_NOT_HANDLED': 'The provided statement type is not handled',
-    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not found in model',
-    'OBSERVABLES_NOT_FOUND': 'Statement has no associated observable',
-    'NO_PATHS_FOUND': 'Statement has no path for any observable',
-    'MAX_PATH_LENGTH_EXCEEDED': 'Statement has no path len <= MAX_PATH_LENGTH',
-    'PATHS_FOUND': 'Statement has path len <= MAX_PATH_LENGTH',
-    'INPUT_RULES_NOT_FOUND': 'No rules with Statement subject found',
-    'MAX_PATHS_ZERO': 'Path found but MAX_PATHS is set to zero',
+    'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
+    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
+    'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
+    'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
+    'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
+    'PATHS_FOUND': 'Path found which satisfies the test statement',
+    'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
+    'MAX_PATHS_ZERO': 'Path found but not reconstructed',
 }
 
 
