@@ -31,9 +31,10 @@
   <!-- Script Files -->
   <!-- <script src="https://indralab.github.io/aws/js/awsServices.js"></script> -->
   <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
-  <!-- <script src="http://127.0.0.2:5000/emmaaFunctions.js"></script> -->
-  <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script>
-  <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script>
+  <script src="http://127.0.0.2:5000/emmaaFunctions.js"></script>
+  <!-- <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script> -->
+  <script src="http://127.0.0.2:5000/queryFunctions.js"></script>
+  <!-- <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script> -->
 
 </head>
 
@@ -123,6 +124,9 @@
                     onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
           </div>
           <div class="container">
+            <div id="query-status-gif">
+              <img src="http://127.0.0.2:5000/images/ajax-loader.gif">
+            </div>
             <span><i id="query-status"></i></span>
           </div>
         </div>
