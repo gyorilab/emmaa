@@ -177,7 +177,7 @@ class EmmaaModel(object):
 
         self.assembled_stmts = stmts
 
-    def upload_to_ndex(self):
+    def update_to_ndex(self):
         """Upload the assembled model as CX to NDEx"""
         if not self.assembled_stmts:
             self.run_assembly()
@@ -185,6 +185,15 @@ class EmmaaModel(object):
         cxa.make_model()
         cx_str = cxa.print_cx()
         ndex_client.update_network(cx_str, self.ndex_network)
+
+    def upload_to_ndex(self):
+        """Upload the assembled model as CX to NDEx"""
+        if not self.assembled_stmts:
+            self.run_assembly()
+        cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
+        cxa.make_model()
+        model_uuid = cxa.upload_model()
+        return model_uuid
 
     def save_to_s3(self):
         """Dump the model state to S3."""
