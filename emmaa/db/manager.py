@@ -209,9 +209,9 @@ class EmmaaDatabaseManager(object):
         Returns
         -------
         results : list[tuple]
-            A list of tuples, each of the form:
-              (model_id, query_json, result_string, date)
-            Representing the result of a query run on a model on a given date.
+            A list of tuples, each of the form: (model_id, query_json,
+            result_string, date) representing the result of a query run on a
+            model on a given date.
         """
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json,
