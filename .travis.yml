@@ -10,6 +10,8 @@ install:
   - pip install .[test]
 script:
   - export AWS_DEFAULT_REGION='us-east-1'
-  - nosetests -v --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
+  - export NOSEATTR="!notravis";
+  - nosetests -v -a $NOSEATTR --with-coverage --cover-inclusive
+    --cover-package=emmaa -w emmaa/tests
 after_success:
   - coveralls

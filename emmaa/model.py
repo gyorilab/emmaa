@@ -131,19 +131,13 @@ class EmmaaModel(object):
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
         logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
-        self.stmts = {estmt.stmt.get_hash(shallow=False): estmt
-                      for estmt in self.stmts}.values()
+        self.stmts = list({estmt.stmt.get_hash(shallow=False): estmt
+                           for estmt in self.stmts}.values())
         logger.info(('Continuing with %d raw EmmaaStatements'
                      ' that are not exact copies') % len(self.stmts))
 
     def run_assembly(self):
-        """Run INDRA's assembly pipeline on the Statements.
-
-        Returns
-        -------
-        stmts : list[indra.statements.Statement]
-            The list of assembled INDRA Statements.
-        """
+        """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
@@ -177,14 +171,24 @@ class EmmaaModel(object):
 
         self.assembled_stmts = stmts
 
-    def upload_to_ndex(self):
-        """Upload the assembled model as CX to NDEx"""
+    def update_to_ndex(self):
+        """Update assembled model as CX on NDEx, updates existing network."""
         if not self.assembled_stmts:
             self.run_assembly()
         cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
         cxa.make_model()
         cx_str = cxa.print_cx()
         ndex_client.update_network(cx_str, self.ndex_network)
+
+    def upload_to_ndex(self):
+        """Upload the assembled model as CX to NDEx, creates new network."""
+        if not self.assembled_stmts:
+            self.run_assembly()
+        cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
+        cxa.make_model()
+        model_uuid = cxa.upload_model()
+        self.ndex_network = model_uuid
+        return model_uuid
 
     def save_to_s3(self):
         """Dump the model state to S3."""
