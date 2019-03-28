@@ -113,6 +113,7 @@ class EmmaaDatabaseManager(object):
         return True
 
     def add_user(self, email):
+        """Add a new user's email to Emmaa's User table."""
         try:
             new_user = User(email)
             with self.get_session() as sess:
@@ -122,6 +123,22 @@ class EmmaaDatabaseManager(object):
         return new_user.id
 
     def put_queries(self, user_id, query_json, model_ids):
+        """Add queries to the database for a given user.
+
+        Note: users are not considered, and user_id is ignored. In future, the
+        user will be recorded and used to restrict the scope of get_results.
+
+        Parameters
+        ----------
+        user_id : str
+            (currently unused) the ID of the user that entered the queries.
+        query_json : json
+            The json dictionary containing the data needed to specify the
+            query.
+        model_ids : list[str]
+            A list of the short, standard model IDs to which the user wishes
+            to apply these queries.
+        """
         if not isinstance(model_ids, list):
             raise TypeError("Invalid type: %s" % type(model_ids))
         # TODO: Handle case where queries already exist
@@ -137,12 +154,35 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_queries(self, model_id):
+        """Get queries that refer to the given model_id.
+
+        Parameters
+        ----------
+        model_id : str
+            The short, standard model ID.
+
+        Returns
+        -------
+        queries : list[json]
+            A list of query json's retrieved from the database.
+        """
         with self.get_session() as sess:
             q = sess.query(Query.json).filter(Query.model_id == model_id)
             queries = [q for q, in q.all()]
         return queries
 
     def put_results(self, model_id, query_results):
+        """Add new results for a set of queries tested on a model_id.
+
+        Parameters
+        ----------
+        model_id : str
+            The short, standard model ID.
+        query_results : list of tuples
+            A list of tuples of the form (query_json, result_string), where
+            the query_json is the standard query json run against the model,
+            and the result_string is the corresponding result.
+        """
         results = []
         for query_json, result_string in query_results:
             query_hash = hash_query(query_json, model_id)
@@ -153,15 +193,33 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_results(self, user_id):
+        """Get the results for which the user has registered.
+
+        Note: currently users are not handled, and this will simply return
+        all results.
+
+        Parameters
+        ----------
+        user_id : str
+            The standardised user id.
+
+        Returns
+        -------
+        results : list[tuple]
+            A list of tuples, each of the form:
+              (model_id, query_json, result_string, date)
+            Representing the result of a query run on a model on a given date.
+        """
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json,
                             Result.string, Result.date)
                  .filter(Query.hash == Result.query_hash))
-            ret = [tuple(res) for res in q.all()]
-        return ret
+            results = [tuple(res) for res in q.all()]
+        return results
 
 
 def sorted_json_string(json_thing):
+    """Produce a string that is unique to a json's contents."""
     if isinstance(json_thing, str):
         return json_thing
     elif isinstance(json_thing, list):
@@ -175,5 +233,6 @@ def sorted_json_string(json_thing):
 
 
 def hash_query(query_json, model_id):
+    """Create an FNV-1a 32-bit hash from the query json and model_id."""
     unique_string = model_id + ':' + sorted_json_string(query_json)
     return fnv1a_32(unique_string.encode('utf-8'))
