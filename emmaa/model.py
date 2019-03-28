@@ -277,7 +277,7 @@ def load_config_from_s3(model_name):
     config_key = f'{base_key}/config.json'
     logger.info(f'Loading model config from {config_key}')
     obj = client.get_object(Bucket='emmaa', Key=config_key)
-    config = json.load(obj['Body'].read().decode('utf8'))
+    config = json.loads(obj['Body'].read().decode('utf8'))
     return config
 
 
