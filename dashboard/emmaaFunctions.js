@@ -193,7 +193,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'bar'
   }
 
-  let stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '')
+  var stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '')
 
   // Top agents bar graph
   var top_agents_array = []
@@ -211,7 +211,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'bar'
   }
 
-  let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
+  var agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
 
   // Statements by Evidence Table
   let stEvTable = document.getElementById('stmtEvidence')
@@ -237,7 +237,7 @@ function populateTestResultTable(tableBody, json) {
     ]
   }
 
-  let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
+  var stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
 
   // Model Delta - New statements
   let newStTable = document.getElementById('addedStmts')
@@ -320,8 +320,11 @@ function populateTestResultTable(tableBody, json) {
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
-  // Force redraw of charts on tab show event
-  $('a[data-toggle=tab]').on('shown.bs.tab', function() {
+  // Force redraw of charts to prevent chart overflow
+  $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
+    stmtTypeChart.flush();
+    agentChart.flush();
+    stmtsCountChart.flush();
     lineChart.flush();
     areaChart.flush();
   });
