@@ -37,24 +37,7 @@
   <!-- User query JS -->
   <script>
     // EMMAA rest API
-    var EMMAA_API = 'http://localhost:5000/query/submit'
-    var NAMESPACE_OPTIONS = [
-      ['HGNC', 'HGNC'], 
-      ['UniProt', 'UP'], 
-      ['Entrez', 'EGID'], 
-      ['FamPlex', 'FPLX'], 
-      ['InterPro', 'IP'], 
-      ['Pfam', 'PF'], 
-      ['NextProt family', 'NXPFA'], 
-      ['ChEBI', 'CHEBI'], 
-      ['PubChem', 'PUBCHEM'], 
-      ['LINCS/HMS-LINCS', 'LINCS'], 
-      ['HMDB', 'HMDB'], 
-      ['GO', 'GO'], 
-      ['MeSH', 'MESH'], 
-      ['NCIT', 'NCIT'], 
-      ['Raw text', 'TEXT']
-    ]
+    var EMMAA_API = './query/submit'
 
     $(document).ready(function() {
       fillNamespaceOptions()
