@@ -13,4 +13,4 @@ to sign up for specific notifications about one or more automatically
 built, tested and analyzed models.
 
 The EMMAA Dashboard is accessible at
-`http://indralab.github.io/emmaa/dashboard <http://indralab.github.io/emmaa/dashboard>`_.
+`http://emmaa-service-1943566322.us-east-1.elb.amazonaws.com/home <http://emmaa-service-1943566322.us-east-1.elb.amazonaws.com/home>`_.
