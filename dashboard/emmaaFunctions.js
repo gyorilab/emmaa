@@ -267,8 +267,7 @@ function populateTestResultTable(tableBody, json) {
     ]
   }
 
-  let lineChart = generateLineArea(pasRatId, lineDataParams, '')
-  console.log(lineChart)
+  var lineChart = generateLineArea(pasRatId, lineDataParams, '');
 
   // Applied/passed area graph
   appliedTests = json.changes_over_time.number_applied_tests
@@ -287,7 +286,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'area'
   }
 
-  let areaChart = generateLineArea(pasAppId, passedAppliedParams, '')
+  var areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
   // Tests Delta - New Applied Tests
   let newAppliedTable = document.getElementById('newAppliedTests')
@@ -298,7 +297,7 @@ function populateTestResultTable(tableBody, json) {
     let rowEl = addToRow(pair)
     newAppliedTable.appendChild(generatePassFail(rowEl, 1))
   }
-  // Tests Delta - New Passeed Tests
+  // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests')
   clearTable(newPassedTable)
   var newPasTests = json.tests_delta.pass_fail_delta.added
@@ -321,6 +320,11 @@ function populateTestResultTable(tableBody, json) {
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
+  // Force redraw of charts on tab show event
+  $('a[data-toggle=tab]').on('shown.bs.tab', function() {
+    lineChart.flush();
+    areaChart.flush();
+  });
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
@@ -529,4 +533,5 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
       text: chartTitle
     }
   });
+  return lineChart;
 }
