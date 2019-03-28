@@ -9,8 +9,6 @@ $(document).ready(function() {
 function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)')
 
-  queryNotify('Waiting for server response');
-
   // Get user info
   userInfo = {
     name: 'joshua',
@@ -20,6 +18,10 @@ function postQuery(queryContainer) {
 
   // Collect model query
   let querySel = collectQuery(queryContainer)
+  if (!querySel) {
+    queryNotify('Did not send query');
+    return;
+  }
 
   // Check if user wants to register query
   let reg = document.getElementById('register-query').checked
@@ -48,6 +50,11 @@ function collectQuery(queryContainer) {
       checkboxes.push(box.name)
     }
   }
+  if (checkboxes.length == 0) {
+    // Handle no boxes ticked
+    alert('Must select at least one model!')
+    return;
+  };
   query['models'] = checkboxes;
 
   //  Collect dropdown selections
@@ -72,6 +79,7 @@ function submitQuery(queryDict, test) {
   if (test) queryDict['test'] = true;
 
   // submit POST to emmaa user db
+  queryNotify('Waiting for server response');
   let response = $.ajax({
     url: EMMAA_API,
     type: 'POST',
