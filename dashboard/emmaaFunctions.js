@@ -330,6 +330,7 @@ function populateTestResultTable(tableBody, json) {
   }
 
   // Force redraw of charts to prevent chart overflow
+  // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
     stmtTypeChart.flush();
     agentChart.flush();

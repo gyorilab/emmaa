@@ -37,7 +37,7 @@
   <script>
     // Check if user signed in once page is loaded
     $(document).ready(function(){
-      checkSignIn() // Check if user is signed in; set arg to 'true' to force login
+      // checkSignIn() // Check if user is signed in; set arg to 'true' to force login
       checkLatestModelsUpdate() // Check latest models listed on S3
     })
   </script>
@@ -67,7 +67,7 @@
       <a href="./query">Queries</a>
       <a class="p-2 text-dark" href="#about">About</a>
     </nav>
-    <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button>
+<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
   </div>
 
   <div class="container">
