@@ -1,4 +1,3 @@
-import sys
 import logging
 from os import path, makedirs, environ
 from shutil import copyfile

@@ -4,7 +4,7 @@ from emmaa.db import get_db, Query, Result
 
 
 def _test_db():
-    db = get_db('AWS test')
+    db = get_db('test')
     db.drop_tables(force=True)
     db.create_tables()
     return db
