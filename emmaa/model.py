@@ -131,8 +131,8 @@ class EmmaaModel(object):
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
         logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
-        self.stmts = {estmt.stmt.get_hash(shallow=False): estmt
-                      for estmt in self.stmts}.values()
+        self.stmts = list({estmt.stmt.get_hash(shallow=False): estmt
+                           for estmt in self.stmts}.values())
         logger.info(('Continuing with %d raw EmmaaStatements'
                      ' that are not exact copies') % len(self.stmts))
 
