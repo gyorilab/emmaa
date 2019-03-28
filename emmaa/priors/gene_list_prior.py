@@ -28,6 +28,7 @@ class GeneListPrior(object):
         self.search_terms = []
 
     def make_search_terms(self):
+        """Generate search terms from the gene list."""
         tas_stmts = tas.process_csv().statements
         already_added = set()
         terms = []
@@ -51,6 +52,7 @@ class GeneListPrior(object):
         return terms
 
     def make_gene_statements(self):
+        """Generate Statements from the gene list."""
         drug_names = [st.name for st in self.search_terms if
                       st.type == 'drug']
         indra_stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
@@ -59,6 +61,7 @@ class GeneListPrior(object):
         self.stmts = estmts
 
     def make_config(self):
+        """Generate a configuration based on attributes."""
         if not self.search_terms:
             self.make_search_terms()
         if not self.stmts:
@@ -74,15 +77,18 @@ class GeneListPrior(object):
         return config
 
     def make_model(self):
+        """Make an EmmaaModel and upload it along with the config to S3."""
         config = self.make_config()
         em = EmmaaModel(self.name, config)
         em.stmts = self.stmts
         ndex_uuid = em.upload_to_ndex()
         config['ndex'] = {'network': ndex_uuid}
         save_config_to_s3(self.name, config)
+        em.save_to_s3()
 
 
 def agent_from_gene_name(gene_name):
+    """Return an Agent based on a gene name."""
     hgnc_id = hgnc_client.get_hgnc_id(gene_name)
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
     agent = Agent(gene_name, db_refs={'HGNC': hgnc_id,
