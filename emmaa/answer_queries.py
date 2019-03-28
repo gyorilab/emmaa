@@ -66,7 +66,7 @@ def get_model_list(query_dict):
 
 def load_model_manager_from_s3(model_name):
     client = get_s3_client()
-    key = f'models/{model_name}/latest_model_manager.pkl'
+    key = f'results/{model_name}/latest_model_manager.pkl'
     logger.info(f'Loading latest model manager for {model_name} model.')
     obj = client.get_object(Bucket='emmaa', Key=key)
     model_manager = pickle.loads(obj['Body'].read())
