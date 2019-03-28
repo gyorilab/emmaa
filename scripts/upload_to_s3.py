@@ -1,4 +1,4 @@
-import yaml
+import json
 import pickle
 import datetime
 from emmaa.model import EmmaaModel
@@ -8,8 +8,8 @@ from emmaa.statements import EmmaaStatement
 def update_cancer(cancer_type):
     """Update the model for the given cancer.
 
-    A yaml config file must be present for the given cancer type, located in
-    the models/<cancer_type>/config.yaml.
+    A JSON config file must be present for the given cancer type, located in
+    the models/<cancer_type>/config.json.
 
     Parameters
     ----------
@@ -20,7 +20,7 @@ def update_cancer(cancer_type):
     print(cancer_type)
     with open(f'models/{cancer_type}/prior_stmts.pkl', 'rb') as fh:
         stmts = pickle.load(fh)
-    config = yaml.load(open(f'models/{cancer_type}/config.yaml', 'r'))
+    config = json.load(open(f'models/{cancer_type}/config.json', 'r'))
     em = EmmaaModel(cancer_type, config)
     ess = [EmmaaStatement(st, datetime.datetime.now(), []) for st in stmts]
     em.add_statements(ess)
