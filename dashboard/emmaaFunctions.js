@@ -101,14 +101,6 @@ function generatePassFail(rowEl, col) {
     itag.className = 'fas fa-check';
     rowEl.children[col].innerHTML = null;
     rowEl.children[col].appendChild(itag);
-    let passedTestsCol = rowEl.children[col+1]
-
-    if (passedTestsCol.textContent.split('.').length > 2) {
-      console.log('Adding line breaks for "' + passedTestsCol.textContent + '"')
-      let breakText = passedTestsCol.textContent.replace(/\./g, '.<br>')
-      passedTestsCol.innerHTML = null;
-      passedTestsCol.innerHTML = breakText.substr(0, breakText.length-4);
-    }
   } else if (string.toLowerCase() == 'fail') {
     itag.className = 'fas fa-times';
     rowEl.children[col].innerHTML = null;
@@ -116,6 +108,14 @@ function generatePassFail(rowEl, col) {
   } else {
     console.log('pass/fail not in column' + col)
   }
+  return rowEl;
+}
+
+function addLineBreaks(rowEl, col) {
+  // Adds <br> after '.' to text in specified column
+  let breakText = rowEl.children[col].textContent.replace(/\./g, '.<br>')
+  rowEl.children[col].innerHTML = null;
+  rowEl.children[col].innerHTML = breakText.substr(0, breakText.length-4); // Remove last <br>
   return rowEl;
 }
 
@@ -294,6 +294,7 @@ function populateTestResultTable(tableBody, json) {
   var newAppTests = json.tests_delta.applied_tests_delta.added
 
   for (pair of newAppTests) {
+    // Has columns: Test; Status;
     let rowEl = addToRow(pair)
     newAppliedTable.appendChild(generatePassFail(rowEl, 1))
   }
@@ -304,7 +305,11 @@ function populateTestResultTable(tableBody, json) {
   var newPaths = json.tests_delta.new_paths.added
 
   for (i = 0; i < newPasTests.length; i++) {
+    // Has columns: test; Path Found
     let rowEl = addToRow([newPasTests[i], newPaths[i]])
+    if (rowEl.children[1].textContent.split('.').length > 2) {
+      rowEl = addLineBreaks(rowEl, 1)
+    }
     newPassedTable.appendChild(rowEl)
   }
 
@@ -316,7 +321,11 @@ function populateTestResultTable(tableBody, json) {
   resultValues.sort(function(a,b){return a[1]<b[1];});
 
   for (val of resultValues) {
+    // Has columns: test; Status; Path Found;
     let rowEl = addToRow(val)
+    if (rowEl.children[2].textContent.split('.').length > 2) {
+      rowEl = addLineBreaks(rowEl, 2)
+    }
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
