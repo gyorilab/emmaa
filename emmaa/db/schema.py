@@ -37,12 +37,12 @@ class EmmaaTable(object):
 
 
 class User(Base, EmmaaTable):
-    """A table containing users of EMMAA: User(_id_, email)
+    """A table containing users of EMMAA: ``User(_id_, email)``
 
-    Columns
-    -------
-    id : int  (auto, primary key)
-        A database-generated integer.
+    Parameters
+    ----------
+    id : int
+        (auto, primary key) A database-generated integer.
     email : str
         The email of the user (must be unique)
     """
@@ -52,17 +52,17 @@ class User(Base, EmmaaTable):
 
 
 class Query(Base, EmmaaTable):
-    """A table of queries to run on each model: Query(_hash_, model_id, json)
+    """Queries run on each model: ``Query(_hash_, model_id, json)``
 
     The hash column is a hash generated from the json and model_id columns
     that can be derived from the
 
-    Columns
-    -------
-    hash : big-int  (primary key)
-        A 32 bit integer generated from the json and model_id.
-    model_id : str  (10 character)
-        The short id/acronym for the given model.
+    Parameters
+    ----------
+    hash : big-int
+        (primary key) A 32 bit integer generated from the json and model_id.
+    model_id : str
+        (10 character) The short id/acronym for the given model.
     json : json
         A json dict containing the relevant parameters defining the query.
     """
@@ -78,18 +78,19 @@ class Query(Base, EmmaaTable):
 class UserQuery(Base, EmmaaTable):
     """A table linking users to queries:
 
-    UserQuery(_id_, user_id, query_hash, date, subscription)
+    ``UserQuery(_id_, user_id, query_hash, date, subscription)``
 
-    Columns
-    -------
-    id : int  (auto, primary key)
-        A database-assigned integer id.
-    user_id : int  (foreign key -> User.id)
-        The id of the user related to this query.
-    query_hash : big-int  (foreign key -> Query.hash)
-        The hash of the query json, which can be directly generated.
-    date : datetime   (auto)
-        The date that this entry was added to the database.
+    Parameters
+    ----------
+    id : int
+        (auto, primary key) A database-assigned integer id.
+    user_id : int
+        (foreign key -> User.id) The id of the user related to this query.
+    query_hash : big-int
+        (foreign key -> Query.hash) The hash of the query json, which can be
+        directly generated.
+    date : datetime
+        (auto) The date that this entry was added to the database.
     subscription : bool
         Record whether the user has subscribed to see results of this model.
     """
@@ -104,16 +105,17 @@ class UserQuery(Base, EmmaaTable):
 
 
 class Result(Base, EmmaaTable):
-    """Results of queries to models: Result(_id_, query_hash, date, string)
+    """Results of queries to models: ``Result(_id_, query_hash, date, string)``
 
-    Columns
-    -------
-    id : int  (auto, primary key)
-        A database-assigned integer id.
-    query_hash : big-int  (foreign key -> Query.hash)
-        The hash of the query json, which can be directly generated.
-    date : datetime  (auto)
-        The date the result was entered into the database.
+    Parameters
+    ----------
+    id : int
+        (auto, primary key) A database-assigned integer id.
+    query_hash : big-int
+        (foreign key -> Query.hash) The hash of the query json, which can be
+        directly generated.
+    date : datetime
+        (auto) The date the result was entered into the database.
     string : str
         The string describing the result.
     """
