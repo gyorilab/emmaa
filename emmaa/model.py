@@ -281,6 +281,25 @@ def load_config_from_s3(model_name):
     return config
 
 
+def save_config_to_s3(model_name, config):
+    """Upload config settings for a model to S3.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be saved to S3.
+    config : dict
+        A JSON dict of configurations for the model.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    config_key = f'{base_key}/config.json'
+    logger.info(f'Saving model config to {config_key}')
+    client.put_object(Body=str.encode(json.dumps(config, indent=1),
+                                      encoding='utf8'),
+                      Bucket='emmaa', Key=config_key)
+
+
 def load_model_from_s3(model_name):
     """Return the list of EMMAA Statements constituting the latest model.
 
