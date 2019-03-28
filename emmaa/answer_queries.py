@@ -31,11 +31,11 @@ def answer_registered_queries(model_name, model_manager=None):
     # This function should be added to run_model_tests_from_s3
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
-    query_dict_by_id = get_query_dict_by_id_from_db(model_name) # not implemented function
+    query_dict_by_id = get_query_dict_by_id_from_db(model_name)  # get query_id and query_json from db
     stmts_by_query_id = get_stmts_by_query_id(query_dict_by_id)
     responses = model_manager.answer_queries(stmts_by_query_id)
     results = {'model_name': model_name, 'responses': responses}
-    return results
+    return results  # put results back to db
 
 
 def show_queries_results():
@@ -76,6 +76,8 @@ def load_model_manager_from_s3(model_name):
 def get_agent_from_name(ag_name):
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
+    if not grounding:
+        return
     ag.db_refs = {grounding[0]: grounding[1]}
     return ag
 
@@ -104,3 +106,5 @@ def get_grounding_from_name(name):
     mesh_id, _ = get_mesh_id_name(name)
     if mesh_id:
         return ('MESH', mesh_id)
+
+    return None
