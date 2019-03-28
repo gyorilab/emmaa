@@ -4,7 +4,9 @@ from os import path
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from flask import abort, Flask, redirect, render_template, request, Response
+from flask import abort, Flask, request, Response
+
+from emmaa.model import load_config_from_s3
 from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
 
@@ -39,9 +41,8 @@ def _get_models():
     model_data = []
     for pref in resp['CommonPrefixes']:
         model_id = pref['Prefix'].split('/')[1]
-        meta_key = f'models/{model_id}/config.json'
         try:
-            resp = s3.get_object(Bucket='emmaa', Key=meta_key)
+            config_json = load_config_from_s3(model_id)
         except ClientError:
             logger.warning(f"Model {model_id} has no metadata. Skipping...")
             continue
