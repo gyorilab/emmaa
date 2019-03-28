@@ -13,7 +13,7 @@ class GeneListPrior(object):
         self.search_terms = []
 
     def get_search_terms(self):
-        tas_stmts = tas.process_csv()
+        tas_stmts = tas.process_csv().statements
         already_added = set()
         terms = []
         for gene in self.gene_list:
