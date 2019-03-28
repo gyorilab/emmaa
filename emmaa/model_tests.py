@@ -51,11 +51,10 @@ class ModelManager(object):
     model_checker : indra.explanation.model_checker.ModelChecker
         A ModelChecker to check PySB model
     """
-    def __init__(self, model, belief_cutoff=None):
+    def __init__(self, model):
         self.model = model
-        self.pysb_model = self.model.assemble_pysb(belief_cutoff=belief_cutoff)
-        self.entities = self.model.get_assembled_entities(
-            belief_cutoff=belief_cutoff)
+        self.pysb_model = self.model.assemble_pysb()
+        self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.test_results = []
         self.model_checker = ModelChecker(self.pysb_model)
@@ -312,9 +311,8 @@ def save_model_manager_to_s3(model_name, model_manager):
                       Key=f'results/{model_name}/latest_model_manager.pkl')
 
 
-def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
-                            upload_mm=True, upload_results=True,
-                            upload_stats=True):
+def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
+                            upload_results=True, upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -341,7 +339,7 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     """
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
-    mm = ModelManager(model, belief_cutoff=belief_cutoff)
+    mm = ModelManager(model)
     if upload_mm:
         save_model_manager_to_s3(model_name, mm)
     tm = TestManager([mm], tests)
