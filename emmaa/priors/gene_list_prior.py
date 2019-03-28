@@ -3,6 +3,8 @@ from indra.statements import Agent
 from indra.databases import hgnc_client
 from . import SearchTerm, get_drugs_for_gene
 from . prior_stmts import get_stmts_for_gene_list
+import datetime
+from emmaa.statements import EmmaaStatement
 from emmaa.model import EmmaaModel, save_config_to_s3
 
 
@@ -51,7 +53,10 @@ class GeneListPrior(object):
     def make_gene_statements(self):
         drug_names = [st.name for st in self.search_terms if
                       st.type == 'drug']
-        self.stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
+        indra_stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
+        estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])
+                  for stmt in indra_stmts]
+        self.stmts = estmts
 
     def make_config(self):
         if not self.search_terms:
@@ -71,6 +76,7 @@ class GeneListPrior(object):
     def make_model(self):
         config = self.make_config()
         em = EmmaaModel(self.name, config)
+        em.stmts = self.stmts
         ndex_uuid = em.upload_to_ndex()
         config['ndex'] = {'network': ndex_uuid}
         save_config_to_s3(self.name, config)
