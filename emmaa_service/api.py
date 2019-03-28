@@ -5,6 +5,7 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 from flask import abort, Flask, redirect, render_template, request, Response
+from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
 
 from emmaa.answer_queries import answer_immediate_query
@@ -65,7 +66,9 @@ def get_model_dashboard(model):
 @app.route('/query')
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
-    return QUERIES.render()
+    model_data = _get_models()
+    stmt_types = get_all_descendants(Statement)
+    return QUERIES.render(model_data=model_data, stmt_types=stmt_types)
 
 
 @app.route('/query/submit', methods=['POST'])
