@@ -217,7 +217,7 @@ class EmmaaModel(object):
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
         config = load_config_from_s3(model_name)
-        stmts = load_model_from_s3(model_name)
+        stmts = load_stmts_from_s3(model_name)
         em = klass(model_name, config)
         em.stmts = stmts
         return em
@@ -302,7 +302,7 @@ def save_config_to_s3(model_name, config):
                       Bucket='emmaa', Key=config_key)
 
 
-def load_model_from_s3(model_name):
+def load_stmts_from_s3(model_name):
     """Return the list of EMMAA Statements constituting the latest model.
 
     Parameters
