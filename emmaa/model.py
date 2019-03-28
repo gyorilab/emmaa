@@ -137,13 +137,7 @@ class EmmaaModel(object):
                      ' that are not exact copies') % len(self.stmts))
 
     def run_assembly(self):
-        """Run INDRA's assembly pipeline on the Statements.
-
-        Returns
-        -------
-        stmts : list[indra.statements.Statement]
-            The list of assembled INDRA Statements.
-        """
+        """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
@@ -178,7 +172,7 @@ class EmmaaModel(object):
         self.assembled_stmts = stmts
 
     def update_to_ndex(self):
-        """Upload the assembled model as CX to NDEx"""
+        """Update assembled model as CX on NDEx, updates existing network."""
         if not self.assembled_stmts:
             self.run_assembly()
         cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
@@ -187,12 +181,13 @@ class EmmaaModel(object):
         ndex_client.update_network(cx_str, self.ndex_network)
 
     def upload_to_ndex(self):
-        """Upload the assembled model as CX to NDEx"""
+        """Upload the assembled model as CX to NDEx, creates new network."""
         if not self.assembled_stmts:
             self.run_assembly()
         cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
         cxa.make_model()
         model_uuid = cxa.upload_model()
+        self.ndex_network = model_uuid
         return model_uuid
 
     def save_to_s3(self):
