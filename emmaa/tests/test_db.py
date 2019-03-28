@@ -21,7 +21,7 @@ def test_put_queries():
     test_query = {'objectSelection': 'ERK',
                   'subjectSelection': 'BRAF',
                   'typeSelection': 'activation'}
-    db.put_queries(test_query, ['aml', 'luad'])
+    db.put_queries('joshua', test_query, ['aml', 'luad'])
     with db.get_session() as sess:
         queries = sess.query(Query).all()
     assert len(queries) == 2, len(queries)
@@ -36,7 +36,7 @@ def test_get_queries():
                      'subjectSelection': 'ERK',
                      'typeSelection': 'phosphorylation'}]
     for query in test_queries:
-        db.put_queries(query, ['aml', 'luad'])
+        db.put_queries('joshua', query, ['aml', 'luad'])
     queries = db.get_queries('aml')
     assert len(queries) == 2, len(queries)
     assert all(isinstance(query, dict) for query in queries)
@@ -51,7 +51,7 @@ def test_put_results():
     test_query = {'objectSelection': 'ERK',
                   'subjectSelection': 'BRAF',
                   'typeSelection': 'activation'}
-    db.put_queries(test_query, ['aml', 'luad'])
+    db.put_queries('joshua', test_query, ['aml', 'luad'])
     queries = db.get_queries('aml')
     results = [(query, _get_random_result())
                for query in queries]
@@ -73,7 +73,7 @@ def test_get_results():
 
     # Fill up the database.
     for query in test_queries:
-        db.put_queries(query, models)
+        db.put_queries('joshua', query, models)
     for model in models:
         db.put_results(model, [(query, _get_random_result())
                                for query in test_queries])
