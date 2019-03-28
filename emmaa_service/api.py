@@ -46,8 +46,10 @@ def _get_models():
         except ClientError:
             logger.warning(f"Model {model_id} has no metadata. Skipping...")
             continue
-        meta_json = json.loads(resp['Body'].read())
-        model_data.append((model_id, meta_json))
+        if 'human_readable_name' not in config_json.keys():
+            logger.warning(f"Model {model_id} has readable name. Skipping...")
+            continue
+        model_data.append((model_id, config_json))
     return model_data
 
 
