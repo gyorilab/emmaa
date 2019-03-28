@@ -44,6 +44,7 @@ class EmmaaModel(object):
     def __init__(self, name, config):
         self.name = name
         self.stmts = []
+        self.assembly_config = {}
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
@@ -77,6 +78,8 @@ class EmmaaModel(object):
             self.ndex_network = config['ndex']['network']
         else:
             self.ndex_network = None
+        if 'assembly' in config:
+            self.assembly_config = config['assembly']
 
     def search_literature(self, date_limit=None):
         """Search for the model's search terms in the literature.
@@ -133,8 +136,7 @@ class EmmaaModel(object):
         logger.info(('Continuing with %d raw EmmaaStatements'
                      ' that are not exact copies') % len(self.stmts))
 
-    def run_assembly(self, belief_cutoff=None, filter_ungrounded=False,
-                     **kwargs):
+    def run_assembly(self):
         """Run INDRA's assembly pipeline on the Statements.
 
         Returns
@@ -146,22 +148,23 @@ class EmmaaModel(object):
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
-        if filter_ungrounded:
+        if self.assembly_config.get('filter_ungrounded'):
             stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
         stmts = ac.filter_top_level(stmts)
 
-        if kwargs.get('filter_direct', False):
+        if self.assembly_config.get('filter_direct'):
             stmts = ac.filter_direct(stmts)
             stmts = ac.filter_enzyme_kinase(stmts)
             stmts = ac.filter_mod_nokinase(stmts)
             stmts = ac.filter_transcription_factor(stmts)
 
-        if kwargs.get('mechanism_linking', False):
+        if self.assembly_config.get('mechanism_linking'):
             ml = MechLinker(stmts)
             ml.gather_explicit_activities()
             ml.reduce_activities()
@@ -227,19 +230,18 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def get_assembled_entities(self, belief_cutoff=None):
+    def get_assembled_entities(self):
         """Return a list of Agent objects that the assembled model contains."""
         if not self.assembled_stmts:
-            self.run_assembly(
-                belief_cutoff=belief_cutoff, filter_ungrounded=True)
+            self.run_assembly()
         agents = []
         for stmt in self.assembled_stmts:
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self, belief_cutoff=None):
+    def assemble_pysb(self):
         """Assemble the model into PySB and return the assembled model."""
-        self.run_assembly(belief_cutoff=belief_cutoff, filter_ungrounded=True)
+        self.run_assembly()
         pa = PysbAssembler()
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
