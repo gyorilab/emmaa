@@ -121,7 +121,7 @@ class EmmaaDatabaseManager(object):
             logger.warning(f"A user with email {email} already exists.")
         return new_user.id
 
-    def put_queries(self, query_json, model_ids):
+    def put_queries(self, user_id, query_json, model_ids):
         if not isinstance(model_ids, list):
             raise TypeError("Invalid type: %s" % type(model_ids))
         # TODO: Handle case where queries already exist
