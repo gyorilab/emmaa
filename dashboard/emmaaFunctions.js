@@ -43,8 +43,8 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
-  if (model == 'brca') {
-    alert('BRCA Model Currently Unavailable')
+  if (model == 'brca' || model == 'rasmachine') {
+    alert('Model currently unavailable');
     return;
   }
 
