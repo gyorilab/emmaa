@@ -24,6 +24,6 @@ setup(name='emmaa',
         ],
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'pyyaml', 'jsonpickle', 'kappy',
-                        'pygraphviz', 'fvnhash'],
+                        'pygraphviz', 'fnvhash'],
       extras_require={'test': ['nose', 'coverage', 'python-coveralls']}
       )
