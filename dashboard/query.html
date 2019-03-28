@@ -82,7 +82,7 @@
           <select class="custom-select" id="typeSelection">
             <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
             {% for stmt_type in stmt_types %}
-            <option value="complex">{{ stmt_type }}</option>
+            <option value="{{ stmt_type }}">{{ stmt_type }}</option>
             {% endfor %}
           </select>
         </div>
