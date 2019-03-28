@@ -47,7 +47,7 @@
   <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
     <h5 class="my-0 mr-md-auto font-weight-normal">
       <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-      <a href="./">Queries</a>
+      <a href="./query">Queries</a>
     </h5>
     <nav class="my-2 my-md-0 mr-md-3">
       <a class="p-2 text-dark" href="#about">About</a>
@@ -116,10 +116,15 @@
           </div>
         </div>
 
-        <!-- submit button -->
-        <div class="container" id="button-container" style="margin: auto;">
-          <button class="btn btn-outline-primary" id="query-submit"
-                  onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
+        <div class="container">
+          <!-- submit button -->
+          <div class="container" id="button-container" style="margin: auto;">
+            <button class="btn btn-outline-primary" id="query-submit"
+                    onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
+          </div>
+          <div class="container">
+            <span id="query-status"></span>
+          </div>
         </div>
 
       </div>
