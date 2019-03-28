@@ -1,15 +1,13 @@
-import yaml
 import json
 import time
-import boto3
 import pickle
 import logging
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
-from indra.statements import stmts_to_json
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
+from indra.mechlinker import MechLinker
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -36,7 +34,8 @@ class EmmaaModel(object):
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
     search_terms : list[emmaa.priors.SearchTerm]
-        A list of SearchTerm objects containing the search terms used in the model
+        A list of SearchTerm objects containing the search terms used in the
+        model.
     ndex_network : str
         The identifier of the NDEx network corresponding to the model.
     assembled_stmts : list[indra.statements.Statement]
@@ -45,6 +44,7 @@ class EmmaaModel(object):
     def __init__(self, name, config):
         self.name = name
         self.stmts = []
+        self.assembly_config = {}
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
@@ -74,7 +74,12 @@ class EmmaaModel(object):
     def _load_config(self, config):
         self.search_terms = [SearchTerm.from_json(s) for s in
                              config['search_terms']]
-        self.ndex_network = config['ndex']['network']
+        if 'ndex' in config:
+            self.ndex_network = config['ndex']['network']
+        else:
+            self.ndex_network = None
+        if 'assembly' in config:
+            self.assembly_config = config['assembly']
 
     def search_literature(self, date_limit=None):
         """Search for the model's search terms in the literature.
@@ -123,7 +128,15 @@ class EmmaaModel(object):
             if estmt.stmt.get_hash(shallow=False) not in source_hashes:
                 self.stmts.append(estmt)
 
-    def run_assembly(self, belief_cutoff=None, filter_ungrounded=False):
+    def eliminate_copies(self):
+        """Filter out exact copies of the same Statement."""
+        logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
+        self.stmts = {estmt.stmt.get_hash(shallow=False): estmt
+                      for estmt in self.stmts}.values()
+        logger.info(('Continuing with %d raw EmmaaStatements'
+                     ' that are not exact copies') % len(self.stmts))
+
+    def run_assembly(self):
         """Run INDRA's assembly pipeline on the Statements.
 
         Returns
@@ -131,17 +144,37 @@ class EmmaaModel(object):
         stmts : list[indra.statements.Statement]
             The list of assembled INDRA Statements.
         """
+        self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
-        if filter_ungrounded:
+        if self.assembly_config.get('filter_ungrounded'):
             stmts = ac.filter_grounded_only(stmts)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
         stmts = ac.filter_top_level(stmts)
+
+        if self.assembly_config.get('filter_direct'):
+            stmts = ac.filter_direct(stmts)
+            stmts = ac.filter_enzyme_kinase(stmts)
+            stmts = ac.filter_mod_nokinase(stmts)
+            stmts = ac.filter_transcription_factor(stmts)
+
+        if self.assembly_config.get('mechanism_linking'):
+            ml = MechLinker(stmts)
+            ml.gather_explicit_activities()
+            ml.reduce_activities()
+            ml.gather_modifications()
+            ml.reduce_modifications()
+            ml.gather_explicit_activities()
+            ml.replace_activations()
+            ml.require_active_forms()
+            stmts = ml.statements
+
         self.assembled_stmts = stmts
 
     def upload_to_ndex(self):
@@ -176,24 +209,15 @@ class EmmaaModel(object):
             Name of model to load. This function expects the latest model
             to be found on S3 in the emmaa bucket with key
             'models/{model_name}/model_{date_string}', and the model config
-            file at 'models/{model_name}/config.yaml'.
+            file at 'models/{model_name}/config.json'.
 
         Returns
         -------
         emmaa.model.EmmaaModel
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
-        base_key = f'models/{model_name}'
-        config_key = f'{base_key}/config.yaml'
-        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
-                                               extension='.pkl')
-        client = get_s3_client()
-        logger.info(f'Loading model config from {config_key}')
-        obj = client.get_object(Bucket='emmaa', Key=config_key)
-        config = yaml.load(obj['Body'].read().decode('utf8'))
-        logger.info(f'Loading model state from {latest_model_key}')
-        obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
-        stmts = pickle.loads(obj['Body'].read())
+        config = load_config_from_s3(model_name)
+        stmts = load_stmts_from_s3(model_name)
         em = klass(model_name, config)
         em.stmts = stmts
         return em
@@ -206,19 +230,18 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def get_assembled_entities(self, belief_cutoff=None):
+    def get_assembled_entities(self):
         """Return a list of Agent objects that the assembled model contains."""
         if not self.assembled_stmts:
-            self.run_assembly(
-                belief_cutoff=belief_cutoff, filter_ungrounded=True)
+            self.run_assembly()
         agents = []
         for stmt in self.assembled_stmts:
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self, belief_cutoff=None):
+    def assemble_pysb(self):
         """Assemble the model into PySB and return the assembled model."""
-        self.run_assembly(belief_cutoff=belief_cutoff, filter_ungrounded=True)
+        self.run_assembly()
         pa = PysbAssembler()
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
@@ -236,3 +259,67 @@ class EmmaaModel(object):
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
+
+
+def load_config_from_s3(model_name):
+    """Return a JSON dict of config settings for a model from S3.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be loaded.
+
+    Returns
+    -------
+    config : dict
+        A JSON dictionary of the model configuration loaded from S3.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    config_key = f'{base_key}/config.json'
+    logger.info(f'Loading model config from {config_key}')
+    obj = client.get_object(Bucket='emmaa', Key=config_key)
+    config = json.loads(obj['Body'].read().decode('utf8'))
+    return config
+
+
+def save_config_to_s3(model_name, config):
+    """Upload config settings for a model to S3.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be saved to S3.
+    config : dict
+        A JSON dict of configurations for the model.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    config_key = f'{base_key}/config.json'
+    logger.info(f'Saving model config to {config_key}')
+    client.put_object(Body=str.encode(json.dumps(config, indent=1),
+                                      encoding='utf8'),
+                      Bucket='emmaa', Key=config_key)
+
+
+def load_stmts_from_s3(model_name):
+    """Return the list of EMMAA Statements constituting the latest model.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be loaded.
+
+    Returns
+    -------
+    stmts : list of emmaa.statements.EmmaaStatement
+        The list of EMMAA Statements in the latest model version.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
+                                           extension='.pkl')
+    logger.info(f'Loading model state from {latest_model_key}')
+    obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
+    stmts = pickle.loads(obj['Body'].read())
+    return stmts

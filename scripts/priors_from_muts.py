@@ -1,4 +1,3 @@
-import yaml
 import json
 import pickle
 import datetime
@@ -33,19 +32,19 @@ def get_top_genes(ctype, k):
 
 
 def load_config(ctype):
-    fname = f'../models/{ctype}/config.yaml'
+    fname = f'../models/{ctype}/config.json'
     with open(fname, 'r') as fh:
-        config = yaml.load(fh)
+        config = json.load(fh)
     # TODO: make the search term entries here SearchTerm objects
     return config
 
 
 def save_config(ctype, terms):
-    fname = f'../models/{ctype}/config.yaml'
+    fname = f'../models/{ctype}/config.json'
     config = load_config(ctype)
     config['search_terms'] = [term.to_json() for term in terms]
     with open(fname, 'w') as fh:
-        yaml.dump(config, fh, default_flow_style=False)
+        json.dump(config, fh, indent=1)
 
 
 def save_prior(ctype, stmts):

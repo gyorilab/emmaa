@@ -3,7 +3,6 @@ sphinx_rtd_theme
 mock
 boto3
 indra
-pyyaml
 jsonpickle
 kappy
 fnvhash

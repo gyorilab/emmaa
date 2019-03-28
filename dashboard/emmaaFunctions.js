@@ -330,7 +330,7 @@ function populateTestResultTable(tableBody, json) {
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
   console.log('listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)')
   // 1. Last updated: get from listing models using already created function
-  // 2. NDEX link-out: read yaml as plain text and reg-exp match your way to the NDEX if
+  // 2. NDEX link-out: read from config
   // 3. Possibly listing nodes and edges info (Q: from where? A: From the json files that don't exist yet)
 
   // Get an array of the models for model
@@ -346,10 +346,10 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
   }
   modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
 
-  var yamlURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.json';
-  console.log('Loading model json from ' + yamlURL)
-  var yamlPromise = $.ajax({
-    url: yamlURL,
+  var configURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.json';
+  console.log('Loading model json from ' + configURL)
+  var configPromise = $.ajax({
+    url: configURL,
     dataType: "json",
     success: function(json) {
       console.log('success! Here is your model json ndex id: ')
@@ -358,11 +358,11 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
       let link = document.createElement('a');
       link.textContent = ndexID;
       link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
-      
+
       tableRow = addToRow(['Network on NDEX', '']);
       tableRow.children[1].innerHTML = null;
       tableRow.children[1].appendChild(link);
-      
+
       modelInfoTableBody.appendChild(tableRow);
       }
   });
