@@ -11,5 +11,6 @@ EMMAA modules reference
    model_tests
    priors
    readers
+   database
    aws_lambda
    util
