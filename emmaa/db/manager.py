@@ -17,6 +17,8 @@ class EmmaaDatabaseError(Exception):
 
 
 class EmmaaDatabaseSessionManager(object):
+    """A Database session context manager that is used by EmmaaDatabaseManager.
+    """
     def __init__(self, host, engine):
         logger.debug(f"Grabbing a session to {host}...")
         DBSession = sessionmaker(bind=engine)
@@ -43,6 +45,7 @@ class EmmaaDatabaseSessionManager(object):
 
 
 class EmmaaDatabaseManager(object):
+    """A class used to manage sessions with EMMAA's database."""
     table_order = ['user', 'query', 'user_query', 'result']
 
     def __init__(self, host, label=None):
