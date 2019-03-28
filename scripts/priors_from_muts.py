@@ -1,12 +1,12 @@
 import json
 import pickle
 import datetime
-from emmaa.model import EmmaaModel
 from emmaa.statements import EmmaaStatement
 from emmaa.priors.cancer_prior import TcgaCancerPrior
 from emmaa.priors.prior_stmts import get_stmts_for_gene_list
 from emmaa.priors.reactome_prior import find_drugs_for_genes
 from emmaa.priors.reactome_prior import make_prior_from_genes
+from emmaa.model import EmmaaModel, load_config_from_s3, save_config_to_s3
 
 '''
 def get_terms(ctype):
@@ -31,20 +31,10 @@ def get_top_genes(ctype, k):
     return top_genes
 
 
-def load_config(ctype):
-    fname = f'../models/{ctype}/config.json'
-    with open(fname, 'r') as fh:
-        config = json.load(fh)
-    # TODO: make the search term entries here SearchTerm objects
-    return config
-
-
 def save_config(ctype, terms):
-    fname = f'../models/{ctype}/config.json'
-    config = load_config(ctype)
+    config = load_config_from_s3(ctype)
     config['search_terms'] = [term.to_json() for term in terms]
-    with open(fname, 'w') as fh:
-        json.dump(config, fh, indent=1)
+    save_config_to_s3(ctype, config)
 
 
 def save_prior(ctype, stmts):
@@ -60,7 +50,7 @@ def upload_prior(ctype, config):
               for stmt in stmts]
     model = EmmaaModel(ctype, config)
     model.add_statements(estmts)
-    model.upload_to_ndex()
+    model.update_to_ndex()
 
 
 if __name__ == '__main__':
