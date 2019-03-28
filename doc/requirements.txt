@@ -6,3 +6,4 @@ indra
 jsonpickle
 kappy
 fnvhash
+sqlalchemy
