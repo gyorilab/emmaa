@@ -16,16 +16,16 @@ Gene List Prior (:py:mod:`emmaa.priors.gene_list_prior`)
 --------------------------------------------------------
 
 .. automodule:: emmaa.priors.gene_list_prior
-:members:
-        :show-inheritance:
+    :members:
+    :show-inheritance:
 
 
 Reactome Prior (:py:mod:`emmaa.priors.reactome_prior`)
 ------------------------------------------------------
 
 .. automodule:: emmaa.priors.reactome_prior
-:members:
-        :show-inheritance:
+    :members:
+    :show-inheritance:
 
 Querying Prior Statements (:py:mod:`emmaa.prior_stmts`)
 -------------------------------------------------------
