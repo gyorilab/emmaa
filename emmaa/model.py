@@ -1,13 +1,10 @@
-import yaml
 import json
 import time
-import boto3
 import pickle
 import logging
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client
-from indra.statements import stmts_to_json
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.mechlinker import MechLinker
@@ -76,7 +73,10 @@ class EmmaaModel(object):
     def _load_config(self, config):
         self.search_terms = [SearchTerm.from_json(s) for s in
                              config['search_terms']]
-        self.ndex_network = config['ndex']['network']
+        if 'ndex' in config:
+            self.ndex_network = config['ndex']['network']
+        else:
+            self.ndex_network = None
 
     def search_literature(self, date_limit=None):
         """Search for the model's search terms in the literature.
@@ -206,7 +206,7 @@ class EmmaaModel(object):
             Name of model to load. This function expects the latest model
             to be found on S3 in the emmaa bucket with key
             'models/{model_name}/model_{date_string}', and the model config
-            file at 'models/{model_name}/config.yaml'.
+            file at 'models/{model_name}/config.json'.
 
         Returns
         -------
@@ -214,13 +214,13 @@ class EmmaaModel(object):
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
         base_key = f'models/{model_name}'
-        config_key = f'{base_key}/config.yaml'
+        config_key = f'{base_key}/config.json'
         latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
                                                extension='.pkl')
         client = get_s3_client()
         logger.info(f'Loading model config from {config_key}')
         obj = client.get_object(Bucket='emmaa', Key=config_key)
-        config = yaml.load(obj['Body'].read().decode('utf8'))
+        config = json.load(obj['Body'].read().decode('utf8'))
         logger.info(f'Loading model state from {latest_model_key}')
         obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
         stmts = pickle.loads(obj['Body'].read())
