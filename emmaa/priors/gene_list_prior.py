@@ -3,16 +3,29 @@ from indra.statements import Agent
 from indra.databases import hgnc_client
 from . import SearchTerm, get_drugs_for_gene
 from . prior_stmts import get_stmts_for_gene_list
+from emmaa.model import EmmaaModel, save_config_to_s3
 
 
 class GeneListPrior(object):
-    def __init__(self, name, gene_list):
+    """Class to manage the construction of a model from a list of genes.
+
+    Parameters
+    ----------
+    gene_list : list[str]
+        A list of HGNC gene symbols
+    name : str
+        The name of the model (all lower case, no spaces or special characters)
+    human_readable_name : str
+        The human readable name (display name) of the model
+    """
+    def __init__(self, gene_list, name, human_readable_name):
         self.name = name
         self.gene_list = gene_list
+        self.human_readable_name = human_readable_name
         self.stmts = []
         self.search_terms = []
 
-    def get_search_terms(self):
+    def make_search_terms(self):
         tas_stmts = tas.process_csv().statements
         already_added = set()
         terms = []
@@ -35,10 +48,32 @@ class GeneListPrior(object):
         self.search_terms = terms
         return terms
 
-    def get_gene_statements(self):
+    def make_gene_statements(self):
         drug_names = [st.name for st in self.search_terms if
-                      st.type=='drug']
+                      st.type == 'drug']
         self.stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
+
+    def make_config(self):
+        if not self.search_terms:
+            self.make_search_terms()
+        if not self.stmts:
+            self.make_gene_statements()
+        config = dict()
+        config['name'] = self.name
+        config['human_readable_name'] = self.human_readable_name
+        config['search_terms'] = [st.to_json() for st in self.search_terms]
+        config['assembly'] = {
+            'belief_cutoff': 0.8,
+            'filter_ungrounded': True
+        }
+        return config
+
+    def make_model(self):
+        config = self.make_config()
+        em = EmmaaModel(self.name, config)
+        ndex_uuid = em.upload_to_ndex()
+        config['ndex'] = {'network': ndex_uuid}
+        save_config_to_s3(self.name, config)
 
 
 def agent_from_gene_name(gene_name):
