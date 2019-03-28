@@ -309,7 +309,7 @@ def save_model_manager_to_s3(model_name, model_manager):
     client = get_s3_client()
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
-                      Key=f'models/{model_name}/latest_model_manager.pkl')
+                      Key=f'results/{model_name}/latest_model_manager.pkl')
 
 
 def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
