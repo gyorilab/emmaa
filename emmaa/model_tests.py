@@ -18,6 +18,18 @@ from emmaa.analyze_tests_results import TestRound, StatsGenerator
 logger = logging.getLogger(__name__)
 
 
+RESULT_CODES = {
+    'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
+    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
+    'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
+    'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
+    'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
+    'PATHS_FOUND': 'Path found which satisfies the test statement',
+    'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
+    'MAX_PATHS_ZERO': 'Path found but not reconstructed',
+}
+
+
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
 
@@ -65,6 +77,9 @@ class ModelManager(object):
         """Run one test. Recommended for testing only.
         Use run_tests() to run all tests.
         """
+        self.model_checker.statements = []
+        self.model_checker.add_statements([test.stmt])
+        self.get_im()
         return test.check(self.model_checker, self.pysb_model)
 
     def run_tests(self):
@@ -76,31 +91,60 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(result)
 
-    def make_english_result(self, result):
+    def make_english_path(self, result):
         """Create an English description of a path."""
-        stmts = stmts_from_path(result.paths[0], self.pysb_model,
-                                self.model.assembled_stmts)
         sentences = []
-        for stmt in stmts:
-            ea = EnglishAssembler([stmt])
-            sentences.append(ea.make_model())
+        if result.paths:
+            stmts = stmts_from_path(result.paths[0], self.pysb_model,
+                                    self.model.assembled_stmts)
+            for stmt in stmts:
+                ea = EnglishAssembler([stmt])
+                sentences.append(ea.make_model())
         return sentences
 
-    def has_path(self, result):
-        """Check if a path was found."""
-        return result.path_found
+    def make_english_result_code(self, result):
+        """Get an English explanation of a result code."""
+        result_code = result.result_code
+        return RESULT_CODES[result_code]
 
-    def get_english_result(self, result):
-        """Get English description of a path if it was found.
-        Return an empty string otherwise.
-        """
-        if self.has_path(result):
-            if result.result_code == 'MAX_PATH_LENGTH_EXCEEDED':
-                return [f'Maximum path length ({result.max_path_length}) '
-                         'exceeded.']
+    def answer_query(self, stmt):
+        """Answer user query with a path if it is found."""
+        test = StatementCheckingTest(stmt)
+        if ScopeTestConnector.applicable(self, test):
+            result = self.run_one_test(test)
+            return self.process_response(result)
+        else:
+            return 'Query is not applicable for this model.'
+
+    def answer_queries(self, stmts):
+        """Answer all queries registered for this model."""
+        responses = {}
+        applicable_queries = []
+        for stmt in stmts:
+            test = StatementCheckingTest(stmt)
+            if ScopeTestConnector.applicable(self, test):
+                applicable_queries.append(test)
             else:
-                return self.make_english_result(result)
-        return []
+                responses[stmt.get_hash()] = (
+                    'Query is not applicable for this model.')
+        self.model_checker.add_statements([test.stmt for test in
+                                           applicable_queries])
+        self.get_im()
+        results = self.model_checker.check_model()
+        for (stmt, result) in results:
+            if result.path_found:
+                responses[stmt.get_hash()] = self.make_english_result(result)
+            else:
+                responses[stmt.get_hash()] = result.result_code
+        return responses
+
+    def process_response(self, result):
+        """Get English description of a path if it was found.
+        Return a result code otherwise.
+        """
+        if result.paths:
+            return ' '.join(self.make_english_path(result))
+        return self.make_english_result_code(result)
 
     def assembled_stmts_to_json(self):
         """Put assembled statements to JSON format."""
@@ -118,11 +162,13 @@ class ModelManager(object):
             'statements': self.assembled_stmts_to_json()})
         for ix, test in enumerate(self.applicable_tests):
             results_json.append({
-                   'test_type': test.__class__.__name__,
-                   'test_json': test.to_json(),
-                   'result_json': pickler.flatten(self.test_results[ix]),
-                   'english_result': self.get_english_result(
-                                     self.test_results[ix])})
+                    'test_type': test.__class__.__name__,
+                    'test_json': test.to_json(),
+                    'result_json': pickler.flatten(self.test_results[ix]),
+                    'english_path': self.make_english_path(
+                                                self.test_results[ix]),
+                    'english_code': self.make_english_result_code(
+                        self.test_results[ix])})
         return results_json
 
 
@@ -220,6 +266,9 @@ class StatementCheckingTest(EmmaaTest):
 
     def check(self, model_checker, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
+        # model_checker.statements = []
+        # model_checker.add_statements([self.stmt])
+        # model_checker.get_im(force_update=True)
         res = model_checker.check_statement(self.stmt)
         return res
 
@@ -256,8 +305,16 @@ def load_tests_from_s3(test_name):
     return tests
 
 
+def save_model_manager_to_s3(model_name, model_manager):
+    client = get_s3_client()
+    logger.info(f'Saving a model manager for {model_name} model to S3.')
+    client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
+                      Key=f'models/{model_name}/latest_model_manager.pkl')
+
+
 def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
-                            upload_results=True, upload_stats=True):
+                            upload_mm=True, upload_results=True,
+                            upload_stats=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -285,6 +342,8 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     model = EmmaaModel.load_from_s3(model_name)
     tests = load_tests_from_s3(test_name)
     mm = ModelManager(model, belief_cutoff=belief_cutoff)
+    if upload_mm:
+        save_model_manager_to_s3(model_name, mm)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
@@ -293,7 +352,7 @@ def run_model_tests_from_s3(model_name, test_name, belief_cutoff=0.8,
     # Optionally upload test results to S3
     if upload_results:
         client = get_s3_client()
-        date_str = make_date_str(datetime.datetime.now())
+        date_str = make_date_str()
         result_key = f'results/{model_name}/results_{date_str}.json'
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,

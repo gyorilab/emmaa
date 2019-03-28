@@ -7,9 +7,12 @@
 
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  
+  <!-- C3 css -->
+  <link rel="stylesheet" href="https://s3.amazonaws.com/emmaa-test/c3.css">
 
   <!-- Optional theme -->
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
 
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
@@ -17,11 +20,21 @@
   <!-- AWS SDK -->
   <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
 
+  <!-- D3 -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <!-- C3 -->
+  <script src="https://s3.amazonaws.com/emmaa-test/c3.min.js"></script>
+
   <!-- Script Files -->
-  <script src="https://indralab.github.io/aws/js/awsServices.js"></script>
-  <script src="./emmaaFunctions.js"></script>
+  <!-- <script src="https://indralab.github.io/aws/js/awsServices.js"></script> -->
+  <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
+  <!--<script src="http://127.0.0.2:5000/emmaaFunctions.js"></script>-->
+  <script src="https://s3.amazonaws.com/emmaa-test/emmaaFunctions_dev.js"></script>
 
   <script>
+    var model = '{{ model }}'
+
     // Check if user signed in immediately after page load
     $(document).ready(function(){
       clearTables(document.getElementsByClassName('table-body'))
@@ -29,35 +42,45 @@
       var return_url = window.location.href;
       let dict_split = getDictFromUrl(return_url);
 
-      // Get access and ID tokens
-      // accessTokenString = _readCookie(EMMAA_ACCESSTOKEN_COOKIE_NAME)
-      // idTokenString = _readCookie(EMMAA_IDTOKEN_COOKIE_NAME)
+      // Check sign-in
+      checkSignIn()
+      var ddSelectTag = document.getElementById('modelSelectDD');
+      setModel(ddSelectTag, model);
 
-      // if (!accessTokenString | !idTokenString) {
-      //   console.log('Could not read either idToken or accessToken!')
-      //   notifyUser(document.getElementId('status-notify'), 'Could not read either idToken or accessToken!')
-      //   // Send user to be logged in again
-      //   window.location.replace()
-      // }
+      var infoTableBody = document.getElementById('modelInfoTableBody');
+      var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
+      var testResultsTableBody = document.getElementById('modelTestResultBody');
 
-      // // Verify user
-      // verifyUser(accessTokenString, idTokenString);
+      // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
+      selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
+      });
 
-      // If linked from model name: load that model
-      if (dict_split && dict_split[1] == '?') {
-        let model = dict_split[0]['model'];
-        // Set the model to the one that is selected
-        var ddSelectTag = document.getElementById('modelSelectDD');
-        setModel(ddSelectTag, model);
-        var infoTableBody = document.getElementById('modelInfoTableBody');
-        var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
-        var testResultsTableBody = document.getElementById('modelTestResultBody');
+    function modelRedirect(ddSelect) {
 
-        // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
-        selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
+      // Get selected option
+      let newModel = '';
+      for (child of ddSelect.children) {
+        if (child.selected) {
+          newModel = child.value;
+          break;
+        }
       }
-    });
+
+      if (newModel == 'brca') {
+        alert('BRCA Model Currently Unavailable')
+        return;
+      }
+
+      // redirect url:
+      let redirect = window.location.href.replace(model, newModel)
+      console.log(redirect)
+      window.location.replace(redirect)
+    }
   </script>
+  <style>
+    .fa-check {color: #00FF00}
+    .fa-times {color: #FF0000}
+  </style>
 </head>
 
 <body>
@@ -65,10 +88,15 @@
   <script type="text/javascript">
     setEnv('emmaa') // Set environment for AWS functionalities
   </script>
-  <div class="page-header">
-    <h1 class="display-3">EMMAA models</h1>
-    <p id="status-notify">Not logged in</p>
-    <hr>
+  <!-- Page Header -->
+  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+    <h5 class="my-0 mr-md-auto font-weight-normal">EMMAA Models</h5>
+    <nav class="my-2 my-md-0 mr-md-3">
+      <a href="../home">Home</a>
+      <a href="../query">Queries</a>
+      <a class="p-2 text-dark" href="#about">About</a>
+    </nav>
+    <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button>
   </div>
 
   <!-- Dropdown -->
@@ -76,78 +104,179 @@
     <div class="input-group">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
-        <option value="aml">Acute myeloid leukemia (AML)</option>
-        <option value="brca">Breast cancer (BRCA)</option>
-        <option value="luad">Lung adenocarcinoma (LUAD)</option>
-        <option value="paad">Pancreas adenocarcinoma (PAAD)</option>
-        <option value="prad">Prostate adenocarcinoma (PRAD)</option>
-        <option value="skcm">Skin cutaneous melanoma (SKCM)</option>
-        <option value="test">Test Model (test)</option>
+        {% for model_id, model_meta in model_data %}
+        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+        {% endfor %}
       </select>
       <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
       <div class="input-group-append">
-        <button class="btn btn-outline-secondary" onClick="selectModel(
-        document.getElementById('modelInfoTableBody'), 
-        document.getElementById('modelTestsTableBody'), 
-        document.getElementById('modelTestResultBody'), 
-        this.parentNode.previousElementSibling)" type="button">Load Model</button>
+        <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
       </div>
     </div>
   </div>
 
-  <!-- This table displays model data -->
-  <div class="container" id="modelInfoTable">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Info</h4>
+  <!-- Tabs -->
+  <nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
+    <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+  </div>    
+  </nav>
+  <div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+      <!-- Model stuff goes here -->
+
+      <!-- This table displays model data -->
+      <div class="container" id="modelInfoTable">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Model Info</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Item</th>
+                <th>Details</th>
+              </thead>
+              <tbody class="table-body" id="modelInfoTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="modelTestResultBody"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="agentDistr"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Statement</th>
+                <th>Evidence Count</th>
+              </thead>
+              <tbody class="table-body" id="stmtEvidence"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="stmtsOverTime"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Added Statements</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Statement</th>
+              </thead>
+              <tbody class="table-body" id="addedStmts"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <table class="table">
-          <thead>
-            <th>Item</th>
-            <th>Details</th>
-          </thead>
-          <tbody class="table-body" id="modelInfoTableBody"></tbody>
-        </table>
+      
+    </div>
+    <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+      <!-- Test stuff goes here -->
+
+      <div class="container" id="modelTestResult">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="passedRatio"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
+          </div>
+          <div class="card-body">
+            <div class="container" id="passedApplied"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Applied Tests</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test</th>
+                <th>Status</th>
+              </thead>
+              <tbody class="table-body" id="newAppliedTests"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test</th>
+                <th>Path Found</th>
+              </thead>
+              <tbody class="table-body" id="newPassedTests"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">All Test Results</h4>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <th>Test</th>
+                <th>Status</th>
+                <th>Path Found or Result Code</th>
+              </thead>
+              <tbody class="table-body" id="allTestResults"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 
-  <!-- This table lists the tests for the selected model -->
-  <div class="container" id="modelTestsTable">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal" id="model-test-list">Latest Tests</h4>
-      </div>
-      <div class="card-body">
-        <table class="table">
-          <thead>
-            <th>Test ID</th>
-            <th>Date</th>
-          </thead>
-          <tbody class="table-body" id="modelTestsTableBody"></tbody>
-        </table>
-      </div>
+  <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
+    <div class="container">
+      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+      <small>
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+        <p><a href="https://indralab.github.io">INDRALAB</a></p>
+        <p><a href="http://hits.harvard.edu">Harvard Program in Therapeutic Science (HiTS)</a></p>
+        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+      </small>
     </div>
-  </div>
-
-  <!-- This table shows the contents of a json containning test results for a particular test -->
-  <div class="container" id="modelTestResult">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Test Result Details</h4>
-      </div>
-      <div class="card-body">
-        <table class="table">
-          <thead>
-            <th>Key</th>
-            <th>Value</th>
-          </thead>
-          <tbody class="table-body" id="modelTestResultBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  </footer>
 
 </body>
 </html>

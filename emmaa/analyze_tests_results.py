@@ -156,32 +156,47 @@ class TestRound(object):
             tests_by_hash[test_hash] = [
                 self.get_english_statement(test),
                 get_pass_fail(result)]
-            if result.path_found:
+            if result.paths:
                 tests_by_hash[test_hash].append(
                     self.get_path_by_hash(test_hash))
             else:
-                tests_by_hash[test_hash].append(result.result_code)
+                tests_by_hash[test_hash].append(self.get_english_code_by_hash(
+                    test_hash))
 
         return tests_by_hash
 
     def get_path_descriptions(self):
-        """Return a dictionary mapping a test hash and an English desciption of
-        a path found."""
-        paths = {}
+        """Return a dictionary mapping a test hash and an English description
+        of a path found.
+        """
+        english_paths = {}
         for ix, result in enumerate(self.test_results):
-            if result.path_found:
-                paths[str(self.tests[ix].get_hash())] = (
-                    self.json_results[ix+1]['english_result'])
-        return paths
+            if result.paths:
+                english_paths[str(self.tests[ix].get_hash())] = (
+                    ' '.join(self.json_results[ix+1]['english_path']))
+        return english_paths
+
+    def get_english_codes(self):
+        """Return a dictionary mapping a test hash and an English description
+        of a result code.
+        """
+        english_codes = {}
+        for ix, result in enumerate(self.test_results):
+            english_codes[str(self.tests[ix].get_hash())] = (
+                self.json_results[ix+1]['english_code'])
+        return english_codes
 
     def get_english_test_by_hash(self, test_hash):
         return self.get_applied_tests_results()[test_hash][0]
-    
+
     def get_pass_fail_by_hash(self, test_hash):
         return self.get_applied_tests_results()[test_hash][1]
 
     def get_path_by_hash(self, test_hash):
         return self.get_path_descriptions()[test_hash]
+
+    def get_english_code_by_hash(self, test_hash):
+        return self.get_english_codes()[test_hash]
 
     # Methods to find delta
     def find_numeric_delta(self, other_round, one_round_numeric_func):
