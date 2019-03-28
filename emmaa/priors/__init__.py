@@ -56,15 +56,15 @@ def get_drugs_for_gene(stmts, hgnc_id):
 
     Parameters
     ----------
-    stmts: list of :py:class:`indra.statements.Statement`
-        list of indra statements with a drug as subject
-    hgnc_id: str
+    stmts : list of :py:class:`indra.statements.Statement`
+        List of INDRA statements with a drug as subject
+    hgnc_id : str
         HGNC id for a gene
 
     Returns
     -------
-    drugs_for_gene: list of :py:class:`emmaa.priors.SearchTerm`
-        list of search terms for drugs targeting the input gene
+    drugs_for_gene : list of :py:class:`emmaa.priors.SearchTerm`
+        List of search terms for drugs targeting the input gene
     """
     drugs_for_gene = []
     for stmt in stmts:
