@@ -213,17 +213,8 @@ class EmmaaModel(object):
         emmaa.model.EmmaaModel
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
-        base_key = f'models/{model_name}'
-        config_key = f'{base_key}/config.json'
-        latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
-                                               extension='.pkl')
-        client = get_s3_client()
-        logger.info(f'Loading model config from {config_key}')
-        obj = client.get_object(Bucket='emmaa', Key=config_key)
-        config = json.load(obj['Body'].read().decode('utf8'))
-        logger.info(f'Loading model state from {latest_model_key}')
-        obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
-        stmts = pickle.loads(obj['Body'].read())
+        config = load_config_from_s3(model_name)
+        stmts = load_model_from_s3(model_name)
         em = klass(model_name, config)
         em.stmts = stmts
         return em
@@ -266,3 +257,48 @@ class EmmaaModel(object):
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
+
+
+def load_config_from_s3(model_name):
+    """Return a JSON dict of config settings for a model from S3.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be loaded.
+
+    Returns
+    -------
+    config : dict
+        A JSON dictionary of the model configuration loaded from S3.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    config_key = f'{base_key}/config.json'
+    logger.info(f'Loading model config from {config_key}')
+    obj = client.get_object(Bucket='emmaa', Key=config_key)
+    config = json.load(obj['Body'].read().decode('utf8'))
+    return config
+
+
+def load_model_from_s3(model_name):
+    """Return the list of EMMAA Statements constituting the latest model.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the model whose config should be loaded.
+
+    Returns
+    -------
+    stmts : list of emmaa.statements.EmmaaStatement
+        The list of EMMAA Statements in the latest model version.
+    """
+    client = get_s3_client()
+    base_key = f'models/{model_name}'
+    latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
+                                           extension='.pkl')
+    logger.info(f'Loading model state from {latest_model_key}')
+    obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
+    stmts = pickle.loads(obj['Body'].read())
+    return stmts
