@@ -1,5 +1,6 @@
 // EMMAA rest API
 var EMMAA_API = './query/submit'
+var QUERY_STATUS_ID = 'query-status'
 
 $(document).ready(function() {
   fillNamespaceOptions()
@@ -7,6 +8,9 @@ $(document).ready(function() {
 
 function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)')
+
+  queryNotify('Waiting for server response');
+
   // Get user info
   userInfo = {
     name: 'joshua',
@@ -81,16 +85,24 @@ function submitQuery(queryDict, test) {
       switch (xhr.status) {
         case 200:
           console.log('200 response')
+          queryNotify('Query resolved')
           populateQueryResults(xhr.responseJSON)
           break;
         case 400:
           console.log('400 response')
+          queryNotify('Query failed. Code: ' + xhr.status)
           break;
         case 401:
           console.log('401 response')
+          queryNotify('Query failed. Code: ' + xhr.status)
           break;
         case 404:
           console.log('404 response')
+          queryNotify('Query failed. Code: ' + xhr.status)
+          break;
+        case 500:
+          console.log('500 response')
+          queryNotify('Query failed. Code: ' + xhr.status)
           break;
         default:
           console.log('Unhandled server response: ' + xhr.status)
@@ -121,4 +133,8 @@ function fillNamespaceOptions() {
       nsDD.appendChild(optionTag);
     }
   }
+}
+
+function queryNotify(msg) {
+  document.getElementById(QUERY_STATUS_ID).textContent = msg;
 }
