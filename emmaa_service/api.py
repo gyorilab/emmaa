@@ -39,7 +39,7 @@ def _get_models():
     model_data = []
     for pref in resp['CommonPrefixes']:
         model_id = pref['Prefix'].split('/')[1]
-        meta_key = f'models/{model_id}/{model_id}_model_meta.json'
+        meta_key = f'models/{model_id}/config.json'
         try:
             resp = s3.get_object(Bucket='emmaa', Key=meta_key)
         except ClientError:
