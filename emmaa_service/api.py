@@ -70,7 +70,7 @@ def get_model_dashboard(model):
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     model_data = _get_models()
-    stmt_types = [s.__name__ for s in get_all_descendants(Statement)]
+    stmt_types = sorted([s.__name__ for s in get_all_descendants(Statement)])
     return QUERIES.render(model_data=model_data, stmt_types=stmt_types)
 
 
