@@ -64,7 +64,7 @@
 
         <div class="checkbox-container" id="model-select">
           <div class="checkbox">
-            {% for model_id_,  in model_data %}
+            {% for model_id, _ in model_data %}
             <label for="{{ model_id }}">
               <input type="checkbox" name="{{ model_id }}" id="{{ model_id }}">{{ model_id.upper() }}
             </label>
