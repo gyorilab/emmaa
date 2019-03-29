@@ -77,19 +77,33 @@ def get_query_page():
 
 @app.route('/query/submit', methods=['POST'])
 def process_query():
+    # Print inputs.
     logger.info('Got model query')
     print("Args -----------")
     print(request.args)
     print("Json -----------")
     print(str(request.json))
     print("------------------")
-    models = []
-    subj = ''
-    obj = ''
-    stmt_type = ''
-    user_info = request.json.get('user')
-    register = 'true' == request.json.get('register') if \
-        request.args.get('register') else False
+
+    # Extract info.
+    expected_query_keys = {f'{pos}Selection'
+                           for pos in ['subject', 'object', 'type']}
+    expceted_models = {mid for mid, _ in _get_models()}
+    try:
+        user_email = request.json['user']['email']
+        subscribe = request.json.get('register') == 'true' if \
+            request.args.get('register') else False
+        query_json = request.json['query']
+        assert set(query_json.keys()) == expected_query_keys, \
+            (f'Did not get expected query keys: got {set(query_json.keys())} '
+             f'not {expected_query_keys}')
+        models = set(request.json.get('models'))
+        assert models < expceted_models, \
+            f'Got unexpected models: {models - expceted_models}'
+    except (KeyError, AssertionError) as e:
+        logger.error("Invalid query.")
+        abort(Response(f'Invalid request: {str(e)}', 400))
+
     is_test = 'test' in request.json or 'test' == request.json.get('tag')
 
     if is_test:
@@ -97,25 +111,10 @@ def process_query():
         res = {'result': 'test passed', 'ref': None}
 
     else:
-        if request.json.get('query'):
-            models = request.json.get('query').get('models')
-            subj = request.json.get('query').get('subjectSelection')
-            obj = request.json.get('query').get('objectSelection')
-            stmt_type = request.json.get('query').get('typeSelection')
-
-        if all([models, subj, obj, stmt_type]):
-            query_dict = request.json.copy()
-            assert 'test' not in request.json
-
-            # submit to emmaa query db
-            logger.info('Query submitted')
-            result = answer_immediate_query(query_dict)
-            logger.info('Answer to query received, responding to client.')
-            res = {'result': result}
-        else:
-            # send error
-            logger.info('Invalid query')
-            abort(Response('Invalid query', 400))
+        logger.info('Query submitted')
+        result = answer_immediate_query(query_json, models)
+        logger.info('Answer to query received, responding to client.')
+        res = {'result': result}
 
     logger.info('Result: %s' % str(res))
     return Response(json.dumps(res), mimetype='application/json')
