@@ -4,7 +4,10 @@ from os import path
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from flask import abort, Flask, redirect, render_template, request, Response
+from flask import abort, Flask, request, Response
+
+from emmaa.model import load_config_from_s3
+from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
 
 from emmaa.answer_queries import answer_immediate_query
@@ -38,14 +41,16 @@ def _get_models():
     model_data = []
     for pref in resp['CommonPrefixes']:
         model_id = pref['Prefix'].split('/')[1]
-        meta_key = f'models/{model_id}/{model_id}_model_meta.json'
         try:
-            resp = s3.get_object(Bucket='emmaa', Key=meta_key)
+            config_json = load_config_from_s3(model_id)
         except ClientError:
             logger.warning(f"Model {model_id} has no metadata. Skipping...")
             continue
-        meta_json = json.loads(resp['Body'].read())
-        model_data.append((model_id, meta_json))
+        if 'human_readable_name' not in config_json.keys():
+            logger.warning(
+                f"Model {model_id} has no readable name. Skipping...")
+            continue
+        model_data.append((model_id, config_json))
     return model_data
 
 
@@ -65,7 +70,9 @@ def get_model_dashboard(model):
 @app.route('/query')
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
-    return QUERIES.render()
+    model_data = _get_models()
+    stmt_types = sorted([s.__name__ for s in get_all_descendants(Statement)])
+    return QUERIES.render(model_data=model_data, stmt_types=stmt_types)
 
 
 @app.route('/query/submit', methods=['POST'])

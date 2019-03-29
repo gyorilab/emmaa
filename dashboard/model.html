@@ -43,7 +43,8 @@
       let dict_split = getDictFromUrl(return_url);
 
       // Check sign-in
-      checkSignIn()
+      // checkSignIn()
+      
       var ddSelectTag = document.getElementById('modelSelectDD');
       setModel(ddSelectTag, model);
 
@@ -66,11 +67,6 @@
         }
       }
 
-      if (newModel == 'brca') {
-        alert('BRCA Model Currently Unavailable')
-        return;
-      }
-
       // redirect url:
       let redirect = window.location.href.replace(model, newModel)
       console.log(redirect)
@@ -90,13 +86,14 @@
   </script>
   <!-- Page Header -->
   <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-    <h5 class="my-0 mr-md-auto font-weight-normal">EMMAA Models</h5>
-    <nav class="my-2 my-md-0 mr-md-3">
-      <a href="../home">Home</a>
+    <h5 class="my-0 mr-md-auto font-weight-normal">
+      <a href="../home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
       <a href="../query">Queries</a>
+    </h5>
+    <nav class="my-2 my-md-0 mr-md-3">
       <a class="p-2 text-dark" href="#about">About</a>
     </nav>
-    <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button>
+<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
   </div>
 
   <!-- Dropdown -->

@@ -33,168 +33,27 @@
   <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
   <!-- <script src="http://127.0.0.2:5000/emmaaFunctions.js"></script> -->
   <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script>
-
-  <!-- User query JS -->
-  <script>
-    // EMMAA rest API
-    var EMMAA_API = 'http://localhost:5000/query/submit'
-    var NAMESPACE_OPTIONS = [
-      ['HGNC', 'HGNC'], 
-      ['UniProt', 'UP'], 
-      ['Entrez', 'EGID'], 
-      ['FamPlex', 'FPLX'], 
-      ['InterPro', 'IP'], 
-      ['Pfam', 'PF'], 
-      ['NextProt family', 'NXPFA'], 
-      ['ChEBI', 'CHEBI'], 
-      ['PubChem', 'PUBCHEM'], 
-      ['LINCS/HMS-LINCS', 'LINCS'], 
-      ['HMDB', 'HMDB'], 
-      ['GO', 'GO'], 
-      ['MeSH', 'MESH'], 
-      ['NCIT', 'NCIT'], 
-      ['Raw text', 'TEXT']
-    ]
-
-    $(document).ready(function() {
-      fillNamespaceOptions()
-    })
-
-    function postQuery(queryContainer) {
-      console.log('function postQuery(queryContainer)')
-      // Get user info
-      userInfo = {
-        name: 'joshua',
-        slack_id: '123456abcdef',
-        email: 'joshua@emmaa.com'
-      }
-
-      // Collect model query
-      let querySel = collectQuery(queryContainer)
-
-      // Check if user wants to register query
-      let reg = document.getElementById('register-query').checked
-
-      let ajax_response = submitQuery({
-        user: userInfo,
-        query: querySel,
-        register: reg
-      }, null)
-     
-      console.log("ajax response from submission: ");
-      console.log(ajax_response);
-    }
-
-    function collectQuery(queryContainer) {
-      console.log('function collectQuery(queryContainer)')
-      let dropdownSelections = queryContainer.getElementsByClassName('custom-select')
-
-      query = {};
-      checkboxes = []
-
-      // Get checked models
-      for (box of document.getElementById('model-select').getElementsByTagName('input')) {
-        console.log(box.name)
-        if (!box.disabled && box.checked) {
-          checkboxes.push(box.name)
-        }
-      }
-      query['models'] = checkboxes;
-
-      //  Collect dropdown selections
-      for (selection of dropdownSelections) {
-        selId = selection.id;
-        // Use the IDs of the select tags as keys in the query json
-        query[selId] = selection.options[selection.selectedIndex].value;
-      }
-
-      // Collect subject/object from forms
-      query['subjectSelection'] = document.getElementById('subjectInput').value;
-      query['objectSelection'] = document.getElementById('objectInput').value;
-
-      return query;
-    }
-
-    function submitQuery(queryDict, test) {
-      console.log('function submitQuery(queryDict)')
-      console.log('Submitting data to query DB')
-      console.log(queryDict)
-
-      if (test) queryDict['test'] = true;
-
-      // submit POST to emmaa user db
-      let response = $.ajax({
-        url: EMMAA_API,
-        type: 'POST',
-        dataType: 'json',
-        contentType: 'application/json',
-        data: JSON.stringify(queryDict),
-        complete: function(xhr, statusText) {
-          console.log('responseJSON')
-          console.log(xhr.responseJSON)
-          console.log(statusText)
-          switch (xhr.status) {
-            case 200:
-              console.log('200 response')
-              populateQueryResults(xhr.responseJSON)
-              break;
-            case 400:
-              console.log('400 response')
-              break;
-            case 401:
-              console.log('401 response')
-              break;
-            case 404:
-              console.log('404 response')
-              break;
-            default:
-              console.log('Unhandled server response: ' + xhr.status)
-          }
-        }
-      })
-      return response;
-    }
-
-    function populateQueryResults(json) {
-      console.log('function populateQueryResults(json)')
-      console.log(json)
-      let qrTable = document.getElementById('queryResults');
-      clearTable(qrTable)
-      for (model in json.result) {
-        qrTable.appendChild(addToRow([model, json.result[model]]));
-      }
-    }
-
-    function fillNamespaceOptions() {
-      for (nsDD of document.getElementsByClassName('namespace-dropdown')) {
-        console.log(nsDD)
-        for (n_v of NAMESPACE_OPTIONS) {
-          let optionTag = document.createElement('option');
-          optionTag.value = n_v[1];
-          optionTag.textContent = n_v[0];
-          console.log(optionTag.textContent)
-          nsDD.appendChild(optionTag);
-        }
-      }
-    }
-  </script>
+  <!-- <script src="http://127.0.0.2:5000/queryFunctions.js"></script> -->
+  <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script>
 
 </head>
 
 <body>
   <script type="text/javascript">
     setEnv('emmaa') // Set environment for AWS functionalities
-    checkSignIn() // Check sign-in
+    // checkSignIn() // Check sign-in
   </script>
 
   <!-- Page Header -->
   <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-    <h5 class="my-0 mr-md-auto font-weight-normal">EMMAA Model Queries</h5>
+    <h5 class="my-0 mr-md-auto font-weight-normal">
+      <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
+      <a href="./query">Queries</a>
+    </h5>
     <nav class="my-2 my-md-0 mr-md-3">
-      <a href="./home">Home</a>
       <a class="p-2 text-dark" href="#about">About</a>
     </nav>
-    <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button>
+<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
   </div>
 
   <div class="container" id="query-container">
@@ -208,29 +67,17 @@
 
         <div class="checkbox-container" id="model-select">
           <div class="checkbox">
-            <label for="aml">
-              <input type="checkbox" name="aml" id="aml">AML
+            {% for model_id, _ in model_data %}
+            <label for="{{ model_id }}">
+              <input type="checkbox" name="{{ model_id }}" id="{{ model_id }}">{{ model_id.upper() }}
             </label>
-            <label for="brca">
-              <input type="checkbox" name="brca" id="brca" disabled>BRCA (Unavailable)
-            </label>
-            <label for="luad">
-              <input type="checkbox" name="luad" id="luad">LUAD
-            </label>
-            <label for="paad">
-              <input type="checkbox" name="paad" id="paad">PAAD
-            </label>
-            <label for="prad">
-              <input type="checkbox" name="prad" id="prad">PRAD
-            </label>
-            <label for="skcm">
-              <input type="checkbox" name="skcm" id="skcm">SKCM
-            </label>
+            {% endfor %}
           </div>
         </div>
         <div class="text-container">
           To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
         </div>
+
         <!-- stmt type select -->
         <div class="dropdown" style="display: inline-block; vertical-align: top;">
           <!-- WARNING: The id of the select tag goes into the query
@@ -238,59 +85,21 @@
           and query handling -->
           <select class="custom-select" id="typeSelection">
             <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-            <option value="complex">Binds (Complex)</option>
-            <option value="self_modification">SelfModification</option>
-            <option value="activation">Activation</option>
-            <option value="deactivation">Deactivation</option>
-            <option value="regulate_amount">RegulateAmount</option>
-            <option value="active_form">ActiveForm</option>
-            <option value="translocation">Translocation</option>
-            <option value="gef">Gef</option>
-            <option value="gap">Gap</option>
-            <option value="conversion">Conversion</option>
-            <option value="phosphorylation">Phosphorylation</option>
-            <option value="dephosphorylation">Dephosphorylation</option>
-            <option value="ubiquitination">Ubiquitination</option>
-            <option value="deubiquitination">Deubiquitination</option>
-            <option value="sumoylation">Sumoylation</option>
-            <option value="desumoylation">Desumoylation</option>
-            <option value="hydroxylation">Hydroxylation</option>
-            <option value="dehydroxylation">Dehydroxylation</option>
-            <option value="acetylation">Acetylation</option>
-            <option value="deacetylation">Deacetylation</option>
-            <option value="glycosylation">Glycosylation</option>
-            <option value="deglycosylation">Deglycosylation</option>
-            <option value="farnesylation">Farnesylation</option>
-            <option value="defarnesylation">Defarnesylation</option>
-            <option value="geranylgeranylation">Geranylgeranylation</option>
-            <option value="degeranylgeranylation">Degeranylgeranylation</option>
-            <option value="palmitoylation">Palmitoylation</option>
-            <option value="depalmitoylation">Depalmitoylation</option>
-            <option value="myristoylation">Myristoylation</option>
-            <option value="demyristoylation">Demyristoylation</option>
-            <option value="ribosylation">Ribosylation</option>
-            <option value="deribosylation">Deribosylation</option>
-            <option value="methylation">Methylation</option>
-            <option value="demethylation">Demethylation</option>
-            <option value="autophosphorylation">Autophosphorylation</option>
-            <option value="transphosphorylation">Transphosphorylation</option>
+            {% for stmt_type in stmt_types %}
+            <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+            {% endfor %}
           </select>
         </div>
 
-        <!-- subject -->
         <div class="subject-container" style="display: inline-block; vertical-align: top;">
-          <div class="text">
-            <form>
-              <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
-            </form>
-          </div>
-        </div>
-
-        <!-- object select -->
-        <div class="object-container" style="display: inline-block; vertical-align: top;">
-          <div class="text">
-            <form>
-              <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
+          <div class="text" style="display: table;">
+            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <!-- subject -->
+              <div style="display: table-cell; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+              <!-- object -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 1px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <!-- formsubmit -->
+              <div style="display: table-cell; padding-left: 6px"><input type="submit" text="Submit query" name="query-submit" id="query-submit"></div>
             </form>
           </div>
         </div>
@@ -302,14 +111,17 @@
               for="register-query">Register Query</label>
           </div>
         </div>
-      </div>
 
-      <!-- submit button -->
-      <div class="container" id="button-container" style="margin: auto;">
-        <button class="btn btn-outline-primary" id="query-submit"
-                onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
-      </div>
+        <div class="container">
+          <div class="container">
+            <div id="query-status-gif" style="display: none;">
+              <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
+            </div>
+            <span><i id="query-status"></i></span>
+          </div>
+        </div>
 
+      </div>
     </div>
   </div>
 

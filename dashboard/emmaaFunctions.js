@@ -43,11 +43,6 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
-  if (model == 'brca') {
-    alert('BRCA Model Currently Unavailable')
-    return;
-  }
-
   endsWith = '.json';
   maxKeys = 1000;  resultsPrefix = 'stats';
   modelsPrefix = 'models';
@@ -101,14 +96,6 @@ function generatePassFail(rowEl, col) {
     itag.className = 'fas fa-check';
     rowEl.children[col].innerHTML = null;
     rowEl.children[col].appendChild(itag);
-    let passedTestsCol = rowEl.children[col+1]
-
-    if (passedTestsCol.textContent.split('.').length > 2) {
-      console.log('Adding line breaks for "' + passedTestsCol.textContent + '"')
-      let breakText = passedTestsCol.textContent.replace(/\./g, '.<br>')
-      passedTestsCol.innerHTML = null;
-      passedTestsCol.innerHTML = breakText.substr(0, breakText.length-4);
-    }
   } else if (string.toLowerCase() == 'fail') {
     itag.className = 'fas fa-times';
     rowEl.children[col].innerHTML = null;
@@ -116,6 +103,14 @@ function generatePassFail(rowEl, col) {
   } else {
     console.log('pass/fail not in column' + col)
   }
+  return rowEl;
+}
+
+function addLineBreaks(rowEl, col) {
+  // Adds <br> after '.' to text in specified column
+  let breakText = rowEl.children[col].textContent.replace(/\./g, '.<br>')
+  rowEl.children[col].innerHTML = null;
+  rowEl.children[col].innerHTML = breakText.substr(0, breakText.length-4); // Remove last <br>
   return rowEl;
 }
 
@@ -193,7 +188,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'bar'
   }
 
-  let stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '')
+  var stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '')
 
   // Top agents bar graph
   var top_agents_array = []
@@ -211,7 +206,7 @@ function populateTestResultTable(tableBody, json) {
     type: 'bar'
   }
 
-  let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
+  var agentChart = generateBar(agDist, agentDataParams, top_agents_array, '')
 
   // Statements by Evidence Table
   let stEvTable = document.getElementById('stmtEvidence')
@@ -237,7 +232,7 @@ function populateTestResultTable(tableBody, json) {
     ]
   }
 
-  let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
+  var stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '')
 
   // Model Delta - New statements
   let newStTable = document.getElementById('addedStmts')
@@ -294,6 +289,7 @@ function populateTestResultTable(tableBody, json) {
   var newAppTests = json.tests_delta.applied_tests_delta.added
 
   for (pair of newAppTests) {
+    // Has columns: Test; Status;
     let rowEl = addToRow(pair)
     newAppliedTable.appendChild(generatePassFail(rowEl, 1))
   }
@@ -304,7 +300,11 @@ function populateTestResultTable(tableBody, json) {
   var newPaths = json.tests_delta.new_paths.added
 
   for (i = 0; i < newPasTests.length; i++) {
+    // Has columns: test; Path Found
     let rowEl = addToRow([newPasTests[i], newPaths[i]])
+    if (rowEl.children[1].textContent.split('.').length > 2) {
+      rowEl = addLineBreaks(rowEl, 1)
+    }
     newPassedTable.appendChild(rowEl)
   }
 
@@ -316,12 +316,20 @@ function populateTestResultTable(tableBody, json) {
   resultValues.sort(function(a,b){return a[1]<b[1];});
 
   for (val of resultValues) {
+    // Has columns: test; Status; Path Found;
     let rowEl = addToRow(val)
+    if (rowEl.children[2].textContent.split('.').length > 2) {
+      rowEl = addLineBreaks(rowEl, 2)
+    }
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
-  // Force redraw of charts on tab show event
-  $('a[data-toggle=tab]').on('shown.bs.tab', function() {
+  // Force redraw of charts to prevent chart overflow
+  // https://c3js.org/reference.html#api-flush
+  $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
+    stmtTypeChart.flush();
+    agentChart.flush();
+    stmtsCountChart.flush();
     lineChart.flush();
     areaChart.flush();
   });
