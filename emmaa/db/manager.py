@@ -210,6 +210,16 @@ class EmmaaDatabaseManager(object):
             sess.add_all(results)
         return
 
+    def get_results_from_query(self, query_json, model_ids):
+        hashes = {hash_query(query_json, model_id) for model_id in model_ids}
+        with self.get_session() as sess:
+            q = (sess.query(Query.model_id, Query.json, Result.string,
+                            Result.date)
+                 .filter(Result.query_hash.in_(hashes),
+                         Query.hash == Result.query_hash))
+            results = [tuple(res) for res in q.all()]
+        return results
+
     def get_results(self, user_email):
         """Get the results for which the user has registered.
 
