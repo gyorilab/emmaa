@@ -17,9 +17,8 @@ from emmaa.db import get_db
 logger = logging.getLogger(__name__)
 
 
-def answer_immediate_query(query_dict):
+def answer_immediate_query(query_dict, model_names):
     stmt = get_statement_by_query(query_dict)
-    model_names = get_model_list(query_dict)
     results = {}
     for model_name in model_names:
         mm = load_model_manager_from_s3(model_name)
@@ -52,16 +51,12 @@ def get_query_stmt_pairs(queries):
 
 def get_statement_by_query(query_dict):
     """Get an INDRA Statement object given a query dictionary"""
-    stmt_type = query_dict['query']['typeSelection']
+    stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
-    subj = get_agent_from_name(query_dict['query']['subjectSelection'])
-    obj = get_agent_from_name(query_dict['query']['objectSelection'])
+    subj = get_agent_from_name(query_dict['subjectSelection'])
+    obj = get_agent_from_name(query_dict['objectSelection'])
     stmt = stmt_class(subj, obj)
     return stmt
-
-
-def get_model_list(query_dict):
-    return query_dict['query']['models']
 
 
 def load_model_manager_from_s3(model_name):
