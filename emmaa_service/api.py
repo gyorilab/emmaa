@@ -8,7 +8,8 @@ from flask import abort, Flask, request, Response
 
 from emmaa.db import get_db
 from emmaa.model import load_config_from_s3
-from indra.statements import get_all_descendants, Statement
+from indra.statements import get_all_descendants, RegulateAmount, \
+    RegulateActivity, Modification
 from jinja2 import Template
 
 from emmaa.answer_queries import answer_immediate_query, \
@@ -55,6 +56,18 @@ def _get_models():
     return model_data
 
 
+def get_queryable_stmt_types():
+    """Return Statement class names that can be used for querying."""
+    def get_sorted_descendants(cls):
+        return sorted([s.__name__ for s in get_all_descendants(cls)])
+
+    stmt_types = \
+        get_sorted_descendants(RegulateActivity) + \
+        get_sorted_descendants(RegulateAmount) + \
+        get_sorted_descendants(Modification)
+    return stmt_types
+
+
 @app.route('/')
 @app.route('/home')
 def get_home():
@@ -72,7 +85,7 @@ def get_model_dashboard(model):
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     model_data = _get_models()
-    stmt_types = sorted([s.__name__ for s in get_all_descendants(Statement)])
+    stmt_types = get_queryable_stmt_types()
 
     user_email = 'joshua@emmaa.com'
     old_results = get_registered_queries(user_email)
@@ -135,4 +148,4 @@ def process_query():
 
 if __name__ == '__main__':
     print(app.url_map)  # Get all avilable urls and link them
-    app.run()
+    app.run(port=1111)
