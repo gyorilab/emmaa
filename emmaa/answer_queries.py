@@ -1,5 +1,6 @@
 import logging
 import pickle
+from datetime import datetime
 from indra.statements.statements import get_statement_by_name
 from indra.statements.agent import Agent
 from indra.databases.hgnc_client import get_hgnc_id
@@ -11,17 +12,26 @@ from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
+db = get_db('primary')
 
 
 def answer_immediate_query(query_dict, model_names):
     """Answer an immediate query for each model given a list of model names."""
+    saved_results = db.get_results_from_query(query_dict, model_names)
+    checked_models = {res[0] for res in saved_results}
+    if checked_models == set(model_names):
+        return format_results(saved_results)
     stmt = get_statement_by_query(query_dict)
-    results = {}
+    new_results = []
+    new_date = datetime()
     for model_name in model_names:
-        mm = load_model_manager_from_s3(model_name)
-        response = mm.answer_query(stmt)
-        results[model_name] = response
-    return results
+        if model_name not in checked_models:
+            result = {}
+            mm = load_model_manager_from_s3(model_name)
+            response = mm.answer_query(stmt)
+            new_results.append((model_name, query_dict, response, new_date))
+    all_results = saved_results + new_results
+    return format_results(all_results)
 
 
 def answer_registered_queries(model_name, model_manager=None):
@@ -30,7 +40,6 @@ def answer_registered_queries(model_name, model_manager=None):
     """
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
-    db = get_db('primary')
     query_dicts = db.get_queries(model_name)
     query_stmt_pairs = get_query_stmt_pairs(query_dicts)
     results = model_manager.answer_queries(query_stmt_pairs)
@@ -38,8 +47,22 @@ def answer_registered_queries(model_name, model_manager=None):
 
 
 def get_registered_queries(user_email):
-    # TODO: return results in the "standardized" format.
-    return []
+    """Get formatted results to registered queries by user."""
+    results = db.get_results(user_email)
+    return format_results(results)
+
+
+def format_results(results):
+    """Format db output to a standard json structure."""
+    formatted_results = []
+    for result in results:
+        formatted_result = {}
+        formatted_result['model'] = result[0]
+        formatted_result['query'] = result[1]
+        formatted_result['response'] = result[2]
+        formatted_result['date'] = result[3]    
+        formatted_results.append(formatted_result)
+    return results
 
 
 def get_query_stmt_pairs(queries):
