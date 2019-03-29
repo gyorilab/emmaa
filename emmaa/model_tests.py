@@ -130,40 +130,39 @@ class ModelManager(object):
         else:
             return 'Query is not applicable for this model.'
 
-    def answer_queries(self, stmts_by_query_id):
+    def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
 
         Parameters
         ----------
-        stmts_by_query_id : list[tuple(int,
+        query_stmt_pairs : list[tuple(json,
                                 indra.statements.statements.Statement)]
-            A list of tuples query IDs and INDRA statement generated from
-            queries.
+            A list of tuples each containing a query json and an INDRA
+            statement derived from it.
 
         Returns
         -------
-        responses : dict
-            A dictionary mapping a query_id to a response.
+        responses : list[tuple(json, str)]
+            A list of tuples each containing a query json and a result string.
         """
-        responses = {}
-        applicable_ids = []
+        responses = []
         applicable_queries = []
         for stmt in stmts:
             test = StatementCheckingTest(stmt,
                 self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
-                applicable_ids.append(query_id)
-                applicable_queries.append(test)
+                applicable_stmts.append(test)
             else:
-                responses[query_id] = (
-                    'Query is not applicable for this model.')
+                responses.append(
+                    (query_json, 'Query is not applicable for this model.'))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
-                                           applicable_queries])
+                                           applicable_stmts])
         self.get_im()
         results = self.model_checker.check_model()
         for ix, (_, result) in enumerate(results):
-            responses[applicable_ids[ix]] = self.process_response(result)
+            responses.append(
+                (applicable_queries[ix], self.process_response(result)))
         return responses
 
     def process_response(self, result):
