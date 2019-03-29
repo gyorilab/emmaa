@@ -41,17 +41,16 @@ def _get_models():
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
-        model_id = pref['Prefix'].split('/')[1]
+        model = pref['Prefix'].split('/')[1]
         try:
-            config_json = load_config_from_s3(model_id)
+            config_json = load_config_from_s3(model)
         except ClientError:
-            logger.warning(f"Model {model_id} has no metadata. Skipping...")
+            logger.warning(f"Model {model} has no metadata. Skipping...")
             continue
         if 'human_readable_name' not in config_json.keys():
-            logger.warning(
-                f"Model {model_id} has no readable name. Skipping...")
+            logger.warning(f"Model {model} has no readable name. Skipping...")
             continue
-        model_data.append((model_id, config_json))
+        model_data.append((model, config_json))
     return model_data
 
 

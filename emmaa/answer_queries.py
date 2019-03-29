@@ -3,13 +3,9 @@ import pickle
 from indra.statements.statements import get_statement_by_name
 from indra.statements.agent import Agent
 from indra.databases.hgnc_client import get_hgnc_id
-from indra.explanation.model_checker import ModelChecker
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
-from emmaa.model_tests import (StatementCheckingTest, ScopeTestConnector,
-                               ModelManager)
-from emmaa.model import EmmaaModel
 from emmaa.util import get_s3_client
 from emmaa.db import get_db
 
