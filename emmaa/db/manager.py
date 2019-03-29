@@ -1,4 +1,5 @@
 from fnvhash import fnv1a_32
+from sqlalchemy.exc import IntegrityError
 
 __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
 
@@ -118,12 +119,13 @@ class EmmaaDatabaseManager(object):
     def add_user(self, email):
         """Add a new user's email to Emmaa's User table."""
         try:
-            new_user = User(email)
+            new_user = User(email=email)
             with self.get_session() as sess:
                 sess.add(new_user)
-        except Exception:
+                user_id = new_user.id
+        except IntegrityError as e:
             logger.warning(f"A user with email {email} already exists.")
-        return new_user.id
+        return user_id
 
     def put_queries(self, user_email, query_json, model_ids, subscribe=True):
         """Add queries to the database for a given user.
