@@ -13,7 +13,7 @@ their latest result.
 
 .. figure:: ../../_static/images/query_filled.png
   :align: center
-  :figwidth: 75 %
+  :figwidth: 100 %
 
   *The query ready to be submitted that asks if BRAF activates ERK in the AML
   cancer model.*
@@ -21,7 +21,7 @@ their latest result.
 If the query is badly formatted or missing information, an error will be
 shown stating the type of error.
 
-The query will be received by the *query service* (NAME) and return a
+The query will be received by the query service and return a
 response which shows if the query was applicable to the model or not. The
 typical response time can be up to a minute, so please be patient when
 posting queries. There is an initial start-up time for a query to be

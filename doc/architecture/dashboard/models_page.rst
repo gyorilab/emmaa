@@ -30,7 +30,7 @@ over time.
 
 .. figure:: ../../_static/images/aml_tests_tab_top.png
   :align: center
-  :figwidth: 75 %
+  :figwidth: 100 %
 
   *The top of the tests tab showing the percentage of tests passed and applied
   and passed tests*
@@ -41,7 +41,7 @@ shown under *New Passed Tests*.
 
 .. figure:: ../../_static/images/aml_tests_tab_tests.png
   :align: center
-  :figwidth: 75 %
+  :figwidth: 100 %
 
   *If new tests were applied, they will be shown together with a breakdown of
   which tests passed*
@@ -50,7 +50,7 @@ Further down, all tests applied to the model are shown.
 
 .. figure:: ../../_static/images/aml_tests_all_tests.png
   :align: center
-  :figwidth: 75 %
+  :figwidth: 100 %
 
   *Part of the list showing all applied tests with a status indicator for
   passed/failed*

@@ -7,7 +7,7 @@ the latest tests applied to the models. The user can also navigate to a
 queries page where queries about the models can be answered.
 
 .. image:: ../_static/images/dashboard_top.png
-   :scale: 80 %
+   :scale: 100 %
    :align: right
 
 Going forward, users will be able
