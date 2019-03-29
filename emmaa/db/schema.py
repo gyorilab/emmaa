@@ -18,14 +18,19 @@ Base = declarative_base()
 class EmmaaTable(object):
     _skip_disp = []
 
-    def _make_str(self):
-        s = self.__tablename__ + ':\n'
+    def _content_strings(self):
+        ret = []
         for k, v in self.__dict__.items():
             if not k.startswith('_'):
                 if k in self._skip_disp:
-                    s += '\t%s: [not shown]\n' % k
+                    ret.append(f'{k}=[not shown]')
                 else:
-                    s += '\t%s: %s\n' % (k, v)
+                    ret.append(f'{k}={v}')
+        return ret
+
+    def _make_str(self):
+        s = self.__tablename__ + ':\n'
+        s += '\n'.join(f'\t{line}' for line in self._content_strings())
         return s
 
     def display(self):
@@ -34,6 +39,10 @@ class EmmaaTable(object):
 
     def __str__(self):
         return self._make_str()
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}' \
+               f'({", ".join(self._content_strings())})'
 
 
 class User(Base, EmmaaTable):
