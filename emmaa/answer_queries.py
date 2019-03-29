@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 db = get_db('primary')
 
 
-def answer_immediate_query(query_dict, model_names):
+def answer_immediate_query(user_email, query_dict, model_names, subscribe):
     """Answer an immediate query for each model given a list of model names."""
+    db.put_queries(user_email, query_dict, model_names, subscribe)
     saved_results = db.get_results_from_query(query_dict, model_names)
     checked_models = {res[0] for res in saved_results}
     if checked_models == set(model_names):

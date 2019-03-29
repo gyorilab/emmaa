@@ -119,9 +119,8 @@ def process_query():
     else:
         logger.info('Query submitted')
         try:
-            result = answer_immediate_query(query_json, models)
-            db = get_db('primary')
-            db.put_queries(user_email, query_json, models, subscribe)
+            result = answer_immediate_query(
+                user_email, query_json, models, subscribe)
         except GroundingError as e:
             db.error("Invalid grounding.")
             abort(Response(f'Invalid entity: {str(e)}', 400))
