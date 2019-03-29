@@ -11,7 +11,8 @@ from emmaa.model import load_config_from_s3
 from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
 
-from emmaa.answer_queries import answer_immediate_query, get_registered_queries
+from emmaa.answer_queries import answer_immediate_query, \
+    get_registered_queries, GroundingError
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -117,9 +118,13 @@ def process_query():
 
     else:
         logger.info('Query submitted')
-        result = answer_immediate_query(query_json, models)
-        db = get_db('primary')
-        db.put_queries(user_email, query_json, models, subscribe)
+        try:
+            result = answer_immediate_query(query_json, models)
+            db = get_db('primary')
+            db.put_queries(user_email, query_json, models, subscribe)
+        except GroundingError as e:
+            db.error("Invalid grounding.")
+            abort(Response(f'Invalid entity: {str(e)}', 400))
         logger.info('Answer to query received, responding to client.')
         res = {'result': result}
 
