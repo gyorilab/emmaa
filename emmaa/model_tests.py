@@ -13,6 +13,7 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
+from emmaa.answer_queries import answer_registered_queries
 
 
 logger = logging.getLogger(__name__)
@@ -403,4 +404,5 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
+    answer_registered_queries(model_name, model_manager=mm)
     return (mm, sg)
