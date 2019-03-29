@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def answer_immediate_query(query_dict, model_names):
+    """Answer an immediate query for each model given a list of model names."""
     stmt = get_statement_by_query(query_dict)
     results = {}
     for model_name in model_names:
@@ -24,7 +25,9 @@ def answer_immediate_query(query_dict, model_names):
 
 
 def answer_registered_queries(model_name, model_manager=None):
-    # This function should be added to run_model_tests_from_s3
+    """Retrieve queries registered on database for a given model, answer them,
+    and put results to a database.
+    """
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
     db = get_db('primary')
@@ -73,7 +76,7 @@ def get_agent_from_name(ag_name):
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
     if not grounding:
-        return
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
     ag.db_refs = {grounding[0]: grounding[1]}
     return ag
 
@@ -104,3 +107,7 @@ def get_grounding_from_name(name):
         return ('MESH', mesh_id)
 
     return None
+
+
+class GroundingError(Exception):
+    pass
