@@ -6,7 +6,7 @@ searchable network views of models of six cancer types, as well as details of
 the latest tests applied to the models. The user can also navigate to a
 queries page where queries about the models can be answered.
 
-.. image:: ../_static/images/dashboard_models.png
+.. image:: ../_static/images/dashboard_top.png
    :scale: 80 %
    :align: right
 
