@@ -152,6 +152,7 @@ class ModelManager(object):
             test = StatementCheckingTest(stmt,
                 self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
+                applicable_queries.append(query_json)
                 applicable_stmts.append(test)
             else:
                 responses.append(
