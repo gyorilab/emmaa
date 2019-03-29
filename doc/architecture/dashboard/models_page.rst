@@ -19,6 +19,38 @@ where recently added to the model
   :align: center
   :figwidth: 75 %
 
+  *The top of the model tab*
+
 Tests Tab
 ---------
 
+The tests tab contains information about how many tests were applied and
+passed to the model and also how the percentage of tests that passed evolved
+over time.
+
+.. figure:: ../../_static/images/aml_tests_tab_top.png
+  :align: center
+  :figwidth: 75 %
+
+  *The top of the tests tab showing the percentage of tests passed and applied
+  and passed tests*
+
+If any new tests were applied in the latest test run of the model
+they are shown under *New Applied Tests*, while the new tests that passed are
+shown under *New Passed Tests*.
+
+.. figure:: ../../_static/images/aml_tests_tab_tests.png
+  :align: center
+  :figwidth: 75 %
+
+  *If new tests were applied, they will be shown together with a breakdown of
+  which tests passed*
+
+Further down, all tests applied to the model are shown.
+
+.. figure:: ../../_static/images/aml_tests_all_tests.png
+  :align: center
+  :figwidth: 75 %
+
+  *Part of the list showing all applied tests with a status indicator for
+  passed/failed*
