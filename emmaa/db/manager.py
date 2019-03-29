@@ -125,7 +125,7 @@ class EmmaaDatabaseManager(object):
             logger.warning(f"A user with email {email} already exists.")
         return new_user.id
 
-    def put_queries(self, user_id, query_json, model_ids):
+    def put_queries(self, user_email, query_json, model_ids, subscribe=True):
         """Add queries to the database for a given user.
 
         Note: users are not considered, and user_id is ignored. In future, the
@@ -133,24 +133,27 @@ class EmmaaDatabaseManager(object):
 
         Parameters
         ----------
-        user_id : str
-            (currently unused) the ID of the user that entered the queries.
+        user_email : str
+            (currently unused) the email of the user that entered the queries.
         query_json : json
             The json dictionary containing the data needed to specify the
             query.
         model_ids : list[str]
             A list of the short, standard model IDs to which the user wishes
             to apply these queries.
+        subscribe : bool
+            True if the user wishes to subscribe to this query.
         """
         # Make sure model_ids is a list.
-        if not isinstance(model_ids, list):
-            raise TypeError("Invalid type: %s" % type(model_ids))
+        if not isinstance(model_ids, list) and not isinstance(model_ids, set):
+            raise TypeError("Invalid type: %s. Must be list or set."
+                            % type(model_ids))
 
         # Get the existing hashes.
         with self.get_session() as sess:
             existing_hashes = {h for h, in sess.query(Query.hash).all()}
 
-        # TODO: Unclude user info
+        # TODO: Include user info
         queries = []
         for model_id in model_ids:
             qh = hash_query(query_json, model_id)
@@ -175,6 +178,7 @@ class EmmaaDatabaseManager(object):
         queries : list[json]
             A list of query json's retrieved from the database.
         """
+        # TODO: check whether a query is registered or not.
         with self.get_session() as sess:
             q = sess.query(Query.json).filter(Query.model_id == model_id)
             queries = [q for q, in q.all()]
@@ -201,7 +205,7 @@ class EmmaaDatabaseManager(object):
             sess.add_all(results)
         return
 
-    def get_results(self, user_id):
+    def get_results(self, user_email):
         """Get the results for which the user has registered.
 
         Note: currently users are not handled, and this will simply return
@@ -209,8 +213,8 @@ class EmmaaDatabaseManager(object):
 
         Parameters
         ----------
-        user_id : str
-            The standardised user id.
+        user_email : str
+            The email of a user.
 
         Returns
         -------
