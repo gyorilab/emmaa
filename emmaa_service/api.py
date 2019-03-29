@@ -6,6 +6,7 @@ import logging
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response
 
+from emmaa.db import get_db
 from emmaa.model import load_config_from_s3
 from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
@@ -111,6 +112,8 @@ def process_query():
         res = {'result': 'test passed', 'ref': None}
 
     else:
+        db = get_db('primary')
+        db.put_queries(user_email, query_json, models, subscribe)
         logger.info('Query submitted')
         result = answer_immediate_query(query_json, models)
         logger.info('Answer to query received, responding to client.')
