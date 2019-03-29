@@ -8,8 +8,9 @@ from flask import abort, Flask, request, Response
 
 from emmaa.db import get_db
 from emmaa.model import load_config_from_s3
-from indra.statements import get_all_descendants, RegulateAmount, \
-    RegulateActivity, Modification
+from indra.statements import get_all_descendants, IncreaseAmount, \
+    DecreaseAmount, Activation, Inhibition, AddModification, \
+    RemoveModification
 from jinja2 import Template
 
 from emmaa.answer_queries import answer_immediate_query, \
@@ -59,12 +60,15 @@ def _get_models():
 def get_queryable_stmt_types():
     """Return Statement class names that can be used for querying."""
     def get_sorted_descendants(cls):
-        return sorted([s.__name__ for s in get_all_descendants(cls)])
+        return sorted(get_names(get_all_descendants(cls)))
+
+    def get_names(classes):
+        return [s.__name__ for s in classes]
 
     stmt_types = \
-        get_sorted_descendants(RegulateActivity) + \
-        get_sorted_descendants(RegulateAmount) + \
-        get_sorted_descendants(Modification)
+        get_names([Activation, Inhibition, IncreaseAmount, DecreaseAmount]) + \
+        get_sorted_descendants(AddModification) + \
+        get_sorted_descendants(RemoveModification)
     return stmt_types
 
 
@@ -148,4 +152,4 @@ def process_query():
 
 if __name__ == '__main__':
     print(app.url_map)  # Get all avilable urls and link them
-    app.run(port=1111)
+    app.run()
