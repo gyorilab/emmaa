@@ -86,7 +86,21 @@ class ModelManager(object):
         self.model_checker.add_statements([test.stmt for test in
                                            self.applicable_tests])
         self.get_im()
-        results = self.model_checker.check_model()
+        try:
+            max_path_length = \
+                self.model.test_config['statement_checking']['max_path_length']
+        except KeyError:
+            max_path_length = 5
+        try:
+            max_paths = \
+                self.model.test_config['statement_checking']['max_paths']
+        except KeyError:
+            max_paths = 1
+        logger.info('Parameters for model checking: %d, %d' %
+                    (max_path_length, max_paths))
+        results = self.model_checker.check_model(
+            max_path_length=max_path_length,
+            max_paths=max_paths)
         for (stmt, result) in results:
             self.add_result(result)
 
@@ -108,7 +122,8 @@ class ModelManager(object):
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
-        test = StatementCheckingTest(stmt)
+        test = StatementCheckingTest(stmt,
+            self.model.test_config.get('statement_checking'))
         if ScopeTestConnector.applicable(self, test):
             result = self.run_one_test(test)
             return self.process_response(result)
@@ -120,7 +135,8 @@ class ModelManager(object):
         responses = {}
         applicable_queries = []
         for stmt in stmts:
-            test = StatementCheckingTest(stmt)
+            test = StatementCheckingTest(stmt,
+                self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
                 applicable_queries.append(test)
             else:
@@ -200,9 +216,9 @@ class TestManager(object):
                                                      self.tests):
             if test_connector.applicable(model_manager, test):
                 model_manager.add_test(test)
-                logger.info(f'Test {test.stmt} is applicable')
+                logger.debug(f'Test {test.stmt} is applicable')
             else:
-                logger.info(f'Test {test.stmt} is not applicable')
+                logger.debug(f'Test {test.stmt} is not applicable')
         logger.info(f'Created tests for {len(self.model_managers)} models.')
         for model_manager in self.model_managers:
             logger.info(f'Created {len(model_manager.applicable_tests)} tests '
@@ -256,8 +272,10 @@ class EmmaaTest(object):
 class StatementCheckingTest(EmmaaTest):
     """Represent an EMMAA test condition that checks a PySB-assembled model
     against an INDRA Statement."""
-    def __init__(self, stmt):
+    def __init__(self, stmt, configs=None):
         self.stmt = stmt
+        self.configs = {} if not configs else configs
+        logger.info('Test configs: %s' % configs)
         # TODO
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
@@ -267,7 +285,13 @@ class StatementCheckingTest(EmmaaTest):
         # model_checker.statements = []
         # model_checker.add_statements([self.stmt])
         # model_checker.get_im(force_update=True)
-        res = model_checker.check_statement(self.stmt)
+        max_path_length = self.configs.get('max_path_length', 5)
+        max_paths = self.configs.get('max_paths', 1)
+        logger.info('Parameters for model checking: %s, %d' %
+                    (max_path_length, max_paths))
+        res = model_checker.check_statement(self.stmt,
+            max_path_length=max_path_length,
+            max_paths=max_paths)
         return res
 
     def get_entities(self):
