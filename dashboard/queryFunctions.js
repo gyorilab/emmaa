@@ -80,9 +80,7 @@ function submitQuery(queryDict, test) {
 
   // submit POST to emmaa user db
   queryNotify('Waiting for server response');
-  $('#query-status-gif').ajaxStart(function () {
-    $(this).show();
-  });
+  $('#query-status-gif').show();
   let response = $.ajax({
     url: EMMAA_API,
     type: 'POST',
@@ -93,9 +91,7 @@ function submitQuery(queryDict, test) {
       console.log('responseJSON')
       console.log(xhr.responseJSON)
       console.log(statusText)
-      $('#query-status-gif').ajaxStart(function () {
-        $(this).hide();
-      });
+      $('#query-status-gif').hide();
       switch (xhr.status) {
         case 200:
           console.log('200 response')
