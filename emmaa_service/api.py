@@ -107,7 +107,7 @@ def process_query():
         assert models < expceted_models, \
             f'Got unexpected models: {models - expceted_models}'
     except (KeyError, AssertionError) as e:
-        logger.error("Invalid query.")
+        logger.error("Invalid query:" + e)
         abort(Response(f'Invalid request: {str(e)}', 400))
 
     is_test = 'test' in request.json or 'test' == request.json.get('tag')
