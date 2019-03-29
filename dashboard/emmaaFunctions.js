@@ -43,11 +43,6 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
-  if (model == 'brca' || model == 'rasmachine') {
-    alert('Model currently unavailable');
-    return;
-  }
-
   endsWith = '.json';
   maxKeys = 1000;  resultsPrefix = 'stats';
   modelsPrefix = 'models';
