@@ -45,6 +45,7 @@ class EmmaaModel(object):
         self.name = name
         self.stmts = []
         self.assembly_config = {}
+        self.test_config = {}
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
@@ -80,6 +81,8 @@ class EmmaaModel(object):
             self.ndex_network = None
         if 'assembly' in config:
             self.assembly_config = config['assembly']
+        if 'test' in config:
+            self.test_config = config['test']
 
     def search_literature(self, date_limit=None):
         """Search for the model's search terms in the literature.

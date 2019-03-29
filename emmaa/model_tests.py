@@ -108,7 +108,8 @@ class ModelManager(object):
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
-        test = StatementCheckingTest(stmt)
+        test = StatementCheckingTest(stmt,
+            self.model.test_config.get('statement_checking'))
         if ScopeTestConnector.applicable(self, test):
             result = self.run_one_test(test)
             return self.process_response(result)
@@ -120,7 +121,8 @@ class ModelManager(object):
         responses = {}
         applicable_queries = []
         for stmt in stmts:
-            test = StatementCheckingTest(stmt)
+            test = StatementCheckingTest(stmt,
+                self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
                 applicable_queries.append(test)
             else:
@@ -256,8 +258,9 @@ class EmmaaTest(object):
 class StatementCheckingTest(EmmaaTest):
     """Represent an EMMAA test condition that checks a PySB-assembled model
     against an INDRA Statement."""
-    def __init__(self, stmt):
+    def __init__(self, stmt, configs):
         self.stmt = stmt
+        self.configs = {} if not configs else configs
         # TODO
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
@@ -267,7 +270,11 @@ class StatementCheckingTest(EmmaaTest):
         # model_checker.statements = []
         # model_checker.add_statements([self.stmt])
         # model_checker.get_im(force_update=True)
-        res = model_checker.check_statement(self.stmt)
+        max_path_length = self.configs.get('max_path_length', 5)
+        max_paths = self.configs.get('max_paths', 1)
+        res = model_checker.check_statement(self.stmt,
+            max_path_length=max_path_length,
+            max_paths=max_paths)
         return res
 
     def get_entities(self):
