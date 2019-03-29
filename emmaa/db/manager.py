@@ -151,6 +151,9 @@ class EmmaaDatabaseManager(object):
             raise TypeError("Invalid type: %s. Must be list or set."
                             % type(model_ids))
 
+        if not subscribe:
+            return
+
         # Get the existing hashes.
         with self.get_session() as sess:
             existing_hashes = {h for h, in sess.query(Query.hash).all()}
