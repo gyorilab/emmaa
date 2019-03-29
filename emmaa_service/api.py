@@ -47,7 +47,8 @@ def _get_models():
             logger.warning(f"Model {model_id} has no metadata. Skipping...")
             continue
         if 'human_readable_name' not in config_json.keys():
-            logger.warning(f"Model {model_id} has readable name. Skipping...")
+            logger.warning(
+                f"Model {model_id} has no readable name. Skipping...")
             continue
         model_data.append((model_id, config_json))
     return model_data
