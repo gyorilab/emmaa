@@ -11,6 +11,7 @@ from emmaa.model_tests import (StatementCheckingTest, ScopeTestConnector,
                                ModelManager)
 from emmaa.model import EmmaaModel
 from emmaa.util import get_s3_client
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -31,23 +32,22 @@ def answer_registered_queries(model_name, model_manager=None):
     # This function should be added to run_model_tests_from_s3
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
-    query_dict_by_id = get_query_dict_by_id_from_db(model_name)  # get query_id and query_json from db
-    stmts_by_query_id = get_stmts_by_query_id(query_dict_by_id)
-    responses = model_manager.answer_queries(stmts_by_query_id)
-    results = {'model_name': model_name, 'responses': responses}
-    return results  # put results back to db
+    db = get_db('primary')
+    query_dicts = db.get_queries(model_name)
+    query_stmt_pairs = get_query_stmt_pairs(query_dicts)
+    results = model_manager.answer_queries(query_stmt_pairs)
+    db.put_results(model_name, results)
 
 
-def show_queries_results():
-    # get info from db and display the results
-    pass
-
-
-def get_stmts_by_query_id(query_dict_by_id):
-    stmts_by_query_id = []
-    for (query_id, query_dict) in query_dict_by_id:
-        stmts_by_query_id.append((query_id, get_statement_by_query))
-    return stmts_by_query_id
+def get_query_stmt_pairs(queries):
+    """Return a list of tuples each containing a query dictionary and a
+    statement derived from it.
+    """
+    query_stmt_pairs = []
+    for query_dict in queries:
+        query_stmt_pairs.append(
+            (query_dict, get_statement_by_query(query_dict)))
+    return query_stmt_pairs
 
 
 def get_statement_by_query(query_dict):
