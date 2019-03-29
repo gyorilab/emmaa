@@ -111,10 +111,10 @@ def process_query():
         res = {'result': 'test passed', 'ref': None}
 
     else:
-        db = get_db('primary')
-        db.put_queries(user_email, query_json, models, subscribe)
         logger.info('Query submitted')
         result = answer_immediate_query(query_json, models)
+        db = get_db('primary')
+        db.put_queries(user_email, query_json, models, subscribe)
         logger.info('Answer to query received, responding to client.')
         res = {'result': result}
 
