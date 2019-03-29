@@ -91,20 +91,15 @@
           </select>
         </div>
 
-        <!-- subject -->
         <div class="subject-container" style="display: inline-block; vertical-align: top;">
-          <div class="text">
-            <form>
-              <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
-            </form>
-          </div>
-        </div>
-
-        <!-- object select -->
-        <div class="object-container" style="display: inline-block; vertical-align: top;">
-          <div class="text">
-            <form>
-              <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
+          <div class="text" style="display: table;">
+            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <!-- subject -->
+              <div style="display: table-cell; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+              <!-- object -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 1px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <!-- formsubmit -->
+              <div style="display: table-cell; padding-left: 6px"><input type="submit" text="Submit query" name="query-submit" id="query-submit"></div>
             </form>
           </div>
         </div>
@@ -118,11 +113,6 @@
         </div>
 
         <div class="container">
-          <!-- submit button -->
-          <div class="container" id="button-container" style="margin: auto;">
-            <button class="btn btn-outline-primary" id="query-submit"
-                    onClick="postQuery(document.getElementById('query-container'))">Submit query</button>
-          </div>
           <div class="container">
             <div id="query-status-gif" style="display: none;">
               <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
