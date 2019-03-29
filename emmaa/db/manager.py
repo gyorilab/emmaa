@@ -142,15 +142,21 @@ class EmmaaDatabaseManager(object):
             A list of the short, standard model IDs to which the user wishes
             to apply these queries.
         """
+        # Make sure model_ids is a list.
         if not isinstance(model_ids, list):
             raise TypeError("Invalid type: %s" % type(model_ids))
-        # TODO: Handle case where queries already exist
+
+        # Get the existing hashes.
+        with self.get_session() as sess:
+            existing_hashes = {h for h, in sess.query(Query.hash).all()}
+
         # TODO: Unclude user info
         queries = []
         for model_id in model_ids:
             qh = hash_query(query_json, model_id)
-            queries.append(Query(model_id=model_id, json=query_json.copy(),
-                                 hash=qh))
+            if qh not in existing_hashes:
+                queries.append(Query(model_id=model_id, json=query_json.copy(),
+                                     hash=qh))
 
         with self.get_session() as sess:
             sess.add_all(queries)
