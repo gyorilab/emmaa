@@ -34,6 +34,11 @@ def answer_registered_queries(model_name, model_manager=None):
     db.put_results(model_name, results)
 
 
+def get_registered_queries(user_email):
+    # TODO: return results in the "standardized" format.
+    return []
+
+
 def get_query_stmt_pairs(queries):
     """Return a list of tuples each containing a query dictionary and a
     statement derived from it.

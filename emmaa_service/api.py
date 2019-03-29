@@ -11,7 +11,7 @@ from emmaa.model import load_config_from_s3
 from indra.statements import get_all_descendants, Statement
 from jinja2 import Template
 
-from emmaa.answer_queries import answer_immediate_query
+from emmaa.answer_queries import answer_immediate_query, get_registered_queries
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -72,7 +72,12 @@ def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     model_data = _get_models()
     stmt_types = sorted([s.__name__ for s in get_all_descendants(Statement)])
-    return QUERIES.render(model_data=model_data, stmt_types=stmt_types)
+
+    user_email = 'joshua@emmaa.com'
+    old_results = get_registered_queries(user_email)
+
+    return QUERIES.render(model_data=model_data, stmt_types=stmt_types,
+                          old_results=old_results)
 
 
 @app.route('/query/submit', methods=['POST'])

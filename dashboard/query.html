@@ -150,6 +150,9 @@
         <h4 class="my-0 font-weight-normal">Your previous queries</h4>
       </div>
       <div class="card-body" id="user-queries">
+        {% for result in old_results %}
+        <p>{{ result }}</p>
+        {% endfor %}
       </div>
     </div>
   </div>
