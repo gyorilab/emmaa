@@ -198,7 +198,6 @@ class TestManager(object):
                     f'{len(self.model_managers)} models')
         for model_manager, test in itertools.product(self.model_managers,
                                                      self.tests):
-            logger.info(f'Checking applicability of test {test.stmt}')
             if test_connector.applicable(model_manager, test):
                 model_manager.add_test(test)
                 logger.info(f'Test {test.stmt} is applicable')
