@@ -258,7 +258,7 @@ class EmmaaTest(object):
 class StatementCheckingTest(EmmaaTest):
     """Represent an EMMAA test condition that checks a PySB-assembled model
     against an INDRA Statement."""
-    def __init__(self, stmt, configs):
+    def __init__(self, stmt, configs=None):
         self.stmt = stmt
         self.configs = {} if not configs else configs
         # TODO
