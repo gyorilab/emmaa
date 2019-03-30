@@ -132,7 +132,7 @@ function populateQueryResults(json) {
   let qrTable = document.getElementById('queryResults');
   clearTable(qrTable)
   for (model in json.result) {
-    qrTable.appendChild(addToRow([model, json.result[model]]));
+    qrTable.appendChild(addToRow([json.result[model][0], json.result[model][2]]));
   }
 }
 
