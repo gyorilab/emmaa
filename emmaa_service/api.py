@@ -39,22 +39,35 @@ MODEL = _load_template('model.html')
 QUERIES = _load_template('query.html')
 
 
+model_cache = {}
+
+
 def _get_models():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
-        try:
-            config_json = load_config_from_s3(model)
-        except ClientError:
-            logger.warning(f"Model {model} has no metadata. Skipping...")
-            continue
-        if 'human_readable_name' not in config_json.keys():
-            logger.warning(f"Model {model} has no readable name. Skipping...")
+        config_json = get_model_config(model)
+        if not config_json:
             continue
         model_data.append((model, config_json))
     return model_data
+
+
+def get_model_config(model):
+    if model in model_cache:
+        return model_cache[model]
+    try:
+        config_json = load_config_from_s3(model)
+        model_cache[model] = config_json
+    except ClientError:
+        logger.warning(f"Model {model} has no metadata. Skipping...")
+        return None
+    if 'human_readable_name' not in config_json.keys():
+        logger.warning(f"Model {model} has no readable name. Skipping...")
+        model_cache[model] = None
+    return model_cache[model]
 
 
 def get_queryable_stmt_types():
