@@ -7,7 +7,7 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
-from emmaa.util import get_s3_client
+from emmaa.util import get_s3_client, make_date_str
 from emmaa.db import get_db
 
 
@@ -24,7 +24,7 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe):
         return format_results(saved_results)
     stmt = get_statement_by_query(query_dict)
     new_results = []
-    new_date = datetime()
+    new_date = make_date_str(datetime.now())
     for model_name in model_names:
         if model_name not in checked_models:
             result = {}
