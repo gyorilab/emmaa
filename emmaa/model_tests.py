@@ -349,7 +349,8 @@ def save_model_manager_to_s3(model_name, model_manager):
 
 
 def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
-                            upload_results=True, upload_stats=True):
+                            upload_results=True, upload_stats=True,
+                            registered_queries=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -362,15 +363,18 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
         Name of EmmaaModel to load from S3.
     test_name : str
         Name of test file to load from S3.
-    belief_cutoff : float
-        A belief cutoff to assemble a model.
-    upload_mm : bool
+    upload_mm : Optional[bool]
         Whether to upload a model manager instance to S3 as a pickle file.
-    upload_results : bool
+        Default: True
+    upload_results : Optional[bool]
         Whether to upload test results to S3 in JSON format. Can be set
-        to False when running tests.
-    upload_stats : bool
-        Whether to upload latest statistics about model and a test
+        to False when running tests. Default: True
+    upload_stats : Optional[bool]
+        Whether to upload latest statistics about model and a test.
+        Default: True
+    registered_queries : Optional[bool]
+        If True, registered queries are fetched from the database and
+        executed, the results are then saved to the database. Default: True
 
     Returns
     -------
@@ -405,5 +409,6 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
-    answer_registered_queries(model_name, model_manager=mm)
+    if registered_queries:
+        answer_registered_queries(model_name, model_manager=mm)
     return (mm, sg)

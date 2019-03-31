@@ -29,7 +29,7 @@ def test_load_tests_from_s3():
 def test_run_tests_from_s3():
     (mm, sg) = run_model_tests_from_s3(
         'test', 'simple_model_test.pkl', upload_mm=False,
-        upload_results=False, upload_stats=False)
+        upload_results=False, upload_stats=False, registered_queries=False)
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
     assert isinstance(mm.model_checker, ModelChecker)

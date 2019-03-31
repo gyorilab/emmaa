@@ -9,6 +9,8 @@ EMMAA modules reference
    statements
    model
    model_tests
+   test_analysis
+   answer_queries
    priors
    readers
    database

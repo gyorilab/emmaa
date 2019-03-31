@@ -291,6 +291,7 @@ class TestRound(object):
 
 class StatsGenerator(object):
     """Generates statistic for a given test round.
+
     Parameters
     ----------
     model_name : str
