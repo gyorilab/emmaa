@@ -1,16 +1,20 @@
 import json
-from os import path
-
+import argparse
 import boto3
 import logging
+from os import path
+from jinja2 import Template
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response
 
-from emmaa.model import load_config_from_s3
-from indra.statements import get_all_descendants, Statement
-from jinja2 import Template
+from indra.statements import get_all_descendants, IncreaseAmount, \
+    DecreaseAmount, Activation, Inhibition, AddModification, \
+    RemoveModification
 
-from emmaa.answer_queries import answer_immediate_query
+from emmaa.db import get_db
+from emmaa.model import load_config_from_s3
+from emmaa.answer_queries import answer_immediate_query, \
+    get_registered_queries, GroundingError, load_model_manager_from_s3
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -35,23 +39,50 @@ MODEL = _load_template('model.html')
 QUERIES = _load_template('query.html')
 
 
+model_cache = {}
+
+
 def _get_models():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
-        model_id = pref['Prefix'].split('/')[1]
-        try:
-            config_json = load_config_from_s3(model_id)
-        except ClientError:
-            logger.warning(f"Model {model_id} has no metadata. Skipping...")
+        model = pref['Prefix'].split('/')[1]
+        config_json = get_model_config(model)
+        if not config_json:
             continue
-        if 'human_readable_name' not in config_json.keys():
-            logger.warning(
-                f"Model {model_id} has no readable name. Skipping...")
-            continue
-        model_data.append((model_id, config_json))
+        model_data.append((model, config_json))
     return model_data
+
+
+def get_model_config(model):
+    if model in model_cache:
+        return model_cache[model]
+    try:
+        config_json = load_config_from_s3(model)
+        model_cache[model] = config_json
+    except ClientError:
+        logger.warning(f"Model {model} has no metadata. Skipping...")
+        return None
+    if 'human_readable_name' not in config_json.keys():
+        logger.warning(f"Model {model} has no readable name. Skipping...")
+        model_cache[model] = None
+    return model_cache[model]
+
+
+def get_queryable_stmt_types():
+    """Return Statement class names that can be used for querying."""
+    def get_sorted_descendants(cls):
+        return sorted(get_names(get_all_descendants(cls)))
+
+    def get_names(classes):
+        return [s.__name__ for s in classes]
+
+    stmt_types = \
+        get_names([Activation, Inhibition, IncreaseAmount, DecreaseAmount]) + \
+        get_sorted_descendants(AddModification) + \
+        get_sorted_descendants(RemoveModification)
+    return stmt_types
 
 
 @app.route('/')
@@ -71,25 +102,45 @@ def get_model_dashboard(model):
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
     model_data = _get_models()
-    stmt_types = sorted([s.__name__ for s in get_all_descendants(Statement)])
-    return QUERIES.render(model_data=model_data, stmt_types=stmt_types)
+    stmt_types = get_queryable_stmt_types()
+
+    user_email = 'joshua@emmaa.com'
+    old_results = get_registered_queries(user_email)
+
+    return QUERIES.render(model_data=model_data, stmt_types=stmt_types,
+                          old_results=old_results)
 
 
 @app.route('/query/submit', methods=['POST'])
 def process_query():
+    # Print inputs.
     logger.info('Got model query')
     print("Args -----------")
     print(request.args)
     print("Json -----------")
     print(str(request.json))
     print("------------------")
-    models = []
-    subj = ''
-    obj = ''
-    stmt_type = ''
-    user_info = request.json.get('user')
-    register = 'true' == request.json.get('register') if \
-        request.args.get('register') else False
+
+    # Extract info.
+    expected_query_keys = {f'{pos}Selection'
+                           for pos in ['subject', 'object', 'type']}
+    expceted_models = {mid for mid, _ in _get_models()}
+    try:
+        user_email = request.json['user']['email']
+        subscribe = request.json.get('register') == 'true' if \
+            request.args.get('register') else False
+        query_json = request.json['query']
+        assert set(query_json.keys()) == expected_query_keys, \
+            (f'Did not get expected query keys: got {set(query_json.keys())} '
+             f'not {expected_query_keys}')
+        models = set(request.json.get('models'))
+        assert models < expceted_models, \
+            f'Got unexpected models: {models - expceted_models}'
+    except (KeyError, AssertionError) as e:
+        logger.exception(e)
+        logger.error("Invalid query!")
+        abort(Response(f'Invalid request: {str(e)}', 400))
+
     is_test = 'test' in request.json or 'test' == request.json.get('tag')
 
     if is_test:
@@ -97,30 +148,35 @@ def process_query():
         res = {'result': 'test passed', 'ref': None}
 
     else:
-        if request.json.get('query'):
-            models = request.json.get('query').get('models')
-            subj = request.json.get('query').get('subjectSelection')
-            obj = request.json.get('query').get('objectSelection')
-            stmt_type = request.json.get('query').get('typeSelection')
-
-        if all([models, subj, obj, stmt_type]):
-            query_dict = request.json.copy()
-            assert 'test' not in request.json
-
-            # submit to emmaa query db
-            logger.info('Query submitted')
-            result = answer_immediate_query(query_dict)
-            logger.info('Answer to query received, responding to client.')
-            res = {'result': result}
-        else:
-            # send error
-            logger.info('Invalid query')
-            abort(Response('Invalid query', 400))
+        logger.info('Query submitted')
+        try:
+            result = answer_immediate_query(
+                user_email, query_json, models, subscribe)
+        except GroundingError as e:
+            logger.exception(e)
+            logger.error("Invalid grounding!")
+            abort(Response(f'Invalid entity: {str(e)}', 400))
+        logger.info('Answer to query received, responding to client.')
+        res = {'result': result}
 
     logger.info('Result: %s' % str(res))
     return Response(json.dumps(res), mimetype='application/json')
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--port', default=5000, type=int)
+    parser.add_argument('--preload', action='store_true')
+    args = parser.parse_args()
+
+    # TODO: make pre-loading available when running service via Gunicorn
+    if args.preload:
+        # Load all the model configs
+        models = _get_models()
+        # Load all the model mamangers for queries
+        for model, _ in models:
+            load_model_manager_from_s3(model)
+
     print(app.url_map)  # Get all avilable urls and link them
-    app.run()
+    app.run(host=args.host, port=args.port)

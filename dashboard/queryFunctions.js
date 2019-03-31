@@ -18,7 +18,7 @@ function postQuery(queryContainer) {
 
   // Collect model query
   let querySel = collectQuery(queryContainer)
-  if (!querySel) {
+  if (querySel.length < 2) {
     queryNotify('Did not send query');
     return;
   }
@@ -28,7 +28,8 @@ function postQuery(queryContainer) {
 
   let ajax_response = submitQuery({
     user: userInfo,
-    query: querySel,
+    models: querySel[0],
+    query: querySel[1],
     register: reg
   }, null)
 
@@ -40,6 +41,7 @@ function collectQuery(queryContainer) {
   console.log('function collectQuery(queryContainer)')
   let dropdownSelections = queryContainer.getElementsByClassName('custom-select')
 
+  result = []
   query = {};
   checkboxes = []
 
@@ -55,7 +57,7 @@ function collectQuery(queryContainer) {
     alert('Must select at least one model!')
     return;
   };
-  query['models'] = checkboxes;
+  result.push(checkboxes);
 
   //  Collect dropdown selections
   for (selection of dropdownSelections) {
@@ -67,8 +69,9 @@ function collectQuery(queryContainer) {
   // Collect subject/object from forms
   query['subjectSelection'] = document.getElementById('subjectInput').value;
   query['objectSelection'] = document.getElementById('objectInput').value;
+  result.push(query);
 
-  return query;
+  return result;
 }
 
 function submitQuery(queryDict, test) {
@@ -100,22 +103,23 @@ function submitQuery(queryDict, test) {
           break;
         case 400:
           console.log('400 response')
-          queryNotify('Query failed. Code: ' + xhr.status)
+          queryNotify('Query failed: ' + statusText)
           break;
         case 401:
           console.log('401 response')
-          queryNotify('Query failed. Code: ' + xhr.status)
+          queryNotify('Query failed: ' + statusText)
           break;
         case 404:
           console.log('404 response')
-          queryNotify('Query failed. Code: ' + xhr.status)
+          queryNotify('Query failed: ' + statusText)
           break;
         case 500:
           console.log('500 response')
-          queryNotify('Query failed. Code: ' + xhr.status)
+          queryNotify('Query failed: ' + statusText)
           break;
         default:
           console.log('Unhandled server response: ' + xhr.status)
+          queryNotify('Query failed: ' + statusText)
       }
     }
   })
@@ -128,7 +132,7 @@ function populateQueryResults(json) {
   let qrTable = document.getElementById('queryResults');
   clearTable(qrTable)
   for (model in json.result) {
-    qrTable.appendChild(addToRow([model, json.result[model]]));
+    qrTable.appendChild(addToRow([json.result[model][0], json.result[model][2]]));
   }
 }
 

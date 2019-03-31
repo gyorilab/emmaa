@@ -150,6 +150,24 @@
         <h4 class="my-0 font-weight-normal">Your previous queries</h4>
       </div>
       <div class="card-body" id="user-queries">
+        <table class="table">
+          <thead>
+            <th>Model</th>
+            <th>Query</th>
+            <th>Status</th>
+            <th>Date</th>
+          </thead>
+          <tbody class="table-body" id="old-results">
+            {% for result in old_results %}
+            <tr>
+              <td>{{ result[0] }}</td>
+              <td>{{ result[1]['typeSelection'] }}({{ result[1]['subjectSelection'] }}, {{ result[1]['objectSelection'] }})</td>
+              <td>{{ result[2] }}</td>
+              <td>{{ result[3] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

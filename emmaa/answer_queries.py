@@ -1,58 +1,115 @@
 import logging
 import pickle
+from datetime import datetime
 from indra.statements.statements import get_statement_by_name
 from indra.statements.agent import Agent
 from indra.databases.hgnc_client import get_hgnc_id
-from indra.explanation.model_checker import ModelChecker
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
-from emmaa.model_tests import (StatementCheckingTest, ScopeTestConnector,
-                               ModelManager)
-from emmaa.model import EmmaaModel
-from emmaa.util import get_s3_client
+from emmaa.util import get_s3_client, make_date_str
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
+db = get_db('primary')
+
+
+model_manager_cache = {}
+
+
+def answer_immediate_query(user_email, query_dict, model_names, subscribe):
+    """Answer an immediate query for each model given a list of model names."""
+    db.put_queries(user_email, query_dict, model_names, subscribe)
+    saved_results = db.get_results_from_query(query_dict, model_names)
+    checked_models = {res[0] for res in saved_results}
+    if checked_models == set(model_names):
+        return format_results(saved_results)
+    stmt = get_statement_by_query(query_dict)
+    new_results = []
+    new_date = make_date_str(datetime.now())
+    for model_name in model_names:
+        if model_name not in checked_models:
+            result = {}
+            mm = load_model_manager_from_s3(model_name)
+            response = mm.answer_query(stmt)
+            new_results.append((model_name, query_dict, response, new_date))
+    all_results = saved_results + new_results
+    return format_results(all_results)
+
+
+def answer_registered_queries(model_name, model_manager=None):
+    """Retrieve queries registered on database for a given model, answer them,
+    and put results to a database.
+    """
+    if not model_manager:
+        model_manager = load_model_manager_from_s3(model_name)
+    query_dicts = db.get_queries(model_name)
+    query_stmt_pairs = get_query_stmt_pairs(query_dicts)
+    results = model_manager.answer_queries(query_stmt_pairs)
+    db.put_results(model_name, results)
+
+
+def get_registered_queries(user_email):
+    """Get formatted results to registered queries by user."""
+    results = db.get_results(user_email)
+    return format_results(results)
+
+
+def format_results(results):
+    """Format db output to a standard json structure."""
+    formatted_results = []
+    for result in results:
+        formatted_result = {}
+        formatted_result['model'] = result[0]
+        formatted_result['query'] = result[1]
+        formatted_result['response'] = result[2]
+        formatted_result['date'] = result[3]    
+        formatted_results.append(formatted_result)
+    return results
+
+
+def get_query_stmt_pairs(queries):
+    """Return a list of tuples each containing a query dictionary and a
+    statement derived from it.
+    """
+    query_stmt_pairs = []
+    for query_dict in queries:
+        query_stmt_pairs.append(
+            (query_dict, get_statement_by_query(query_dict)))
+    return query_stmt_pairs
 
 
 def get_statement_by_query(query_dict):
     """Get an INDRA Statement object given a query dictionary"""
-    stmt_type = query_dict['query']['typeSelection']
+    stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
-    subj = get_agent_from_name(query_dict['query']['subjectSelection'])
-    obj = get_agent_from_name(query_dict['query']['objectSelection'])
+    subj = get_agent_from_name(query_dict['subjectSelection'])
+    obj = get_agent_from_name(query_dict['objectSelection'])
     stmt = stmt_class(subj, obj)
     return stmt
 
 
-def get_model_list(query_dict):
-    return query_dict['query']['models']
-
-
-def answer_immediate_query(query_dict):
-    stmt = get_statement_by_query(query_dict)
-    model_names = get_model_list(query_dict)
-    results = {}
-    for model_name in model_names:
-        mm = load_model_manager_from_s3(model_name)
-        response = mm.answer_query(stmt)
-        results[model_name] = response
-    return results
-
-
 def load_model_manager_from_s3(model_name):
+    model_manager = model_manager_cache.get(model_name)
+    if model_manager:
+        logger.info(f'Loaded model manager for {model_name} from cache.')
+        return model_manager
     client = get_s3_client()
-    key = f'models/{model_name}/latest_model_manager.pkl'
-    logger.info(f'Loading latest model manager for {model_name} model.')
+    key = f'results/{model_name}/latest_model_manager.pkl'
+    logger.info(f'Loading latest model manager for {model_name} model from '
+                f'S3.')
     obj = client.get_object(Bucket='emmaa', Key=key)
     model_manager = pickle.loads(obj['Body'].read())
+    model_manager_cache[model_name] = model_manager
     return model_manager
 
 
 def get_agent_from_name(ag_name):
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
+    if not grounding:
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
     ag.db_refs = {grounding[0]: grounding[1]}
     return ag
 
@@ -81,3 +138,9 @@ def get_grounding_from_name(name):
     mesh_id, _ = get_mesh_id_name(name)
     if mesh_id:
         return ('MESH', mesh_id)
+
+    return None
+
+
+class GroundingError(Exception):
+    pass

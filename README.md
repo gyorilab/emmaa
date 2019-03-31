@@ -2,7 +2,7 @@
 EMMAA is an Ecosystem of Machine-maintained Models with Automated Analysis.
 The primary way users can interact with EMMAA is by using the EMMAA Dashboard
 which can be accessed 
-[here](http://emmaa-service-1943566322.us-east-1.elb.amazonaws.com).
+[here](http://emmaa.indra.bio).
 
 ## Documentation
 For a detailed documentation of EMMA, visit http://emmaa.readthedocs.io

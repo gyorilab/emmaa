@@ -1,4 +1,5 @@
 from fnvhash import fnv1a_32
+from sqlalchemy.exc import IntegrityError
 
 __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
 
@@ -118,14 +119,15 @@ class EmmaaDatabaseManager(object):
     def add_user(self, email):
         """Add a new user's email to Emmaa's User table."""
         try:
-            new_user = User(email)
+            new_user = User(email=email)
             with self.get_session() as sess:
                 sess.add(new_user)
-        except Exception:
+                user_id = new_user.id
+        except IntegrityError as e:
             logger.warning(f"A user with email {email} already exists.")
-        return new_user.id
+        return user_id
 
-    def put_queries(self, user_id, query_json, model_ids):
+    def put_queries(self, user_email, query_json, model_ids, subscribe=True):
         """Add queries to the database for a given user.
 
         Note: users are not considered, and user_id is ignored. In future, the
@@ -133,24 +135,36 @@ class EmmaaDatabaseManager(object):
 
         Parameters
         ----------
-        user_id : str
-            (currently unused) the ID of the user that entered the queries.
+        user_email : str
+            (currently unused) the email of the user that entered the queries.
         query_json : json
             The json dictionary containing the data needed to specify the
             query.
         model_ids : list[str]
             A list of the short, standard model IDs to which the user wishes
             to apply these queries.
+        subscribe : bool
+            True if the user wishes to subscribe to this query.
         """
-        if not isinstance(model_ids, list):
-            raise TypeError("Invalid type: %s" % type(model_ids))
-        # TODO: Handle case where queries already exist
-        # TODO: Unclude user info
+        # Make sure model_ids is a list.
+        if not isinstance(model_ids, list) and not isinstance(model_ids, set):
+            raise TypeError("Invalid type: %s. Must be list or set."
+                            % type(model_ids))
+
+        if not subscribe:
+            return
+
+        # Get the existing hashes.
+        with self.get_session() as sess:
+            existing_hashes = {h for h, in sess.query(Query.hash).all()}
+
+        # TODO: Include user info
         queries = []
         for model_id in model_ids:
             qh = hash_query(query_json, model_id)
-            queries.append(Query(model_id=model_id, json=query_json.copy(),
-                                 hash=qh))
+            if qh not in existing_hashes:
+                queries.append(Query(model_id=model_id, json=query_json.copy(),
+                                     hash=qh))
 
         with self.get_session() as sess:
             sess.add_all(queries)
@@ -169,6 +183,7 @@ class EmmaaDatabaseManager(object):
         queries : list[json]
             A list of query json's retrieved from the database.
         """
+        # TODO: check whether a query is registered or not.
         with self.get_session() as sess:
             q = sess.query(Query.json).filter(Query.model_id == model_id)
             queries = [q for q, in q.all()]
@@ -195,7 +210,17 @@ class EmmaaDatabaseManager(object):
             sess.add_all(results)
         return
 
-    def get_results(self, user_id):
+    def get_results_from_query(self, query_json, model_ids):
+        hashes = {hash_query(query_json, model_id) for model_id in model_ids}
+        with self.get_session() as sess:
+            q = (sess.query(Query.model_id, Query.json, Result.string,
+                            Result.date)
+                 .filter(Result.query_hash.in_(hashes),
+                         Query.hash == Result.query_hash))
+            results = [tuple(res) for res in q.all()]
+        return results
+
+    def get_results(self, user_email):
         """Get the results for which the user has registered.
 
         Note: currently users are not handled, and this will simply return
@@ -203,8 +228,8 @@ class EmmaaDatabaseManager(object):
 
         Parameters
         ----------
-        user_id : str
-            The standardised user id.
+        user_email : str
+            The email of a user.
 
         Returns
         -------

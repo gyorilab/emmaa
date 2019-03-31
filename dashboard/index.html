@@ -87,8 +87,7 @@
                data-holder-rendered="true"
                style="height: 225px; width: 100%; display: block;">
           <div class="card-body">
-            <p class="card-text">Short model description of {{ model_meta['human_readable_name'].lower() }}</p>
-            <p class="card-text modelUpdateInfo" id="amlUpdate">Last updated</p>
+            <p class="card-text">{{ model_meta['description'] }}</p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
                 <a class="btn btn-sm btn-outline-secondary" href="./dashboard/{{ model_id }}">Details</a>

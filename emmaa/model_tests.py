@@ -13,6 +13,7 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
+from emmaa.answer_queries import answer_registered_queries
 
 
 logger = logging.getLogger(__name__)
@@ -130,27 +131,40 @@ class ModelManager(object):
         else:
             return 'Query is not applicable for this model.'
 
-    def answer_queries(self, stmts):
-        """Answer all queries registered for this model."""
-        responses = {}
+    def answer_queries(self, query_stmt_pairs):
+        """Answer all queries registered for this model.
+
+        Parameters
+        ----------
+        query_stmt_pairs : list[tuple(json,
+                                indra.statements.statements.Statement)]
+            A list of tuples each containing a query json and an INDRA
+            statement derived from it.
+
+        Returns
+        -------
+        responses : list[tuple(json, str)]
+            A list of tuples each containing a query json and a result string.
+        """
+        responses = []
         applicable_queries = []
         for stmt in stmts:
             test = StatementCheckingTest(stmt,
                 self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
-                applicable_queries.append(test)
+                applicable_queries.append(query_json)
+                applicable_stmts.append(test)
             else:
-                responses[stmt.get_hash()] = (
-                    'Query is not applicable for this model.')
+                responses.append(
+                    (query_json, 'Query is not applicable for this model.'))
+        self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
-                                           applicable_queries])
+                                           applicable_stmts])
         self.get_im()
         results = self.model_checker.check_model()
-        for (stmt, result) in results:
-            if result.path_found:
-                responses[stmt.get_hash()] = self.make_english_result(result)
-            else:
-                responses[stmt.get_hash()] = result.result_code
+        for ix, (_, result) in enumerate(results):
+            responses.append(
+                (applicable_queries[ix], self.process_response(result)))
         return responses
 
     def process_response(self, result):
@@ -348,9 +362,15 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
         Name of EmmaaModel to load from S3.
     test_name : str
         Name of test file to load from S3.
+    belief_cutoff : float
+        A belief cutoff to assemble a model.
+    upload_mm : bool
+        Whether to upload a model manager instance to S3 as a pickle file.
     upload_results : bool
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests.
+    upload_stats : bool
+        Whether to upload latest statistics about model and a test
 
     Returns
     -------
@@ -385,4 +405,5 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
+    answer_registered_queries(model_name, model_manager=mm)
     return (mm, sg)
