@@ -39,7 +39,9 @@ S3. Finally, the new test results are propagated onto the EMMAA Dashboard
 website. This process is summarized in the figure below.
 
 .. image:: ../_static/images/testing_pipeline.png
-   :scale: 50 %
+   :width: 2134px
+   :scale: 33 %
+   :align: center
 
 The code implemented here is avilable in the following places:
 
