@@ -11,7 +11,7 @@ valid. A query can also optionally be submitted for registration. With this
 option, when returning to the page, previous queries will be loaded with
 their latest result.
 
-.. figure:: ../../_static/images/query_filled.png
+.. figure:: ../_static/images/query_filled.png
   :align: center
   :figwidth: 100 %
 

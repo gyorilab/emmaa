@@ -10,6 +10,7 @@ EMMAA: Ecosystem of Machine-maintained models with Automated Analysis
    :maxdepth: 3
 
    architecture/index
+   dashboard/index
    modules/index
 
 

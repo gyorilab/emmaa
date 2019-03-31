@@ -15,7 +15,7 @@ statement types, the top 10 agents in the model, most supported statements,
 how the number of statements have changed over time and show which statements
 where recently added to the model
 
-.. figure:: ../../_static/images/aml_model_tab.png
+.. figure:: ../_static/images/aml_model_tab.png
   :align: center
   :figwidth: 75 %
 
@@ -28,7 +28,7 @@ The tests tab contains information about how many tests were applied and
 passed to the model and also how the percentage of tests that passed evolved
 over time.
 
-.. figure:: ../../_static/images/aml_tests_tab_top.png
+.. figure:: ../_static/images/aml_tests_tab_top.png
   :align: center
   :figwidth: 100 %
 
@@ -39,7 +39,7 @@ If any new tests were applied in the latest test run of the model
 they are shown under *New Applied Tests*, while the new tests that passed are
 shown under *New Passed Tests*.
 
-.. figure:: ../../_static/images/aml_tests_tab_tests.png
+.. figure:: ../_static/images/aml_tests_tab_tests.png
   :align: center
   :figwidth: 100 %
 
@@ -48,7 +48,7 @@ shown under *New Passed Tests*.
 
 Further down, all tests applied to the model are shown.
 
-.. figure:: ../../_static/images/aml_tests_all_tests.png
+.. figure:: ../_static/images/aml_tests_all_tests.png
   :align: center
   :figwidth: 100 %
 

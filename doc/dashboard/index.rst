@@ -16,3 +16,10 @@ built, tested and analyzed models.
 
 The EMMAA Dashboard is accessible at
 `http://emmaa-service-1943566322.us-east-1.elb.amazonaws.com/home <http://emmaa-service-1943566322.us-east-1.elb.amazonaws.com/home>`_.
+
+
+.. toctree::
+   :maxdepth: 4
+
+   model_queries
+   models_page

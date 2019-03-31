@@ -16,4 +16,3 @@ available at http://github.com/indralab/emmaa.
    assembly
    metamodel
    analysis
-   dashboard
