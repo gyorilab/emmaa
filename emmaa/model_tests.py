@@ -10,6 +10,7 @@ from collections import defaultdict
 from indra.explanation.model_checker import ModelChecker
 from indra.explanation.reporting import stmts_from_path
 from indra.assemblers.english.assembler import EnglishAssembler
+from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
@@ -114,7 +115,9 @@ class ModelManager(object):
                                     self.model.assembled_stmts)
             for stmt in stmts:
                 ea = EnglishAssembler([stmt])
-                sentences.append(ea.make_model())
+                sentence = ea.make_model()
+                link = get_statement_queries([stmt])[0] + '&format=html'
+                sentences.append((sentence, link))
         return sentences
 
     def make_english_result_code(self, result):
@@ -174,7 +177,10 @@ class ModelManager(object):
         Return a result code otherwise.
         """
         if result.paths:
-            return ' '.join(self.make_english_path(result))
+            path = []
+            for sentence in self.make_english_path(result):
+                path.append(sentence[0])
+            return ' '.join(path)
         return self.make_english_result_code(result)
 
     def assembled_stmts_to_json(self):
