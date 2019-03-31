@@ -1,20 +1,20 @@
 import json
-from os import path
-
+import argparse
 import boto3
 import logging
+from os import path
+from jinja2 import Template
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response
 
-from emmaa.db import get_db
-from emmaa.model import load_config_from_s3
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification
-from jinja2 import Template
 
+from emmaa.db import get_db
+from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import answer_immediate_query, \
-    get_registered_queries, GroundingError
+    get_registered_queries, GroundingError, load_model_manager_from_s3
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -164,5 +164,18 @@ def process_query():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--port', default=5000)
+    parser.add_argument('--preload', action='store_true')
+    args = parser.parse_args()
+
+    if args.preload:
+        # Load all the model configs
+        models = _get_models()
+        # Load all the model mamangers for queries
+        for model, _ in models:
+            load_model_manager_from_s3(model)
+
     print(app.url_map)  # Get all avilable urls and link them
-    app.run()
+    app.run(host=args.host, port=args.port)

@@ -91,7 +91,7 @@ def get_statement_by_query(query_dict):
 
 
 def load_model_manager_from_s3(model_name):
-    model_manager = model_manager_cache.get('model_name')
+    model_manager = model_manager_cache.get(model_name)
     if model_manager:
         logger.info(f'Loaded model manager for {model_name} from cache.')
         return model_manager
@@ -101,7 +101,7 @@ def load_model_manager_from_s3(model_name):
                 f'S3.')
     obj = client.get_object(Bucket='emmaa', Key=key)
     model_manager = pickle.loads(obj['Body'].read())
-    model_manager_cache['model_name'] = model_manager
+    model_manager_cache[model_name] = model_manager
     return model_manager
 
 
