@@ -9,11 +9,14 @@ the menu.
 Model Tab
 ---------
 
-The model tab contains model info with the date the model was last updated
-and shows the Ndex ID of the model. The page also shows the distribution of
-statement types, the top 10 agents in the model, most supported statements,
-how the number of statements have changed over time and show which statements
-where recently added to the model
+The model tab contains model info with the date the model was last updated and
+links to the NDEx website where a network view of the model can be examined.
+The page also displays properties of the current state of the model, namely,
+the distribution of statement types, the top 10 agents in the model, and the
+statements with the most evidential support from various knowledge sources.
+Further, the page shows how the number of statements in the model has evolved
+over time, and which statements were added to the model during the most recent
+update.
 
 .. figure:: ../_static/images/aml_model_tab.png
   :align: center
@@ -24,9 +27,10 @@ where recently added to the model
 Tests Tab
 ---------
 
-The tests tab contains information about how many tests were applied and
-passed to the model and also how the percentage of tests that passed evolved
-over time.
+The tests tab contains two related plots: one showing the evolution over time
+of the  percentage of applicable tests that passed, and another showing the
+absolute number of tests that were applied to the model and the number of tests
+that passed. 
 
 .. figure:: ../_static/images/aml_tests_tab_top.png
   :align: center
@@ -46,7 +50,11 @@ shown under *New Passed Tests*.
   *If new tests were applied, they will be shown together with a breakdown of
   which tests passed*
 
-Further down, all tests applied to the model are shown.
+Further down, all tests applied to the model are shown. A green check mark is
+shown for tests that passed, along with an English language summary of how,
+specifically, the model satisfies the test condition. For tests that didn't
+pass, a red cross is shown, along with the reason for the model not having
+passed the test (e.g., "Statement subject not in model").
 
 .. figure:: ../_static/images/aml_tests_all_tests.png
   :align: center

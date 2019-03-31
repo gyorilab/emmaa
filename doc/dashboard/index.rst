@@ -21,5 +21,5 @@ The EMMAA Dashboard is accessible at
 .. toctree::
    :maxdepth: 4
 
-   model_queries
    models_page
+   model_queries
