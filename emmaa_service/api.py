@@ -166,10 +166,11 @@ def process_query():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
     parser.add_argument('--host', default='0.0.0.0')
-    parser.add_argument('--port', default=5000)
+    parser.add_argument('--port', default=5000, type=int)
     parser.add_argument('--preload', action='store_true')
     args = parser.parse_args()
 
+    # TODO: make pre-loading available when running service via Gunicorn
     if args.preload:
         # Load all the model configs
         models = _get_models()
