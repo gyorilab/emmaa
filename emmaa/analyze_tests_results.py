@@ -8,6 +8,7 @@ from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         make_date_str, get_s3_client)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
+from indra.sources.indra_db_rest.api import get_statement_queries
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class TestRound(object):
         return [str(stmt.get_hash()) for stmt in self.statements]
 
     def get_statement_types(self):
-        """Return a sorted list of tuples containing a statement type and a 
+        """Return a sorted list of tuples containing a statement type and a
         number of times a statement of this type occured in a model.
         """
         statement_types = defaultdict(int)
@@ -108,7 +109,9 @@ class TestRound(object):
 
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
-        return ea.make_model()
+        sentence = ea.make_model()
+        link = get_statement_queries([stmt])[0] + '&format=html'
+        return (sentence, link)
 
     def get_english_statement_by_hash(self, stmt_hash):
         return self.get_english_statements_by_hash()[stmt_hash]
@@ -173,7 +176,7 @@ class TestRound(object):
         for ix, result in enumerate(self.test_results):
             if result.paths:
                 english_paths[str(self.tests[ix].get_hash())] = (
-                    ' '.join(self.json_results[ix+1]['english_path']))
+                    self.json_results[ix+1]['english_path'])
         return english_paths
 
     def get_english_codes(self):
