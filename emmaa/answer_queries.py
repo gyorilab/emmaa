@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 db = get_db('primary')
 
 
+model_manager_cache = {}
+
+
 def answer_immediate_query(user_email, query_dict, model_names, subscribe):
     """Answer an immediate query for each model given a list of model names."""
     db.put_queries(user_email, query_dict, model_names, subscribe)
@@ -88,11 +91,17 @@ def get_statement_by_query(query_dict):
 
 
 def load_model_manager_from_s3(model_name):
+    model_manager = model_manager_cache.get('model_name')
+    if model_manager:
+        logger.info(f'Loaded model manager for {model_name} from cache.')
+        return model_manager
     client = get_s3_client()
     key = f'results/{model_name}/latest_model_manager.pkl'
-    logger.info(f'Loading latest model manager for {model_name} model.')
+    logger.info(f'Loading latest model manager for {model_name} model from '
+                f'S3.')
     obj = client.get_object(Bucket='emmaa', Key=key)
     model_manager = pickle.loads(obj['Body'].read())
+    model_manager_cache['model_name'] = model_manager
     return model_manager
 
 
