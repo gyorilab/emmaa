@@ -5,7 +5,11 @@ which can be accessed
 [here](http://emmaa.indra.bio).
 
 ## Documentation
-For a detailed documentation of EMMA, visit http://emmaa.readthedocs.io
+For a detailed documentation of EMMA, visit http://emmaa.readthedocs.io.
+The documentation contains three main sections:
+- A conceptual description of the [EMMAA architecture and approach](https://emmaa.readthedocs.io/en/latest/architecture/index.html)
+- An [introduction to the EMMAA Dashboard](https://emmaa.readthedocs.io/en/latest/dashboard/index.html)
+- A [module-level documentation of all of EMMAA's code base](https://emmaa.readthedocs.io/en/latest/modules/index.html) linked directly to the source code on Github
 
 ## Concept
 The main idea behind EMMAA is to create a set of computational models that
@@ -34,4 +38,4 @@ to be installed and configured separately.
 
 ## Funding
 The development of EMMAA is funded under the DARPA Automating Scientific
-Knowledge Extraction (ASKE) program.
+Knowledge Extraction (ASKE) program under award HR00111990009.
