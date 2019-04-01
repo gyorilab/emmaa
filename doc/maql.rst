@@ -97,24 +97,51 @@ Specifying the overall path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The overall path specification can be done using the JSON Schema developed
 for INDRA Statements (see https://github.com/sorgerlab/indra/blob/master/indra/resources/statements_schema.json).
-The path is specified via an overall *type*, and, depending on the type,
+The *path* is specified via an overall *type*, and, depending on the type,
 the appropriate Agent arguments.
 
 Entity constraints
 ~~~~~~~~~~~~~~~~~~
 It is possible to specify constraints on the entities (*entity_constraints*)
 appearing along the path, for instance, whether to include or exclude
-certain Agents. The keys for these specifications are *include_agents* and
-*exclude_agents* respectively.
+certain Agents. The keys for these specifications are *include* and
+*exclude* respectively.
 
 Relationship constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~
 It is also possible to specify constraints on relationships along the path
-(*relationship_constraints*) with the *include_relationships* and
-*exclude_relationships* keys.
+(*relationship_constraints*) with the *include* and
+*exclude* keys.
 
 Examples
 ~~~~~~~~
 Example: How does EGFR lead to ERK phosphorylation without including
 PI3K or any transcriptional regulation?
 
+.. code-block:: json
+
+    {"type": "path_property",
+     "path": {
+        "type": "Phosphorylation",
+        "enz": {
+            "type": "Agent":
+            "name": "EGFR"
+            },
+        "sub": {
+            "type": "Agent":
+            "name": "ERK"
+            }
+        },
+      "entity_constraints": {
+        "exclude": [
+            {"type": "Agent",
+             "name": "PI3K"}
+            ]
+        },
+      "relationship_constratints": {
+        "exclude": [
+            {"type": "IncreaseAmount"},
+            {"type": "DecreaseAmount"}
+            ]
+        }
+     }
