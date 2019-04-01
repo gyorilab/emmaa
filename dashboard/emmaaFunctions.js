@@ -233,7 +233,8 @@ function populateTestResultTable(tableBody, json) {
   var stmtByEv = json.model_summary.stmts_by_evidence
 
   for (pair of stmtByEv.slice(0,10)) {
-    let rowEl = addToRow([english_stmts[pair[0]], pair[1]])
+    let rowEl = addToRow(['', pair[1]])
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], english_stmts[pair[0]]);
     stEvTable.appendChild(rowEl)
   }
 
@@ -258,7 +259,9 @@ function populateTestResultTable(tableBody, json) {
   var new_stmts = json.model_delta.statements_delta.added
   console.log(new_stmts)
   for (stmt of new_stmts) {
+    // Has columns: statements
     let rowEl = addToRow([stmt])
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], stmt)
     newStTable.appendChild(rowEl)
   }
   // Tests Tab
@@ -309,7 +312,9 @@ function populateTestResultTable(tableBody, json) {
   for (pair of newAppTests) {
     // Has columns: Test; Status;
     let rowEl = addToRow(pair)
-    newAppliedTable.appendChild(generatePassFail(rowEl, 1))
+    rowEl = generatePassFail(rowEl, 1)
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], pair[0])
+    newAppliedTable.appendChild(rowEl)
   }
   // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests')
@@ -319,10 +324,10 @@ function populateTestResultTable(tableBody, json) {
 
   for (i = 0; i < newPasTests.length; i++) {
     // Has columns: test; Path Found
-    let rowEl = addToRow([newPasTests[i], newPaths[i]])
-    if (rowEl.children[1].textContent.split('.').length > 2) {
-      rowEl = addLineBreaks(rowEl, 1)
-    }
+    // let rowEl = addToRow([newPasTests[i], newPaths[i]])
+    let rowEl = addToRow(['', ''])
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i])
+    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i])
     newPassedTable.appendChild(rowEl)
   }
 
@@ -336,9 +341,8 @@ function populateTestResultTable(tableBody, json) {
   for (val of resultValues) {
     // Has columns: test; Status; Path Found;
     let rowEl = addToRow(val)
-    if (rowEl.children[2].textContent.split('.').length > 2) {
-      rowEl = addLineBreaks(rowEl, 2)
-    }
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0])
+    rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2])
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
