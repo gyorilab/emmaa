@@ -29,3 +29,19 @@ class EmmaaApiTest(unittest.TestCase):
         resp = self.app.post('/query/submit', json=test_query)
 
         assert resp.status_code == 200
+
+    def test_query(self):
+        """Test querying a model"""
+
+        test_query = {'user': {'email': 'joshua@emmaa.com',
+                                   'name': 'joshua',
+                                   'slack_id': '123456abcdef'},
+                          'models': ['rasmodel'],
+                          'query': {'objectSelection': 'AKT1',
+                                    'subjectSelection': 'PIK3CA',
+                                    'typeSelection': 'activation'},
+                          'register': 'false'}
+
+        resp = self.app.post('/query/submit', json=test_query)
+
+        assert resp.status_code == 200
