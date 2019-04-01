@@ -131,7 +131,7 @@ test-driven modeling brought to the forefront how common these processes are.
 
 Second, just as in software development, test-driven modeling helps the modeler
 avoid decorating a model with details that are not essential to improving
-overall performance. This helps to avoid modeling quagmires in which a a
+overall performance. This helps to avoid modeling quagmires in which a
 modeler attempts to encode everything known about a process in maximum detail.
 The existence of a set of tests, and the iterative development process that
 EMMAA enables (serving here as a tool for continuous integration of models),
@@ -184,18 +184,16 @@ automatically extracted observations. In our initial work, we focused on the
 application of curated experimental observations (from the BEL large corpus) to
 automatically assembled mechanistic models. We described above how applying
 these tests to the Ras Machine model helped us to identify issues in our
-automatic model assembly pipeline that had been latent for years.  We now also
+automatic model assembly pipeline that had been latent for years. We now also
 see the value in automatically collecting tests and using high-quality curated
 models to evaluate the plausibility of the test observations themselves. For
 example, in the development of the Ras Model, we found that a surprising
 proportion (over 15%) of the tests in the BEL Large Corpus were incorrectly
-curated.  These *test errors* were inadvertently highlighted when the *model*
+curated. These *test errors* were inadvertently highlighted when the *model*
 failed to pass them. We imagine that observations derived from a noisy source
 (such as machine reading) could be subjected to checking by one or more
-high-quality model, with the model establishing the likelihood that a finding
+high-quality models, with the model establishing the likelihood that a finding
 resulted from a machine reading error. It is also possible to imagine that in
-fields where where models are mature, new scientific findings could be
+fields where models are mature, new scientific findings could be
 automatically subjected to model-driven evaluation, highlighting the ways in
 which they either support or contradict established models.
-
-
