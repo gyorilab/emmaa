@@ -1,31 +1,121 @@
-ASKE Month 5 Milestone Report
-=============================
+ASKE Month 5 Milestone Report: Lessons Learned
+==============================================
 
-Th
+Automated model assembly: the challenge of defining scope and context
+---------------------------------------------------------------------
 
-Difficult of defining model scope
+The initial development of EMMAA focused on deplopying an automated model
+assembly pipeline to generate models specific to the various cancer types
+catalogued in the cancer genome atlas (TCGA). Collectively these models would
+constitute an "Ecosystem" of self-updating, context-specific models that could
+be used to answer mechanistic queries relevant to specific diseases. Context
+specificity was necessary because the answer to queries such as "What is the
+effect of EGFR inhibition on cell growth?" can differ depending on the specific
+gene expression pattern and mutation profile of a particular cancer type.
 
-Benefits of symmetry in model building and testing
+Our initial approach to enforce the context-specificity of automatically
+assembled models is described *here* and is centered on the genetics of specific
+cancer types. Frequently mutated genes in specific cancers were used as search
+terms to query Pubmed for publications which were then processed with
+machine reading tools and assembled into models along with information from
+curated databases.
 
-Test-driven modeling
+Subsequent model testing highlighted a key shortcoming of this approach: tests
+of well-known biochemical pathways would fail in nearly all models because the
+limitations imposed on model scope (in the interest of context specificity)
+resulted in many key genes being omitted.
+
+In an effort to expand models to incorporate key "backbone" genes while still
+retaining context specifity we then implemented two alternative approaches.
+
+1. Run heat diffusion over our biological knowledge network to identify genes
+   that were highly connected to the cancer-specific genes;
+2. Query Reactome, a high quality database of biological pathways, for
+   pathways containing the disease genes, and incorporate all genes
+   from these pathways into the model.
+
+We found that the latter approach involving Reactome was more effective at
+eliminating mechanistic gaps than heat diffusion, which tended to highlight
+irrelevant genes based peculiarities of the knowledge network structure.
+However, even with the automated Reactome-based approach we found that models
+had a very low ratio of passing tests, and glaring mechanistic gaps: for
+example, the melanoma model passed `only 4% of tests
+<http://emmaa.indra.bio/dashboard/skcm>`_ from the BEL Large Corpus, and
+omitted MAP2K1, a protein immediately downstream of (the frequently mutated
+gene) BRAF and a validated target in melanoma.
+
+We therefore explored an alternative approach, in which models would be made
+specific to biochemical pathways rather than cancer types, a la the original
+Ras Machine. We found that the first iteration of this model had a much
+higher pass ratio of 34%, suggesting that models built and limited in scope
+in this way were more likely to have the internal integrity required for
+answering mechanistic queries.
+
+Despite this improvement, the central problem of capturing model context
+remains: even if an automatically assembled model contains the genes relevant
+to a specific disease does not imply that it can answer a mechanistic query in
+a context specific way. For example, the Ras pathway is involved in many cancer
+types, not least in lung cancer and melanoma, yet the effects of intervening in
+the pathways differ between the two diseases. A key remaining challenge is to
+develop a system that can pull in the relevant data (e.g., gene expression,
+mutations) to contextualize structurally identical models, and make use of this
+data during analysis to reach context-specific conclusions.
+
+
+Automated model analysis: benefits of automated model validation
+----------------------------------------------------------------
+
+With respect to model analysis, the first key lesson learned is how valuable
+the process of automated testing is for developing model assembly systems
+such as INDRA and EMMAA.
+
+
+The first and most obvious 
+
+a common approach to modeling there n be a tendency in modeling (particularly in systems
+biology) to develop models to 
+
+with test-driven development in software, 
 
 * Forces a modeler to think locally about satisfying tests, rather than an
   overall narrative or hypothesis. This can lead to unexpected insights, in that
 
    EGFR -> SRC vs. SRC -> EGFR
 
-
-
-* Build a model and use tests to evaluate the credibility of the model
-
 * Can also have a model, collect empirical observations, and use the model to
   evaluate the credibility of the observations
 
-* Either or both of machine 
-
 * Determining what's in a model
+
   Can analyze mechanistically, or can determine empirically
 
+
+
+
+
+
+
+
+Test-driven modeling
+--------------------
+
+A key observation that we have during the development of EMMAA is the value of
+not only model testing as a means of post-hoc model validation, but of
+*test-driven modeling.* That is, the *construction* of scientific models based
+on a corpus of qualitative experimental constraints. This is by analogy with
+`test-driven development
+<https://en.wikipedia.org/wiki/Test-driven_development>`_ in software
+engineering where the tests are written first, and program features are
+only added to satisfy the tests.
+
+This approach has a number of advantages for the construction of scientific
+models. First, the approach to scientific modeling in many fields has been to
+use a formal model to encode a specific hypothesis about a particular
+phenomenon. These "fit-to-purpose" models are useful tools for answer specific
+scientific questions but they are rarely reusable and are biased toward a
+particular explanations. With test-driven modeling, 
+
+.. image:: _static/images/ras_tests_annot.png
 
 
 
