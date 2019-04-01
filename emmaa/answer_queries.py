@@ -55,7 +55,7 @@ def answer_registered_queries(model_name, model_manager=None):
 
 
 def get_registered_queries(user_email):
-    """Get formatted results to registered queries by user."""
+    """Get formatted results to queries registered by user."""
     results = db.get_results(user_email)
     return format_results(results)
 
@@ -85,7 +85,7 @@ def get_query_stmt_pairs(queries):
 
 
 def get_statement_by_query(query_dict):
-    """Get an INDRA Statement object given a query dictionary"""
+    """Get an INDRA Statement object given a query dictionary."""
     stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
     subj = get_agent_from_name(query_dict['subjectSelection'])
