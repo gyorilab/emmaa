@@ -80,32 +80,6 @@ tests:
 
 
 
-The first and most obvious 
-
-a common approach to modeling there n be a tendency in modeling (particularly in systems
-biology) to develop models to 
-
-with test-driven development in software, 
-
-* Forces a modeler to think locally about satisfying tests, rather than an
-  overall narrative or hypothesis. This can lead to unexpected insights, in that
-
-   EGFR -> SRC vs. SRC -> EGFR
-
-* Can also have a model, collect empirical observations, and use the model to
-  evaluate the credibility of the observations
-
-* Determining what's in a model
-
-  Can analyze mechanistically, or can determine empirically
-
-
-
-
-
-
-
-
 Test-driven modeling
 --------------------
 
@@ -128,5 +102,22 @@ particular explanations. With test-driven modeling,
 .. image:: _static/images/ras_tests_annot.png
 
 
+The first and most obvious 
 
+a common approach to modeling there n be a tendency in modeling (particularly in systems
+biology) to develop models to 
 
+with test-driven development in software, 
+
+* Forces a modeler to think locally about satisfying tests, rather than an
+  overall narrative or hypothesis. This can lead to unexpected insights, in that
+
+   EGFR -> SRC vs. SRC -> EGFR
+
+* Can also have a model, collect empirical observations, and use the model to
+  evaluate the credibility of the observations
+
+* Determining what's in a model
+
+  Can analyze mechanistically, or can determine empirically
+e0a6cbcb
