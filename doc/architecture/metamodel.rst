@@ -111,7 +111,7 @@ answer these types of queries for a single model type: executable dynamical
 models implemented in `PySB <http://pysb.org>`_. Model annotations are
 generated as part of the PySB model assembly process in INDRA; for instance see
 `the PySB Assembler code here
-<https://github.com/sorgerlab/indra/blob/master/indra/assemblers/pysb/assembler.py#L1190>`_
+<https://indra.readthedocs.io/en/latest/_modules/indra/assemblers/pysb/assembler.html#grounded_monomer_patterns>`_
 for an example of how the `PySB Annotation class
 <https://github.com/pysb/pysb/blob/master/pysb/annotation.py>`_ is used to
 associate entities with their role (subject/object) in a process (#4).

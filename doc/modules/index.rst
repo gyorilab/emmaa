@@ -14,5 +14,5 @@ EMMAA modules reference
    priors
    readers
    database
-   aws_lambda
+   aws_lambda_functions
    util

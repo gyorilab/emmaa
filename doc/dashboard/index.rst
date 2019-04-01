@@ -1,3 +1,5 @@
+.. _dashboard:
+
 EMMAA Dashboard
 ===============
 The EMMAA Dashboard is accessible at
