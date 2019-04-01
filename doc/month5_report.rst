@@ -67,7 +67,17 @@ Automated model analysis: benefits of automated model validation
 
 With respect to model analysis, the first key lesson learned is how valuable
 the process of automated testing is for developing model assembly systems
-such as INDRA and EMMAA.
+such as INDRA and EMMAA. By coupling large-scale automated reading and assembly
+with automated testing and analysis, the strengths and weaknesses of the
+reading/assembly machinery itself are clearly exposed. Over the course
+of monitoring daily updates to the disease models and browsing test results,
+we were able to identify bugs and other opportunities for improvement in a
+highly efficient and targeted way. The image below illustrates the effect
+of some of these improvements as they affected the number of applied and passed
+tests:
+
+.. image:: _static/images/aml_tests_annot.png
+
 
 
 The first and most obvious 
