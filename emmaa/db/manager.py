@@ -146,12 +146,16 @@ class EmmaaDatabaseManager(object):
         subscribe : bool
             True if the user wishes to subscribe to this query.
         """
+        logger.info(f"Got request to put query {query_json} for {user_email} "
+                    f"for {model_ids} with subscribe={subscribe}")
+
         # Make sure model_ids is a list.
         if not isinstance(model_ids, list) and not isinstance(model_ids, set):
             raise TypeError("Invalid type: %s. Must be list or set."
                             % type(model_ids))
 
         if not subscribe:
+            logger.info("Not subscribing...")
             return
 
         # Get the existing hashes.
@@ -163,8 +167,11 @@ class EmmaaDatabaseManager(object):
         for model_id in model_ids:
             qh = hash_query(query_json, model_id)
             if qh not in existing_hashes:
+                logger.info(f"Adding query on {model_id} to the db.")
                 queries.append(Query(model_id=model_id, json=query_json.copy(),
                                      hash=qh))
+            else:
+                logger.info(f"Skipping {model_id}; already in db.")
 
         with self.get_session() as sess:
             sess.add_all(queries)
@@ -211,6 +218,7 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_results_from_query(self, query_json, model_ids):
+        logger.info(f"Got request for results of {query_json} on {model_ids}.")
         hashes = {hash_query(query_json, model_id) for model_id in model_ids}
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.string,
@@ -218,6 +226,7 @@ class EmmaaDatabaseManager(object):
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
             results = [tuple(res) for res in q.all()]
+        logger.info(f"Found {len(results)} results.")
         return results
 
     def get_results(self, user_email):
@@ -238,6 +247,7 @@ class EmmaaDatabaseManager(object):
             result_string, date) representing the result of a query run on a
             model on a given date.
         """
+        logger.info(f"Got request for results for {user_email}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json,
                             Result.string, Result.date)

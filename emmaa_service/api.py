@@ -115,11 +115,11 @@ def get_query_page():
 def process_query():
     # Print inputs.
     logger.info('Got model query')
-    print("Args -----------")
-    print(request.args)
-    print("Json -----------")
-    print(str(request.json))
-    print("------------------")
+    logger.info("Args -----------")
+    logger.info(request.args)
+    logger.info("Json -----------")
+    logger.info(str(request.json))
+    logger.info("------------------")
 
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
