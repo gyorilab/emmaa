@@ -15,18 +15,16 @@ cancer types we have initially chosen are as follows.
 - Prostate Adenocarcinoma (prad)
 - Skin Cutaneous Melanoma (skcm)
 
-Each type is followed by a "code" in parantheses indicating the subfolder in
-`emmaa/models <https://github.com/indralab/emmaa/tree/master/models>`_ in which
-the model files for the given cancer type are located.  For instance, the
-initial configuration files for Pancreatic Adenocarcinoma can be found `here
-<https://github.com/indralab/emmaa/blob/master/models/paad/>`_.
+Each type is followed by a "code" in parantheses indicating the identifier
+of the model through which models are organized in the cloud, on AWS S3.
 
 Model availability
 ------------------
 
-EMMAA models may be browsed through the Network Data Exchange (NDEx)
-portal, available here:
-http://ndexbio.org/#/group/be7cd689-f6a1-11e8-aaa6-0ac135e8bacf
+EMMAA models may be browsed on the EMMAA Dashboard, for more information,
+see a tutorial to the dashboard here: :res:`dashboard`, and the dashboard
+itself here: http://emmaa.indra.bio. For example the AML model can be
+accessed directly at http://emmaa.indra.bio/dashboard/aml.
 
 Defining model scope
 --------------------
@@ -140,10 +138,15 @@ and high-throughput reading pipeline to collect and read publications using the
 <https://github.com/ddmcdonald/sparser>`_ systems.  We then use INDRA's input
 processors to extract INDRA Statements from the reader outputs. We also
 associate metadata with each Statement: the date at which it was created and
-the search terms which are associated with it.
+the search terms which are associated with it. These functionalities are
+implemented in the :py:mod:`emmaa.readers.aws_reader` module.
 
-These functionalities are implemented in the :py:mod:`emmaa.readers.aws_reader`
-module.
+As an optimized approach to gathering and reading new publications, we
+decoupled this step from EMMAA, and it is currently done independently by
+a scheduled job of the INDRA DB once a day. EMMAA's model update jobs
+query the DB directly for Statements extracted from the new publications
+each day, making the model update cycle significantly faster. These
+queries are implemented in :py:mod:`emmaa.readers.db_client_reader`.
 
 Automated incremental assembly
 ------------------------------
