@@ -27,8 +27,8 @@ Reactome Prior (:py:mod:`emmaa.priors.reactome_prior`)
     :members:
     :show-inheritance:
 
-Querying Prior Statements (:py:mod:`emmaa.prior_stmts`)
--------------------------------------------------------
+Querying Prior Statements (:py:mod:`emmaa.priors.prior_stmts`)
+--------------------------------------------------------------
 
 .. automodule:: emmaa.priors.prior_stmts
     :members:

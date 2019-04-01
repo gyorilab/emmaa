@@ -109,16 +109,8 @@ Assembling a prior network
 
 Given a set of entities of interest, we turn to the INDRA DB and query for all
 Statements about these entities. This set of Statements becomes the starting
-point from which the model begins a process of assembly. This involves the
-following steps:
-
-- Filter out hypotheses
-- Map grounding of entities
-- Map sequences of entities
-- Filter out non-human genes
-- Run preassembly in which exact and partial redundancies are found and
-  resolved
-
+point from which the model begins a process of incremental extension
+and assembly. This is implemented in :py:mod:`emmaa.priors.prior_stmts`.
 
 Updating the network
 --------------------
@@ -150,10 +142,31 @@ queries are implemented in :py:mod:`emmaa.readers.db_client_reader`.
 
 Automated incremental assembly
 ------------------------------
+Each time new "raw" Statements are added to the model from
+new literature results, an assembly process is run which involves the following
+steps:
 
-The newly obtained Statements are evaluated against Statements already existing
-in the model. A new Statement can relate to the existing model in the following
-ways:
+- Filter out hypotheses
+- Map grounding of entities
+- Map sequences of entities
+- Filter out Statements with ungrounded entities
+- Run preassembly in which exact and partial redundancies are found and
+  resolved
+- Calculate belief score for each Statement
+- Filter to statements above a configured belief threshold
+- Filter out subsumed Statements with respect to partial redundancy graph
+- (In some models) filter out Statements representing indirect mechanisms
+
+The set of Statements obtained this way are considered to be "assembled" at
+the knowledge level. It is this assembled set of Statements that are considered
+when showing update statistics on the Dashboard.
+The newly obtained assembled Statements are also evaluated against Statements
+already existing in the model. Note that The Statements below the threshold
+still remain in the "raw" model knowledge and can later advance to be included
+in the published model if they collect enough evidence to reach the belief
+threshold.
+
+A new Statement can relate to the existing model in the following ways:
 
 - Novel: there is no such mechanism yet in the model
 - Redundant / Corroborating: the mechanism represented by the Statement
@@ -164,10 +177,5 @@ ways:
 - Subsumption: the mechanism is a more specific form of one already in the model
 - Conflicting: the mechanism conflicts with one already in the model
 
-The process of preassembly includes determining which case from the above list
-applies and calculating belief scores. One can then apply a cutoff to only
-"publish" Statements in the model that are above the given belief threshold.
-The Statements below the threshold still remain in the "raw" model knowledge
-and can later advance to be included in the published model if they collect
-enough evidence to reach the belief threshold.
-
+Currently, the dashboard lists new Statements without explicitly
+showing what relationship they have to the existing model.
