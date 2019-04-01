@@ -21,13 +21,13 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'emmaa'
-copyright = '2018, EMMAA developers'
+copyright = '2019, EMMAA developers'
 author = 'EMMAA developers'
 
 # The short X.Y version
-version = '1.0'
+version = '1.2'
 # The full version, including alpha/beta/rc tags
-release = '1.1.0'
+release = '1.2.0'
 
 
 # -- General configuration ---------------------------------------------------
