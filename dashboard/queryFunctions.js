@@ -101,23 +101,23 @@ function submitQuery(queryDict, test) {
           break;
         case 400:
           console.log('400 response')
-          queryNotify('Query failed: ' + statusText)
+          queryNotify('Query failed: Bad Request (400)')
           break;
         case 401:
           console.log('401 response')
-          queryNotify('Query failed: ' + statusText)
+          queryNotify('Query failed: Unauthorized (401). Try to sign in again.')
           break;
         case 404:
           console.log('404 response')
-          queryNotify('Query failed: ' + statusText)
+          queryNotify('Query failed: Not Found (404)')
           break;
         case 500:
           console.log('500 response')
-          queryNotify('Query failed: ' + statusText)
+          queryNotify('Query failed: Internal Server Error (500)')
           break;
         default:
           console.log('Unhandled server response: ' + xhr.status)
-          queryNotify('Query failed: ' + statusText)
+          queryNotify('Query failed: ' + xhr.status)
       }
     }
   })
