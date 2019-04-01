@@ -136,7 +136,9 @@ model satisfies the test condition (as human-interpretable English language
 summary) or the reason for why the model could not satsfy the test condition.
 
 .. image:: ../_static/images/rasmodel_test_report.png
-   :scale: 60 %
+   :width: 1898px
+   :scale: 33 %
+   :align: center
 
 In a manner analogous to continuous integration for software, EMMAA model
 testing is automatically triggered on AWS anytime the model or its associated
