@@ -68,7 +68,7 @@ def format_results(results):
         formatted_result['model'] = result[0]
         formatted_result['query'] = result[1]
         formatted_result['response'] = result[2]
-        formatted_result['date'] = result[3]    
+        formatted_result['date'] = result[3]
         formatted_results.append(formatted_result)
     return results
 
