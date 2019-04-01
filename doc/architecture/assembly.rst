@@ -78,7 +78,7 @@ parameter to `TcgaCancerPrior`. We use a network derived from processing and
 assembling the content of the `PathwayCommons
 <http://www.pathwaycommons.org/>`_, `SIGNOR <https://signor.uniroma2.it/>`_,
 and `BEL Large Corpus
-<https://github.com/OpenBEL/openbel-framework-resources/blob/latest/knowledge/large_corpus.xbel.gz>`_
+<https://wiki.openbel.org/display/home/Summary+of+Large+and+Small+BEL+Corpora>`_
 databases, as well as machine reading *all* biomedical literature (roughly 32%
 full text, 68% abstracts) with two machine reading systems: `REACH
 <http://github.com/clulab/reach>`_ and `Sparser
