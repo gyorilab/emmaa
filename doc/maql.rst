@@ -71,20 +71,19 @@ Example: "What kinases does BRAF phosphorylate?"
 
 .. code-block:: json
 
-  {"type": "structural_property":
-    {"subtype": "from_source",
-     "source": {
-        "type": "agent",
-        "name": "BRAF"
-        },
-     "entity_constraints": [
-        {"type": "protein",
-         "subtype": "kinase"}
-        ],
-     "relationship_constraints": [
-       {"type": "Phosphorylation"}
-       ]
-     }
+  {"type": "structural_property",
+   "subtype": "from_source",
+   "source": {
+    "type": "agent",
+    "name": "BRAF"
+    },
+   "entity_constraints": [
+    {"type": "protein",
+     "subtype": "kinase"}
+    ],
+   "relationship_constraints": [
+    {"type": "Phosphorylation"}
+   ]
   }
 
 Path properties with constraints
@@ -125,11 +124,11 @@ PI3K or any transcriptional regulation?"
      "path": {
         "type": "Phosphorylation",
         "enz": {
-            "type": "Agent":
+            "type": "Agent",
             "name": "EGFR"
             },
         "sub": {
-            "type": "Agent":
+            "type": "Agent",
             "name": "ERK"
             }
         },
