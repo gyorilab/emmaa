@@ -43,11 +43,10 @@ website. This process is summarized in the figure below.
    :scale: 33 %
    :align: center
 
-The code implemented here is avilable in the following places:
+The code implemented here is available in the following places:
 
+- The Lambda implementation is documented at: :py:mod:`emmaa.aws_lambda`).
 - The EMMAA Dockerfile is available `here <https://github.com/indralab/emmaa/tree/master/Dockerfile>`_ .
-- The Lambda implementation (:py:mod:`emmaa.aws_lambda`) is documented
-  `here <https://emmaa.readthedocs.io/en/latest/modules/aws_lambda.html>`_.
 
 Test conditions generated automatically
 ---------------------------------------
@@ -93,80 +92,99 @@ and `EmmaaTest` (:py:mod:`emmaa.model_tests.EmmaaTest`).
 Test conditions mapped to models automatically
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EMMAA currently implements a specific set of testing classes that
-are adequate for our cancer models. This implementation uses the
-`ScopeTestConnector` (:py:mod:`emmaa.model_tests.ScopeTestConnector`)
-and `StatementCheckingTest` (:py:mod:`emmaa.model_tests.StatementCheckingTest`) classes in EMMAA.
-The ScopeTestConnector class uses our meta-model annotations to
-determine the identity of the concepts in the model as well as in the test, and
-deems the test to be applicable to the model if all the concepts (i.e. the
-perturbation and the readout) in the test are also contained in the model. 
+EMMAA currently implements a specific set of testing classes that are adequate
+for our cancer models. This implementation uses the `ScopeTestConnector`
+(:py:mod:`emmaa.model_tests.ScopeTestConnector`) and `StatementCheckingTest`
+(:py:mod:`emmaa.model_tests.StatementCheckingTest`) classes in EMMAA.  The
+ScopeTestConnector class uses our meta-model annotations to determine the
+identity of the concepts in the model as well as in the test, and deems the
+test to be applicable to the model if all the concepts (i.e. the perturbation
+and the readout) in the test are also contained in the model. 
 
 Testing models using static analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The StatementCheckingTest class takes a pair of a model and an applicable tests,
-and determines whether the model satisfies the test as follows. The model is
-first assembled into a rule-based PySB model object using INDRA's
-PySB Assembler. The model is then exported into the Kappa framework, which
-provides static analysis methods, including generating an influence map
-(a signed, directed graph) over the set of rules in the model. EMMAA then
-uses INDRA's `Model Checker
-<https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_ to find paths in this influence map that match
-the test condition (itself expressed as an INDRA Statement). If one or more
-such paths are found, the test is assumed to be satisfied, and the results
-are reported and stored. Otherwise, the model is assumed to to satisfy the
-test.
+The StatementCheckingTest class takes a pair of a model and an applicable
+tests, and determines whether the model satisfies the test as follows. The
+model is first assembled into a rule-based PySB model object using INDRA's PySB
+Assembler. The model is then exported into the Kappa framework, which provides
+static analysis methods, including generating an influence map (a signed,
+directed graph) over the set of rules in the model. EMMAA then uses INDRA's
+`Model Checker
+<https://indra.readthedocs.io/en/latest/modules/explanation/index.html#module-indra.explanation.model_checker>`_
+to find paths in this influence map that match the test condition (itself
+expressed as an INDRA Statement). If one or more such paths are found, the test
+is assumed to be satisfied, and the results are reported and stored. Otherwise,
+the model is assumed to to satisfy the test.
 
-An end-to-end model building and testing example is available `here <https://github.com/indralab/emmaa/blob/master/scripts/generate_simple_model_test.py>`_.
+An end-to-end model building and testing example is available `here
+<https://github.com/indralab/emmaa/blob/master/scripts/generate_simple_model_test.py>`_.
 
 Going forward, the testing methodology will involve multiple modes of
-simulation and analysis including also dynamic testing. 
+simulation and analysis including also dynamic testing.
 
 Human-readable model test reports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A mockup showing a simple test report for a Ras signaling pathway model is
+A snippet of the test report for a Ras signaling pathway model (see
+http://emmaa.indra.bio/dashboard/rasmodel) as of 4/1/2019 is
 shown below, where each "Observation" is expressed in terms of an expectation
-of model behavior (e.g., "IGF1R phosphorylates AKT1 on T308") along with a
-determination of whether the constraint was satisfied ("Model Result"), the
-number of different paths found, and the length of the shortest path.
+of model behavior (e.g., "IFG1R phosphorylated on Y1166 activates IRS1")
+along with a
+determination of whether the constraint was satisfied (green tick mark if yes,
+red cross if not), along with a description of the specific way in which the
+model satisfies the test condition (as human-interpretable English language
+summary) or the reason for why the model could not satsfy the test condition.
 
-.. image:: ../_static/images/testing_mockup.png
+.. image:: ../_static/images/rasmodel_test_report.png
    :scale: 60 %
 
-In a manner analogous to continuous integration for software, model testing
-will be triggered anytime the model or its associated constraints are updated.
+In a manner analogous to continuous integration for software, EMMAA model
+testing is automatically triggered on AWS anytime the model or its associated
+constraints are updated.
 
-Pre-registered queries and notifications
-----------------------------------------
+Model queries from users
+------------------------
 
-Going forward, each EMMAA model will also come with a set of pre-registered
-queries from users. The queries will be in a machine-readable representation
-that utilizes the meta-model semantics developed for automated model analysis.
-EMMAA will initially support the following types of queries (here we show
-examples in natural language but we initially imagine these queries to be
-submitted in a formal, templated language):
+Through the EMMAA Dashboard Query page at http://emmaa.indra.bio/query,
+users can submit specific queries to one or more
+models simultaneously, that are evaluated immediately by a web service, and
+the results of the analysis are summarized in a table.
+For more information, see: :ref:`dashboard_query`.
+
+EMMAA currently supports "Path property" queries on its models in a templated
+form through the Dashboard. However,
+the types of analysis queries will be extended, and we imagine later supporting
+natural language-based querying as well. The types of queries EMMAA will
+support are as follows. We developed a
+Model Analysis Query Language which specifies these types of properties,
+see :ref:`maql`.
 
 - Structural properties with constraints: e.g., "What drugs bind PIK3CA but not
   PIK3CB?"
-- Mechanistic path properties with constraints: e.g., "How does treatment with
+- Path properties with constraints: e.g., "How does treatment with
   PD-325901 lead to EGFR activation?"
 - Simple intervention properties: e.g., "What is the effect of Selumatinib 
   on ERK activation by EGF?"
 - Comparative intervention properties: e.g., "How is the effect of targeting
   MEK different from targeting PI3K on the activation of ERK by EGF?"
 
+Each such property maps onto a specific model analysis task that can be run on
+an EMMAA model, for instance, causal path finding with semantic constraints, or
+dynamical simulations under differential initial conditions. 
+
+
+Pre-registered queries and notifications
+----------------------------------------
+Each query can also be "registered" by EMMAA, and evaluated again whenever the
+model is updated. Currently these registered queries are shared by all users.
+Going forward, individual users will be able to register their own, personal
+queries for one or more models of interest. The result of analysis for each
+property on a given version of the model will be saved. This will then allow
+comparing any changes to the result of analysis with previous states of the
+model. If a meaningful change occurs, a notification will be generated to the
+user who registered the query.
+
 .. image:: ../_static/images/user_queries_concept.png
    :scale: 60 %
    :align: right
 
-Each such property maps onto a specific model analysis task that can be run on
-an EMMAA model, for instance, causal path finding with semantic constraints, or
-dynamical simulations under differential initial conditions. We developed a
-Model Analysis Query Language which specifies these types of properties,
-see :ref:`maql`.
-
-Further, the result of analysis for each property on a given version of the
-model will be saved. This will then allow comparing any changes to the result
-of analysis with previous states of the model. If a meaningful change occurs, a
-notification will be generated to the user who registered the query.

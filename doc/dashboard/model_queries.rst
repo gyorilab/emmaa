@@ -1,3 +1,5 @@
+.. _dashboard_query:
+
 EMMAA Model Queries
 ===================
 The Queries page can be accessed by clicking the "Queries" link at the top
