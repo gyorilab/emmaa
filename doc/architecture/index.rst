@@ -17,7 +17,7 @@ with models). Models are also available for automated analysis in which
 relevant queries that fall within the scope of each model can be automatically
 mapped to structural and dynamical analysis procedures on the model. Currently,
 the Dashboard supports running and registering queries with respect to one or
-more existing models. In the near future, EMMAA with automatically recognize
+more existing models. In the near future, EMMAA will automatically recognize
 and report changes to each model that result in meaningful changes to analysis
 results.
 
