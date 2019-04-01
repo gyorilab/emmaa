@@ -85,7 +85,6 @@ tests:
 .. image:: _static/images/aml_tests_annot.png
 
 
-
 Test-driven modeling
 --------------------
 
@@ -171,4 +170,32 @@ many of its downstream effectors; addition of only a single statement
 (connecting EGFR to SOS1, which was already in the model for its role
 downstream of IGF1R) led to a large number of the new tests passing, boosting
 the pass ratio back to over 50% (3, both plots).
+
+Exploiting the bidirectional relationship between models and tests
+------------------------------------------------------------------
+
+During the development of EMMAA we have come to appreciate the benefits of
+treating the information flow between models and tests as symmetric
+and bidirectional.
+
+For example, manually curated tests can be used to validate automatically
+assembled models, or the other way around: curated models validating
+automatically extracted observations. In our initial work, we focused on the
+application of curated experimental observations (from the BEL large corpus) to
+automatically assembled mechanistic models. We described above how applying
+these tests to the Ras Machine model helped us to identify issues in our
+automatic model assembly pipeline that had been latent for years.  We now also
+see the value in automatically collecting tests and using high-quality curated
+models to evaluate the plausibility of the test observations themselves. For
+example, in the development of the Ras Model, we found that a surprising
+proportion (over 15%) of the tests in the BEL Large Corpus were incorrectly
+curated.  These *test errors* were inadvertently highlighted when the *model*
+failed to pass them. We imagine that observations derived from a noisy source
+(such as machine reading) could be subjected to checking by one or more
+high-quality model, with the model establishing the likelihood that a finding
+resulted from a machine reading error. It is also possible to imagine that in
+fields where where models are mature, new scientific findings could be
+automatically subjected to model-driven evaluation, highlighting the ways in
+which they either support or contradict established models.
+
 
