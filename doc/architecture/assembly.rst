@@ -22,7 +22,7 @@ Model availability
 ------------------
 
 EMMAA models may be browsed on the EMMAA Dashboard, for more information,
-see a tutorial to the dashboard here: :res:`dashboard`, and the dashboard
+see a tutorial to the dashboard here: :ref:`dashboard`, and the dashboard
 itself here: http://emmaa.indra.bio. For example the AML model can be
 accessed directly at http://emmaa.indra.bio/dashboard/aml.
 
