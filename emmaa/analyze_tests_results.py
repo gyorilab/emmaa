@@ -191,7 +191,7 @@ class TestRound(object):
         english_codes = {}
         for ix, result in enumerate(self.test_results):
             english_codes[str(self.tests[ix].get_hash())] = (
-                self.json_results[ix+1]['english_code'])
+                [self.json_results[ix+1]['english_code']])
         return english_codes
 
     def get_english_test_by_hash(self, test_hash):
