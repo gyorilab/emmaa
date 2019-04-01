@@ -122,7 +122,7 @@ class TestRound(object):
         """Return a list of hashes for passed tests."""
         passed_tests = []
         for ix, result in enumerate(self.test_results):
-            if result.path_found:
+            if result.paths:
                 passed_tests.append(str(self.tests[ix].get_hash()))
         return passed_tests
 
