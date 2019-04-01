@@ -111,7 +111,8 @@ class TestRound(object):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
         link = get_statement_queries([stmt])[0] + '&format=html'
-        return (sentence, link)
+        link_str = f'<a href="{link}">{sentence}</a>'
+        return link_str
 
     def get_english_statement_by_hash(self, stmt_hash):
         return self.get_english_statements_by_hash()[stmt_hash]
@@ -175,8 +176,12 @@ class TestRound(object):
         english_paths = {}
         for ix, result in enumerate(self.test_results):
             if result.paths:
-                english_paths[str(self.tests[ix].get_hash())] = (
-                    self.json_results[ix+1]['english_path'])
+                paths = self.json_results[ix+1]['english_path']
+                links = []
+                for (sentence, link) in paths:
+                    link_str = f'<a href="{link}">{sentence}</a>'
+                    links.append(link_str)
+                english_paths[str(self.tests[ix].get_hash())] = links
         return english_paths
 
     def get_english_codes(self):
