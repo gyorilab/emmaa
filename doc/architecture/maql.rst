@@ -3,7 +3,7 @@
 Model Analysis Query Language
 =============================
 
-This is a specification for a machine-readable description format for
+This is v1.0 of a specification for a machine-readable description format for
 the analysis and querying of EMMAA models. The specification uses a JSON
 format that is easily generated and processed, and is also human-readable
 and editable.
@@ -87,6 +87,11 @@ Example: "What kinases does BRAF phosphorylate?"
     {"type": "Phosphorylation"}
    ]
   }
+
+Ideas for extension
+~~~~~~~~~~~~~~~~~~~
+The constraints could be generalized to allow logical formulae over entity
+types and relations.
 
 Path properties with constraints
 --------------------------------
