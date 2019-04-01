@@ -32,9 +32,24 @@ however, it can be applied to other domains that the INDRA system and the
 reading systems integrated with INDRA can handle.
 
 ## Installation
-The primary dependency of EMMAA is INDRA which can be installed using pip.
-Depending on the application, third-party dependencies of INDRA may need
-to be installed and configured separately.
+Users primarily interact with EMMAA via the
+[Dashboard](http://emmaa.indra.bio), for which no dependencies need to be
+installed.
+
+To set up programmatic access to EMMAA's features locally, do the following:
+```
+git clone https://github.com/indralab/emmaa.git
+cd emmaa
+pip install git+https://github.com/sorgerlab/indra.git
+pip install git+https://github.com/indralab/indra_db.git
+pip install -e .
+```
+
+A Dockerized version of EMMAA is available at
+https://hub.docker.com/r/labsyspharm/emmaa, which can be obtained as
+```
+docker pull labsyspharm/emmaa
+```
 
 ## Funding
 The development of EMMAA is funded under the DARPA Automating Scientific
