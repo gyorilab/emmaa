@@ -10,13 +10,13 @@ experts work with models of complex systems.
 Automated model assembly: the challenge of defining scope and context
 ---------------------------------------------------------------------
 
-The initial development of EMMAA focused on deplopying an automated model
+The initial development of EMMAA focused on deploying an automated model
 assembly pipeline to generate models specific to the various cancer types
 catalogued in the cancer genome atlas (TCGA). Collectively these models would
 constitute an "Ecosystem" of self-updating, context-specific models that could
 be used to answer mechanistic queries relevant to specific diseases. Context
-specificity was necessary because the answer to queries such as "What is the
-effect of EGFR inhibition on cell growth?" can differ depending on the specific
+specificity was necessary because the answer to queries (e.g. "What is the
+effect of EGFR inhibition on cell growth?") differ depending on the specific
 gene expression pattern and mutation profile of a particular cancer type.
 
 Our initial approach to enforce the context-specificity of automatically
