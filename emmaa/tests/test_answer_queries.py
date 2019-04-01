@@ -51,7 +51,7 @@ def test_answer_immediate_query():
     assert results[0]['model'] == 'test'
     assert results[0]['query'] == test_query
     assert isinstance(results[0]['response'], str)
-    assert isinstance(results[0]['date']), str)
+    assert isinstance(results[0]['date'], str)
 
 
 @attr('notravis')
