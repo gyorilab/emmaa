@@ -35,6 +35,7 @@ Agent.
 Specifying topology
 ~~~~~~~~~~~~~~~~~~~
 Structural queries have multiple *subtypes* based on the topology of the query:
+
 - binary_directed: specifies two Agents, a *source* and a *target*, between
   which, a directed relationship is queried.
 - binary_undirected: specifies two Agents in an *agents* list, in arbitrary
@@ -115,8 +116,8 @@ It is also possible to specify constraints on relationships along the path
 
 Examples
 ~~~~~~~~
-Example: How does EGFR lead to ERK phosphorylation without including
-PI3K or any transcriptional regulation?
+Example: "How does EGFR lead to ERK phosphorylation without including
+PI3K or any transcriptional regulation?"
 
 .. code-block:: json
 
