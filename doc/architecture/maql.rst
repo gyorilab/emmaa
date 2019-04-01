@@ -9,6 +9,7 @@ format that is easily generated and processed, and is also human-readable
 and editable.
 
 The specification extends to four, increasingly complex query types:
+
 - Structural properties with constraints
 - Path properties with constraints
 - Simple intervention properties
@@ -27,9 +28,11 @@ as arguments, which themselves can have different types are determined by
 grounding to an ontology. At an abstract level
 
 Structural property queries can have different "topologies" in terms of the
-entities they reference including (i) unary queries referring to a single
-Agent alone, (ii) queries referring to a single Agent and its neighborhood,
-(iii) binary queries that refer to two Agents.
+entities they reference including
+
+- unary queries referring to a single Agent alone,
+- queries referring to a single Agent and its neighborhood,
+- binary queries that refer to two Agents.
 
 Structural property queries may also constrain the type of the Statement and
 Agent.
