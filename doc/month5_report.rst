@@ -1,6 +1,12 @@
 ASKE Month 5 Milestone Report: Lessons Learned
 ==============================================
 
+Here we summarize some of the high-level lessons we learned about large-scale
+machine-assisted model assembly and analysis over the course of developing
+EMMAA. Overall, we strongly believe that through an attempt to automate
+scientific modeling, we can gain substantial insight into the way human
+experts work with models of complex systems.
+
 Automated model assembly: the challenge of defining scope and context
 ---------------------------------------------------------------------
 
@@ -84,10 +90,10 @@ Test-driven modeling
 --------------------
 
 A key observation that we have made during the development of EMMAA is of the
-value automated model testing not only as a means of post-hoc model validation,
+value of automated model testing not only as a means of post-hoc model validation,
 but also to support *test-driven modeling.* That is, the *construction* (in
 part manual) of scientific models based on a corpus of qualitative experimental
-constraints.  This is by analogy with `test-driven development
+constraints. This is by analogy with `test-driven development
 <https://en.wikipedia.org/wiki/Test-driven_development>`_ in software
 engineering in which the tests are written first, and program features are only
 added to satisfy the tests.
