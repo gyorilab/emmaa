@@ -253,6 +253,7 @@ class EmmaaDatabaseManager(object):
                             Result.string, Result.date)
                  .filter(Query.hash == Result.query_hash))
             results = [tuple(res) for res in q.all()]
+        logger.info(f"Found {len(results)} results.")
         return results
 
 
