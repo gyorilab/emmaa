@@ -148,9 +148,10 @@ class ModelManager(object):
         """
         responses = []
         applicable_queries = []
-        for stmt in stmts:
-            test = StatementCheckingTest(stmt,
-                self.model.test_config.get('statement_checking'))
+        applicable_stmts = []
+        for (query_json, stmt) in query_stmt_pairs:
+            test = StatementCheckingTest(
+                stmt, self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
                 applicable_queries.append(query_json)
                 applicable_stmts.append(test)
