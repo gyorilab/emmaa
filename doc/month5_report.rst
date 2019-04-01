@@ -83,41 +83,86 @@ tests:
 Test-driven modeling
 --------------------
 
-A key observation that we have during the development of EMMAA is the value of
-not only model testing as a means of post-hoc model validation, but of
-*test-driven modeling.* That is, the *construction* of scientific models based
-on a corpus of qualitative experimental constraints. This is by analogy with
-`test-driven development
+A key observation that we have made during the development of EMMAA is of the
+value automated model testing not only as a means of post-hoc model validation,
+but also to support *test-driven modeling.* That is, the *construction* (in
+part manual) of scientific models based on a corpus of qualitative experimental
+constraints.  This is by analogy with `test-driven development
 <https://en.wikipedia.org/wiki/Test-driven_development>`_ in software
-engineering where the tests are written first, and program features are
-only added to satisfy the tests.
+engineering in which the tests are written first, and program features are only
+added to satisfy the tests.
 
-This approach has a number of advantages for the construction of scientific
-models. First, the approach to scientific modeling in many fields has been to
-use a formal model to encode a specific hypothesis about a particular
-phenomenon. These "fit-to-purpose" models are useful tools for answer specific
-scientific questions but they are rarely reusable and are biased toward a
-particular explanations. With test-driven modeling, 
+During this reporting period, we have explored test-driven modeling by manually
+building a model of a core subset of the `Ras signaling pathway
+<https://www.cancer.gov/research/key-initiatives/ras/ras-central/blog/2015/ras-pathway-v2>`_.
+The model is built using natural language via INDRA and TRIPS as described
+`here <http://msb.embopress.org/content/13/11/954.long>`_; the automated
+assembly of the natural language sentences yields a model with semantic
+annotations enabling subsequent testing and analysis. The model is exposed in
+the EMMAA dashboard as the `"Ras Model"
+<http://emmaa.indra.bio/dashboard/rasmodel>`_. The initial model consisted of a
+set of roughly 60 natural language sentences and was roughly doubled in size
+through an iterative process of expansion and refinement that was driven by
+model testing.
+
+We have found that the test-driven modeling approach has a number of advantages
+for the construction of scientific models. First, the approach to scientific
+modeling in many fields is to use a formal model to encode a specific
+hypothesis about a particular phenomenon. These "fit-to-purpose" models are
+useful tools for answering specific scientific questions but they are rarely
+reusable and are biased toward a particular explanation. With test-driven
+modeling, the growth of the model is empirically driven by the observations
+that match the scope of the model, independent of any specific problem.  In
+extending the Ras model to satisfy tests from the BEL Large Corpus, we
+repeatedly found it necessary to add in underappreciated or noncanonical
+mechanisms. For example, it is well known that EGFR activation leads to the
+phosphorylation and activation of SRC; but it is also the case that SRC
+phosphorylates and potentiates the activation of EGFR. Similarly, AKT1 both
+phosphorylates and is phosphorylated by MTOR. In typical practice, a modeler
+would not incorporate all of these influences unless it was their specific
+intention to investigate crosstalk, feedback, or other aspects of the
+overall mechanism that deviate from a simple linear pathway. The process of
+test-driven modeling brought to the forefront how common these processes are.
+
+Second, just as in software development, test-driven modeling helps the modeler
+avoid decorating a model with details that are not essential to improving
+overall performance. This helps to avoid modeling quagmires in which a a
+modeler attempts to encode everything known about a process in maximum detail.
+The existence of a set of tests, and the iterative development process that
+EMMAA enables (serving here as a tool for continuous integration of models),
+dramatically improves the efficiency of building high quality, reusable models.
+
+Third, test-driven modeling helps build insight into how a model works, as well
+as highlighting serendipitous and potentially unexpected implications of
+particular mechanisms.  During the test-driven development of the Ras Model,
+there were several instances where adding a small extension to the model to
+address an issue that appeared to be local to the two proteins resulted in
+several additional tests passing, that involved long-range causal influences.
+For example, fixing a reaction involving MTOR and PPP2CA resulted in three
+tests passing, each highlighting the negative feedback from MTOR back to
+upstream IGF1R signaling via IRS-1.
+
+.. image:: _static/images/new_passed_tests.png
+
+The screenshot of the EMMAA dashboard test results page for the curated Ras
+Model, shown below, highlights the iterative process of test-driven
+model refinement and expansion.
 
 .. image:: _static/images/ras_tests_annot.png
 
+The bottom plot shows the total number of applied tests over time, along with
+the number of passing tests; the top plot tracks changes in the percentage of
+passing tests. The initial process of model refinement is shown by (1), in
+which the initial model was subject to testing and then progressively refined
+over time. During this process the pass ratio grew from roughly 20% to 67%. At
+this point, the model was expanded to include the well studied signaling
+proteins EGF and EGFR. This nearly doubled the number of applied tests (2,
+bottom plot), but since relatively few of these new tests passed, the pass
+ratio dropped to ~35%. Importantly, these new tests were applied
+*automatically* by EMMAA as a consequence of the expansion in model scope.
+Inspection of the model highlighted the fact that EGFR was disconnected from
+many of its downstream effectors; addition of only a single statement
+(connecting EGFR to SOS1, which was already in the model for its role
+downstream of IGF1R) led to a large number of the new tests passing, boosting
+the pass ratio back to over 50% (3, both plots).
 
-The first and most obvious 
-
-a common approach to modeling there n be a tendency in modeling (particularly in systems
-biology) to develop models to 
-
-with test-driven development in software, 
-
-* Forces a modeler to think locally about satisfying tests, rather than an
-  overall narrative or hypothesis. This can lead to unexpected insights, in that
-
-   EGFR -> SRC vs. SRC -> EGFR
-
-* Can also have a model, collect empirical observations, and use the model to
-  evaluate the credibility of the observations
-
-* Determining what's in a model
-
-  Can analyze mechanistically, or can determine empirically
-e0a6cbcb
