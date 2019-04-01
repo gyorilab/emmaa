@@ -12,7 +12,7 @@ The specification extends to four, increasingly complex query types:
 - Simple intervention properties
 - Comparative intervention properties
 
-Note that the specification for *defining* queries does not explcitly specify
+Note that this specification for defining queries does not explcitly specify
 the method by which the query is executed, though some query specifications are
 defined with a certain type of analysis method in mind.
 
@@ -34,7 +34,7 @@ Agent.
 
 Specifying topology
 ~~~~~~~~~~~~~~~~~~~
-Structural queries have multiple subtypes based on the topology of the query:
+Structural queries have multiple *subtypes* based on the topology of the query:
 - binary_directed: specifies two Agents, a *source* and a *target*, between
   which, a directed relationship is queried.
 - binary_undirected: specifies two Agents in an *agents* list, in arbitrary
@@ -70,7 +70,8 @@ Example: "What kinases does BRAF phosphorylate?"
 
 .. code-block:: json
 
-    {"type": "from_source",
+  {"type": "structural_property":
+    {"subtype": "from_source",
      "source": {
         "type": "agent",
         "name": "BRAF"
@@ -83,6 +84,37 @@ Example: "What kinases does BRAF phosphorylate?"
        {"type": "Phosphorylation"}
        ]
      }
-
+  }
 
 Path properties with constraints
+--------------------------------
+Path properites of models are evaluated at a lower level than simple
+structural properties due to the fact that mechanistic paths need to
+be causally consistent (i.e., each step of the path needs to be causally
+linked to the next step).
+
+Specifying the overall path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The overall path specification can be done using the JSON Schema developed
+for INDRA Statements (see https://github.com/sorgerlab/indra/blob/master/indra/resources/statements_schema.json).
+The path is specified via an overall *type*, and, depending on the type,
+the appropriate Agent arguments.
+
+Entity constraints
+~~~~~~~~~~~~~~~~~~
+It is possible to specify constraints on the entities (*entity_constraints*)
+appearing along the path, for instance, whether to include or exclude
+certain Agents. The keys for these specifications are *include_agents* and
+*exclude_agents* respectively.
+
+Relationship constraints
+~~~~~~~~~~~~~~~~~~~~~~~~
+It is also possible to specify constraints on relationships along the path
+(*relationship_constraints*) with the *include_relationships* and
+*exclude_relationships* keys.
+
+Examples
+~~~~~~~~
+Example: How does EGFR lead to ERK phosphorylation without including
+PI3K or any transcriptional regulation?
+
