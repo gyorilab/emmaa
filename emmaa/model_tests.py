@@ -41,7 +41,7 @@ class ModelManager(object):
 
     Attributes
     ----------
-    pysb_model : emmaa.model.EmmaaModel
+    pysb_model : pysb.Model
         PySB model assembled from EMMAA model
     entities : list[indra.statements.agent.Agent]
         A list of entities of EMMAA model
@@ -74,8 +74,9 @@ class ModelManager(object):
         self.test_results.append(result)
 
     def run_one_test(self, test):
-        """Run one test. Recommended for testing only.
-        Use run_tests() to run all tests.
+        """Run one test. This can be used for running immediate query or for
+        debugging. For running all tests and all queries, use more efficient
+        run_all_tests.
         """
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt])
@@ -123,8 +124,8 @@ class ModelManager(object):
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
-        test = StatementCheckingTest(stmt,
-            self.model.test_config.get('statement_checking'))
+        test = StatementCheckingTest(
+            stmt, self.model.test_config.get('statement_checking'))
         if ScopeTestConnector.applicable(self, test):
             result = self.run_one_test(test)
             return self.process_response(result)

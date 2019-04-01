@@ -19,12 +19,15 @@ model_manager_cache = {}
 
 
 def answer_immediate_query(user_email, query_dict, model_names, subscribe):
-    """Answer an immediate query for each model given a list of model names."""
+    """Save an immediate query in a database and answer it for each model."""
     db.put_queries(user_email, query_dict, model_names, subscribe)
+    # Check if the query has already been answered for any of given models and
+    # retrieve the results from database.
     saved_results = db.get_results_from_query(query_dict, model_names)
     checked_models = {res[0] for res in saved_results}
     if checked_models == set(model_names):
         return format_results(saved_results)
+    # Run answer queries mechanism for models for which result was not found.
     stmt = get_statement_by_query(query_dict)
     new_results = []
     new_date = make_date_str(datetime.now())
@@ -107,6 +110,7 @@ def load_model_manager_from_s3(model_name):
 
 
 def get_agent_from_name(ag_name):
+    """Return an INDRA Agent object."""
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
     if not grounding:
@@ -116,6 +120,7 @@ def get_agent_from_name(ag_name):
 
 
 def get_grounding_from_name(name):
+    """Return grounding given an agent name."""
     # See if it's a gene name
     hgnc_id = get_hgnc_id(name)
     if hgnc_id:
