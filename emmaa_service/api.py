@@ -115,11 +115,11 @@ def get_query_page():
 def process_query():
     # Print inputs.
     logger.info('Got model query')
-    print("Args -----------")
-    print(request.args)
-    print("Json -----------")
-    print(str(request.json))
-    print("------------------")
+    logger.info("Args -----------")
+    logger.info(request.args)
+    logger.info("Json -----------")
+    logger.info(str(request.json))
+    logger.info("------------------")
 
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
@@ -127,8 +127,7 @@ def process_query():
     expceted_models = {mid for mid, _ in _get_models()}
     try:
         user_email = request.json['user']['email']
-        subscribe = request.json.get('register') == 'true' if \
-            request.args.get('register') else False
+        subscribe = request.json['register']
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '

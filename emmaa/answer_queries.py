@@ -30,10 +30,11 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe):
     new_date = make_date_str(datetime.now())
     for model_name in model_names:
         if model_name not in checked_models:
-            result = {}
             mm = load_model_manager_from_s3(model_name)
             response = mm.answer_query(stmt)
             new_results.append((model_name, query_dict, response, new_date))
+            if subscribe:
+                db.put_results(model_name, [(query_dict, response)])
     all_results = saved_results + new_results
     return format_results(all_results)
 
