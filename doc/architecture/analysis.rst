@@ -45,7 +45,7 @@ website. This process is summarized in the figure below.
 
 The code implemented here is available in the following places:
 
-- The Lambda implementation is documented at: :py:mod:`emmaa.aws_lambda`).
+- The Lambda implementation is documented at: :py:mod:`emmaa.aws_lambda_functions`.
 - The EMMAA Docker image is available `here <https://hub.docker.com/r/labsyspharm/emmaa>`_ .
 
 Test conditions generated automatically
@@ -188,5 +188,5 @@ user who registered the query.
 
 .. image:: ../_static/images/user_queries_concept.png
    :scale: 60 %
-   :align: right
+   :align: center
 
