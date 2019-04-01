@@ -146,3 +146,56 @@ PI3K or any transcriptional regulation?"
             ]
         }
      }
+
+Simple intervention properties
+------------------------------
+Simple intervention properties focus on the effects of targeted interventions
+on one or more entities in the model without considering comparisons or
+optimization across multiple interventions.
+
+Specifying an intervention
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+An intervention can be specified either on a single entity readout or on a
+path-level effect (we call this a *reference*, i.e., something that the
+intervention is meant to change). In the first case, the readout is
+represented, again, as an INDRA Agent, with name, grounding and state. In the
+second case, a path is represented as and INDRA Statement with type and Agent
+arguments.  The intervention itself is represented as a list of Agents with
+additional parameters to specify the type of intervetion.
+
+Specifying the reference
+~~~~~~~~~~~~~~~~~~~~~~~~
+The *reference* can either have *type* of  *relationship* or *entity*. In case
+of a *relationship*, the specification is an INDRA Statement JSON. In case
+of an *entity*, the specificaton is an INDRA Agent JSON (see references above).
+
+Specifying the intervetion
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The *intervention* consists of a list of intervening entities (specified as
+INDRA Agent JSONs) and the perturbation by which the intervention applies to
+these entities (i.e., *increase*, *decrease*).
+
+Examples
+~~~~~~~~
+Example: "How does Selumetinib affect phosphorylated MAPK1?"
+
+.. code-block:: json
+
+    {"type": "simple_intervention_property",
+     "reference": {
+        "type": "Agent",
+        "name": "MAPK1",
+        "mods": [
+            {"mod_type": "phosphorylation"}
+            ]
+        },
+    "intervention": [
+        {"entity": {
+            "type": "Agent",
+            "name": "Selumetinib"
+            },
+         "perturbation": "increase"
+         }
+        ]
+     }
+
