@@ -107,6 +107,23 @@ function generatePassFail(rowEl, col) {
   return rowEl;
 }
 
+function linkifyFromArray(tag, linkArray) {
+  console.log('function linkifyFromArray(tag, linkArray)')
+  var linkText = '';
+  for (link of linkArray) {
+    linkText = linkText + link + '<br>'; // Append link
+  }
+  return linkifyFromString(tag, linkText.substr(0, breakText.length-4)); // Remove last <br>
+}
+
+function linkifyFromString(tag, htmlText) {
+  console.log('function linkifyFromString(tag, htmlText)')
+  tag.innerHTML = null;
+  tag.innerHTML = htmlText;
+  console.log(tag)
+  return tag;
+}
+
 function addLineBreaks(rowEl, col) {
   // Adds <br> after '.' to text in specified column
   let breakText = rowEl.children[col].textContent.replace(/\./g, '.<br>')
