@@ -230,7 +230,7 @@ EGF?"
             "name": "ERK",
             }
         },
-    "interventions: [
+    "interventions": [
         [{"entity": {
             "type": "Agent",
             "name": "Selumetinib"
