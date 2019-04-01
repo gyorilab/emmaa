@@ -127,8 +127,7 @@ def process_query():
     expceted_models = {mid for mid, _ in _get_models()}
     try:
         user_email = request.json['user']['email']
-        subscribe = request.json.get('register') == 'true' if \
-            request.args.get('register') else False
+        subscribe = request.json['register']
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
