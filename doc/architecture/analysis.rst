@@ -46,7 +46,7 @@ website. This process is summarized in the figure below.
 The code implemented here is available in the following places:
 
 - The Lambda implementation is documented at: :py:mod:`emmaa.aws_lambda`).
-- The EMMAA Dockerfile is available `here <https://github.com/indralab/emmaa/tree/master/Dockerfile>`_ .
+- The EMMAA Docker image is available `here <https://hub.docker.com/r/labsyspharm/emmaa>`_ .
 
 Test conditions generated automatically
 ---------------------------------------
@@ -172,7 +172,7 @@ see :ref:`maql`.
 
 Each such property maps onto a specific model analysis task that can be run on
 an EMMAA model, for instance, causal path finding with semantic constraints, or
-dynamical simulations under differential initial conditions. 
+dynamical simulations under differential initial conditions.
 
 
 Pre-registered queries and notifications
