@@ -1,3 +1,5 @@
+.. _maql:
+
 Model Analysis Query Language
 =============================
 

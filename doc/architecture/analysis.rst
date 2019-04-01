@@ -151,8 +151,8 @@ submitted in a formal, templated language):
   PIK3CB?"
 - Mechanistic path properties with constraints: e.g., "How does treatment with
   PD-325901 lead to EGFR activation?"
-- Simple intervention properties: e.g., "What intervention can reduce ERK
-  activation by EGF?"
+- Simple intervention properties: e.g., "What is the effect of Selumatinib 
+  on ERK activation by EGF?"
 - Comparative intervention properties: e.g., "How is the effect of targeting
   MEK different from targeting PI3K on the activation of ERK by EGF?"
 
@@ -162,7 +162,9 @@ submitted in a formal, templated language):
 
 Each such property maps onto a specific model analysis task that can be run on
 an EMMAA model, for instance, causal path finding with semantic constraints, or
-dynamical simulations under differential initial conditions.
+dynamical simulations under differential initial conditions. We developed a
+Model Analysis Query Language which specifies these types of properties,
+see :ref:`maql`.
 
 Further, the result of analysis for each property on a given version of the
 model will be saved. This will then allow comparing any changes to the result
