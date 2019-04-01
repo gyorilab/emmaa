@@ -45,8 +45,11 @@ pip install git+https://github.com/indralab/indra_db.git
 pip install -e .
 ```
 
-Finally, a Dockerized version of EMMAA is available at
-https://hub.docker.com/r/labsyspharm/emmaa.
+A Dockerized version of EMMAA is available at
+https://hub.docker.com/r/labsyspharm/emmaa, which can be obtained as
+```
+docker pull labsyspharm/emmaa
+```
 
 ## Funding
 The development of EMMAA is funded under the DARPA Automating Scientific
