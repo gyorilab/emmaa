@@ -199,3 +199,50 @@ Example: "How does Selumetinib affect phosphorylated MAPK1?"
         ]
      }
 
+
+Comparative intervention properties
+-----------------------------------
+Comparative intervention properties are similar to simple intervention
+properties but are more general in that they can be used to express
+comparisons or optimality among a set of possible intervetions.
+The specification consists, again, of a *reference*, but this time, a list
+of *interventions* rather than a single *intervention*. The comparison
+also needs to be specified, i.e., whether the intervetion is meant to
+*increase* or *decrease* the *reference*.
+
+For comparative intervention properties, the *reference* and each possible
+*intervention* is specified as above.
+
+Examples
+~~~~~~~~
+Example: "Is Selumetinib or Vemurafenib optimal in decreasing ERK activation by
+EGF?"
+
+.. code-block:: json
+
+    {"type": "comparative_intervention_property",
+     "reference": {
+        "type": "Activation",
+        "subj": {
+            "name": "EGF",
+            },
+        "obj": {
+            "name": "ERK",
+            }
+        },
+    "interventions: [
+        [{"entity": {
+            "type": "Agent",
+            "name": "Selumetinib"
+            },
+         "perturbation": "increase"
+         }],
+        [{"entity": {
+            "type": "Agent",
+            "name": "Vemurafenib"
+            },
+         "perturbation": "increase"
+         }]
+        ],
+      "comparison": "increase"
+     }
