@@ -160,10 +160,11 @@
           <tbody class="table-body" id="old-results">
             {% for result in old_results %}
             <tr>
-              <td>{{ result[0] }}</td>
-              <td>{{ result[1]['typeSelection'] }}({{ result[1]['subjectSelection'] }}, {{ result[1]['objectSelection'] }})</td>
-              <td>{{ result[2] }}</td>
-              <td>{{ result[3] }}</td>
+              <!-- model, query, response, date -->
+              <td>{{ result['model'] }}</td>
+              <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
+              <td>{{ result['response'] }}</td>
+              <td>{{ result['date'] }}</td>
             </tr>
             {% endfor %}
           </tbody>
