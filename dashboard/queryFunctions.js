@@ -131,8 +131,8 @@ function populateQueryResults(json) {
   console.log(json)
   let qrTable = document.getElementById('queryResults');
   clearTable(qrTable)
-  for (model in json.result) {
-    qrTable.appendChild(addToRow([json.result[model][0], json.result[model][2]]));
+  for (res of json.result) {
+    qrTable.appendChild(addToRow([res['model'], res['response']]));
   }
 }
 
