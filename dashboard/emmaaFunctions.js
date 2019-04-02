@@ -15,6 +15,7 @@ var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
                     'prad',     // Prostate adenocarcinoma
                     'skcm',     // Skin cutaneous melanoma
                     'rasmodel', // RasModel
+                    'rasmachine', // Ras Machine
                     'test']     // TestModel (only three nodes/two edges)
 
 function grabPlainText (url, callback) {
@@ -407,6 +408,7 @@ function getModels(findModel, keyMapArray, endsWith) {
                 'prad': [],
                 'skcm': [],
                 'rasmodel': [],
+                'rasmachine': [],
                 'test': []}
   for (keyItem of keyMapArray) {
     if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
