@@ -117,6 +117,9 @@ def get_agent_from_name(ag_name):
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
     if not grounding:
+        grounding = get_grounding_from_name(ag_name.upper())
+        ag = Agent(ag_name.upper())
+    if not grounding:
         raise GroundingError(f"Could not find grounding for {ag_name}.")
     ag.db_refs = {grounding[0]: grounding[1]}
     return ag
