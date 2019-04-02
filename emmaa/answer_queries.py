@@ -12,14 +12,15 @@ from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
-db = get_db('primary')
 
 
 model_manager_cache = {}
 
 
-def answer_immediate_query(user_email, query_dict, model_names, subscribe):
+def answer_immediate_query(user_email, query_dict, model_names, subscribe,
+                           db_name='primary'):
     """Save an immediate query in a database and answer it for each model."""
+    db = get_db(db_name)
     db.put_queries(user_email, query_dict, model_names, subscribe)
     # Check if the query has already been answered for any of given models and
     # retrieve the results from database.
@@ -42,20 +43,22 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe):
     return format_results(all_results)
 
 
-def answer_registered_queries(model_name, model_manager=None):
+def answer_registered_queries(model_name, model_manager=None, db_name='primary'):
     """Retrieve queries registered on database for a given model, answer them,
     and put results to a database.
     """
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
+    db = get_db(db_name)
     query_dicts = db.get_queries(model_name)
     query_stmt_pairs = get_query_stmt_pairs(query_dicts)
     results = model_manager.answer_queries(query_stmt_pairs)
     db.put_results(model_name, results)
 
 
-def get_registered_queries(user_email):
+def get_registered_queries(user_email, db_name='primary'):
     """Get formatted results to queries registered by user."""
+    db = get_db(db_name)
     results = db.get_results(user_email)
     return format_results(results)
 
