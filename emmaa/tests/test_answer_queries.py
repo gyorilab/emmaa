@@ -5,6 +5,19 @@ from emmaa.answer_queries import (
 from emmaa.model_tests import ModelManager
 from indra.statements.statements import Activation
 from indra.statements.agent import Agent
+from nose.plugins.attrib import attr
+
+
+# Tell nose to not run tests in the imported modules
+answer_immediate_query.__test__ = False
+answer_registered_queries.__test__ = False
+get_registered_queries.__test__ = False
+format_results.__test__ = False
+get_statement_by_query.__test__ = False
+load_model_manager_from_s3.__test__ = False
+ModelManager.__test__ = False
+Activation.__test__ = False
+Agent.__test__ = False
 
 
 test_query = {'objectSelection': 'MAPK1', 'subjectSelection': 'BRAF',
