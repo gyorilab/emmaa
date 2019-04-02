@@ -2,8 +2,7 @@ from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import (
     answer_immediate_query, answer_registered_queries, get_registered_queries,
-    format_results, get_statement_by_query,
-    load_model_manager_from_s3)
+    format_results, get_statement_by_query, load_model_manager_from_s3)
 from emmaa.model_tests import ModelManager
 from emmaa.db import get_db
 from indra.statements.statements import Activation
@@ -20,6 +19,7 @@ load_model_manager_from_s3.__test__ = False
 ModelManager.__test__ = False
 Activation.__test__ = False
 Agent.__test__ = False
+get_db.__test__ = False
 
 
 test_query = {'objectSelection': 'MAPK1', 'subjectSelection': 'BRAF',
