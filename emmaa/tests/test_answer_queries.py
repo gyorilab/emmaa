@@ -1,11 +1,13 @@
+from datetime import datetime
+from nose.plugins.attrib import attr
 from emmaa.answer_queries import (
     answer_immediate_query, answer_registered_queries, get_registered_queries,
     format_results, get_statement_by_query,
     load_model_manager_from_s3)
 from emmaa.model_tests import ModelManager
+from emmaa.db import get_db
 from indra.statements.statements import Activation
 from indra.statements.agent import Agent
-from nose.plugins.attrib import attr
 
 
 # Tell nose to not run tests in the imported modules
@@ -43,14 +45,14 @@ def test_load_model_manager_from_s3():
 def test_format_results():
     results = [('test', test_query,
                 'BRAF activates MAP2K1. Active MAP2K1 activates MAPK1.',
-                '2019-04-01-20-32-20')]
+                datetime.now())]
     formatted_results = format_results(results)
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
     assert formatted_results[0]['query'] == test_query
     assert formatted_results[0]['response'] == (
         'BRAF activates MAP2K1. Active MAP2K1 activates MAPK1.')
-    assert formatted_results[0]['date'] == '2019-04-01-20-32-20'
+    assert isinstance(formatted_results[0]['date'], str)
 
 
 @attr('notravis')
@@ -69,8 +71,7 @@ def test_answer_get_registered_queries():
     db = get_db('test')
     db.drop_tables(force=True)
     db.create_tables()
-    answer_immediate_query('tester@test.com', test_query, ['test'],
-                           subscribe=True, db_name='test')
+    db.put_queries('tester@test.com', test_query, ['test'], subscribe=True)
     answer_registered_queries('test', db_name='test')
     results = get_registered_queries('tester@test.com', db_name='test')
     assert len(results) == 1
