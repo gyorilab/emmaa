@@ -90,15 +90,8 @@
       <a href="../home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
       <a href="../query">Queries</a>
     </h5>
-    <nav class="my-2 my-md-0 mr-md-3">
-      <a class="p-2 text-dark" href="#about">About</a>
-    </nav>
-<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
-  </div>
-
-  <!-- Dropdown -->
-  <div class="container">
-    <div class="input-group">
+    <!-- Dropdown -->
+    <div class="input-group" style="width: 50%;">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
         {% for model_id, model_meta in model_data %}
@@ -110,6 +103,10 @@
         <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
       </div>
     </div>
+    <nav class="my-2 my-md-0 mr-md-3">
+      <a class="p-2 text-dark" href="#about">About</a>
+    </nav>
+<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
   </div>
 
   <!-- Tabs -->
