@@ -48,6 +48,10 @@
     })
   </script>
 
+  <style>
+    a.model-link {color: #000000;}
+  </style>
+
 </head>
 
 <body>
@@ -177,7 +181,7 @@
             {% for result in old_results %}
             <tr>
               <!-- model, query, response, date -->
-              <td>{{ result['model'] }}</td>
+              <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
               <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
               <td>{{ result['response'] }}</td>
               <td>{{ result['date'] }}</td>
