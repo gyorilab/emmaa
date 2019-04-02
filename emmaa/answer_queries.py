@@ -12,22 +12,26 @@ from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
-db = get_db('primary')
 
 
 model_manager_cache = {}
 
 
-def answer_immediate_query(user_email, query_dict, model_names, subscribe):
-    """Answer an immediate query for each model given a list of model names."""
+def answer_immediate_query(user_email, query_dict, model_names, subscribe,
+                           db_name='primary'):
+    """Save an immediate query in a database and answer it for each model."""
+    db = get_db(db_name)
     db.put_queries(user_email, query_dict, model_names, subscribe)
+    # Check if the query has already been answered for any of given models and
+    # retrieve the results from database.
     saved_results = db.get_results_from_query(query_dict, model_names)
     checked_models = {res[0] for res in saved_results}
     if checked_models == set(model_names):
         return format_results(saved_results)
+    # Run answer queries mechanism for models for which result was not found.
     stmt = get_statement_by_query(query_dict)
     new_results = []
-    new_date = make_date_str(datetime.now())
+    new_date = datetime.now()
     for model_name in model_names:
         if model_name not in checked_models:
             mm = load_model_manager_from_s3(model_name)
@@ -39,20 +43,22 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe):
     return format_results(all_results)
 
 
-def answer_registered_queries(model_name, model_manager=None):
+def answer_registered_queries(model_name, model_manager=None, db_name='primary'):
     """Retrieve queries registered on database for a given model, answer them,
     and put results to a database.
     """
     if not model_manager:
         model_manager = load_model_manager_from_s3(model_name)
+    db = get_db(db_name)
     query_dicts = db.get_queries(model_name)
     query_stmt_pairs = get_query_stmt_pairs(query_dicts)
     results = model_manager.answer_queries(query_stmt_pairs)
     db.put_results(model_name, results)
 
 
-def get_registered_queries(user_email):
-    """Get formatted results to registered queries by user."""
+def get_registered_queries(user_email, db_name='primary'):
+    """Get formatted results to queries registered by user."""
+    db = get_db(db_name)
     results = db.get_results(user_email)
     return format_results(results)
 
@@ -65,9 +71,9 @@ def format_results(results):
         formatted_result['model'] = result[0]
         formatted_result['query'] = result[1]
         formatted_result['response'] = result[2]
-        formatted_result['date'] = result[3]    
+        formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
-    return results
+    return formatted_results
 
 
 def get_query_stmt_pairs(queries):
@@ -82,7 +88,7 @@ def get_query_stmt_pairs(queries):
 
 
 def get_statement_by_query(query_dict):
-    """Get an INDRA Statement object given a query dictionary"""
+    """Get an INDRA Statement object given a query dictionary."""
     stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
     subj = get_agent_from_name(query_dict['subjectSelection'])
@@ -107,8 +113,12 @@ def load_model_manager_from_s3(model_name):
 
 
 def get_agent_from_name(ag_name):
+    """Return an INDRA Agent object."""
     ag = Agent(ag_name)
     grounding = get_grounding_from_name(ag_name)
+    if not grounding:
+        grounding = get_grounding_from_name(ag_name.upper())
+        ag = Agent(ag_name.upper())
     if not grounding:
         raise GroundingError(f"Could not find grounding for {ag_name}.")
     ag.db_refs = {grounding[0]: grounding[1]}
@@ -116,6 +126,7 @@ def get_agent_from_name(ag_name):
 
 
 def get_grounding_from_name(name):
+    """Return grounding given an agent name."""
     # See if it's a gene name
     hgnc_id = get_hgnc_id(name)
     if hgnc_id:
