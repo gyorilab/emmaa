@@ -46,7 +46,7 @@ def test_answer_immediate_query():
     db.drop_tables(force=True)
     db.create_tables()
     results = answer_immediate_query('tester@test.com', test_query, ['test'],
-                                     subscribe=False)
+                                     subscribe=False, db_name='test')
     assert len(results) == 1
     assert results[0]['model'] == 'test'
     assert results[0]['query'] == test_query
