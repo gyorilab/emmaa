@@ -42,9 +42,6 @@ def test_format_results():
 
 @attr('notravis')
 def test_answer_immediate_query():
-    db = get_db('test')
-    db.drop_tables(force=True)
-    db.create_tables()
     results = answer_immediate_query('tester@test.com', test_query, ['test'],
                                      subscribe=False, db_name='test')
     assert len(results) == 1
@@ -56,4 +53,15 @@ def test_answer_immediate_query():
 
 @attr('notravis')
 def test_answer_get_registered_queries():
-    pass
+    db = get_db('test')
+    db.drop_tables(force=True)
+    db.create_tables()
+    answer_immediate_query('tester@test.com', test_query, ['test'],
+                           subscribe=True, db_name='test')
+    answer_registered_queries('test', db_name='test')
+    results = get_registered_queries('tester@test.com', db_name='test')
+    assert len(results) == 1
+    assert results[0]['model'] == 'test'
+    assert results[0]['query'] == test_query
+    assert isinstance(results[0]['response'], str)
+    assert isinstance(results[0]['date'], str)
