@@ -73,7 +73,7 @@ def format_results(results):
         formatted_result['response'] = result[2]
         formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
-    return results
+    return formatted_results
 
 
 def get_query_stmt_pairs(queries):
