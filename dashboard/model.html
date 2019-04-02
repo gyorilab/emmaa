@@ -74,8 +74,9 @@
     }
   </script>
   <style>
-    .fa-check {color: #00FF00}
-    .fa-times {color: #FF0000}
+    .fa-check {color: #00ff00}
+    .fa-times {color: #ff0000}
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
   </style>
 </head>
 
@@ -91,7 +92,7 @@
       <a href="../query">Queries</a>
     </h5>
     <!-- Dropdown -->
-    <div class="input-group" style="width: 50%;">
+    <div class="input-group" style="width: 410px;">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
         {% for model_id, model_meta in model_data %}
@@ -111,7 +112,7 @@
 
   <!-- Tabs -->
   <div class="container nav-container">
-    <nav>
+    <nav class="nav-fill">
       <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
         <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
