@@ -70,13 +70,14 @@
 
   <div class="container" id="query-container">
 
-    <!-- checkboxes -->
     <div class="card">
       <div class="card-header">
         <h4 class="my-0 font-weight-normal">Model Queries</h4>
       </div>
       <div class="card-body">
 
+        <!-- model selection -->
+        <h5>Model selection</h5>
         <div class="checkbox-container">
           <div class="form-select">
             <select name="model-select" id="model-select" placeholder="Select models" multiple>
@@ -86,11 +87,9 @@
             </select>
           </div>
         </div>
-        <div class="text-container">
-          To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
-        </div>
 
         <!-- stmt type select -->
+        <h5 style="padding-top: 20px;">Query selection</h5>
         <div class="dropdown" style="display: inline-block; vertical-align: top;">
           <!-- WARNING: The id of the select tag goes into the query
           dictionary, do NOT change it unless it is changed in the rest API
@@ -116,7 +115,12 @@
           </div>
         </div>
 
+        <div class="text-container">
+          To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
+        </div>
+
         <!-- register query -->
+        <h5 style="padding-top: 20px;">Register query</h5>
         <div class="register-container">
           <div class="checkbox">
             <input type="checkbox" name="register" id="register-query"><label
