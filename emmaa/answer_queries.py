@@ -31,7 +31,7 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe,
     # Run answer queries mechanism for models for which result was not found.
     stmt = get_statement_by_query(query_dict)
     new_results = []
-    new_date = make_date_str(datetime.now())
+    new_date = datetime.now()
     for model_name in model_names:
         if model_name not in checked_models:
             mm = load_model_manager_from_s3(model_name)
@@ -71,7 +71,7 @@ def format_results(results):
         formatted_result['model'] = result[0]
         formatted_result['query'] = result[1]
         formatted_result['response'] = result[2]
-        formatted_result['date'] = result[3]
+        formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
     return results
 
