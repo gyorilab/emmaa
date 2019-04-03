@@ -109,21 +109,26 @@ class ModelManager(object):
 
     def make_english_path(self, result):
         """Create an English description of a path."""
-        sentences = []
+        paths = []
         if result.paths:
-            stmts = stmts_from_path(result.paths[0], self.pysb_model,
-                                    self.model.assembled_stmts)
-            for stmt in stmts:
-                ea = EnglishAssembler([stmt])
-                sentence = ea.make_model()
-                link = get_statement_queries([stmt])[0] + '&format=html'
-                sentences.append((sentence, link))
-        return sentences
+            for path in result.paths:
+                sentences = []
+                stmts = stmts_from_path(path, self.pysb_model,
+                                        self.model.assembled_stmts)
+                for stmt in stmts:
+                    ea = EnglishAssembler([stmt])
+                    sentence = ea.make_model()
+                    link = get_statement_queries([stmt])[0] + '&format=html'
+                    sentences.append((sentence, link))
+                paths.append(sentences)
+        return paths
 
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
-        return RESULT_CODES[result_code]
+        # TODO
+        # generate links to web pages explaining result codes
+        return [[RESULT_CODES[result_code]]]
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
@@ -177,10 +182,7 @@ class ModelManager(object):
         Return a result code otherwise.
         """
         if result.paths:
-            path = []
-            for sentence in self.make_english_path(result):
-                path.append(sentence[0])
-            return ' '.join(path)
+            return self.make_english_path(result)
         return self.make_english_result_code(result)
 
     def assembled_stmts_to_json(self):
