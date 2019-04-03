@@ -108,19 +108,29 @@ function generatePassFail(rowEl, col) {
 }
 
 function linkifyFromArray(tag, linkArray) {
-  console.log('function linkifyFromArray(tag, linkArray)')
+  // console.log('function linkifyFromArray(tag, linkArray)')
+  if (Object.prototype.toString.call(linkArray) == '[object String]') {
+    return linkifyFromString(tag, linkArray);
+  }
   var linkText = '';
   for (link of linkArray) {
     linkText = linkText + link + '<br>'; // Append link
   }
-  return linkifyFromString(tag, linkText.substr(0, breakText.length-4)); // Remove last <br>
+
+  return linkifyFromString(tag, linkText.substr(0, linkText.length-4)); // Remove last <br>
 }
 
 function linkifyFromString(tag, htmlText) {
-  console.log('function linkifyFromString(tag, htmlText)')
+  // console.log('function linkifyFromString(tag, htmlText)')
   tag.innerHTML = null;
   tag.innerHTML = htmlText;
-  console.log(tag)
+  let anchors = tag.getElementsByTagName('a')
+  if (anchors.length > 0) {
+    for (let a of anchors) {
+      a.className = 'stmt-dblink'
+    }
+  }
+  // console.log(tag)
   return tag;
 }
 
