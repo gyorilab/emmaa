@@ -4,7 +4,7 @@ from nose.plugins.attrib import attr
 from emmaa.db import get_db, Query, Result
 
 
-@attr('notravis')
+@attr('nonpublic')
 def _test_db():
     db = get_db('test')
     db.drop_tables(force=True)
@@ -12,14 +12,14 @@ def _test_db():
     return db
 
 
-@attr('notravis')
+@attr('nonpublic')
 def test_instantiation():
     db = _test_db()
     assert db
     return
 
 
-@attr('notravis')
+@attr('nonpublic')
 def test_put_queries():
     db = _test_db()
     test_query = {'objectSelection': 'ERK',
@@ -31,7 +31,7 @@ def test_put_queries():
     assert len(queries) == 2, len(queries)
 
 
-@attr('notravis')
+@attr('nonpublic')
 def test_get_queries():
     db = _test_db()
     test_queries = [{'objectSelection': 'ERK',
@@ -51,7 +51,7 @@ def _get_random_result():
     return random.choice(['This is fine.', 'This is not ok.'])
 
 
-@attr('notravis')
+@attr('nonpublic')
 def test_put_results():
     db = _test_db()
     test_query = {'objectSelection': 'ERK',
@@ -67,7 +67,7 @@ def test_put_results():
     assert len(db_results) == len(results)
 
 
-@attr('notravis')
+@attr('nonpublic')
 def test_get_results():
     db = _test_db()
     models = ['aml', 'luad']
