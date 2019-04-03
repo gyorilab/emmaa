@@ -7,6 +7,7 @@ import datetime
 import itertools
 import jsonpickle
 from collections import defaultdict
+from fnvhash import fnv1a_32
 from indra.explanation.model_checker import ModelChecker
 from indra.explanation.reporting import stmts_from_path
 from indra.assemblers.english.assembler import EnglishAssembler
@@ -139,7 +140,8 @@ class ModelManager(object):
             result = self.run_one_test(test)
             return self.process_response(result)
         else:
-            return [[RESULT_CODES['QUERY_NOT_APPLICABLE']]]
+            return self.hash_response_list(
+                        [[RESULT_CODES['QUERY_NOT_APPLICABLE']]])
 
     def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
@@ -167,7 +169,8 @@ class ModelManager(object):
                 applicable_stmts.append(test)
             else:
                 responses.append(
-                    (query_json, [[RESULT_CODES['QUERY_NOT_APPLICABLE']]]))
+                    (query_json, self.hash_response_list(
+                        [[RESULT_CODES['QUERY_NOT_APPLICABLE']]])))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_stmts])
@@ -179,12 +182,31 @@ class ModelManager(object):
         return responses
 
     def process_response(self, result):
-        """Get English description of a path if it was found.
-        Return a result code otherwise.
+        """Return a dictionary in which every key is a hash and value is a list
+        of tuples. Each tuple contains a sentence describing either a step in a
+        path (if it was found) or result code (if a path was not found) and a
+        link leading to a webpage with more information about corresponding
+        sentence.
         """
         if result.paths:
-            return self.make_english_path(result)
-        return self.make_english_result_code(result)
+            response_list = self.make_english_path(result)
+        else:
+            response_list = self.make_english_result_code(result)
+        return self.hash_response_list(response_list)
+
+    def hash_response_list(self, response_list):
+        """Return a dictionary mapping a hash with a response in a response
+        list.
+        """
+        response_dict = {}
+        for response in response_list:
+            sentences = []
+            for (sentence, link) in response:
+                sentences.append(sentence)
+            response_str = ' '.join(sentences)
+            response_hash = fnv1a_32(response_str.encode('utf-8'))
+            response_dict[response_hash] = response_list
+        return response_dict
 
     def assembled_stmts_to_json(self):
         """Put assembled statements to JSON format."""
