@@ -176,12 +176,14 @@ class TestRound(object):
         english_paths = {}
         for ix, result in enumerate(self.test_results):
             if result.paths:
-                paths = self.json_results[ix+1]['english_path']
-                links = []
-                for (sentence, link) in paths:
-                    link_str = f'<a href="{link}">{sentence}</a>'
-                    links.append(link_str)
-                english_paths[str(self.tests[ix].get_hash())] = links
+                paths = []
+                for path in self.json_results[ix+1]['english_path']:
+                    links = []
+                    for (sentence, link) in path:
+                        link_str = f'<a href="{link}">{sentence}</a>'
+                        links.append(link_str)
+                    paths.append(links)
+                english_paths[str(self.tests[ix].get_hash())] = paths
         return english_paths
 
     def get_english_codes(self):
@@ -190,8 +192,9 @@ class TestRound(object):
         """
         english_codes = {}
         for ix, result in enumerate(self.test_results):
+            (sentence, link) = self.json_results[ix+1]['english_code'][0][0]
             english_codes[str(self.tests[ix].get_hash())] = (
-                [self.json_results[ix+1]['english_code']])
+                [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
 
     def get_english_test_by_hash(self, test_hash):
