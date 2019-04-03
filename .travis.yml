@@ -11,6 +11,9 @@ install:
 script:
   - export AWS_DEFAULT_REGION='us-east-1'
   - export NOSEATTR="!notravis";
+  - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
+      export NOSEATTR="!nonpublic,$NOSEATTR";
+    fi
   - nosetests -v -a $NOSEATTR --with-coverage --cover-inclusive
     --cover-package=emmaa -w emmaa/tests
 after_success:
