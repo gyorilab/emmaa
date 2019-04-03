@@ -75,7 +75,7 @@ def format_results(results):
         sentence_link_pairs = response_json[response_hashes[0]]
         response = [f'<a href="{link}">{sentence}</a>' for (sentence, link) in
                     sentence_link_pairs]
-        formatted_result['response'] = result[2]
+        formatted_result['response'] = response
         formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
     return formatted_results

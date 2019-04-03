@@ -205,7 +205,7 @@ class ModelManager(object):
                 sentences.append(sentence)
             response_str = ' '.join(sentences)
             response_hash = fnv1a_32(response_str.encode('utf-8'))
-            response_dict[response_hash] = response_list
+            response_dict[response_hash] = response
         return response_dict
 
     def assembled_stmts_to_json(self):
