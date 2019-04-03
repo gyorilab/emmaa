@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 def get_db(name):
     """Get a db instance based on its name in the config or env."""
-    if name == 'test' and 'EMMAA_TEST_DB' in os.environ:
-        db_name = os.environ['EMMAA_TEST_DB']
+    if name == 'test' and 'EMMAADBTEST' in os.environ:
+        db_name = os.environ['EMMAADBTEST']
     else:
         defaults = get_databases()
         db_name = defaults[name]
