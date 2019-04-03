@@ -21,14 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 RESULT_CODES = {
-    'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
-    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
-    'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
-    'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
-    'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
-    'PATHS_FOUND': 'Path found which satisfies the test statement',
-    'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
-    'MAX_PATHS_ZERO': 'Path found but not reconstructed',
+    'STATEMENT_TYPE_NOT_HANDLED': ('Statement type not handled', '#'),
+    'SUBJECT_MONOMERS_NOT_FOUND': ('Statement subject not in model', '#'),
+    'OBSERVABLES_NOT_FOUND': ('Statement object state not in model', '#'),
+    'NO_PATHS_FOUND': ('No path found that satisfies the test statement', '#'),
+    'MAX_PATH_LENGTH_EXCEEDED': ('Path found but exceeds search depth', '#'),
+    'PATHS_FOUND': ('Path found which satisfies the test statement', '#'),
+    'INPUT_RULES_NOT_FOUND': ('No rules with test statement subject', '#'),
+    'MAX_PATHS_ZERO': ('Path found but not reconstructed', '#'),
+    'QUERY_NOT_APPLICABLE': ('Query is not applicable for this model', '#'),
 }
 
 
@@ -138,7 +139,7 @@ class ModelManager(object):
             result = self.run_one_test(test)
             return self.process_response(result)
         else:
-            return 'Query is not applicable for this model.'
+            return [[RESULT_CODES['QUERY_NOT_APPLICABLE']]]
 
     def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
@@ -166,7 +167,7 @@ class ModelManager(object):
                 applicable_stmts.append(test)
             else:
                 responses.append(
-                    (query_json, 'Query is not applicable for this model.'))
+                    (query_json, [[RESULT_CODES['QUERY_NOT_APPLICABLE']]]))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_stmts])
