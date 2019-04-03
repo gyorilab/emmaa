@@ -55,6 +55,7 @@ def test_format_results():
     assert isinstance(formatted_results[0]['date'], str)
 
 
+@attr('nonpublic')
 def test_answer_immediate_query():
     results = answer_immediate_query('tester@test.com', test_query, ['test'],
                                      subscribe=False, db_name='test')
@@ -65,6 +66,7 @@ def test_answer_immediate_query():
     assert isinstance(results[0]['date'], str)
 
 
+@attr('nonpublic')
 def test_answer_get_registered_queries():
     db = get_db('test')
     db.drop_tables(force=True)
