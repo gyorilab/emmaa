@@ -50,8 +50,8 @@ def test_format_results():
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
     assert formatted_results[0]['query'] == test_query
-    assert formatted_results[0]['response'] == (
-        'BRAF activates MAP2K1. Active MAP2K1 activates MAPK1.')
+    assert isinstance(formatted_results[0]['response'], list)
+    assert isinstance(formatted_results[0]['response'][0], str)
     assert isinstance(formatted_results[0]['date'], str)
 
 
@@ -62,7 +62,8 @@ def test_answer_immediate_query():
     assert len(results) == 1
     assert results[0]['model'] == 'test'
     assert results[0]['query'] == test_query
-    assert isinstance(results[0]['response'], str)
+    assert isinstance(results[0]['response'], list)
+    assert isinstance(results[0]['response'][0], str)
     assert isinstance(results[0]['date'], str)
 
 
@@ -77,5 +78,6 @@ def test_answer_get_registered_queries():
     assert len(results) == 1
     assert results[0]['model'] == 'test'
     assert results[0]['query'] == test_query
-    assert isinstance(results[0]['response'], str)
+    assert isinstance(results[0]['response'], list)
+    assert isinstance(results[0]['response'][0], str)
     assert isinstance(results[0]['date'], str)
