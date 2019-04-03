@@ -70,6 +70,11 @@ def format_results(results):
         formatted_result = {}
         formatted_result['model'] = result[0]
         formatted_result['query'] = result[1]
+        response_json = result[2]
+        response_hashes = [key for key in response_json.keys()]
+        sentence_link_pairs = response_json[response_hashes[0]]
+        response = [f'<a href="{link}">{sentence}</a>' for (sentence, link) in
+                    sentence_link_pairs]
         formatted_result['response'] = result[2]
         formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
