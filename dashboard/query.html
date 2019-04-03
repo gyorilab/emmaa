@@ -82,7 +82,7 @@
       <div class="card-body">
 
         <!-- model selection -->
-        <h5>Model selection</h5>
+        <h6><b>Model selection</b></h6>
         <div class="checkbox-container">
           <div class="form-select">
             <select name="model-select" id="model-select" placeholder="Select models" multiple>
@@ -94,42 +94,39 @@
         </div>
 
         <!-- stmt type select -->
-        <h5 style="padding-top: 20px;">Query selection</h5>
-        <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <!-- WARNING: The id of the select tag goes into the query
-          dictionary, do NOT change it unless it is changed in the rest API
-          and query handling -->
-          <select class="custom-select" id="typeSelection">
-            <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-            {% for stmt_type in stmt_types %}
-            <option value="{{ stmt_type }}">{{ stmt_type }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="subject-container" style="display: inline-block; vertical-align: top;">
+        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+        <div class="form-container" style="display: inline-block; vertical-align: top;">
           <div class="text" style="display: table;">
             <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <div class="dropdown" style="display: table-cell; padding-right: 2px">
+                <!-- WARNING: The id of the select tag goes into the query
+                dictionary, do NOT change it unless it is changed in the rest API
+                and query handling -->
+                <select class="custom-select" id="typeSelection">
+                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                  {% for stmt_type in stmt_types %}
+                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
               <!-- subject -->
-              <div style="display: table-cell; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
               <!-- object -->
-              <div style="display: table-cell; padding-left: 2px; padding-right: 1px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <!-- register -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
+                <div class="checkbox">
+                  <input type="checkbox" name="register" id="register-query"><label
+                    for="register-query">Register Query</label>
+                </div>
+              </div>
+              <!-- indra docs text -->
+              <div class="text-container">
+                <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.</i>
+              </div>
               <!-- formsubmit -->
-              <div style="display: table-cell; padding-left: 6px"><input type="submit" text="Submit query" name="query-submit" id="query-submit"></div>
+              <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
             </form>
-          </div>
-        </div>
-
-        <div class="text-container">
-          To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
-        </div>
-
-        <!-- register query -->
-        <h5 style="padding-top: 20px;">Register query</h5>
-        <div class="register-container">
-          <div class="checkbox">
-            <input type="checkbox" name="register" id="register-query"><label
-              for="register-query">Register Query</label>
           </div>
         </div>
 
