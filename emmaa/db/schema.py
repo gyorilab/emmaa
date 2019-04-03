@@ -133,4 +133,4 @@ class Result(Base, EmmaaTable):
     query_hash = Column(BigInteger, ForeignKey('query.hash'), nullable=False)
     query = relationship(Query)
     date = Column(DateTime, default=func.now())
-    string = Column(String, nullable=False)
+    string = Column(JSONB, nullable=False)
