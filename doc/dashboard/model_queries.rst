@@ -9,11 +9,10 @@ Submitting a Query
 ------------------
 
 The model queries page can answer direct queries about one or more models.
-A query
-consists of a statement type, a subject, and an object. Together with the
-query, at least one model needs to be selected for the query submission to be
-valid. A query can also optionally be submitted for registration. With this
-option, when returning to the page, previous queries will be loaded with
+A query consists of a statement type, a subject, and an object. Together with
+the query, at least one model needs to be selected for the query submission
+to be valid. A query can also optionally be submitted for registration. With
+this option, when returning to the page, previous queries will be loaded with
 their latest result.
 
 .. figure:: ../_static/images/query_filled.png

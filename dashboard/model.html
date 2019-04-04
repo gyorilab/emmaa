@@ -74,8 +74,9 @@
     }
   </script>
   <style>
-    .fa-check {color: #00FF00}
-    .fa-times {color: #FF0000}
+    .fa-check {color: #00ff00}
+    .fa-times {color: #ff0000}
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
   </style>
 </head>
 
@@ -90,15 +91,8 @@
       <a href="../home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
       <a href="../query">Queries</a>
     </h5>
-    <nav class="my-2 my-md-0 mr-md-3">
-      <a class="p-2 text-dark" href="#about">About</a>
-    </nav>
-<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
-  </div>
-
-  <!-- Dropdown -->
-  <div class="container">
-    <div class="input-group">
+    <!-- Dropdown -->
+    <div class="input-group" style="width: 410px;">
       <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
         <option selected disabled hidden>Select model...</option>
         {% for model_id, model_meta in model_data %}
@@ -110,15 +104,22 @@
         <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
       </div>
     </div>
+    <nav class="my-2 my-md-0 mr-md-3">
+      <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html">Help</a>
+      <a class="p-2 text-dark" href="#about">About</a>
+    </nav>
+<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
   </div>
 
   <!-- Tabs -->
-  <nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
-    <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
-  </div>    
-  </nav>
+  <div class="container nav-container">
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
+        <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      </div>    
+    </nav>
+  </div>
   <div class="tab-content" id="nav-tabContent">
     <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
       <!-- Model stuff goes here -->

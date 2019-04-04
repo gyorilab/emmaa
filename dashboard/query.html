@@ -15,6 +15,12 @@
   <!-- Optional theme -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
+  <!-- Choices multiselect library: https://github.com/jshjohnson/Choices -->
+  <!-- Include Choices CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+  <!-- Include Choices JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
   <!-- bootstrap 4.1.3 -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 
@@ -31,10 +37,21 @@
   <!-- Script Files -->
   <!-- <script src="https://indralab.github.io/aws/js/awsServices.js"></script> -->
   <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
-  <!-- <script src="http://127.0.0.2:5000/emmaaFunctions.js"></script> -->
+  <!-- <script src="http://127.0.0.1:8000/emmaaFunctions.js"></script> -->
   <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script>
-  <!-- <script src="http://127.0.0.2:5000/queryFunctions.js"></script> -->
+  <!-- <script src="http://127.0.0.1:8000/queryFunctions.js"></script> -->
   <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var modelSelect = new Choices('#model-select')
+    })
+  </script>
+
+  <style>
+    a.model-link {color: #000000;}
+    .choices__list--multiple .choices__item {background-color: #007bff; border: #007bff;}
+  </style>
 
 </head>
 
@@ -51,6 +68,7 @@
       <a href="./query">Queries</a>
     </h5>
     <nav class="my-2 my-md-0 mr-md-3">
+      <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html">Help</a>
       <a class="p-2 text-dark" href="#about">About</a>
     </nav>
 <!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
@@ -58,57 +76,58 @@
 
   <div class="container" id="query-container">
 
-    <!-- checkboxes -->
     <div class="card">
       <div class="card-header">
         <h4 class="my-0 font-weight-normal">Model Queries</h4>
       </div>
       <div class="card-body">
 
-        <div class="checkbox-container" id="model-select">
-          <div class="checkbox">
-            {% for model_id, _ in model_data %}
-            <label for="{{ model_id }}">
-              <input type="checkbox" name="{{ model_id }}" id="{{ model_id }}">{{ model_id.upper() }}
-            </label>
+        <!-- model selection -->
+        <h6><b>Model selection</b></h6>
+        <div class="checkbox-container">
+          <div class="form-select">
+            <select name="model-select" id="model-select" placeholder="Select models" multiple>
+            {% for model_id, config_json in model_data %}
+              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
             {% endfor %}
+            </select>
           </div>
-        </div>
-        <div class="text-container">
-          To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.
         </div>
 
         <!-- stmt type select -->
-        <div class="dropdown" style="display: inline-block; vertical-align: top;">
-          <!-- WARNING: The id of the select tag goes into the query
-          dictionary, do NOT change it unless it is changed in the rest API
-          and query handling -->
-          <select class="custom-select" id="typeSelection">
-            <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-            {% for stmt_type in stmt_types %}
-            <option value="{{ stmt_type }}">{{ stmt_type }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="subject-container" style="display: inline-block; vertical-align: top;">
+        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+        <div class="form-container" style="display: inline-block; vertical-align: top;">
           <div class="text" style="display: table;">
             <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <div class="dropdown" style="display: table-cell; padding-right: 2px">
+                <!-- WARNING: The id of the select tag goes into the query
+                dictionary, do NOT change it unless it is changed in the rest API
+                and query handling -->
+                <select class="custom-select" id="typeSelection">
+                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                  {% for stmt_type in stmt_types %}
+                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
               <!-- subject -->
-              <div style="display: table-cell; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
               <!-- object -->
-              <div style="display: table-cell; padding-left: 2px; padding-right: 1px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <!-- register -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
+                <div class="checkbox">
+                  <input type="checkbox" name="register" id="register-query"><label
+                    for="register-query">Register Query</label>
+                </div>
+              </div>
+              <!-- indra docs text -->
+              <div class="text-container">
+                <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html">INDRA documentation</a>.</i>
+              </div>
               <!-- formsubmit -->
-              <div style="display: table-cell; padding-left: 6px"><input type="submit" text="Submit query" name="query-submit" id="query-submit"></div>
+              <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
             </form>
-          </div>
-        </div>
-
-        <!-- register query -->
-        <div class="register-container">
-          <div class="checkbox">
-            <input type="checkbox" name="register" id="register-query"><label
-              for="register-query">Register Query</label>
           </div>
         </div>
 
@@ -161,7 +180,7 @@
             {% for result in old_results %}
             <tr>
               <!-- model, query, response, date -->
-              <td>{{ result['model'] }}</td>
+              <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
               <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
               <td>{{ result['response'] }}</td>
               <td>{{ result['date'] }}</td>

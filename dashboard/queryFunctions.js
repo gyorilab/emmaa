@@ -43,21 +43,19 @@ function collectQuery(queryContainer) {
 
   result = []
   query = {};
-  checkboxes = []
+  models = []
 
   // Get checked models
-  for (box of document.getElementById('model-select').getElementsByTagName('input')) {
-    console.log(box.name)
-    if (!box.disabled && box.checked) {
-      checkboxes.push(box.name)
-    }
+  for (op of document.getElementById('model-select').children) {
+    console.log(op.value)
+    models.push(op.value)
   }
-  if (checkboxes.length == 0) {
+  if (models.length == 0) {
     // Handle no boxes ticked
     alert('Must select at least one model!')
     return;
   };
-  result.push(checkboxes);
+  result.push(models);
 
   //  Collect dropdown selections
   for (selection of dropdownSelections) {
