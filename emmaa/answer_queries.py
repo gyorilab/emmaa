@@ -73,8 +73,13 @@ def format_results(results):
         response_json = result[2]
         response_hashes = [key for key in response_json.keys()]
         sentence_link_pairs = response_json[response_hashes[0]]
-        response = [f'<a href="{link}">{sentence}</a>' for (sentence, link) in
-                    sentence_link_pairs]
+        response_list = []
+        for ix, (sentence, link) in enumerate(sentence_link_pairs):
+            if ix > 0:
+                response_list.append('<br>')
+            response_list.append(
+                f'<a href="{link}" class="status-link">{sentence}</a>')
+        response = ''.join(response_list)
         formatted_result['response'] = response
         formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
