@@ -24,6 +24,11 @@ get_db.__test__ = False
 
 test_query = {'objectSelection': 'MAPK1', 'subjectSelection': 'BRAF',
               'typeSelection': 'activation'}
+test_response = {3801854542: [
+    ('BRAF activates MAP2K1.',
+     'https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html'),
+    ('Active MAP2K1 activates MAPK1.',
+     'https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html')]}
 
 
 def test_get_statement_by_query():
@@ -43,9 +48,7 @@ def test_load_model_manager_from_s3():
 
 
 def test_format_results():
-    results = [('test', test_query,
-                'BRAF activates MAP2K1. Active MAP2K1 activates MAPK1.',
-                datetime.now())]
+    results = [('test', test_query, test_response, datetime.now())]
     formatted_results = format_results(results)
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
