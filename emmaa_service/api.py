@@ -52,16 +52,6 @@ def _get_models():
     return model_data
 
 
-GLOBAL_PRELOAD = False
-model_cache = {}
-if GLOBAL_PRELOAD:
-    # Load all the model configs
-    models = _get_models()
-    # Load all the model managers for queries
-    for model, _ in models:
-        load_model_manager_from_s3(model)
-
-
 def get_model_config(model):
     if model in model_cache:
         return model_cache[model]
@@ -75,6 +65,16 @@ def get_model_config(model):
         logger.warning(f"Model {model} has no readable name. Skipping...")
         model_cache[model] = None
     return model_cache[model]
+
+
+GLOBAL_PRELOAD = False
+model_cache = {}
+if GLOBAL_PRELOAD:
+    # Load all the model configs
+    models = _get_models()
+    # Load all the model managers for queries
+    for model, _ in models:
+        load_model_manager_from_s3(model)
 
 
 def get_queryable_stmt_types():
