@@ -346,7 +346,7 @@ function populateTestResultTable(tableBody, json) {
   clearTable(allTestsTable)
   var testResults = json.test_round_summary.tests_by_hash
   var resultValues = Object.values(testResults)
-  resultValues.sort(function(a,b){return a[1]<b[1];});
+  resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
 
   for (val of resultValues) {
     // Has columns: test; Status; Path Found;
