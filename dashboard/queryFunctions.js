@@ -130,7 +130,9 @@ function populateQueryResults(json) {
   let qrTable = document.getElementById('queryResults');
   clearTable(qrTable)
   for (res of json.result) {
-    qrTable.appendChild(addToRow([res['model'], res['response']]));
+    let rowEl = addToRow([res['model'], res['response']])
+    rowEl.children[1] = linkifyFromString(rowEl.children[1], rowEl.children[1].textContent)
+    qrTable.appendChild(rowEl);
   }
 }
 
