@@ -323,7 +323,8 @@ class StatsGenerator(object):
         statistics for earlier test rounds.
     """
 
-    def __init__(self, model_name, latest_round=None, previous_round=None):
+    def __init__(self, model_name, latest_round=None, previous_round=None,
+                 previous_json_stats=None):
         self.model_name = model_name
         if not latest_round:
             self.latest_round = self._get_latest_round()
@@ -334,7 +335,10 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
-        self.previous_json_stats = self._get_previous_json_stats()
+        if not previous_json_stats:
+            self.previous_json_stats = self._get_previous_json_stats()
+        else:
+            self.previous_json_stats = previous_json_stats
 
     def make_stats(self):
         """Check if two latest test rounds were found and add statistics to
