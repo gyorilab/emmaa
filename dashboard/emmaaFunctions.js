@@ -352,7 +352,7 @@ function populateTestResultTable(tableBody, json) {
     // Has columns: test; Status; Path Found;
     let rowEl = addToRow(val)
     rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0])
-    rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2])
+    rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0])
     allTestsTable.appendChild(generatePassFail(rowEl, 1))
   }
 
