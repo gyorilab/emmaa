@@ -21,16 +21,17 @@ from emmaa.answer_queries import answer_registered_queries
 logger = logging.getLogger(__name__)
 
 
+result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
 RESULT_CODES = {
-    'STATEMENT_TYPE_NOT_HANDLED': ('Statement type not handled', '#'),
-    'SUBJECT_MONOMERS_NOT_FOUND': ('Statement subject not in model', '#'),
-    'OBSERVABLES_NOT_FOUND': ('Statement object state not in model', '#'),
-    'NO_PATHS_FOUND': ('No path found that satisfies the test statement', '#'),
-    'MAX_PATH_LENGTH_EXCEEDED': ('Path found but exceeds search depth', '#'),
-    'PATHS_FOUND': ('Path found which satisfies the test statement', '#'),
-    'INPUT_RULES_NOT_FOUND': ('No rules with test statement subject', '#'),
-    'MAX_PATHS_ZERO': ('Path found but not reconstructed', '#'),
-    'QUERY_NOT_APPLICABLE': ('Query is not applicable for this model', '#'),
+    'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
+    'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
+    'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
+    'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
+    'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
+    'PATHS_FOUND': 'Path found which satisfies the test statement',
+    'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
+    'MAX_PATHS_ZERO': 'Path found but not reconstructed',
+    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
 }
 
 
@@ -130,7 +131,7 @@ class ModelManager(object):
         result_code = result.result_code
         # TODO
         # generate links to web pages explaining result codes
-        return [[RESULT_CODES[result_code]]]
+        return [[(RESULT_CODES[result_code], result_codes_link)]]
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
@@ -140,8 +141,8 @@ class ModelManager(object):
             result = self.run_one_test(test)
             return self.process_response(result)
         else:
-            return self.hash_response_list(
-                        [[RESULT_CODES['QUERY_NOT_APPLICABLE']]])
+            return self.hash_response_list([[
+                RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link]])
 
     def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
@@ -170,7 +171,8 @@ class ModelManager(object):
             else:
                 responses.append(
                     (query_json, self.hash_response_list(
-                        [[RESULT_CODES['QUERY_NOT_APPLICABLE']]])))
+                        [[RESULT_CODES['QUERY_NOT_APPLICABLE'],
+                          result_codes_link]])))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_stmts])
@@ -426,7 +428,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     results_json_dict = mm.results_to_json()
-    results_json_str = json.dumps(results_json_dict)
+    results_json_str = json.dumps(results_json_dict, indent=1)
     # Optionally upload test results to S3
     if upload_results:
         client = get_s3_client()
