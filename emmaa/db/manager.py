@@ -204,14 +204,15 @@ class EmmaaDatabaseManager(object):
         model_id : str
             The short, standard model ID.
         query_results : list of tuples
-            A list of tuples of the form (query_json, result_string), where
+            A list of tuples of the form (query_json, result_json), where
             the query_json is the standard query json run against the model,
-            and the result_string is the corresponding result.
+            and the result_json is the json containing corresponding result.
         """
         results = []
-        for query_json, result_string in query_results:
+        for query_json, result_json in query_results:
             query_hash = hash_query(query_json, model_id)
-            results.append(Result(query_hash=query_hash, string=result_string))
+            results.append(Result(query_hash=query_hash,
+                                  result_json=result_json))
 
         with self.get_session() as sess:
             sess.add_all(results)
@@ -221,7 +222,7 @@ class EmmaaDatabaseManager(object):
         logger.info(f"Got request for results of {query_json} on {model_ids}.")
         hashes = {hash_query(query_json, model_id) for model_id in model_ids}
         with self.get_session() as sess:
-            q = (sess.query(Query.model_id, Query.json, Result.string,
+            q = (sess.query(Query.model_id, Query.json, Result.result_json,
                             Result.date)
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
@@ -244,13 +245,13 @@ class EmmaaDatabaseManager(object):
         -------
         results : list[tuple]
             A list of tuples, each of the form: (model_id, query_json,
-            result_string, date) representing the result of a query run on a
+            result_json, date) representing the result of a query run on a
             model on a given date.
         """
         logger.info(f"Got request for results for {user_email}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json,
-                            Result.string, Result.date)
+                            Result.result_json, Result.date)
                  .filter(Query.hash == Result.query_hash))
             results = [tuple(res) for res in q.all()]
         logger.info(f"Found {len(results)} results.")
