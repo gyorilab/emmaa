@@ -142,7 +142,7 @@ class ModelManager(object):
             return self.process_response(result)
         else:
             return self.hash_response_list([[
-                RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link]])
+                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
 
     def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
@@ -156,8 +156,8 @@ class ModelManager(object):
 
         Returns
         -------
-        responses : list[tuple(json, str)]
-            A list of tuples each containing a query json and a result string.
+        responses : list[tuple(json, json)]
+            A list of tuples each containing a query json and a result json.
         """
         responses = []
         applicable_queries = []
@@ -171,8 +171,8 @@ class ModelManager(object):
             else:
                 responses.append(
                     (query_json, self.hash_response_list(
-                        [[RESULT_CODES['QUERY_NOT_APPLICABLE'],
-                          result_codes_link]])))
+                        [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
+                          result_codes_link)]])))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_stmts])
