@@ -6,6 +6,18 @@ tabs: *Model* and *Tests*. At the top of the page the selected model is
 shown in a drop-down menu. Another model can also be selected and loaded from
 the menu.
 
+Link to sources
+---------------
+
+To see further details regarding a mechanism, links to content databases are
+generated for all statements where possible.
+
+.. figure:: ../_static/images/linkout.png
+  :align: center
+  :figwidth: 75 %
+
+  *Link to content database*
+
 Model Tab
 ---------
 

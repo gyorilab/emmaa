@@ -7,9 +7,11 @@ import datetime
 import itertools
 import jsonpickle
 from collections import defaultdict
+from fnvhash import fnv1a_32
 from indra.explanation.model_checker import ModelChecker
 from indra.explanation.reporting import stmts_from_path
 from indra.assemblers.english.assembler import EnglishAssembler
+from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
@@ -19,6 +21,7 @@ from emmaa.answer_queries import answer_registered_queries
 logger = logging.getLogger(__name__)
 
 
+result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -28,6 +31,7 @@ RESULT_CODES = {
     'PATHS_FOUND': 'Path found which satisfies the test statement',
     'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
     'MAX_PATHS_ZERO': 'Path found but not reconstructed',
+    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
 }
 
 
@@ -108,19 +112,26 @@ class ModelManager(object):
 
     def make_english_path(self, result):
         """Create an English description of a path."""
-        sentences = []
+        paths = []
         if result.paths:
-            stmts = stmts_from_path(result.paths[0], self.pysb_model,
-                                    self.model.assembled_stmts)
-            for stmt in stmts:
-                ea = EnglishAssembler([stmt])
-                sentences.append(ea.make_model())
-        return sentences
+            for path in result.paths:
+                sentences = []
+                stmts = stmts_from_path(path, self.pysb_model,
+                                        self.model.assembled_stmts)
+                for stmt in stmts:
+                    ea = EnglishAssembler([stmt])
+                    sentence = ea.make_model()
+                    link = get_statement_queries([stmt])[0] + '&format=html'
+                    sentences.append((sentence, link))
+                paths.append(sentences)
+        return paths
 
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
-        return RESULT_CODES[result_code]
+        # TODO
+        # generate links to web pages explaining result codes
+        return [[(RESULT_CODES[result_code], result_codes_link)]]
 
     def answer_query(self, stmt):
         """Answer user query with a path if it is found."""
@@ -130,7 +141,8 @@ class ModelManager(object):
             result = self.run_one_test(test)
             return self.process_response(result)
         else:
-            return 'Query is not applicable for this model.'
+            return self.hash_response_list([[
+                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
 
     def answer_queries(self, query_stmt_pairs):
         """Answer all queries registered for this model.
@@ -144,8 +156,8 @@ class ModelManager(object):
 
         Returns
         -------
-        responses : list[tuple(json, str)]
-            A list of tuples each containing a query json and a result string.
+        responses : list[tuple(json, json)]
+            A list of tuples each containing a query json and a result json.
         """
         responses = []
         applicable_queries = []
@@ -158,7 +170,9 @@ class ModelManager(object):
                 applicable_stmts.append(test)
             else:
                 responses.append(
-                    (query_json, 'Query is not applicable for this model.'))
+                    (query_json, self.hash_response_list(
+                        [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
+                          result_codes_link)]])))
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt for test in
                                            applicable_stmts])
@@ -170,12 +184,31 @@ class ModelManager(object):
         return responses
 
     def process_response(self, result):
-        """Get English description of a path if it was found.
-        Return a result code otherwise.
+        """Return a dictionary in which every key is a hash and value is a list
+        of tuples. Each tuple contains a sentence describing either a step in a
+        path (if it was found) or result code (if a path was not found) and a
+        link leading to a webpage with more information about corresponding
+        sentence.
         """
         if result.paths:
-            return ' '.join(self.make_english_path(result))
-        return self.make_english_result_code(result)
+            response_list = self.make_english_path(result)
+        else:
+            response_list = self.make_english_result_code(result)
+        return self.hash_response_list(response_list)
+
+    def hash_response_list(self, response_list):
+        """Return a dictionary mapping a hash with a response in a response
+        list.
+        """
+        response_dict = {}
+        for response in response_list:
+            sentences = []
+            for (sentence, link) in response:
+                sentences.append(sentence)
+            response_str = ' '.join(sentences)
+            response_hash = fnv1a_32(response_str.encode('utf-8'))
+            response_dict[response_hash] = response
+        return response_dict
 
     def assembled_stmts_to_json(self):
         """Put assembled statements to JSON format."""
@@ -395,7 +428,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     results_json_dict = mm.results_to_json()
-    results_json_str = json.dumps(results_json_dict)
+    results_json_str = json.dumps(results_json_dict, indent=1)
     # Optionally upload test results to S3
     if upload_results:
         client = get_s3_client()

@@ -29,7 +29,7 @@
   <!-- Script Files -->
   <!-- <script src="https://indralab.github.io/aws/js/awsServices.js"></script> -->
   <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
-  <!--<script src="http://127.0.0.2:5000/emmaaFunctions.js"></script>-->
+  <!-- <script src="http://127.0.0.1:8000/emmaaFunctions.js"></script> -->
   <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script>
 
   <script>
@@ -77,6 +77,10 @@
     .fa-check {color: #00ff00}
     .fa-times {color: #ff0000}
     .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
+    a.stmt-dblink {
+      color: #000000;
+      text-decoration: none;
+    }
   </style>
 </head>
 
@@ -117,7 +121,7 @@
       <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
         <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
-      </div>    
+      </div>
     </nav>
   </div>
   <div class="tab-content" id="nav-tabContent">

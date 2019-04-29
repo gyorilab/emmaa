@@ -8,6 +8,7 @@ from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         make_date_str, get_s3_client)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
+from indra.sources.indra_db_rest.api import get_statement_queries
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class TestRound(object):
         return [str(stmt.get_hash()) for stmt in self.statements]
 
     def get_statement_types(self):
-        """Return a sorted list of tuples containing a statement type and a 
+        """Return a sorted list of tuples containing a statement type and a
         number of times a statement of this type occured in a model.
         """
         statement_types = defaultdict(int)
@@ -108,7 +109,10 @@ class TestRound(object):
 
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
-        return ea.make_model()
+        sentence = ea.make_model()
+        link = get_statement_queries([stmt])[0] + '&format=html'
+        link_str = f'<a href="{link}">{sentence}</a>'
+        return link_str
 
     def get_english_statement_by_hash(self, stmt_hash):
         return self.get_english_statements_by_hash()[stmt_hash]
@@ -172,8 +176,14 @@ class TestRound(object):
         english_paths = {}
         for ix, result in enumerate(self.test_results):
             if result.paths:
-                english_paths[str(self.tests[ix].get_hash())] = (
-                    ' '.join(self.json_results[ix+1]['english_path']))
+                paths = []
+                for path in self.json_results[ix+1]['english_path']:
+                    links = []
+                    for (sentence, link) in path:
+                        link_str = f'<a href="{link}">{sentence}</a>'
+                        links.append(link_str)
+                    paths.append(links)
+                english_paths[str(self.tests[ix].get_hash())] = paths
         return english_paths
 
     def get_english_codes(self):
@@ -182,8 +192,9 @@ class TestRound(object):
         """
         english_codes = {}
         for ix, result in enumerate(self.test_results):
+            (sentence, link) = self.json_results[ix+1]['english_code'][0][0]
             english_codes[str(self.tests[ix].get_hash())] = (
-                self.json_results[ix+1]['english_code'])
+                [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
 
     def get_english_test_by_hash(self, test_hash):
@@ -312,7 +323,8 @@ class StatsGenerator(object):
         statistics for earlier test rounds.
     """
 
-    def __init__(self, model_name, latest_round=None, previous_round=None):
+    def __init__(self, model_name, latest_round=None, previous_round=None,
+                 previous_json_stats=None):
         self.model_name = model_name
         if not latest_round:
             self.latest_round = self._get_latest_round()
@@ -323,7 +335,10 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
-        self.previous_json_stats = self._get_previous_json_stats()
+        if not previous_json_stats:
+            self.previous_json_stats = self._get_previous_json_stats()
+        else:
+            self.previous_json_stats = previous_json_stats
 
     def make_stats(self):
         """Check if two latest test rounds were found and add statistics to

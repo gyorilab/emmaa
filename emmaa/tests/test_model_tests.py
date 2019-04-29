@@ -1,3 +1,4 @@
+from nose.plugins.attrib import attr
 from indra.explanation.model_checker import PathResult, ModelChecker
 from indra.statements.statements import Statement
 from emmaa.model import EmmaaModel
@@ -26,6 +27,7 @@ def test_load_tests_from_s3():
     assert isinstance(test, StatementCheckingTest)
 
 
+@attr('nonpublic')
 def test_run_tests_from_s3():
     (mm, sg) = run_model_tests_from_s3(
         'test', 'simple_model_test.pkl', upload_mm=False,

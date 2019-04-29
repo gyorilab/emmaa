@@ -114,7 +114,9 @@ class UserQuery(Base, EmmaaTable):
 
 
 class Result(Base, EmmaaTable):
-    """Results of queries to models: ``Result(_id_, query_hash, date, string)``
+    """Results of queries to models:
+
+    ``Result(_id_, query_hash, date, result_json)``
 
     Parameters
     ----------
@@ -125,12 +127,12 @@ class Result(Base, EmmaaTable):
         directly generated.
     date : datetime
         (auto) The date the result was entered into the database.
-    string : str
-        The string describing the result.
+    result_json : json
+        A json dict containing the results for the query.
     """
     __tablename__ = 'result'
     id = Column(Integer, primary_key=True)
     query_hash = Column(BigInteger, ForeignKey('query.hash'), nullable=False)
     query = relationship(Query)
     date = Column(DateTime, default=func.now())
-    string = Column(String, nullable=False)
+    result_json = Column(JSONB, nullable=False)
