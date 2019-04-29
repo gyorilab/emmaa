@@ -1,3 +1,4 @@
+from nose.plugins.attrib import attr
 from indra.explanation.model_checker import PathResult, ModelChecker
 from indra.statements.statements import Statement
 from emmaa.model import EmmaaModel
