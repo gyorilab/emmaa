@@ -62,6 +62,16 @@ class EmmaaDatabaseManager(object):
         return EmmaaDatabaseSessionManager(self.host, self.engine)
 
     def create_tables(self, tables=None):
+        """Create the tables from the EMMAA database
+
+        Optionally specify `tables` to be created. List may contain either
+        table objects or the string names of the tables.
+        """
+        # Regularize the type of input to name strings.
+        if tables is not None:
+            tables = [tbl.__tablename__ if isinstance(tbl, EmmaaTable) else tbl
+                      for tbl in tables]
+
         if tables is None:
             tables = set(self.tables.keys())
         else:
@@ -85,6 +95,11 @@ class EmmaaDatabaseManager(object):
         is False, a warning prompt will be raised to asking for confirmation,
         as this action will remove all data from that table.
         """
+        # Regularize the type of input to table objects.
+        if tables is not None:
+            tables = [tbl if isinstance(tbl, EmmaaTable) else self.tables[tbl]
+                      for tbl in tables]
+
         if not force:
             # Build the message
             if tables is None:
@@ -92,7 +107,8 @@ class EmmaaDatabaseManager(object):
                        % self.label)
             else:
                 msg = "You are going to clear the following tables:\n"
-                msg += str([tbl.__tablename__ for tbl in tables]) + '\n'
+                msg += '\n'.join(['\t-' + tbl.__tablename__ for tbl in tables])
+                msg += '\n'
                 msg += ("Do you really want to clear these tables from %s? "
                         "[y/N]: " % self.label)
 
