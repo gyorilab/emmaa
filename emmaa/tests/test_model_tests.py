@@ -26,6 +26,7 @@ def test_load_tests_from_s3():
     assert isinstance(test, StatementCheckingTest)
 
 
+@attr('nonpublic')
 def test_run_tests_from_s3():
     (mm, sg) = run_model_tests_from_s3(
         'test', 'simple_model_test.pkl', upload_mm=False,
