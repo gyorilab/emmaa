@@ -39,9 +39,6 @@ MODEL = _load_template('model.html')
 QUERIES = _load_template('query.html')
 
 
-model_cache = {}
-
-
 def _get_models():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
@@ -68,6 +65,16 @@ def get_model_config(model):
         logger.warning(f"Model {model} has no readable name. Skipping...")
         model_cache[model] = None
     return model_cache[model]
+
+
+GLOBAL_PRELOAD = False
+model_cache = {}
+if GLOBAL_PRELOAD:
+    # Load all the model configs
+    models = _get_models()
+    # Load all the model managers for queries
+    for model, _ in models:
+        load_model_manager_from_s3(model)
 
 
 def get_queryable_stmt_types():
@@ -170,7 +177,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # TODO: make pre-loading available when running service via Gunicorn
-    if args.preload:
+    if args.preload and not GLOBAL_PRELOAD:
         # Load all the model configs
         models = _get_models()
         # Load all the model mamangers for queries
