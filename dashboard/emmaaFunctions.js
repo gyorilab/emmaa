@@ -158,6 +158,7 @@ function populateModelsTable(metaTableBody, json) {
     if (sourceHash) {
       link.textContent = 'Evidence'
       link.href = 'https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/statements/from_hash/' + sourceHash + '?format=html' // rest api from hash
+      link.target = '_blank'
     } else {
       link.textContent = 'No evidence'
     }
@@ -398,6 +399,7 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
       let link = document.createElement('a');
       link.textContent = ndexID;
       link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
+      link.target = '_blank';
 
       tableRow = addToRow(['Network on NDEX', '']);
       tableRow.children[1].innerHTML = null;
