@@ -11,7 +11,7 @@ sources (databases and literature), and model components are annotated such
 that given the result, we can link back to the original sources.
 
 
-.. image:: _static/images/akt_mtor_linkout.png
+.. image:: ../_static/images/akt_mtor_linkout.png
 
-.. image:: _static/images/akt_mtor_curation.png
+.. image:: ../_static/images/akt_mtor_curation.png
 
