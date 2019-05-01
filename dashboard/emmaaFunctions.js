@@ -128,6 +128,7 @@ function linkifyFromString(tag, htmlText) {
   if (anchors.length > 0) {
     for (let a of anchors) {
       a.className = 'stmt-dblink'
+      a.target = "_blank"
     }
   }
   // console.log(tag)
