@@ -188,6 +188,8 @@ class EmmaaModel(object):
                 stmts_out.append(stmt)
             elif policy == 'prior_all' and agnames.issubset(stnames):
                 stmts_out.append(stmt)
+            elif policy is None:
+                stmts_out.append(stmt)
         logger.info('%d statements after filter...' % len(stmts_out))
         return stmts_out
 
