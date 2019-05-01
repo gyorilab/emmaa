@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fnvhash import fnv1a_32
 from sqlalchemy.exc import IntegrityError
 
@@ -242,7 +244,7 @@ class EmmaaDatabaseManager(object):
                             Result.date)
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
-            results = [tuple(res) for res in q.all()]
+            results = _weed_results(q.all())
         logger.info(f"Found {len(results)} results.")
         return results
 
@@ -269,9 +271,18 @@ class EmmaaDatabaseManager(object):
             q = (sess.query(Query.model_id, Query.json,
                             Result.result_json, Result.date)
                  .filter(Query.hash == Result.query_hash))
-            results = [tuple(res) for res in q.all()]
+            results = _weed_results(q.all())
         logger.info(f"Found {len(results)} results.")
         return results
+
+
+def _weed_results(result_iter):
+    result_dict = defaultdict(list)
+    for res in result_iter:
+        result_dict[hash_query(res[1], res[0])].append(tuple(res))
+    results = [max(res_list, key=lambda r: r[-1])
+               for res_list in result_dict.values()]
+    return results
 
 
 def sorted_json_string(json_thing):
