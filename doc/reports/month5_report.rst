@@ -82,7 +82,7 @@ highly efficient and targeted way. The image below illustrates the effect
 of some of these improvements as they affected the number of applied and passed
 tests:
 
-.. image:: _static/images/aml_tests_annot.png
+.. image:: ../_static/images/aml_tests_annot.png
 
 
 Test-driven modeling
@@ -147,13 +147,13 @@ For example, fixing a reaction involving MTOR and PPP2CA resulted in three
 tests passing, each highlighting the negative feedback from MTOR back to
 upstream IGF1R signaling via IRS-1.
 
-.. image:: _static/images/new_passed_tests.png
+.. image:: ../_static/images/new_passed_tests.png
 
 The screenshot of the EMMAA dashboard test results page for the curated Ras
 Model, shown below, highlights the iterative process of test-driven
 model refinement and expansion.
 
-.. image:: _static/images/ras_tests_annot.png
+.. image:: ../_static/images/ras_tests_annot.png
 
 The bottom plot shows the total number of applied tests over time, along with
 the number of passing tests; the top plot tracks changes in the percentage of

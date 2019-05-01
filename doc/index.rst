@@ -11,8 +11,8 @@ EMMAA: Ecosystem of Machine-maintained models with Automated Analysis
 
    architecture/index
    dashboard/index
-   month5_report
    modules/index
+   reports/index
 
 * :ref:`genindex`
 * :ref:`modindex`
