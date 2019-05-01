@@ -72,3 +72,47 @@ def test_model_json():
     # Need hashes to be strings so that javascript can read them
     assert isinstance(emmaa_model_json['stmts'][0]['stmt']['evidence'][0][
                           'source_hash'], str)
+
+
+def test_filter_relevance():
+    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
+                   'search_terms': [{'db_refs': {'HGNC': '20974'},
+                                     'name': 'MAPK1',
+                                     'search_term': 'MAPK1',
+                                     'type': 'gene'}]}
+    indra_stmts = \
+        [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
+                    Agent('MAP2K1'),
+                    evidence=[Evidence(text='BRAF activates MAP2K1.',
+                                       source_api='assertion')]),
+         Activation(Agent('MAP2K1',
+                          activity=ActivityCondition('activity', True)),
+                    Agent('MAPK1'),
+                    evidence=[Evidence(text='Active MAP2K1 activates '
+                                            'MAPK1.',
+                                       source_api='assertion')])
+         ]
+    st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
+    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
+                   for stmt in indra_stmts]
+
+    # Try no filter first
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model.run_assembly()
+    assert len(emmaa_model.assembled_stmts) == 2, emmaa_model.assembled_stmts
+
+    # Next do a prior_one filter
+    config_dict['assembly'] = {'filter_relevance': 'prior_one'}
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model.run_assembly()
+    assert len(emmaa_model.assembled_stmts) == 1, emmaa_model.assembled_stmts
+    assert emmaa_model.assembled_stmts[0].obj.name == 'MAPK1'
+
+    # Next do a prior_all filter
+    config_dict['assembly'] = {'filter_relevance': 'prior_all'}
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model.run_assembly()
+    assert len(emmaa_model.assembled_stmts) == 0
