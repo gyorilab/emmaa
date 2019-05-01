@@ -1,5 +1,5 @@
-Status codes:
-=============
+Status codes
+============
 
   - **Path found but exceeds search depth** - Path is found, but the search
     depth is reached. Search depth is the maximum number of steps taken to
