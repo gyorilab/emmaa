@@ -79,9 +79,7 @@ def test_filter_relevance():
                    'search_terms': [{'db_refs': {'HGNC': '20974'},
                                      'name': 'MAPK1',
                                      'search_term': 'MAPK1',
-                                     'type': 'gene'}],
-                   'assembly': {'filter_relevance': True}}
-    emmaa_model = EmmaaModel('test', config_dict)
+                                     'type': 'gene'}]}
     indra_stmts = \
         [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
                     Agent('MAP2K1'),
@@ -97,7 +95,24 @@ def test_filter_relevance():
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
                    for stmt in indra_stmts]
+
+    # Try no filter first
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model.run_assembly()
+    assert len(emmaa_model.assembled_stmts) == 2, emmaa_model.assembled_stmts
+
+    # Next do a prior_one filter
+    config_dict['assembly'] = {'filter_relevance': 'prior_one'}
+    emmaa_model = EmmaaModel('test', config_dict)
     emmaa_model.extend_unique(emmaa_stmts)
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 1, emmaa_model.assembled_stmts
     assert emmaa_model.assembled_stmts[0].obj.name == 'MAPK1'
+
+    # Next do a prior_all filter
+    config_dict['assembly'] = {'filter_relevance': 'prior_all'}
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model.run_assembly()
+    assert len(emmaa_model.assembled_stmts) == 0
