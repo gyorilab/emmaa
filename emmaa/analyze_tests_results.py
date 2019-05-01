@@ -126,7 +126,7 @@ class TestRound(object):
         """Return a list of hashes for passed tests."""
         passed_tests = []
         for ix, result in enumerate(self.test_results):
-            if result.paths:
+            if result.path_found:
                 passed_tests.append(str(self.tests[ix].get_hash()))
         return passed_tests
 
@@ -175,15 +175,21 @@ class TestRound(object):
         """
         english_paths = {}
         for ix, result in enumerate(self.test_results):
-            if result.paths:
-                paths = []
-                for path in self.json_results[ix+1]['english_path']:
-                    links = []
-                    for (sentence, link) in path:
-                        link_str = f'<a href="{link}">{sentence}</a>'
-                        links.append(link_str)
-                    paths.append(links)
-                english_paths[str(self.tests[ix].get_hash())] = paths
+            if result.path_found:
+                if result.paths:
+                    paths = []
+                    for path in self.json_results[ix+1]['english_path']:
+                        links = []
+                        for (sentence, link) in path:
+                            link_str = f'<a href="{link}">{sentence}</a>'
+                            links.append(link_str)
+                        paths.append(links)
+                    english_paths[str(self.tests[ix].get_hash())] = paths
+                else:
+                    (sentence, link) = (
+                        self.json_results[ix+1]['english_code'][0][0])
+                    english_paths[str(self.tests[ix].get_hash())] = (
+                        [[f'<a href="{link}">{sentence}</a>']])
         return english_paths
 
     def get_english_codes(self):
