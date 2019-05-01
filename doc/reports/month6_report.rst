@@ -82,7 +82,7 @@ During this reporting period, we investigated the use of the most
 coarse-grained of these representations, directed networks, to check EMMAA
 models against tests. Code and results are available in an iPython notebook
 accompanying this report available on Github `here
-<https://github.com/johnbachman/emmaa/blob/report/notebooks/Graph-based%20model%20checking%20for%20EMMAA.ipynb>`_.
+<https://github.com/indralab/emmaa/blob/report/notebooks/Graph-based%20model%20checking%20for%20EMMAA.ipynb>`_.
 Using the most recent model and test results from the EMMAA `Ras Machine 2.0
 <http://emmaa.indra.bio/dashboard/rasmachine>`_, we built a simple directed
 graph among agents using `networkx` and checked for paths between pairs of genes
@@ -95,7 +95,7 @@ indicating that the latter is a strict subset of the former.  Roughly half
 (52%) of the tests that *failed* in the PySB/Kappa model yielded paths in the
 directed graph. Inspection of the discrepancies highlighted some
 characteristics of these types of tests (see `iPython notebook
-<https://github.com/johnbachman/emmaa/blob/report/notebooks/Graph-based%20model%20checking%20for%20EMMAA.ipynb>`_.)
+<https://github.com/indralab/emmaa/blob/report/notebooks/Graph-based%20model%20checking%20for%20EMMAA.ipynb>`_.)
 A key point is that the proportion of tests passed by the directed graph model
 represent an *upper bound* of the mechanistic coverage of the model that is
 independent of the particular modeling formalism involved. While many of the
