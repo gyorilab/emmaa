@@ -1,4 +1,6 @@
+import time
 import random
+
 from nose.plugins.attrib import attr
 
 from emmaa.db import get_db, Query, Result
@@ -86,6 +88,39 @@ def test_get_results():
                                for query in test_queries])
 
     # Try to get the results.
+    results = db.get_results('joshua')
+    assert len(results) == len(test_queries)*len(models), len(results)
+    assert all(isinstance(result, tuple) for result in results)
+    assert all(result[0] in models for result in results)
+    assert all(result[1] in test_queries for result in results)
+    assert all(isinstance(result[2], str) for result in results)
+
+
+@attr('nonpublic')
+def test_get_latest_results():
+    db = _test_db()
+    models = ['aml', 'luad']
+    test_queries = [{'objectSelection': 'ERK',
+                     'subjectSelection': 'BRAF',
+                     'typeSelection': 'activation'},
+                    {'objectSelection': 'MEK',
+                     'subjectSelection': 'ERK',
+                     'typeSelection': 'phosphorylation'}]
+
+    # Fill up the database.
+    for query in test_queries:
+        db.put_queries('joshua', query, models)
+    for model in models:
+        db.put_results(model, [(query, _get_random_result())
+                               for query in test_queries])
+
+    # Add the same statements over again
+    time.sleep(10)
+    for model in models:
+        db.put_results(model, [(query, _get_random_result())
+                               for query in test_queries])
+
+    # Try to get the results. Make sure we only get the one set.
     results = db.get_results('joshua')
     assert len(results) == len(test_queries)*len(models), len(results)
     assert all(isinstance(result, tuple) for result in results)
