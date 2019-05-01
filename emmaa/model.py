@@ -147,7 +147,8 @@ class EmmaaModel(object):
         stmts = ac.map_grounding(stmts)
         if self.assembly_config.get('filter_ungrounded'):
             stmts = ac.filter_grounded_only(stmts)
-        stmts = self.filter_relevance(stmts)
+        if self.assembly_config.get('filter_relevance'):
+            stmts = self.filter_relevance(stmts)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
@@ -177,12 +178,14 @@ class EmmaaModel(object):
 
     def filter_relevance(self, stmts):
         """Filter a list of Statements to ones matching a search term."""
+        logger.info('Filtering %d statements for relevance...' % len(stmts))
         stmts_out = []
         stnames = {s.name for s in self.search_terms}
         for stmt in stmts:
             agnames = {a.name for a in stmt.agent_list() if a is not None}
             if agnames & stnames:
                 stmts_out.append(stmt)
+        logger.info('%d statements after filter...' % len(stmts_out))
         return stmts_out
 
     def update_to_ndex(self):
