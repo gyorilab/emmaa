@@ -17,9 +17,22 @@ Links to browse evidence are available in all of the following contexts:
 - New tests applicable to the model
 - Passed/failed tests and the mechanisms constituting paths by which tests
   passed
-- Query results
 
 .. image:: ../_static/images/akt_mtor_linkout.png
 
 .. image:: ../_static/images/akt_mtor_curation.png
 
+
+Including new information based on relevance
+--------------------------------------------
+
+EMMAA models self-update by searching relevant litearture each day and adding
+mechanisms described in new publications. However, event publications that
+are relevant often contain pieces of information that aren't directly relevant
+for the model. We therefore created a relevance filter which can take one
+of several policies and determine if a new statement is `relevant` to the
+given model or not. The strictest policy is called `prior_all` which only
+considers statements in which all participants are prior search terms of
+interest for the model as relevant. A less strict policy, `prior_one` requires
+that at least one participant of a statement is a prior search term for the
+model. Currently, EMMAA models are running with the `prior_one` policy.
