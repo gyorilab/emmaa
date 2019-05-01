@@ -10,3 +10,4 @@ Scientific Knowledge Extraction (ASKE) program.
    :maxdepth: 4
 
    month5_report
+   month6_report
