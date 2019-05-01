@@ -34,7 +34,7 @@ function setModel(ddSelect, model) {
 }
 
 function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) {
-  console.log('function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect)')
+  // console.log('function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect)')
   // Get selected option
   var model = '';
   for (child of ddSelect.children) {
@@ -57,7 +57,7 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
 }
 
 function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith) {
-  console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
+  // console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
   // wrapper function that can be called selectModel or from pageload of models.html
   // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
   listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, prefix, maxKeys, endsWith)
@@ -143,7 +143,7 @@ function addLineBreaks(rowEl, col) {
 }
 
 function populateModelsTable(metaTableBody, json) {
-  console.log('function populateModelsTable(metaTableBody, json)')
+  // console.log('function populateModelsTable(metaTableBody, json)')
   // console.log(json)
   clearTable(metaTableBody);
 
@@ -172,7 +172,7 @@ function populateModelsTable(metaTableBody, json) {
 }
 
 function getTestResultJsonToTable(testResultTableBody, jsonKey) {
-  console.log('function getTestResultJsonToTable(testResultTableBody, jsonKey)');
+  // console.log('function getTestResultJsonToTable(testResultTableBody, jsonKey)');
   let jsonPromise = getPublicJson(EMMMAA_BUCKET, jsonKey);
   jsonPromise.then(function(json){
     populateTestResultTable(testResultTableBody, json);
@@ -182,7 +182,8 @@ function getTestResultJsonToTable(testResultTableBody, jsonKey) {
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
   console.log('function populateTestResultTable(tableBody, json)')
-  console.log(tableBody)
+  // console.log(tableBody)
+  console.log('test results json')
   console.log(json)
 
   // IDs
@@ -207,8 +208,8 @@ function populateTestResultTable(tableBody, json) {
     stmt_freq_array.push(pair[1])
   }
   // See example at: https://c3js.org/samples/axes_x_tick_format.html
-  console.log('stmt_type_array: ' + stmt_type_array)
-  console.log('stmt_freq_array: ' + stmt_freq_array)
+  // console.log('stmt_type_array: ' + stmt_type_array)
+  // console.log('stmt_freq_array: ' + stmt_freq_array)
   stmtTypeDataParams = {
     // x: 'x',
     columns: [
@@ -268,7 +269,7 @@ function populateTestResultTable(tableBody, json) {
   let newStTable = document.getElementById('addedStmts')
   clearTable(newStTable)
   var new_stmts = json.model_delta.statements_delta.added
-  console.log(new_stmts)
+  // console.log(new_stmts)
   for (stmt of new_stmts) {
     // Has columns: statements
     let rowEl = addToRow([stmt])
@@ -282,7 +283,7 @@ function populateTestResultTable(tableBody, json) {
   passedRatio = passedRatio.map(function(element) {
     return (element*100).toFixed(2);
   })
-  console.log('ratio %' + passedRatio)
+  // console.log('ratio %' + passedRatio)
   passedRatio.unshift('Passed Ratio')
 
   lineDataParams = {
@@ -338,7 +339,7 @@ function populateTestResultTable(tableBody, json) {
     // let rowEl = addToRow([newPasTests[i], newPaths[i]])
     let rowEl = addToRow(['', ''])
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i])
-    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i])
+    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0])
     newPassedTable.appendChild(rowEl)
   }
 
@@ -369,7 +370,7 @@ function populateTestResultTable(tableBody, json) {
 }
 
 function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith) {
-  console.log('listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)')
+  // console.log('listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)')
   // 1. Last updated: get from listing models using already created function
   // 2. NDEX link-out: read from config
   // 3. Possibly listing nodes and edges info (Q: from where? A: From the json files that don't exist yet)
@@ -388,7 +389,7 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
   modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
 
   var configURL = 'https://s3.amazonaws.com/' + bucket + '/models/' + model + '/config.json';
-  console.log('Loading model json from ' + configURL)
+  // console.log('Loading model json from ' + configURL)
   var configPromise = $.ajax({
     url: configURL,
     dataType: "json",
@@ -416,11 +417,11 @@ function modelsLastUpdated(keyMapArray, endsWith) {
   //    sort list descending, alphabetical, order
   //    get first (i.e. latest) item
   //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
-  console.log('Objects in bucket: ')
-  console.log(keyMapArray)
+  // console.log('Objects in bucket: ')
+  // console.log(keyMapArray)
   let modelsMapArray = getModels(null, keyMapArray, endsWith)
-  console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
-  console.log(modelsMapArray)
+  // console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
+  // console.log(modelsMapArray)
 
   let modelUpdateTagsArray = document.getElementsByClassName('modelUpdateInfo')
   for (tag of modelUpdateTagsArray) {
@@ -433,7 +434,7 @@ function modelsLastUpdated(keyMapArray, endsWith) {
 }
 
 function getModels(findModel, keyMapArray, endsWith) {
-  console.log('function getModels(findModel, keyMapArray, endsWith)')
+  // console.log('function getModels(findModel, keyMapArray, endsWith)')
   var models = {'aml': [],
                 'brca': [],
                 'luad': [],
@@ -463,7 +464,7 @@ function getModels(findModel, keyMapArray, endsWith) {
 }
 
 function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith) {
-  console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
+  // console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
   
   // get array of filtered object keys
   let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith)
@@ -496,7 +497,7 @@ function listModelTests(tableBody, testResultTableBody, keyMapArray, model, ends
 }
 
 function getArrayOfModelTests(model, keyMapArray, endsWith) {
-  console.log('function getArrayOfModelTests(model, keyMapArray, endsWith)');
+  // console.log('function getArrayOfModelTests(model, keyMapArray, endsWith)');
   //  for each object ket
   //    if key.endswith(endsWith) & correct prefix
   //      save to list
@@ -531,9 +532,9 @@ https://c3js.org/
 */
 
 function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
-  console.log('function generateBar(chartDivId, dataParams)')
-  console.log(chartDivId)
-  console.log(dataParams)
+  // console.log('function generateBar(chartDivId, dataParams)')
+  // console.log(chartDivId)
+  // console.log(dataParams)
   var barChart = c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -557,9 +558,9 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
 }
 
 function generateLineArea(chartDivId, dataParams, chartTitle) {
-  console.log('function generateLine(chartId, dataparams)')
-  console.log(chartDivId)
-  console.log(dataParams)
+  // console.log('function generateLine(chartId, dataparams)')
+  // console.log(chartDivId)
+  // console.log(dataParams)
   var lineChart = c3.generate({
     bindto: chartDivId,
     data: dataParams,
