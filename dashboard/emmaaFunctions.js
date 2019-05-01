@@ -338,7 +338,7 @@ function populateTestResultTable(tableBody, json) {
     // let rowEl = addToRow([newPasTests[i], newPaths[i]])
     let rowEl = addToRow(['', ''])
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i])
-    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i])
+    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0])
     newPassedTable.appendChild(rowEl)
   }
 
