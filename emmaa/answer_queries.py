@@ -78,7 +78,8 @@ def format_results(results):
             if ix > 0:
                 response_list.append('<br>')
             response_list.append(
-                f'<a href="{link}" class="status-link">{sentence}</a>')
+                f'<a href="{link}" target="_blank" '
+                f'class="status-link">{sentence}</a>')
         response = ''.join(response_list)
         formatted_result['response'] = response
         formatted_result['date'] = make_date_str(result[3])
