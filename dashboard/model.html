@@ -80,10 +80,12 @@
     a.stmt-dblink {
       color: #000000;
       text-decoration: none;
-
     }
     a {
       target-new: tab;
+    }
+    body > .container {
+      padding: 85px 15px 0;
     }
   </style>
 </head>
@@ -94,31 +96,32 @@
     setEnv('emmaa') // Set environment for AWS functionalities
   </script>
   <!-- Page Header -->
-  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-    <h5 class="my-0 mr-md-auto font-weight-normal">
-      <a href="../home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-      <a href="../query">Queries</a>
-    </h5>
-    <!-- Dropdown -->
-    <div class="input-group" style="width: 410px;">
-      <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
-        <option selected disabled hidden>Select model...</option>
-        {% for model_id, model_meta in model_data %}
-        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
-        {% endfor %}
-      </select>
-      <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
-      <div class="input-group-append">
-        <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
+      <h5 class="my-0 mr-md-auto font-weight-normal">
+        <a href="../home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
+        <a href="../query">Queries</a>
+      </h5>
+      <!-- Dropdown -->
+      <div class="input-group" style="width: 410px;">
+        <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
+          <option selected disabled hidden>Select model...</option>
+          {% for model_id, model_meta in model_data %}
+          <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+          {% endfor %}
+        </select>
+        <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
+        </div>
       </div>
+      <nav class="my-2 my-md-0 mr-md-3">
+        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+        <a class="p-2 text-dark" href="#about">About</a>
+      </nav>
+  <!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
     </div>
-    <nav class="my-2 my-md-0 mr-md-3">
-      <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-      <a class="p-2 text-dark" href="#about">About</a>
-    </nav>
-<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
-  </div>
-
+  </header>
   <!-- Tabs -->
   <div class="container nav-container">
     <nav>

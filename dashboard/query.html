@@ -67,6 +67,9 @@
     a {
       target-new: tab;
     }
+    body > .container {
+      padding: 85px 15px 0;
+    }
   </style>
 </head>
 
@@ -77,17 +80,19 @@
   </script>
 
   <!-- Page Header -->
-  <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-    <h5 class="my-0 mr-md-auto font-weight-normal">
-      <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-      <a href="./query">Queries</a>
-    </h5>
-    <nav class="my-2 my-md-0 mr-md-3">
-      <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-      <a class="p-2 text-dark" href="#about">About</a>
-    </nav>
-<!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
-  </div>
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
+      <h5 class="my-0 mr-md-auto font-weight-normal">
+        <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
+        <a href="./query">Queries</a>
+      </h5>
+      <nav class="my-2 my-md-0 mr-md-3">
+        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+        <a class="p-2 text-dark" href="#about">About</a>
+      </nav>
+  <!--     <button class="btn btn-outline-primary" id="status-notify" onClick="getTokenFromAuthEndpoint(window.location.href)">Sign up/Sign in</button> -->
+    </div>
+  </header>
 
   <div class="container" id="query-container">
 
