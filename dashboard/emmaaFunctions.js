@@ -576,6 +576,9 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
     },
     title: {
       text: chartTitle
+    },
+    zoom: {
+      enabled: true
     }
   });
   return lineChart;
