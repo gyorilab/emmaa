@@ -68,6 +68,8 @@ class ModelManager(object):
         """Get the influence map for the model."""
         self.model_checker.get_im(self.pysb_model)
         self.model_checker.prune_influence_map()
+        self.model_checker.prune_influence_map_degrade_bind_positive(
+            self.model.assembled_stmts)
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
