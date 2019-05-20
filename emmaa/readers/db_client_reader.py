@@ -1,6 +1,8 @@
 import datetime
 from indra_db.client.statements import get_statements_by_paper
+from indra_db.util import get_primary_db
 from emmaa.statements import EmmaaStatement
+
 
 def read_db_pmid_search_terms(pmid_search_terms):
     """Return extracted EmmaaStatements from INDRA database given a
@@ -19,13 +21,9 @@ def read_db_pmid_search_terms(pmid_search_terms):
     """
     pmids = list(pmid_search_terms.keys())
     date = datetime.datetime.utcnow()
-    pmid_stmts = {}
-    for pmid in pmids:
-        stmts = get_statements_by_paper(
-            pmid, id_type='pmid', preassembled=False)
-        if stmts is None:
-            stmts = []
-        pmid_stmts[pmid] = stmts
+    db = get_primary_db()
+    pmid_stmts = get_statements_by_paper(pmids, id_type='pmid', db=db,
+                                         preassembled=False)
     estmts = []
     for pmid, stmts in pmid_stmts.items():
         for stmt in stmts:
