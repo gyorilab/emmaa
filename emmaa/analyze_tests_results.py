@@ -18,7 +18,7 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'statements': ('get_stmt_hashes', 'get_english_statement_by_hash'),
     'applied_tests': ('get_applied_test_hashes', 'get_english_test_by_hash'),
     'passed_tests': ('get_passed_test_hashes', 'get_english_test_by_hash'),
-    'paths': ('get_passed_test_hashes', 'get_path_by_hash')
+    'paths': ('get_passed_test_hashes', 'get_path_or_code_by_hash')
 }
 
 
@@ -54,6 +54,7 @@ class TestRound(object):
         self.test_results = self._get_results()
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
+        self.english_test_results = self._get_applied_tests_results()
 
     @classmethod
     def load_from_s3_key(cls, key):
@@ -67,7 +68,9 @@ class TestRound(object):
     # Model Summary Methods
     def get_total_statements(self):
         """Return a total number of statements in a model."""
-        return len(self.statements)
+        total = len(self.statements)
+        logger.info(f'An assembled model has {total} statements.')
+        return total
 
     def get_stmt_hashes(self):
         """Return a list of hashes for all statements in a model."""
@@ -78,6 +81,7 @@ class TestRound(object):
         number of times a statement of this type occured in a model.
         """
         statement_types = defaultdict(int)
+        logger.info('Finding a distribution of statements types.')
         for stmt in self.statements:
             statement_types[type(stmt).__name__] += 1
         return sorted(statement_types.items(), key=lambda x: x[1], reverse=True)
@@ -85,6 +89,7 @@ class TestRound(object):
     def get_agent_distribution(self):
         """Return a sorted list of tuples containing an agent name and a number
         of times this agent occured in statements of a model."""
+        logger.info('Finding agent distribution among model statements.')
         agent_count = defaultdict(int)
         for stmt in self.statements:
             for agent in stmt.agent_list():
@@ -98,6 +103,7 @@ class TestRound(object):
         stmts_evidence = {}
         for stmt in self.statements:
             stmts_evidence[str(stmt.get_hash())] = len(stmt.evidence)
+        logger.info('Sorting statements by evidence count.')
         return sorted(stmts_evidence.items(), key=lambda x: x[1], reverse=True)
 
     def get_english_statements_by_hash(self):
@@ -120,35 +126,39 @@ class TestRound(object):
     # Test Summary Methods
     def get_applied_test_hashes(self):
         """Return a list of hashes for all applied tests."""
-        return [str(test.get_hash()) for test in self.tests]
+        return list(self.english_test_results.keys())
 
     def get_passed_test_hashes(self):
         """Return a list of hashes for passed tests."""
-        passed_tests = []
-        for ix, result in enumerate(self.test_results):
-            if result.path_found:
-                passed_tests.append(str(self.tests[ix].get_hash()))
-        return passed_tests
+        return [test_hash for test_hash in self.english_test_results.keys() if
+                self.english_test_results[test_hash][1] == 'Pass']
 
     def get_total_applied_tests(self):
         """Return a number of all applied tests."""
-        return len(self.tests)
+        total = len(self.tests)
+        logger.info(f'{total} tests were applied.')
+        return total
 
     def get_number_passed_tests(self):
         """Return a number of all passed tests."""
-        return len(self.get_passed_test_hashes())
+        total = len(self.get_passed_test_hashes())
+        logger.info(f'{total} tests passed.')
+        return total
 
     def passed_over_total(self):
         """Return a ratio of passed over total tests."""
         return self.get_number_passed_tests()/self.get_total_applied_tests()
 
-    def get_applied_tests_results(self):
+    def _get_applied_tests_results(self):
         """Return a dictionary mapping a test hash and a list containing its
         English description, result in Pass/Fail form and either a path if it
         was found or a result code if it was not."""
         tests_by_hash = {}
+        logger.info('Retrieving test hashes, english tests and test results.')
 
         def get_pass_fail(res):
+            # Here use result.path_found because we care if the path was found
+            # and do not care about path length
             if res.path_found:
                 return 'Pass'
             else:
@@ -159,13 +169,8 @@ class TestRound(object):
             result = self.test_results[ix]
             tests_by_hash[test_hash] = [
                 self.get_english_statement(test),
-                get_pass_fail(result)]
-            if result.paths:
-                tests_by_hash[test_hash].append(
-                    self.get_path_by_hash(test_hash))
-            else:
-                tests_by_hash[test_hash].append(self.get_english_code_by_hash(
-                    test_hash))
+                get_pass_fail(result),
+                self.get_path_or_code_by_hash(test_hash)]
 
         return tests_by_hash
 
@@ -175,21 +180,17 @@ class TestRound(object):
         """
         english_paths = {}
         for ix, result in enumerate(self.test_results):
-            if result.path_found:
-                if result.paths:
-                    paths = []
-                    for path in self.json_results[ix+1]['english_path']:
-                        links = []
-                        for (sentence, link) in path:
-                            link_str = f'<a href="{link}">{sentence}</a>'
-                            links.append(link_str)
-                        paths.append(links)
+            # Here we use result.paths because we can only get a description if
+            # a path does not exceed max length
+            if result.paths:
+                paths = []
+                for path in self.json_results[ix+1]['english_path']:
+                    links = []
+                    for (sentence, link) in path:
+                        link_str = f'<a href="{link}">{sentence}</a>'
+                        links.append(link_str)
+                    paths.append(links)
                     english_paths[str(self.tests[ix].get_hash())] = paths
-                else:
-                    (sentence, link) = (
-                        self.json_results[ix+1]['english_code'][0][0])
-                    english_paths[str(self.tests[ix].get_hash())] = (
-                        [[f'<a href="{link}">{sentence}</a>']])
         return english_paths
 
     def get_english_codes(self):
@@ -204,16 +205,18 @@ class TestRound(object):
         return english_codes
 
     def get_english_test_by_hash(self, test_hash):
-        return self.get_applied_tests_results()[test_hash][0]
+        return self.english_test_results[test_hash][0]
 
     def get_pass_fail_by_hash(self, test_hash):
-        return self.get_applied_tests_results()[test_hash][1]
+        return self.english_test_results[test_hash][1]
 
-    def get_path_by_hash(self, test_hash):
-        return self.get_path_descriptions()[test_hash]
-
-    def get_english_code_by_hash(self, test_hash):
-        return self.get_english_codes()[test_hash]
+    def get_path_or_code_by_hash(self, test_hash):
+        # If we have a path description return it, otherwise return code
+        try:
+            result = self.get_path_descriptions()[test_hash]
+        except KeyError:
+            result = self.get_english_codes()[test_hash]
+        return result
 
     # Methods to find delta
     def find_numeric_delta(self, other_round, one_round_numeric_func):
@@ -236,6 +239,8 @@ class TestRound(object):
             Difference between return values of one_round_numeric_function
             of two given test rounds.
         """
+        logger.info(f'Calculating numeric delta using {one_round_numeric_func}'
+                    ' method')
         delta = (getattr(self, one_round_numeric_func)()
                  - getattr(other_round, one_round_numeric_func)())
         return delta
@@ -264,16 +269,24 @@ class TestRound(object):
             a dictionary will contain lists of tuples where each tuple has an
             item and a result in Pass/Fail format.
         """
+        logger.info(f'Finding a content delta for {content_type}.')
+        # First we need to find hashes of objects we want to compare for 
+        # latest and previous rounds
         latest_hashes = getattr(self, self.function_mapping[content_type][0])()
+        logger.info(f'Found {len(latest_hashes)} hashes in current round.')
         previous_hashes = getattr(
             other_round, other_round.function_mapping[content_type][0])()
+        logger.info(f'Found {len(previous_hashes)} hashes in other round.')
+        # Find hashes unique for each of the rounds - this is delta
         added_hashes = list(set(latest_hashes) - set(previous_hashes))
         removed_hashes = list(set(previous_hashes) - set(latest_hashes))
 
         def get_item(tr, item_hash):
+            # Get an instance of an object given its hash
             return getattr(
                     tr, tr.function_mapping[content_type][1])(item_hash)
 
+        # Optionally add pass/fail status (applicable for tests)
         if add_result:
             added_items = [(get_item(self, item_hash),
                             self.get_pass_fail_by_hash(item_hash))
@@ -281,12 +294,15 @@ class TestRound(object):
             removed_items = [(get_item(other_round, item_hash),
                               other_round.get_pass_fail_by_hash(item_hash))
                              for item_hash in removed_hashes]
+        # Get lists of items added and removed in the latest round
         else:
             added_items = [
                 get_item(self, item_hash) for item_hash in added_hashes]
             removed_items = [
                 get_item(other_round, item_hash) for item_hash in
                 removed_hashes]
+        logger.info(f'Found {len(added_items)} added and {len(removed_items)} '
+                    f'removed items of {content_type}.')
         return {'added': added_items, 'removed': removed_items}
 
     # Helping methods
@@ -355,6 +371,7 @@ class StatsGenerator(object):
         if not self.latest_round:
             logger.info(f'Latest round for {self.model_name} is not found.')
             return
+        logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_test_summary()
         self.make_model_delta()
@@ -363,6 +380,7 @@ class StatsGenerator(object):
         
     def make_model_summary(self):
         """Add latest model state summary to json_stats."""
+        logger.info(f'Generating model summary for {self.model_name}.')
         self.json_stats['model_summary'] = {
             'model_name': self.model_name,
             'number_of_statements': self.latest_round.get_total_statements(),
@@ -374,17 +392,19 @@ class StatsGenerator(object):
 
     def make_test_summary(self):
         """Add latest test round summary to json_stats."""
+        logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'number_passed_tests': self.latest_round.get_number_passed_tests(),
             'passed_ratio': self.latest_round.passed_over_total(),
-            'tests_by_hash': self.latest_round.get_applied_tests_results(),
+            'tests_by_hash': self.latest_round.english_test_results,
             'passed_tests': self.latest_round.get_passed_test_hashes(),
             'paths': self.latest_round.get_path_descriptions()
         }
 
     def make_model_delta(self):
         """Add model delta between two latest model states to json_stats."""
+        logger.info(f'Generating model delta for {self.model_name}.')
         if not self.previous_round:
             self.json_stats['model_delta'] = {
                 'number_of_statements_delta': 0,
@@ -401,6 +421,7 @@ class StatsGenerator(object):
 
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
+        logger.info(f'Generating tests delta for {self.model_name}.')
         if not self.previous_round:
             self.json_stats['tests_delta'] = {
                 'number_applied_tests_delta': 0,
@@ -430,6 +451,7 @@ class StatsGenerator(object):
 
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
+        logger.info(f'Comparing changes over time for {self.model_name}.')
         self.json_stats['changes_over_time'] = {
             'number_of_statements': self.get_over_time(
                 'model_summary', 'number_of_statements'),
@@ -443,6 +465,8 @@ class StatsGenerator(object):
         }
 
     def get_over_time(self, section, metrics):
+        logger.info(f'Getting changes over time in {metrics} '
+                    f'for {self.model_name}.')
         if not self.previous_json_stats:
             previous_data = []
         else:
