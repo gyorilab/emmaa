@@ -70,11 +70,30 @@ class QueryManager(object):
         self.db.create_tables()
 
 
+def is_diff(new_result_json, old_result_json):
+    old_result_hashes = [k for k in old_result_json.keys()]
+    new_result_hashes = [k for k in new_result_json.keys()]
+    return not set(new_result_hashes) == set(previous_result_hashes)
+
+
 def get_registered_queries(user_email, db_name='primary'):
     """Get formatted results to queries registered by user."""
     db = get_db(db_name)
     results = db.get_results(user_email)
     return format_results(results)
+
+
+def make_report(query_json, new_result_json, old_result_json, new_stmts=None):
+    # TODO construct a report in either html/email format or txt file
+    pass
+
+
+def notify_user(user_email, query_json, new_result_json, old_result_json,
+                new_stmts=None):
+    report = make_report(
+        query_json, new_result_json, old_result_json, new_stmts)
+    # TODO send an email to user
+    pass
 
 
 def format_results(results):
