@@ -10,7 +10,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base, Result
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery
 
 logger = logging.getLogger(__name__)
 
@@ -274,6 +274,14 @@ class EmmaaDatabaseManager(object):
             results = _weed_results(q.all())
         logger.info(f"Found {len(results)} results.")
         return results
+
+    def get_users(self, query_json):
+        logger.info(f"Got request for users for {query_json}")
+        with self.get_session() as sess:
+            q = (sess.query(User.email).filter(User.id == UserQuery.user_id,
+                                               Query.json == query_json))
+            users = [q for q, in q.all()]
+        return users
 
 
 def _weed_results(result_iter):
