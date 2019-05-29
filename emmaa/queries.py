@@ -45,15 +45,19 @@ class PathProperty(Query):
         json_dict = _o(type=query_type)
         json_dict['path'] = self.path_stmt.to_json()
         json_dict['entity_constraints'] = {}
-        json_dict['entity_constraints']['include'] = [ec.to_json() for ec in
-                                                      self.include_entities]
-        json_dict['entity_constraints']['exclude'] = [ec.to_json() for ec in
-                                                      self.exclude_entities]
+        if self.include_entities:
+            json_dict['entity_constraints']['include'] = [
+                ec.to_json() for ec in self.include_entities]
+        if self.exclude_entities:
+            json_dict['entity_constraints']['exclude'] = [
+                ec.to_json() for ec in self.exclude_entities]
         json_dict['relationship_constraints'] = {}
-        json_dict['relationship_constraints']['include'] = [
-            {'type': rel} for rel in self.include_rels]
-        json_dict['relationship_constraints']['exclude'] = [
-            {'type': rel} for rel in self.exclude_rels]
+        if self.include_rels:
+            json_dict['relationship_constraints']['include'] = [
+                {'type': rel} for rel in self.include_rels]
+        if self.exclude_rels:
+            json_dict['relationship_constraints']['exclude'] = [
+                {'type': rel} for rel in self.exclude_rels]
         return json_dict
 
     @classmethod

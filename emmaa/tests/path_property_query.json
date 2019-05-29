@@ -1,0 +1,25 @@
+{"type": "path_property",
+    "path": {
+       "type": "Phosphorylation",
+       "enz": {
+           "type": "Agent",
+           "name": "EGFR"
+           },
+       "sub": {
+           "type": "Agent",
+           "name": "ERK"
+           }
+       },
+     "entity_constraints": {
+       "exclude": [
+           {"type": "Agent",
+            "name": "PI3K"}
+           ]
+       },
+     "relationship_constraints": {
+       "exclude": [
+           {"type": "IncreaseAmount"},
+           {"type": "DecreaseAmount"}
+           ]
+       }
+    }
