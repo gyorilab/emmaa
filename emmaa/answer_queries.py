@@ -21,10 +21,17 @@ class QueryManager(object):
             self, user_email, query_dict, model_names, subscribe):
         query = Query._from_json(query_dict)
         query_dict = query.to_json()
+<<<<<<< Updated upstream
         self.db.put_queries(user_email, query_dict, model_names, subscribe)
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
         saved_results = self.db.get_results_from_query(query_dict, model_names)
+=======
+        db.put_queries(user_email, query_dict, model_names, subscribe)
+        # Check if the query has already been answered for any of given models
+        # and retrieve the results from database.
+        saved_results = db.get_results_from_query(query_dict, model_names)
+>>>>>>> Stashed changes
         checked_models = {res[0] for res in saved_results}
         if checked_models == set(model_names):
             return format_results(saved_results)
