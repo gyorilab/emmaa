@@ -103,7 +103,7 @@ class PathProperty(Query):
         in future we can also incorporate checking entity constraints at this
         level.
         """
-        return path_stmt.agent_list()
+        return self.path_stmt.agent_list()
 
 
 class SimpleInterventionProperty(Query):

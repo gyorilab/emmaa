@@ -1,8 +1,7 @@
 from datetime import datetime
 from nose.plugins.attrib import attr
-from emmaa.answer_queries import (
-    answer_immediate_query, answer_registered_queries, get_registered_queries,
-    format_results, load_model_manager_from_s3)
+from emmaa.answer_queries import QueryManager, get_registered_queries, \
+    format_results, load_model_manager_from_s3
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
 from emmaa.db import get_db
@@ -11,8 +10,6 @@ from indra.statements.agent import Agent
 
 
 # Tell nose to not run tests in the imported modules
-answer_immediate_query.__test__ = False
-answer_registered_queries.__test__ = False
 get_registered_queries.__test__ = False
 format_results.__test__ = False
 load_model_manager_from_s3.__test__ = False
@@ -21,6 +18,7 @@ Activation.__test__ = False
 Agent.__test__ = False
 get_db.__test__ = False
 Query.__test__ = False
+QueryManager.__test__ = False
 
 
 test_query = {'type': 'path_property', 'path': {
@@ -51,8 +49,10 @@ def test_format_results():
 
 @attr('nonpublic')
 def test_answer_immediate_query():
-    results = answer_immediate_query('tester@test.com', processed_query, ['test'],
-                                     subscribe=False, db_name='test')
+    qm = QueryManager(db_name='test')
+    qm._recreate_db()
+    results = qm.answer_immediate_query('tester@test.com', processed_query,
+                                        ['test'], subscribe=False)
     assert len(results) == 1
     assert results[0]['model'] == 'test'
     assert results[0]['query'] == processed_query, (results[0]['query'], processed_query)
@@ -63,11 +63,10 @@ def test_answer_immediate_query():
 
 @attr('nonpublic')
 def test_answer_get_registered_queries():
-    db = get_db('test')
-    db.drop_tables(force=True)
-    db.create_tables()
-    db.put_queries('tester@test.com', processed_query, ['test'], subscribe=True)
-    answer_registered_queries('test', db_name='test')
+    qm = QueryManager(db_name='test')
+    qm._recreate_db()
+    qm.db.put_queries('tester@test.com', processed_query, ['test'], subscribe=True)
+    qm.answer_registered_queries('test')
     results = get_registered_queries('tester@test.com', db_name='test')
     assert len(results) == 1
     assert results[0]['model'] == 'test'
