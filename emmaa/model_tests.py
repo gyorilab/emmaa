@@ -15,7 +15,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
-from emmaa.answer_queries import answer_registered_queries
+from emmaa.answer_queries import QueryManager
 
 
 logger = logging.getLogger(__name__)
@@ -388,7 +388,7 @@ def save_model_manager_to_s3(model_name, model_manager):
 
 def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
                             upload_results=True, upload_stats=True,
-                            registered_queries=True):
+                            registered_queries=True, db_name='primary'):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -448,5 +448,6 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     if upload_stats:
         sg.save_to_s3()
     if registered_queries:
-        answer_registered_queries(model_name, model_manager=mm)
+        qm = QueryManager(db_name=db_name, model_managers=[mm])
+        qm.answer_registered_queries(model_name)
     return (mm, sg)

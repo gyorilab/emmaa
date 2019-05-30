@@ -13,10 +13,9 @@ model_manager_cache = {}
 
 
 class QueryManager(object):
-    def __init__(self, db_name='primary'):
+    def __init__(self, db_name='primary', model_managers=None):
         self.db = get_db(db_name)
-        self.queries = []
-        self.model_managers = []
+        self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(self, user_email, query_dict, model_names, subscribe):
         query = Query._from_json(query_dict)
