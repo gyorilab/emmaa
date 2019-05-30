@@ -1,6 +1,10 @@
 from inflection import camelize, underscore
 from collections import OrderedDict as _o
 from indra.statements.statements import Statement, Agent, get_all_descendants
+from indra.databases.hgnc_client import get_hgnc_id
+from indra.databases.chebi_client import get_chebi_id_from_name
+from indra.databases.mesh_client import get_mesh_id_name
+from indra.preassembler.grounding_mapper import gm
 
 
 class Query(object):
@@ -35,10 +39,18 @@ class PathProperty(Query):
     def __init__(self, path_stmt, entity_constraints=None,
                  relationship_constraints=None):
         self.path_stmt = path_stmt
-        self.include_entities = entity_constraints.get('include')
-        self.exclude_entities = entity_constraints.get('exclude')
-        self.include_rels = relationship_constraints.get('include')
-        self.exclude_rels = relationship_constraints.get('exclude')
+        if entity_constraints:
+            self.include_entities = entity_constraints.get('include')
+            self.exclude_entities = entity_constraints.get('exclude')
+        else:
+            self.include_entities = None
+            self.exclude_entities = None
+        if relationship_constraints:
+            self.include_rels = relationship_constraints.get('include')
+            self.exclude_rels = relationship_constraints.get('exclude')
+        else:
+            self.include_rels = None
+            self.exclude_rels = None
 
     def to_json(self):
         query_type = underscore(type(self).__name__)
@@ -64,15 +76,25 @@ class PathProperty(Query):
     def _from_json(cls, json_dict):
         path_stmt_json = json_dict.get('path')
         path_stmt = Statement._from_json(path_stmt_json)
+        for ag in path_stmt.agent_list():
+            grounding = get_grounding_from_name(ag.name)
+            if not grounding:
+                grounding = get_grounding_from_name(ag.name.upper())
+                ag.name = ag.name.upper()
+            ag.db_refs = {grounding[0]: grounding[1]}
         ent_constr_json = json_dict.get('entity_constraints')
-        entity_constraints = {}
-        for key, value in ent_constr_json.items():
-            entity_constraints[key] = [Agent._from_json(ec) for ec in value]
+        entity_constraints = None
+        if ent_constr_json:
+            entity_constraints = {}
+            for key, value in ent_constr_json.items():
+                entity_constraints[key] = [Agent._from_json(ec) for ec in value]
         rel_constr_json = json_dict.get('relationship_constraints')
-        relationship_constraints = {}
-        for key, value in rel_constr_json.items():
-            relationship_constraints[key] = [
-                rel_type['type'] for rel_type in value]
+        relationship_constraints = None
+        if rel_constr_json:
+            relationship_constraints = {}
+            for key, value in rel_constr_json.items():
+                relationship_constraints[key] = [
+                    rel_type['type'] for rel_type in value]
         query = cls(path_stmt, entity_constraints, relationship_constraints)
         return query
 
@@ -91,6 +113,39 @@ def query_cls_from_type(query_type):
         if query_class.__name__.lower() == camelize(query_type).lower():
             return query_class
     raise NotAQueryType(f'{query_type} is not recognized as a query type!')
+
+
+def get_grounding_from_name(name):
+    """Return grounding given an agent name."""
+    # See if it's a gene name
+    hgnc_id = get_hgnc_id(name)
+    if hgnc_id:
+        return ('HGNC', hgnc_id)
+
+    # Check if it's in the grounding map
+    try:
+        refs = gm[name]
+        if isinstance(refs, dict):
+            for dbn, dbi in refs.items():
+                if dbn != 'TEXT':
+                    return (dbn, dbi)
+    # If not, search by text
+    except KeyError:
+        pass
+
+    chebi_id = get_chebi_id_from_name(name)
+    if chebi_id:
+        return ('CHEBI', f'CHEBI: {chebi_id}')
+
+    mesh_id, _ = get_mesh_id_name(name)
+    if mesh_id:
+        return ('MESH', mesh_id)
+
+    return None
+
+
+class GroundingError(Exception):
+    pass
 
 
 class NotAQueryType(Exception):
