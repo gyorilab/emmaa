@@ -122,18 +122,49 @@ def _make_str_report_one_query(model_name, query_json, new_result_json,
 
 def make_html_report_per_user(user_email, filename='query_delta.html',
                               db_name='primary'):
-    pass
+    db = get_db(db_name)
+    results = db.get_results(user_email)
+    msg = '<html><body>'
+    for result in results:
+            model_name = result[0]
+            query_json = result[1]
+            new_result_json = result[2]
+            old_result_json = result[4]
+            msg += _make_html_one_query_inner(model_name, query_json,
+                                              new_result_json, old_result_json)
+    msg += '</body></html>'
+    with open(filename, 'w') as f:
+        f.write(msg)
 
 
 def make_html_one_query_report(model_name, query_json, new_result_json,
                                old_result_json):
-    pass
+    msg = '<html><body>'
+    msg += _make_html_one_query_inner(model_name, query_json, new_result_json,
+                                      old_result_json)
+    msg += '</body></html>'
+    return msg
 
 
 def _make_html_one_query_inner(model_name, query_json, new_result_json,
                                old_result_json):
-    # TODO create inner part of html for one query
-    pass
+    if _is_diff(new_result_json, old_result_json):
+        msg = f'<p>A new result to query {query_json["typeSelection"]}(' \
+              f'{query_json["subjectSelection"]},' \
+              f'{query_json["objectSelection"]}) in {model_name} was found.<br>'
+        msg += 'Previous result was:<br>'
+        msg += _process_result_to_html(old_result_json)
+        msg += 'New result is:<br>'
+        msg += _process_result_to_html(new_result_json)
+        msg += '</p>'
+    else:
+        msg = f'<p>A result to query {query_json["typeSelection"]}(' \
+                f'{query_json["subjectSelection"]},' \
+                f'{query_json["objectSelection"]}) in {model_name} did not ' \
+                f'change. The result is:<br>'
+        msg += _process_result_to_html(new_result_json)
+        msg += '</p>'
+    return msg
 
 
 def get_user_query_delta(user_email, db_name='primary',
@@ -148,7 +179,7 @@ def notify_user(user_email, model_name, query_json, new_result_json,
                 old_result_json):
     str_msg = _make_str_report_one_query(model_name, query_json,
                                          new_result_json, old_result_json)
-    html_msg = _make_html_one_query_inner(model_name, query_json,
+    html_msg = make_html_one_query_report(model_name, query_json,
                                           new_result_json, old_result_json)
     # TODO send an email to user
     pass
@@ -162,16 +193,7 @@ def format_results(results):
         formatted_result['model'] = result[0]
         formatted_result['query'] = result[1]
         response_json = result[2]
-        response_hashes = [key for key in response_json.keys()]
-        sentence_link_pairs = response_json[response_hashes[0]]
-        response_list = []
-        for ix, (sentence, link) in enumerate(sentence_link_pairs):
-            if ix > 0:
-                response_list.append('<br>')
-            response_list.append(
-                f'<a href="{link}" target="_blank" '
-                f'class="status-link">{sentence}</a>')
-        response = ''.join(response_list)
+        response = _process_result_to_html(response_json)
         formatted_result['response'] = response
         formatted_result['date'] = make_date_str(result[3])
         formatted_results.append(formatted_result)
@@ -191,3 +213,73 @@ def load_model_manager_from_s3(model_name):
     model_manager = pickle.loads(obj['Body'].read())
     model_manager_cache[model_name] = model_manager
     return model_manager
+<<<<<<< HEAD
+=======
+
+
+def get_agent_from_name(ag_name):
+    """Return an INDRA Agent object."""
+    ag = Agent(ag_name)
+    grounding = get_grounding_from_name(ag_name)
+    if not grounding:
+        grounding = get_grounding_from_name(ag_name.upper())
+        ag = Agent(ag_name.upper())
+    if not grounding:
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
+    ag.db_refs = {grounding[0]: grounding[1]}
+    return ag
+
+
+def get_grounding_from_name(name):
+    """Return grounding given an agent name."""
+    # See if it's a gene name
+    hgnc_id = get_hgnc_id(name)
+    if hgnc_id:
+        return ('HGNC', hgnc_id)
+
+    # Check if it's in the grounding map
+    try:
+        refs = gm[name]
+        if isinstance(refs, dict):
+            for dbn, dbi in refs.items():
+                if dbn != 'TEXT':
+                    return (dbn, dbi)
+    # If not, search by text
+    except KeyError:
+        pass
+
+    chebi_id = get_chebi_id_from_name(name)
+    if chebi_id:
+        return ('CHEBI', f'CHEBI: {chebi_id}')
+
+    mesh_id, _ = get_mesh_id_name(name)
+    if mesh_id:
+        return ('MESH', mesh_id)
+
+    return None
+
+
+def _process_result_to_str(result_json):
+    msg = ''
+    for v in old_result_json.values():
+            for sentence, link in v:
+                msg += sentence
+    return msg
+
+
+def _process_result_to_html(result_json):
+    response_list = []
+    for v in result_json.values():
+        for ix, (sentence, link) in enumerate(v):
+            if ix > 0:
+                response_list.append('<br>')
+            response_list.append(
+                f'<a href="{link}" target="_blank" '
+                f'class="status-link">{sentence}</a>')
+        response = ''.join(response_list)
+    return response
+
+
+class GroundingError(Exception):
+    pass
+>>>>>>> ef8bceb... Create html report
