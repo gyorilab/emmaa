@@ -135,8 +135,9 @@ class ModelManager(object):
         # generate links to web pages explaining result codes
         return [[(RESULT_CODES[result_code], result_codes_link)]]
 
-    def answer_query(self, stmt):
+    def answer_query(self, query):
         """Answer user query with a path if it is found."""
+        stmt = query.path_stmt
         test = StatementCheckingTest(
             stmt, self.model.test_config.get('statement_checking'))
         if ScopeTestConnector.applicable(self, test):
@@ -146,7 +147,7 @@ class ModelManager(object):
             return self.hash_response_list([[
                 (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
 
-    def answer_queries(self, query_stmt_pairs):
+    def answer_queries(self, queries):
         """Answer all queries registered for this model.
 
         Parameters
@@ -164,25 +165,25 @@ class ModelManager(object):
         responses = []
         applicable_queries = []
         applicable_stmts = []
-        for (query_json, stmt) in query_stmt_pairs:
+        for query in queries:
             test = StatementCheckingTest(
-                stmt, self.model.test_config.get('statement_checking'))
+                query.path_stmt, self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
-                applicable_queries.append(query_json)
-                applicable_stmts.append(test)
+                applicable_queries.append(query)
+                applicable_stmts.append(query.path_stmt)
             else:
                 responses.append(
-                    (query_json, self.hash_response_list(
+                    (query.to_json(), self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
         self.model_checker.statements = []
-        self.model_checker.add_statements([test.stmt for test in
-                                           applicable_stmts])
+        self.model_checker.add_statements([stmt for stmt in applicable_stmts])
         self.get_im()
         results = self.model_checker.check_model()
         for ix, (_, result) in enumerate(results):
             responses.append(
-                (applicable_queries[ix], self.process_response(result)))
+                (applicable_queries[ix].to_json(),
+                 self.process_response(result)))
         return responses
 
     def process_response(self, result):
