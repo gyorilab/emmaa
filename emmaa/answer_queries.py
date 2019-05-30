@@ -9,6 +9,7 @@ from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
 from emmaa.util import get_s3_client, make_date_str
 from emmaa.db import get_db
+from emmaa.queries import Query
 
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,8 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe,
                            db_name='primary'):
     """Save an immediate query in a database and answer it for each model."""
     db = get_db(db_name)
+    query = Query._from_json(query_dict)
+    query_dict = query.to_json()
     db.put_queries(user_email, query_dict, model_names, subscribe)
     # Check if the query has already been answered for any of given models and
     # retrieve the results from database.
@@ -29,13 +32,12 @@ def answer_immediate_query(user_email, query_dict, model_names, subscribe,
     if checked_models == set(model_names):
         return format_results(saved_results)
     # Run answer queries mechanism for models for which result was not found.
-    stmt = get_statement_by_query(query_dict)
     new_results = []
     new_date = datetime.now()
     for model_name in model_names:
         if model_name not in checked_models:
             mm = load_model_manager_from_s3(model_name)
-            response = mm.answer_query(stmt)
+            response = mm.answer_query(query)
             new_results.append((model_name, query_dict, response, new_date))
             if subscribe:
                 db.put_results(model_name, [(query_dict, response)])
@@ -51,8 +53,8 @@ def answer_registered_queries(model_name, model_manager=None, db_name='primary')
         model_manager = load_model_manager_from_s3(model_name)
     db = get_db(db_name)
     query_dicts = db.get_queries(model_name)
-    query_stmt_pairs = get_query_stmt_pairs(query_dicts)
-    results = model_manager.answer_queries(query_stmt_pairs)
+    queries = [Query._from_json(json) for json in query_dicts]
+    results = model_manager.answer_queries(queries)
     db.put_results(model_name, results)
 
 
@@ -87,27 +89,6 @@ def format_results(results):
     return formatted_results
 
 
-def get_query_stmt_pairs(queries):
-    """Return a list of tuples each containing a query dictionary and a
-    statement derived from it.
-    """
-    query_stmt_pairs = []
-    for query_dict in queries:
-        query_stmt_pairs.append(
-            (query_dict, get_statement_by_query(query_dict)))
-    return query_stmt_pairs
-
-
-def get_statement_by_query(query_dict):
-    """Get an INDRA Statement object given a query dictionary."""
-    stmt_type = query_dict['typeSelection']
-    stmt_class = get_statement_by_name(stmt_type)
-    subj = get_agent_from_name(query_dict['subjectSelection'])
-    obj = get_agent_from_name(query_dict['objectSelection'])
-    stmt = stmt_class(subj, obj)
-    return stmt
-
-
 def load_model_manager_from_s3(model_name):
     model_manager = model_manager_cache.get(model_name)
     if model_manager:
@@ -121,49 +102,3 @@ def load_model_manager_from_s3(model_name):
     model_manager = pickle.loads(obj['Body'].read())
     model_manager_cache[model_name] = model_manager
     return model_manager
-
-
-def get_agent_from_name(ag_name):
-    """Return an INDRA Agent object."""
-    ag = Agent(ag_name)
-    grounding = get_grounding_from_name(ag_name)
-    if not grounding:
-        grounding = get_grounding_from_name(ag_name.upper())
-        ag = Agent(ag_name.upper())
-    if not grounding:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
-    ag.db_refs = {grounding[0]: grounding[1]}
-    return ag
-
-
-def get_grounding_from_name(name):
-    """Return grounding given an agent name."""
-    # See if it's a gene name
-    hgnc_id = get_hgnc_id(name)
-    if hgnc_id:
-        return ('HGNC', hgnc_id)
-
-    # Check if it's in the grounding map
-    try:
-        refs = gm[name]
-        if isinstance(refs, dict):
-            for dbn, dbi in refs.items():
-                if dbn != 'TEXT':
-                    return (dbn, dbi)
-    # If not, search by text
-    except KeyError:
-        pass
-
-    chebi_id = get_chebi_id_from_name(name)
-    if chebi_id:
-        return ('CHEBI', f'CHEBI: {chebi_id}')
-
-    mesh_id, _ = get_mesh_id_name(name)
-    if mesh_id:
-        return ('MESH', mesh_id)
-
-    return None
-
-
-class GroundingError(Exception):
-    pass
