@@ -4,6 +4,7 @@ from datetime import datetime
 from emmaa.util import get_s3_client, make_date_str
 from emmaa.db import get_db
 from emmaa.queries import Query
+from indra.statements.statements import Statement
 
 
 logger = logging.getLogger(__name__)
@@ -21,17 +22,10 @@ class QueryManager(object):
             self, user_email, query_dict, model_names, subscribe):
         query = Query._from_json(query_dict)
         query_dict = query.to_json()
-<<<<<<< Updated upstream
         self.db.put_queries(user_email, query_dict, model_names, subscribe)
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
         saved_results = self.db.get_results_from_query(query_dict, model_names)
-=======
-        db.put_queries(user_email, query_dict, model_names, subscribe)
-        # Check if the query has already been answered for any of given models
-        # and retrieve the results from database.
-        saved_results = db.get_results_from_query(query_dict, model_names)
->>>>>>> Stashed changes
         checked_models = {res[0] for res in saved_results}
         if checked_models == set(model_names):
             return format_results(saved_results)
@@ -88,13 +82,14 @@ def get_registered_queries(user_email, db_name='primary'):
 def make_str_report_per_user(user_email, filename='query_delta.txt',
                              db_name='primary'):
     db = get_db(db_name)
-    results = db.get_results(user_email)
+    results = db.get_results(user_email, latest_order=1)
     with open(filename, 'w') as f:
         for result in results:
             model_name = result[0]
             query_json = result[1]
             new_result_json = result[2]
-            old_result_json = result[4]
+            old_result_json = db.get_results_from_query(
+                query_json, [model_name], latest_order=2)
             f.write(make_str_report_one_query(model_name, query_json,
                     new_result_json, old_result_json))
 
@@ -104,18 +99,16 @@ def _make_str_report_one_query(model_name, query_json, new_result_json,
     """Return a string message containing information about query and any
     change in the results."""
     if _is_diff(new_result_json, old_result_json):
-        msg = f'A new result to query {query_json["typeSelection"]}(' \
-                f'{query_json["subjectSelection"]},' \
-                f'{query_json["objectSelection"]}) in {model_name} was found.'
+        msg = f'A new result to query ' \
+              f'{Statement._from_json(query_json["path"])} in  {model_name} ' \
+              f'was found.'
         msg += '\nPrevious result was:'
         msg += _process_result_to_str(old_result_json)
         msg += '\nNew result is:'
         msg += _process_result_to_str(new_result_json)
     else:
-        msg = f'A result to query {query_json["typeSelection"]}(' \
-                f'{query_json["subjectSelection"]},' \
-                f'{query_json["objectSelection"]}) in {model_name} did not ' \
-                f'change. The result is:'
+        msg = f'A result to query {Statement._from_json(query_json["path"])}' \
+              f' did not change. The result is:'
         msg += _process_result_to_str(new_result_json)
     return msg
 
@@ -123,13 +116,14 @@ def _make_str_report_one_query(model_name, query_json, new_result_json,
 def make_html_report_per_user(user_email, filename='query_delta.html',
                               db_name='primary'):
     db = get_db(db_name)
-    results = db.get_results(user_email)
+    results = db.get_results(user_email, latest_order=1)
     msg = '<html><body>'
     for result in results:
             model_name = result[0]
             query_json = result[1]
             new_result_json = result[2]
-            old_result_json = result[4]
+            old_result_json = db.get_results_from_query(
+                query_json, [model_name], latest_order=2)
             msg += _make_html_one_query_inner(model_name, query_json,
                                               new_result_json, old_result_json)
     msg += '</body></html>'
@@ -149,19 +143,18 @@ def make_html_one_query_report(model_name, query_json, new_result_json,
 def _make_html_one_query_inner(model_name, query_json, new_result_json,
                                old_result_json):
     if _is_diff(new_result_json, old_result_json):
-        msg = f'<p>A new result to query {query_json["typeSelection"]}(' \
-              f'{query_json["subjectSelection"]},' \
-              f'{query_json["objectSelection"]}) in {model_name} was found.<br>'
+        msg = f'<p>A new result to query ' \
+              f'{Statement._from_json(query_json["path"])} in {model_name} ' \
+              f'was found.<br>'
         msg += 'Previous result was:<br>'
         msg += _process_result_to_html(old_result_json)
         msg += 'New result is:<br>'
         msg += _process_result_to_html(new_result_json)
         msg += '</p>'
     else:
-        msg = f'<p>A result to query {query_json["typeSelection"]}(' \
-                f'{query_json["subjectSelection"]},' \
-                f'{query_json["objectSelection"]}) in {model_name} did not ' \
-                f'change. The result is:<br>'
+        msg = f'<p>A result to query ' \
+              f'{Statement._from_json(query_json["path"])} in {model_name} ' \
+              f'did not change. The result is:<br>'
         msg += _process_result_to_html(new_result_json)
         msg += '</p>'
     return msg
@@ -213,50 +206,6 @@ def load_model_manager_from_s3(model_name):
     model_manager = pickle.loads(obj['Body'].read())
     model_manager_cache[model_name] = model_manager
     return model_manager
-<<<<<<< HEAD
-=======
-
-
-def get_agent_from_name(ag_name):
-    """Return an INDRA Agent object."""
-    ag = Agent(ag_name)
-    grounding = get_grounding_from_name(ag_name)
-    if not grounding:
-        grounding = get_grounding_from_name(ag_name.upper())
-        ag = Agent(ag_name.upper())
-    if not grounding:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
-    ag.db_refs = {grounding[0]: grounding[1]}
-    return ag
-
-
-def get_grounding_from_name(name):
-    """Return grounding given an agent name."""
-    # See if it's a gene name
-    hgnc_id = get_hgnc_id(name)
-    if hgnc_id:
-        return ('HGNC', hgnc_id)
-
-    # Check if it's in the grounding map
-    try:
-        refs = gm[name]
-        if isinstance(refs, dict):
-            for dbn, dbi in refs.items():
-                if dbn != 'TEXT':
-                    return (dbn, dbi)
-    # If not, search by text
-    except KeyError:
-        pass
-
-    chebi_id = get_chebi_id_from_name(name)
-    if chebi_id:
-        return ('CHEBI', f'CHEBI: {chebi_id}')
-
-    mesh_id, _ = get_mesh_id_name(name)
-    if mesh_id:
-        return ('MESH', mesh_id)
-
-    return None
 
 
 def _process_result_to_str(result_json):
@@ -278,8 +227,3 @@ def _process_result_to_html(result_json):
                 f'class="status-link">{sentence}</a>')
         response = ''.join(response_list)
     return response
-
-
-class GroundingError(Exception):
-    pass
->>>>>>> ef8bceb... Create html report
