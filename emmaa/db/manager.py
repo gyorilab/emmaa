@@ -236,7 +236,7 @@ class EmmaaDatabaseManager(object):
             sess.add_all(results)
         return
 
-    def get_results_from_query(self, query_json, model_ids):
+    def get_results_from_query(self, query_json, model_ids, latest_order=1):
         logger.info(f"Got request for results of {query_json} on {model_ids}.")
         hashes = {hash_query(query_json, model_id) for model_id in model_ids}
         with self.get_session() as sess:
@@ -244,11 +244,11 @@ class EmmaaDatabaseManager(object):
                             Result.date)
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
-            results = _weed_results(q.all())
+            results = _weed_results(q.all(), latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
         return results
 
-    def get_results(self, user_email):
+    def get_results(self, user_email, latest_order=1):
         """Get the results for which the user has registered.
 
         Note: currently users are not handled, and this will simply return
@@ -271,7 +271,7 @@ class EmmaaDatabaseManager(object):
             q = (sess.query(Query.model_id, Query.json,
                             Result.result_json, Result.date)
                  .filter(Query.hash == Result.query_hash))
-            results = _weed_results(q.all())
+            results = _weed_results(q.all(), latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
         return results
 
@@ -284,12 +284,13 @@ class EmmaaDatabaseManager(object):
         return users
 
 
-def _weed_results(result_iter):
+def _weed_results(result_iter, latest_order=1):
     result_dict = defaultdict(list)
     for res in result_iter:
         result_dict[hash_query(res[1], res[0])].append(tuple(res))
-    results = [max(res_list, key=lambda r: r[-1])
-               for res_list in result_dict.values()]
+    sorted_results = [sorted(res_list, key=lambda r: r[-1])
+                      for res_list in result_dict.values()]
+    results = [result[-latest_order] for result in sorted_results]
     return results
 
 
