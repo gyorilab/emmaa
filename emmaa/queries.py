@@ -39,6 +39,7 @@ class PathProperty(Query):
     def __init__(self, path_stmt, entity_constraints=None,
                  relationship_constraints=None):
         self.path_stmt = path_stmt
+        self.entities = self._get_entities()
         if entity_constraints:
             self.include_entities = entity_constraints.get('include')
             self.exclude_entities = entity_constraints.get('exclude')
@@ -94,6 +95,15 @@ class PathProperty(Query):
                     rel_type['type'] for rel_type in value]
         query = cls(path_stmt, entity_constraints, relationship_constraints)
         return query
+
+    def _get_entities(self):
+        """Return entities of the query.
+
+        Note: Right now we only return entities of the path statement her, but
+        in future we can also incorporate checking entity constraints at this
+        level.
+        """
+        return path_stmt.agent_list()
 
 
 class SimpleInterventionProperty(Query):
