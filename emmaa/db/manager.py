@@ -295,6 +295,8 @@ def sorted_json_string(json_thing):
     elif isinstance(json_thing, dict):
         return '{%s}' % (','.join(sorted(k + sorted_json_string(v)
                                          for k, v in json_thing.items())))
+    elif isinstance(json_thing, float):
+        return str(json_thing)
     else:
         raise TypeError(f"Invalid type: {type(json_thing)}")
 
