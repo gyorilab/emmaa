@@ -70,7 +70,9 @@ class QueryManager(object):
         self.db.create_tables()
 
 
-def is_diff(new_result_json, old_result_json):
+def _is_diff(new_result_json, old_result_json):
+    """Return True if there is a delta between results."""
+    # Compare hashes of query results
     old_result_hashes = [k for k in old_result_json.keys()]
     new_result_hashes = [k for k in new_result_json.keys()]
     return not set(new_result_hashes) == set(previous_result_hashes)
@@ -83,15 +85,71 @@ def get_registered_queries(user_email, db_name='primary'):
     return format_results(results)
 
 
-def make_report(query_json, new_result_json, old_result_json, new_stmts=None):
-    # TODO construct a report in either html/email format or txt file
+def make_str_report_per_user(user_email, filename='query_delta.txt',
+                             db_name='primary'):
+    db = get_db(db_name)
+    results = db.get_results(user_email)
+    with open(filename, 'w') as f:
+        for result in results:
+            model_name = result[0]
+            query_json = result[1]
+            new_result_json = result[2]
+            old_result_json = result[4]
+            f.write(make_str_report_one_query(model_name, query_json,
+                    new_result_json, old_result_json))
+
+
+def _make_str_report_one_query(model_name, query_json, new_result_json,
+                               old_result_json):
+    """Return a string message containing information about query and any
+    change in the results."""
+    if _is_diff(new_result_json, old_result_json):
+        msg = f'A new result to query {query_json["typeSelection"]}(' \
+                f'{query_json["subjectSelection"]},' \
+                f'{query_json["objectSelection"]}) in {model_name} was found.'
+        msg += '\nPrevious result was:'
+        msg += _process_result_to_str(old_result_json)
+        msg += '\nNew result is:'
+        msg += _process_result_to_str(new_result_json)
+    else:
+        msg = f'A result to query {query_json["typeSelection"]}(' \
+                f'{query_json["subjectSelection"]},' \
+                f'{query_json["objectSelection"]}) in {model_name} did not ' \
+                f'change. The result is:'
+        msg += _process_result_to_str(new_result_json)
+    return msg
+
+
+def make_html_report_per_user(user_email, filename='query_delta.html',
+                              db_name='primary'):
     pass
 
 
-def notify_user(user_email, query_json, new_result_json, old_result_json,
-                new_stmts=None):
-    report = make_report(
-        query_json, new_result_json, old_result_json, new_stmts)
+def make_html_one_query_report(model_name, query_json, new_result_json,
+                               old_result_json):
+    pass
+
+
+def _make_html_one_query_inner(model_name, query_json, new_result_json,
+                               old_result_json):
+    # TODO create inner part of html for one query
+    pass
+
+
+def get_user_query_delta(user_email, db_name='primary',
+                         filename='query_delta.txt', report_format='str'):
+    if report_format == 'str':
+        make_str_report_per_user(user_email, filename=filename, db_name=db_name)
+    elif report_format == 'hmtl':
+        make_html_report_per_user(user_email, filename=filename, db_name=db_name)
+
+
+def notify_user(user_email, model_name, query_json, new_result_json,
+                old_result_json):
+    str_msg = _make_str_report_one_query(model_name, query_json,
+                                         new_result_json, old_result_json)
+    html_msg = _make_html_one_query_inner(model_name, query_json,
+                                          new_result_json, old_result_json)
     # TODO send an email to user
     pass
 
