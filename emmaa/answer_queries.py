@@ -1,12 +1,6 @@
 import logging
 import pickle
 from datetime import datetime
-from indra.statements.statements import get_statement_by_name
-from indra.statements.agent import Agent
-from indra.databases.hgnc_client import get_hgnc_id
-from indra.databases.chebi_client import get_chebi_id_from_name
-from indra.databases.mesh_client import get_mesh_id_name
-from indra.preassembler.grounding_mapper import gm
 from emmaa.util import get_s3_client, make_date_str
 from emmaa.db import get_db
 from emmaa.queries import Query
