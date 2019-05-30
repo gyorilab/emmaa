@@ -27,8 +27,9 @@ def test_path_property_from_json():
 
 
 def test_path_property_to_json():
-    stmt = Phosphorylation(enz=Agent('EGFR'), sub=Agent('ERK'))
-    entity_constraints = {'exclude': [Agent('PI3K')]}
+    stmt = Phosphorylation(enz=Agent('EGFR', db_refs={'HGNC': '3236'}),
+                           sub=Agent('ERK', db_refs={'FPLX': 'ERK'}))
+    entity_constraints = {'exclude': [Agent('PI3K', db_refs={'FPLX': 'PI3K'})]}
     relationship_contraints = {'exclude': ['IncreaseAmount', 'DecreaseAmount']}
     query = PathProperty(stmt, entity_constraints, relationship_contraints)
     assert query
@@ -38,4 +39,4 @@ def test_path_property_to_json():
     assert path.get('type') == 'Phosphorylation'
     deserialize_query = Query._from_json(json)
     json2 = deserialize_query.to_json()
-    assert json == json2
+    assert json == json2, {'json': json, 'json2': json2}

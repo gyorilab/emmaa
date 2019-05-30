@@ -77,17 +77,14 @@ class PathProperty(Query):
         path_stmt_json = json_dict.get('path')
         path_stmt = Statement._from_json(path_stmt_json)
         for ag in path_stmt.agent_list():
-            grounding = get_grounding_from_name(ag.name)
-            if not grounding:
-                grounding = get_grounding_from_name(ag.name.upper())
-                ag.name = ag.name.upper()
-            ag.db_refs = {grounding[0]: grounding[1]}
+            ag = add_db_refs(ag)
         ent_constr_json = json_dict.get('entity_constraints')
         entity_constraints = None
         if ent_constr_json:
             entity_constraints = {}
             for key, value in ent_constr_json.items():
-                entity_constraints[key] = [Agent._from_json(ec) for ec in value]
+                entity_constraints[key] = [
+                    add_db_refs(Agent._from_json(ec)) for ec in value]
         rel_constr_json = json_dict.get('relationship_constraints')
         relationship_constraints = None
         if rel_constr_json:
@@ -113,6 +110,16 @@ def query_cls_from_type(query_type):
         if query_class.__name__.lower() == camelize(query_type).lower():
             return query_class
     raise NotAQueryType(f'{query_type} is not recognized as a query type!')
+
+
+def add_db_refs(agent):
+    """Add db_refs to an Agent object and update a name if needed."""
+    grounding = get_grounding_from_name(agent.name)
+    if not grounding:
+        grounding = get_grounding_from_name(agent.name.upper())
+        ag.name = agent.name.upper()
+    agent.db_refs = {grounding[0]: grounding[1]}
+    return agent
 
 
 def get_grounding_from_name(name):
