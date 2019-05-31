@@ -1,6 +1,12 @@
 ASKE Month 7 Milestone Report
 =============================
 
+Updated conceptual diagram of EMMAA in the ASKE context
+-------------------------------------------------------
+
+.. image:: ../_static/images/emmaa_aske_architecture.png
+
+
 Use cases for the EMMAA system (and ASKE systems in general)
 ------------------------------------------------------------
 
@@ -12,11 +18,15 @@ pulling results into our heads, we push results into machine-maintained big
 mechanisms, where they can be examined by anyone. This could change science
 profoundly."
 
-ASKE systems have the potential to go beyond this ambitious goal by
+ASKE systems have the potential to go beyond this ambitious goal by:
+
 - actively searching for new discoveries and data,
+
 - autonomously updating a set of models by integrating new discoveries,
+
 - designing model analysis experiments to understand the effect of this new
   knowledge
+
 - reporting the effect of new discoveries on scientific questions
   relevant to the user
 
