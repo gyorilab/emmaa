@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 setup(name='emmaa',
-      version='1.2.1',
+      version='1.2.2',
       description='Ecosystem of Machine-maintained Models with ' + \
                   'Automated Analysis',
       long_description=long_description,
