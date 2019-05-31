@@ -48,14 +48,14 @@ Since the PI meeting we have also concluded that important model inference and
 transformation procedures can occur at layers other than level 3, and that
 these operations can occur *within*, not just across layers. For example, in
 INDRA there are a set of related procedures that we collectively refer to as
-"pre-assembly": identifying subsumption relationships, inferring and applying
-belief scores, identifying statement relationships, etc. Both the information
-considered in these operations, and the operations themselves explicitly make
-use of domain-specific knowledge, and all take INDRA Statements as input and
-produce INDRA Statements as output. These steps are referred to as
-"preassembly" to differentiate them from the step of *assembly*, which denotes
-the transformation of knowledge level information (level 3) from model-level
-information (level 2).
+"knowledge assembly" or "pre-assembly": identifying subsumption relationships,
+inferring and applying belief scores, identifying statement relationships, etc.
+Both the information considered in these operations, and the operations
+themselves explicitly make use of domain-specific knowledge, and all take INDRA
+Statements as input and produce INDRA Statements as output. These steps are
+referred to as "pre-assembly" to differentiate them from the step of
+*assembly*, which denotes the transformation of knowledge-level information
+(level 2) from model-level information (level 3).
 
 
 Use cases for the EMMAA system (and ASKE systems in general)
