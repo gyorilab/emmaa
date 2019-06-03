@@ -14,19 +14,33 @@ model_manager_cache = {}
 
 
 class QueryManager(object):
+    """Manager to run queries and interact with the database.
+
+    Parameters
+    ----------
+    db_name : str
+        Name of the database to use
+    model_managers : list[emmaa.model_tests.ModelManager]
+        Optional list of ModelManagers to use for running queries. If not
+        given, the methods will load ModelManager from S3 when needed.
+    """
     def __init__(self, db_name='primary', model_managers=None):
         self.db = get_db(db_name)
         self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(
             self, user_email, query_dict, model_names, subscribe):
+        """This method first tries to find saved result to the query in the
+        database and if not found, runs ModelManager method to answer query."""
         query = Query._from_json(query_dict)
         query_dict = query.to_json()
+        # Store query in the database for future reference.
         self.db.put_queries(user_email, query_dict, model_names, subscribe)
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
         saved_results = self.db.get_results_from_query(query_dict, model_names)
         checked_models = {res[0] for res in saved_results}
+        # If the query was answered for all models before, return the results.
         if checked_models == set(model_names):
             return format_results(saved_results)
         # Run queries mechanism for models for which result was not found.
@@ -42,22 +56,146 @@ class QueryManager(object):
         all_results = saved_results + new_results
         return format_results(all_results)
 
+    def answer_registered_queries(
+            self, model_name, find_delta=True, notify=False):
+        """Retrieve queries registered on database for a given model,
+        answer them, calculate delta between results, notify users in case of
+        any changes, and put results to a database.
+        """
+        model_manager = self.get_model_manager(model_name)
+        query_dicts = self.db.get_queries(model_name)
+        queries = [Query._from_json(json) for json in query_dicts]
+        results = model_manager.answer_queries(queries)
+        # Optionally find delta between results
+        # NOTE: For now the report is presented in the logs. In future we can
+        # choose some other ways to keep track of result changes.
+        if find_delta:
+            for query_json, result_json in results:
+                old_json = self.db.get_results_from_query(
+                                query_json, [model_name], latest_order=1)[0][2]
+                logger.info(self.make_str_report_one_query(
+                    model_name, query_json, result_json, old_json))
+                # Optionally notify users if there's a change in result
+                if notify:
+                    if is_diff(result_json, old_json):
+                        users = self.db.get_users(query_json)
+                        for user in users:
+                            self.notify_user(
+                                user, model_name, query_json,
+                                result_json, old_json)
+        self.db.put_results(model_name, results)
+
+    def get_registered_queries(self, user_email, db_name='primary'):
+        """Get formatted results to queries registered by user."""
+        results = self.db.get_results(user_email)
+        return format_results(results)
+
+    def get_user_query_delta(
+            self, user_email, filename='query_delta', report_format='str'):
+        """Produce a report for all query results per user in a given format."""
+        if report_format == 'str':
+            filename = filename + '.txt'
+            self.make_str_report_per_user(user_email, filename=filename)
+        elif report_format == 'hmtl':
+            filename = filename + '.html'
+            self.make_html_report_per_user(user_email, filename=filename)
+
+    def make_str_report_per_user(self, user_email, filename='query_delta.txt'):
+        """Produce a report for all query results per user in a text file."""
+        results = self.db.get_results(user_email, latest_order=1)
+        with open(filename, 'w') as f:
+            for result in results:
+                model_name = result[0]
+                query_json = result[1]
+                new_result_json = result[2]
+                old_result_json = self.db.get_results_from_query(
+                    query_json, [model_name], latest_order=2)
+                f.write(self.make_str_report_one_query(model_name, query_json,
+                        new_result_json, old_result_json))
+
+    def make_html_report_per_user(self, user_email, filename='query_delta.html'):
+        """Produce a report for all query results per user in an html file."""
+        results = self.db.get_results(user_email, latest_order=1)
+        msg = '<html><body>'
+        for result in results:
+                model_name = result[0]
+                query_json = result[1]
+                new_result_json = result[2]
+                old_result_json = self.db.get_results_from_query(
+                    query_json, [model_name], latest_order=2)
+                msg += self._make_html_one_query_inner(
+                            model_name, query_json, new_result_json,
+                            old_result_json)
+        msg += '</body></html>'
+        with open(filename, 'w') as f:
+            f.write(msg)
+
+    def make_str_report_one_query(
+            self, model_name, query_json, new_result_json, old_result_json):
+        """Return a string message containing information about a query and any
+        change in the results."""
+        if _is_diff(new_result_json, old_result_json):
+            msg = f'A new result to query ' \
+                f'{Statement._from_json(query_json["path"])} in  {model_name} ' \
+                f'was found.'
+            msg += '\nPrevious result was:'
+            msg += _process_result_to_str(old_result_json)
+            msg += '\nNew result is:'
+            msg += _process_result_to_str(new_result_json)
+        else:
+            msg = f'A result to query {Statement._from_json(query_json["path"])}' \
+                f' did not change. The result is:'
+            msg += _process_result_to_str(new_result_json)
+        return msg
+
+    def make_html_one_query_report(
+            self, model_name, query_json, new_result_json, old_result_json):
+        """Return an html page containing information about a query and any
+        change in the results."""
+        msg = '<html><body>'
+        msg += self._make_html_one_query_inner(
+                    model_name, query_json,
+                    new_result_json, old_result_json)
+        msg += '</body></html>'
+        return msg
+
+    def _make_html_one_query_inner(
+            self, model_name, query_json, new_result_json, old_result_json):
+        # Create an html part for one query to be used in producing html report
+            if _is_diff(new_result_json, old_result_json):
+                msg = f'<p>A new result to query ' \
+                    f'{Statement._from_json(query_json["path"])} in ' \
+                    f'{model_name} was found.<br>'
+                msg += 'Previous result was:<br>'
+                msg += _process_result_to_html(old_result_json)
+                msg += 'New result is:<br>'
+                msg += _process_result_to_html(new_result_json)
+                msg += '</p>'
+            else:
+                msg = f'<p>A result to query ' \
+                    f'{Statement._from_json(query_json["path"])} in ' \
+                    f'{model_name} did not change. The result is:<br>'
+                msg += _process_result_to_html(new_result_json)
+                msg += '</p>'
+            return msg
+
+    def notify_user(
+            self, user_email, model_name, query_json, new_result_json,
+            old_result_json):
+        """Create a query result delta report and send it to user."""
+        str_msg = self._make_str_report_one_query(
+            model_name, query_json, new_result_json, old_result_json)
+        html_msg = self.make_html_one_query_report(
+            model_name, query_json, new_result_json, old_result_json)
+        # TODO send an email to user
+        pass
+
     def get_model_manager(self, model_name):
         # Try get model manager from class attributes or load from s3.
         for mm in self.model_managers:
             if mm.model.name == model_name:
                 return mm
         return load_model_manager_from_s3(model_name)
-
-    def answer_registered_queries(self, model_name):
-        """Retrieve queries registered on database for a given model,
-        answer them, and put results to a database.
-        """
-        model_manager = self.get_model_manager(model_name)
-        query_dicts = self.db.get_queries(model_name)
-        queries = [Query._from_json(json) for json in query_dicts]
-        results = model_manager.answer_queries(queries)
-        self.db.put_results(model_name, results)
 
     def _recreate_db(self):
         self.db.drop_tables(force=True)
@@ -70,112 +208,6 @@ def _is_diff(new_result_json, old_result_json):
     old_result_hashes = [k for k in old_result_json.keys()]
     new_result_hashes = [k for k in new_result_json.keys()]
     return not set(new_result_hashes) == set(previous_result_hashes)
-
-
-def get_registered_queries(user_email, db_name='primary'):
-    """Get formatted results to queries registered by user."""
-    db = get_db(db_name)
-    results = db.get_results(user_email)
-    return format_results(results)
-
-
-def make_str_report_per_user(user_email, filename='query_delta.txt',
-                             db_name='primary'):
-    db = get_db(db_name)
-    results = db.get_results(user_email, latest_order=1)
-    with open(filename, 'w') as f:
-        for result in results:
-            model_name = result[0]
-            query_json = result[1]
-            new_result_json = result[2]
-            old_result_json = db.get_results_from_query(
-                query_json, [model_name], latest_order=2)
-            f.write(make_str_report_one_query(model_name, query_json,
-                    new_result_json, old_result_json))
-
-
-def _make_str_report_one_query(model_name, query_json, new_result_json,
-                               old_result_json):
-    """Return a string message containing information about query and any
-    change in the results."""
-    if _is_diff(new_result_json, old_result_json):
-        msg = f'A new result to query ' \
-              f'{Statement._from_json(query_json["path"])} in  {model_name} ' \
-              f'was found.'
-        msg += '\nPrevious result was:'
-        msg += _process_result_to_str(old_result_json)
-        msg += '\nNew result is:'
-        msg += _process_result_to_str(new_result_json)
-    else:
-        msg = f'A result to query {Statement._from_json(query_json["path"])}' \
-              f' did not change. The result is:'
-        msg += _process_result_to_str(new_result_json)
-    return msg
-
-
-def make_html_report_per_user(user_email, filename='query_delta.html',
-                              db_name='primary'):
-    db = get_db(db_name)
-    results = db.get_results(user_email, latest_order=1)
-    msg = '<html><body>'
-    for result in results:
-            model_name = result[0]
-            query_json = result[1]
-            new_result_json = result[2]
-            old_result_json = db.get_results_from_query(
-                query_json, [model_name], latest_order=2)
-            msg += _make_html_one_query_inner(model_name, query_json,
-                                              new_result_json, old_result_json)
-    msg += '</body></html>'
-    with open(filename, 'w') as f:
-        f.write(msg)
-
-
-def make_html_one_query_report(model_name, query_json, new_result_json,
-                               old_result_json):
-    msg = '<html><body>'
-    msg += _make_html_one_query_inner(model_name, query_json, new_result_json,
-                                      old_result_json)
-    msg += '</body></html>'
-    return msg
-
-
-def _make_html_one_query_inner(model_name, query_json, new_result_json,
-                               old_result_json):
-    if _is_diff(new_result_json, old_result_json):
-        msg = f'<p>A new result to query ' \
-              f'{Statement._from_json(query_json["path"])} in {model_name} ' \
-              f'was found.<br>'
-        msg += 'Previous result was:<br>'
-        msg += _process_result_to_html(old_result_json)
-        msg += 'New result is:<br>'
-        msg += _process_result_to_html(new_result_json)
-        msg += '</p>'
-    else:
-        msg = f'<p>A result to query ' \
-              f'{Statement._from_json(query_json["path"])} in {model_name} ' \
-              f'did not change. The result is:<br>'
-        msg += _process_result_to_html(new_result_json)
-        msg += '</p>'
-    return msg
-
-
-def get_user_query_delta(user_email, db_name='primary',
-                         filename='query_delta.txt', report_format='str'):
-    if report_format == 'str':
-        make_str_report_per_user(user_email, filename=filename, db_name=db_name)
-    elif report_format == 'hmtl':
-        make_html_report_per_user(user_email, filename=filename, db_name=db_name)
-
-
-def notify_user(user_email, model_name, query_json, new_result_json,
-                old_result_json):
-    str_msg = _make_str_report_one_query(model_name, query_json,
-                                         new_result_json, old_result_json)
-    html_msg = make_html_one_query_report(model_name, query_json,
-                                          new_result_json, old_result_json)
-    # TODO send an email to user
-    pass
 
 
 def format_results(results):
@@ -209,6 +241,7 @@ def load_model_manager_from_s3(model_name):
 
 
 def _process_result_to_str(result_json):
+    # Remove the links when making text report
     msg = ''
     for v in old_result_json.values():
             for sentence, link in v:
@@ -217,6 +250,7 @@ def _process_result_to_str(result_json):
 
 
 def _process_result_to_html(result_json):
+    # Make clickable links when making htmk report
     response_list = []
     for v in result_json.values():
         for ix, (sentence, link) in enumerate(v):
