@@ -71,10 +71,15 @@ class QueryManager(object):
         # choose some other ways to keep track of result changes.
         if find_delta:
             for query_json, result_json in results:
-                old_json = self.db.get_results_from_query(
-                                query_json, [model_name], latest_order=1)[0][2]
+                try:
+                    old_results = self.db.get_results_from_query(
+                                    query_json, [model_name], latest_order=1)
+                    old_result_json = old_results[0][2]
+                except IndexError:
+                    logger.info('No previous result was found.')
+                    old_result_json = None
                 logger.info(self.make_str_report_one_query(
-                    model_name, query_json, result_json, old_json))
+                    model_name, query_json, result_json, old_result_json))
                 # Optionally notify users if there's a change in result
                 if notify:
                     if is_diff(result_json, old_json):
@@ -96,7 +101,7 @@ class QueryManager(object):
         if report_format == 'str':
             filename = filename + '.txt'
             self.make_str_report_per_user(user_email, filename=filename)
-        elif report_format == 'hmtl':
+        elif report_format == 'html':
             filename = filename + '.html'
             self.make_html_report_per_user(user_email, filename=filename)
 
@@ -108,8 +113,13 @@ class QueryManager(object):
                 model_name = result[0]
                 query_json = result[1]
                 new_result_json = result[2]
-                old_result_json = self.db.get_results_from_query(
-                    query_json, [model_name], latest_order=2)
+                try:
+                    old_results = self.db.get_results_from_query(
+                                    query_json, [model_name], latest_order=2)
+                    old_result_json = old_results[0][2]
+                except IndexError:
+                    logger.info('No previous result was found.')
+                    old_result_json = None
                 f.write(self.make_str_report_one_query(model_name, query_json,
                         new_result_json, old_result_json))
 
@@ -121,8 +131,13 @@ class QueryManager(object):
                 model_name = result[0]
                 query_json = result[1]
                 new_result_json = result[2]
-                old_result_json = self.db.get_results_from_query(
-                    query_json, [model_name], latest_order=2)
+                try:
+                    old_results = self.db.get_results_from_query(
+                                    query_json, [model_name], latest_order=2)
+                    old_result_json = old_results[0][2]
+                except IndexError:
+                    logger.info('No previous result was found.')
+                    old_result_json = None
                 msg += self._make_html_one_query_inner(
                             model_name, query_json, new_result_json,
                             old_result_json)
@@ -131,25 +146,32 @@ class QueryManager(object):
             f.write(msg)
 
     def make_str_report_one_query(
-            self, model_name, query_json, new_result_json, old_result_json):
+            self, model_name, query_json, new_result_json, old_result_json=None):
         """Return a string message containing information about a query and any
         change in the results."""
         if _is_diff(new_result_json, old_result_json):
-            msg = f'A new result to query ' \
-                f'{Statement._from_json(query_json["path"])} in  {model_name} ' \
-                f'was found.'
-            msg += '\nPrevious result was:'
-            msg += _process_result_to_str(old_result_json)
-            msg += '\nNew result is:'
-            msg += _process_result_to_str(new_result_json)
+            if not old_result_json:
+                msg = f'This is the first result to query ' \
+                      f'{Statement._from_json(query_json["path"])}. ' \
+                      f'The result is:'
+                msg += _process_result_to_str(new_result_json)
+            else:
+                msg = f'A new result to query ' \
+                    f'{Statement._from_json(query_json["path"])} in ' \
+                    f'{model_name} was found.'
+                msg += '\nPrevious result was:'
+                msg += _process_result_to_str(old_result_json)
+                msg += '\nNew result is:'
+                msg += _process_result_to_str(new_result_json)
         else:
-            msg = f'A result to query {Statement._from_json(query_json["path"])}' \
+            msg = f'A result to query ' \
+                  f'{Statement._from_json(query_json["path"])}' \
                 f' did not change. The result is:'
             msg += _process_result_to_str(new_result_json)
         return msg
 
     def make_html_one_query_report(
-            self, model_name, query_json, new_result_json, old_result_json):
+            self, model_name, query_json, new_result_json, old_result_json=None):
         """Return an html page containing information about a query and any
         change in the results."""
         msg = '<html><body>'
@@ -160,17 +182,24 @@ class QueryManager(object):
         return msg
 
     def _make_html_one_query_inner(
-            self, model_name, query_json, new_result_json, old_result_json):
+            self, model_name, query_json, new_result_json, old_result_json=None):
         # Create an html part for one query to be used in producing html report
             if _is_diff(new_result_json, old_result_json):
-                msg = f'<p>A new result to query ' \
-                    f'{Statement._from_json(query_json["path"])} in ' \
-                    f'{model_name} was found.<br>'
-                msg += 'Previous result was:<br>'
-                msg += _process_result_to_html(old_result_json)
-                msg += 'New result is:<br>'
-                msg += _process_result_to_html(new_result_json)
-                msg += '</p>'
+                if not old_result_json:
+                    msg = f'<p>This is the first result to query ' \
+                          f'{Statement._from_json(query_json["path"])} in ' \
+                          f'{model_name}. The result is:<br>'
+                    msg += _process_result_to_html(new_result_json)
+                    msg += '</p>'
+                else:
+                    msg = f'<p>A new result to query ' \
+                        f'{Statement._from_json(query_json["path"])} in ' \
+                        f'{model_name} was found.<br>'
+                    msg += '<br>Previous result was:<br>'
+                    msg += _process_result_to_html(old_result_json)
+                    msg += '<br>New result is:<br>'
+                    msg += _process_result_to_html(new_result_json)
+                    msg += '</p>'
             else:
                 msg = f'<p>A result to query ' \
                     f'{Statement._from_json(query_json["path"])} in ' \
@@ -181,7 +210,7 @@ class QueryManager(object):
 
     def notify_user(
             self, user_email, model_name, query_json, new_result_json,
-            old_result_json):
+            old_result_json=None):
         """Create a query result delta report and send it to user."""
         str_msg = self._make_str_report_one_query(
             model_name, query_json, new_result_json, old_result_json)
@@ -202,12 +231,15 @@ class QueryManager(object):
         self.db.create_tables()
 
 
-def _is_diff(new_result_json, old_result_json):
+def _is_diff(new_result_json, old_result_json=None):
     """Return True if there is a delta between results."""
+    # Return True if this is the first result
+    if not old_result_json:
+        return True
     # Compare hashes of query results
     old_result_hashes = [k for k in old_result_json.keys()]
     new_result_hashes = [k for k in new_result_json.keys()]
-    return not set(new_result_hashes) == set(previous_result_hashes)
+    return not set(new_result_hashes) == set(old_result_hashes)
 
 
 def format_results(results):
@@ -242,8 +274,8 @@ def load_model_manager_from_s3(model_name):
 
 def _process_result_to_str(result_json):
     # Remove the links when making text report
-    msg = ''
-    for v in old_result_json.values():
+    msg = '\n'
+    for v in result_json.values():
             for sentence, link in v:
                 msg += sentence
     return msg
@@ -254,10 +286,10 @@ def _process_result_to_html(result_json):
     response_list = []
     for v in result_json.values():
         for ix, (sentence, link) in enumerate(v):
-            if ix > 0:
-                response_list.append('<br>')
+            response_list.append('<br>')
             response_list.append(
                 f'<a href="{link}" target="_blank" '
                 f'class="status-link">{sentence}</a>')
+        response_list.append('<br>')
         response = ''.join(response_list)
     return response
