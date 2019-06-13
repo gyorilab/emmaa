@@ -1,6 +1,7 @@
 from inflection import camelize, underscore
 from collections import OrderedDict as _o
-from indra.statements.statements import Statement, Agent, get_all_descendants
+from indra.statements.statements import Statement, Agent, get_all_descendants,\
+    mk_str, make_hash
 from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
@@ -15,6 +16,12 @@ class Query(object):
         query_cls = query_cls_from_type(query_type)
         query = query_cls._from_json(json_dict)
         return query
+
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def get_hash(self):
+        return make_hash(self.matches_key(), 14)
 
 
 class StructuralProperty(Query):
@@ -99,11 +106,36 @@ class PathProperty(Query):
     def _get_entities(self):
         """Return entities of the query.
 
-        Note: Right now we only return entities of the path statement her, but
+        NOTE: Right now we only return entities of the path statement her, but
         in future we can also incorporate checking entity constraints at this
         level.
         """
         return self.path_stmt.agent_list()
+
+    def matches_key(self):
+        key = (self.path_stmt.matches_key(), tuple(ent.matches_key() for ent
+               in sorted(self.include_entities, key=lambda x: x.matches_key())),
+               tuple(ent.matches_key() for ent in
+               sorted(self.exclude_entities, key=lambda x: x.matches_key())),
+               tuple(rel for rel in sorted(self.include_rels)),
+               tuple(rel for rel in sorted(self.exclude_rels)))
+        return mk_str(key)
+
+    def __str__(self):
+        parts = [f'PathPropertyQuery(stmt={str(self.path_stmt)}.']
+        if self.include_entities:
+            inents = ', '.join([str(e) for e in self.include_entities])
+            parts.append(f' Include entities: {inents}.')
+        if self.exclude_entities:
+            exents = ', '.join([str(e) for e in self.exclude_entities])
+            parts.append(f' Exclude entities: {exents}.')
+        if self.include_rels:
+            inrels = ', '.join(self.include_rels)
+            parts.append(f' Include relations: {inrels}.')
+        if self.exclude_rels:
+            exrels = ', '.join(self.exclude_rels)
+            parts.append(f' Exclude relations: {exrels}.')
+        return ''.join(parts)
 
 
 class SimpleInterventionProperty(Query):
