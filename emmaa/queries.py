@@ -23,6 +23,10 @@ class Query(object):
     def get_hash(self):
         return make_hash(self.matches_key(), 14)
 
+    def get_hash_with_model(self, model_name):
+        key = (self.matches_key(), model_name)
+        return make_hash(mk_str(key), 14)
+
 
 class StructuralProperty(Query):
     pass
@@ -113,12 +117,21 @@ class PathProperty(Query):
         return self.path_stmt.agent_list()
 
     def matches_key(self):
-        key = (self.path_stmt.matches_key(), tuple(ent.matches_key() for ent
-               in sorted(self.include_entities, key=lambda x: x.matches_key())),
-               tuple(ent.matches_key() for ent in
-               sorted(self.exclude_entities, key=lambda x: x.matches_key())),
-               tuple(rel for rel in sorted(self.include_rels)),
-               tuple(rel for rel in sorted(self.exclude_rels)))
+        key = self.path_stmt.matches_key()
+        if self.include_entities:
+            for ent in sorted(self.include_entities,
+                              key=lambda x: x.matches_key()):
+                key += ent.matches_key()
+        if self.exclude_entities:
+            for ent in sorted(self.exclude_entities,
+                              key=lambda x: x.matches_key()):
+                key += ent.matches_key()
+        if self.include_rels:
+            for rel in sorted(self.include_rels):
+                key += rel
+        if self.exclude_rels:
+            for rel in sorted(self.exclude_rels):
+                key += rel
         return mk_str(key)
 
     def __str__(self):
