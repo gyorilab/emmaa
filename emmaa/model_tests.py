@@ -173,7 +173,7 @@ class ModelManager(object):
                 applicable_stmts.append(query.path_stmt)
             else:
                 responses.append(
-                    (query.to_json(), self.hash_response_list(
+                    (query, self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
         self.model_checker.statements = []
@@ -182,7 +182,7 @@ class ModelManager(object):
         results = self.model_checker.check_model()
         for ix, (_, result) in enumerate(results):
             responses.append(
-                (applicable_queries[ix].to_json(),
+                (applicable_queries[ix],
                  self.process_response(result)))
         return responses
 

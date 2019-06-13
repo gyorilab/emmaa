@@ -29,16 +29,14 @@ class QueryManager(object):
         self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(
-            self, user_email, query_dict, model_names, subscribe):
+            self, user_email, query, model_names, subscribe):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
-        query = Query._from_json(query_dict)
-        query_dict = query.to_json()
         # Store query in the database for future reference.
-        self.db.put_queries(user_email, query_dict, model_names, subscribe)
+        self.db.put_queries(user_email, query, model_names, subscribe)
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
-        saved_results = self.db.get_results_from_query(query_dict, model_names)
+        saved_results = self.db.get_results_from_query(query, model_names)
         checked_models = {res[0] for res in saved_results}
         # If the query was answered for all models before, return the results.
         if checked_models == set(model_names):
@@ -50,9 +48,9 @@ class QueryManager(object):
             if model_name not in checked_models:
                 mm = self.get_model_manager(model_name)
                 response = mm.answer_query(query)
-                new_results.append((model_name, query_dict, response, new_date))
+                new_results.append((model_name, query, response, new_date))
                 if subscribe:
-                    self.db.put_results(model_name, [(query_dict, response)])
+                    self.db.put_results(model_name, [(query, response)])
         all_results = saved_results + new_results
         return format_results(all_results)
 
@@ -63,23 +61,22 @@ class QueryManager(object):
         any changes, and put results to a database.
         """
         model_manager = self.get_model_manager(model_name)
-        query_dicts = self.db.get_queries(model_name)
-        queries = [Query._from_json(json) for json in query_dicts]
+        queries = self.db.get_queries(model_name)
         results = model_manager.answer_queries(queries)
         # Optionally find delta between results
         # NOTE: For now the report is presented in the logs. In future we can
         # choose some other ways to keep track of result changes.
         if find_delta:
-            for query_json, result_json in results:
+            for query, result_json in results:
                 try:
                     old_results = self.db.get_results_from_query(
-                                    query_json, [model_name], latest_order=1)
+                                    query, [model_name], latest_order=1)
                     old_result_json = old_results[0][2]
                 except IndexError:
                     logger.info('No previous result was found.')
                     old_result_json = None
                 logger.info(self.make_str_report_one_query(
-                    model_name, query_json, result_json, old_result_json))
+                    model_name, query, result_json, old_result_json))
                 # Optionally notify users if there's a change in result
                 if notify:
                     if is_diff(result_json, old_json):
@@ -90,7 +87,7 @@ class QueryManager(object):
                                 result_json, old_json)
         self.db.put_results(model_name, results)
 
-    def get_registered_queries(self, user_email, db_name='primary'):
+    def get_registered_queries(self, user_email):
         """Get formatted results to queries registered by user."""
         results = self.db.get_results(user_email)
         return format_results(results)

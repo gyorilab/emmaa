@@ -24,7 +24,7 @@ _is_diff.__test__ = False
 test_query = {'type': 'path_property', 'path': {
     'type': 'Activation', 'subj': {'type': 'Agent', 'name': 'BRAF'},
     'obj': {'type': 'Agent', 'name': 'MAPK1'}}}
-processed_query = Query._from_json(test_query).to_json()
+processed_query = Query._from_json(test_query)
 test_response = {3801854542: [
     ('BRAF activates MAP2K1.',
      'https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html'),
