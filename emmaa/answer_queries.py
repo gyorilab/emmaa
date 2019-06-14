@@ -37,6 +37,8 @@ class QueryManager(object):
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
         saved_results = self.db.get_results_from_query(query, model_names)
+        if not saved_results:
+            saved_results = []
         checked_models = {res[0] for res in saved_results}
         # If the query was answered for all models before, return the results.
         if checked_models == set(model_names):
@@ -108,16 +110,16 @@ class QueryManager(object):
         with open(filename, 'w') as f:
             for result in results:
                 model_name = result[0]
-                query_json = result[1]
+                query = result[1]
                 new_result_json = result[2]
                 try:
                     old_results = self.db.get_results_from_query(
-                                    query_json, [model_name], latest_order=2)
+                                    query, [model_name], latest_order=2)
                     old_result_json = old_results[0][2]
                 except IndexError:
                     logger.info('No previous result was found.')
                     old_result_json = None
-                f.write(self.make_str_report_one_query(model_name, query_json,
+                f.write(self.make_str_report_one_query(model_name, query,
                         new_result_json, old_result_json))
 
     def make_html_report_per_user(self, user_email, filename='query_delta.html'):
@@ -126,93 +128,85 @@ class QueryManager(object):
         msg = '<html><body>'
         for result in results:
                 model_name = result[0]
-                query_json = result[1]
+                query = result[1]
                 new_result_json = result[2]
                 try:
                     old_results = self.db.get_results_from_query(
-                                    query_json, [model_name], latest_order=2)
+                                    query, [model_name], latest_order=2)
                     old_result_json = old_results[0][2]
                 except IndexError:
                     logger.info('No previous result was found.')
                     old_result_json = None
                 msg += self._make_html_one_query_inner(
-                            model_name, query_json, new_result_json,
+                            model_name, query, new_result_json,
                             old_result_json)
         msg += '</body></html>'
         with open(filename, 'w') as f:
             f.write(msg)
 
     def make_str_report_one_query(
-            self, model_name, query_json, new_result_json, old_result_json=None):
+            self, model_name, query, new_result_json, old_result_json=None):
         """Return a string message containing information about a query and any
         change in the results."""
         if _is_diff(new_result_json, old_result_json):
             if not old_result_json:
-                msg = f'This is the first result to query ' \
-                      f'{Statement._from_json(query_json["path"])}. ' \
-                      f'The result is:'
+                msg = f'This is the first result to query {query}. ' \
+                      f'\nThe result is:'
                 msg += _process_result_to_str(new_result_json)
             else:
-                msg = f'A new result to query ' \
-                    f'{Statement._from_json(query_json["path"])} in ' \
-                    f'{model_name} was found.'
+                msg = f'A new result to query {query} in {model_name} was ' \
+                      f'found.'
                 msg += '\nPrevious result was:'
                 msg += _process_result_to_str(old_result_json)
                 msg += '\nNew result is:'
                 msg += _process_result_to_str(new_result_json)
         else:
-            msg = f'A result to query ' \
-                  f'{Statement._from_json(query_json["path"])}' \
-                f' did not change. The result is:'
+            msg = f'A result to query {query} did not change. The result is:'
             msg += _process_result_to_str(new_result_json)
         return msg
 
     def make_html_one_query_report(
-            self, model_name, query_json, new_result_json, old_result_json=None):
+            self, model_name, query, new_result_json, old_result_json=None):
         """Return an html page containing information about a query and any
         change in the results."""
         msg = '<html><body>'
         msg += self._make_html_one_query_inner(
-                    model_name, query_json,
-                    new_result_json, old_result_json)
+                    model_name, query, new_result_json, old_result_json)
         msg += '</body></html>'
         return msg
 
     def _make_html_one_query_inner(
-            self, model_name, query_json, new_result_json, old_result_json=None):
+            self, model_name, query, new_result_json, old_result_json=None):
         # Create an html part for one query to be used in producing html report
             if _is_diff(new_result_json, old_result_json):
                 if not old_result_json:
-                    msg = f'<p>This is the first result to query ' \
-                          f'{Statement._from_json(query_json["path"])} in ' \
+                    msg = f'<p>This is the first result to query {query} in ' \
                           f'{model_name}. The result is:<br>'
                     msg += _process_result_to_html(new_result_json)
                     msg += '</p>'
                 else:
-                    msg = f'<p>A new result to query ' \
-                        f'{Statement._from_json(query_json["path"])} in ' \
-                        f'{model_name} was found.<br>'
+                    msg = f'<p>A new result to query {query} in ' \
+                          f'{model_name} was found.<br>'
                     msg += '<br>Previous result was:<br>'
                     msg += _process_result_to_html(old_result_json)
                     msg += '<br>New result is:<br>'
                     msg += _process_result_to_html(new_result_json)
                     msg += '</p>'
             else:
-                msg = f'<p>A result to query ' \
-                    f'{Statement._from_json(query_json["path"])} in ' \
-                    f'{model_name} did not change. The result is:<br>'
+                msg = f'<p>A result to query {query} in ' \
+                      f'{model_name} did not change. The result is:<br>'
                 msg += _process_result_to_html(new_result_json)
                 msg += '</p>'
             return msg
 
     def notify_user(
-            self, user_email, model_name, query_json, new_result_json,
+            self, user_email, model_name, query, new_result_json,
             old_result_json=None):
         """Create a query result delta report and send it to user."""
         str_msg = self._make_str_report_one_query(
-            model_name, query_json, new_result_json, old_result_json)
+            model_name, query, new_result_json, old_result_json)
         html_msg = self.make_html_one_query_report(
-            model_name, query_json, new_result_json, old_result_json)
+            model_name, query, new_result_json, old_result_json)
         # TODO send an email to user
         pass
 
@@ -245,7 +239,8 @@ def format_results(results):
     for result in results:
         formatted_result = {}
         formatted_result['model'] = result[0]
-        formatted_result['query'] = result[1]
+        query = result[1]
+        formatted_result['query'] = _make_query_simple_dict(query)
         response_json = result[2]
         response = _process_result_to_html(response_json)
         formatted_result['response'] = response
@@ -290,3 +285,15 @@ def _process_result_to_html(result_json):
         response_list.append('<br>')
         response = ''.join(response_list)
     return response
+
+
+def _make_query_simple_dict(query):
+    """Turn Query object into a simple dictionary for easier representation on
+    the dashboard."""
+    query_dict = {}
+    stmt = query.path_stmt
+    query_dict['typeSelection'] = type(stmt).__name__
+    subj, obj = stmt.agent_list()
+    query_dict['subjectSelection'] = subj.name
+    query_dict['objectSelection'] = obj.name
+    return query_dict
