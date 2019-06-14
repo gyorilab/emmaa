@@ -104,6 +104,24 @@ class QueryManager(object):
             filename = filename + '.html'
             self.make_html_report_per_user(user_email, filename=filename)
 
+    def get_report_per_query(self, model_name, query):
+        try:
+            new_results = self.db.get_results_from_query(
+                            query, [model_name], latest_order=1)
+            new_result_json = new_results[0][2]
+        except IndexError:
+            logger.info('No latest result was found.')
+            new_result_json = None
+        try:
+            old_results = self.db.get_results_from_query(
+                            query, [model_name], latest_order=2)
+            old_result_json = old_results[0][2]
+        except IndexError:
+            logger.info('No previous result was found.')
+            old_result_json = None
+        return self.make_str_report_one_query(
+            model_name, query, new_result_json, old_result_json)
+
     def make_str_report_per_user(self, user_email, filename='query_delta.txt'):
         """Produce a report for all query results per user in a text file."""
         results = self.db.get_results(user_email, latest_order=1)
@@ -121,7 +139,7 @@ class QueryManager(object):
                     old_result_json = None
                 f.write(self.make_str_report_one_query(model_name, query,
                         new_result_json, old_result_json))
-
+    
     def make_html_report_per_user(self, user_email, filename='query_delta.html'):
         """Produce a report for all query results per user in an html file."""
         results = self.db.get_results(user_email, latest_order=1)

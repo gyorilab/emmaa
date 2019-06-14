@@ -94,12 +94,23 @@ def test_is_diff():
 @attr('nonpublic')
 def test_report_one_query():
     qm = QueryManager(db_name='test')
+    # Using results from db
+    qm.db.put_queries('tester@test.com', query_object, ['test'], subscribe=True)
+    qm.db.put_results('test', [(query_object, test_response),
+                               (query_object, query_not_appl)])
+    str_msg = qm.get_report_per_query('test', query_object)
+    assert str_msg
+    assert 'A new result to query' in str_msg
+    assert 'Query is not applicable for this model' in str_msg
+    assert 'BRAF activates MAP2K1.' in str_msg
+    # String report given two responses explicitly
     str_msg = qm.make_str_report_one_query(
         'test', query_object, test_response, query_not_appl)
     assert str_msg
     assert 'A new result to query' in str_msg
     assert 'Query is not applicable for this model' in str_msg
     assert 'BRAF activates MAP2K1.' in str_msg
+    # Html report given two responses explicitly
     html_msg = qm.make_html_one_query_report(
         'test', query_object, test_response, query_not_appl)
     assert html_msg
