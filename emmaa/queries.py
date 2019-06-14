@@ -8,6 +8,9 @@ from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
 
 
+GROUNDING_URL = 'http://localhost:8001'
+
+
 class Query(object):
     """The parent class of all query types."""
     @classmethod
@@ -164,17 +167,11 @@ def query_cls_from_type(query_type):
     raise NotAQueryType(f'{query_type} is not recognized as a query type!')
 
 
-def get_agent_from_name(ag_name):
+def get_agent_from_text(ag_name, use_grouding_service=True):
     """Return an INDRA Agent object."""
-    ag = Agent(ag_name)
-    grounding = get_grounding_from_name(ag_name)
-    if not grounding:
-        grounding = get_grounding_from_name(ag_name.upper())
-        ag = Agent(ag_name.upper())
-    if not grounding:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
-    ag.db_refs = {grounding[0]: grounding[1]}
-    return ag
+    if use_grouding_service:
+        return get_agent_from_grounding_service(ag_name, GROUNDING_URL)
+    return get_agent_from_local_grounding(ag_name)
 
 
 def get_grounding_from_name(name):
@@ -204,6 +201,27 @@ def get_grounding_from_name(name):
         return ('MESH', mesh_id)
 
     return None
+
+
+def get_agent_from_local_grounding(ag_name):
+    grounding = get_grounding_from_name(ag_name)
+    if not grounding:
+        grounding = get_grounding_from_name(ag_name.upper())
+        ag_name = ag_name.upper()
+    if not grounding:
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
+    agent = Agent(ag_name, db_refs={grounding[0]: grounding[1]})
+    return agent
+
+
+def get_agent_from_grounding_service(ag_name, url):
+    res = requests.post(url, json={'text': ag_name})
+    rj = res.json()
+    if not rj:
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
+    agent = Agent(name=rj[0]['entry']['entry_name'], 
+                  db_refs={rj[0]['entry']['db']: rj[0]['entry']['id']})
+    return agent
 
 
 class GroundingError(Exception):
