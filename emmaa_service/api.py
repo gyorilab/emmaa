@@ -107,7 +107,7 @@ def _make_query(query_dict):
 
 
 def _get_agent_from_name(agent_name):
-    agent = Agent('agent_name')
+    agent = Agent(agent_name)
     return add_db_refs(agent)
 
 
