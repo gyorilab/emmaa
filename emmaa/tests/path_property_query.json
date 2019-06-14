@@ -3,18 +3,22 @@
        "type": "Phosphorylation",
        "enz": {
            "type": "Agent",
-           "name": "EGFR"
+           "name": "EGFR",
+           "db_refs": {"HGNC": "3236"}
            },
        "sub": {
            "type": "Agent",
-           "name": "ERK"
+           "name": "ERK",
+           "db_refs": {"FPLX": "ERK"}
            }
        },
      "entity_constraints": {
        "exclude": [
            {"type": "Agent",
-            "name": "PI3K"}
-           ]
+            "name": "PI3K",
+            "db_refs": {"FPLX": "ERK"}
+           }
+        ]
        },
      "relationship_constraints": {
        "exclude": [

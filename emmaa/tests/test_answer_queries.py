@@ -21,13 +21,16 @@ QueryManager.__test__ = False
 _is_diff.__test__ = False
 
 
-test_query = {'type': 'path_property', 'path': {
-              'type': 'Activation', 'subj': {'type': 'Agent', 'name': 'BRAF'},
-              'obj': {'type': 'Agent', 'name': 'MAPK1'}}}
+test_query = {'type': 'path_property', 'path': {'type': 'Activation',
+              'subj': {'type': 'Agent', 'name': 'BRAF',
+                       'db_refs': {'HGNC': '1097'}},
+              'obj': {'type': 'Agent', 'name': 'MAPK1',
+                      'db_refs': {'HGNC': '6871'}}}}
 simple_query = {'typeSelection': 'Activation',
                 'subjectSelection': 'BRAF',
                 'objectSelection': 'MAPK1'}
 query_object = Query._from_json(test_query)
+
 test_response = {3801854542: [
     ('BRAF activates MAP2K1.',
      'https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html'),
