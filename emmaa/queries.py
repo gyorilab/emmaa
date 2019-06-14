@@ -197,7 +197,7 @@ def get_grounding_from_name(name):
 
     chebi_id = get_chebi_id_from_name(name)
     if chebi_id:
-        return ('CHEBI', f'CHEBI: {chebi_id}')
+        return ('CHEBI', f'CHEBI:{chebi_id}')
 
     mesh_id, _ = get_mesh_id_name(name)
     if mesh_id:
