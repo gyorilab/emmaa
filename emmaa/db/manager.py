@@ -156,9 +156,8 @@ class EmmaaDatabaseManager(object):
         ----------
         user_email : str
             (currently unused) the email of the user that entered the queries.
-        query_json : json
-            The json dictionary containing the data needed to specify the
-            query.
+        query : emmaa.queries.Query
+            A query object containing all necessary information.
         model_ids : list[str]
             A list of the short, standard model IDs to which the user wishes
             to apply these queries.
@@ -206,8 +205,8 @@ class EmmaaDatabaseManager(object):
 
         Returns
         -------
-        queries : list[json]
-            A list of query json's retrieved from the database.
+        queries : list[emmaa.queries.Query]
+            A list of queries retrieved from the database.
         """
         # TODO: check whether a query is registered or not.
         with self.get_session() as sess:
@@ -223,8 +222,8 @@ class EmmaaDatabaseManager(object):
         model_id : str
             The short, standard model ID.
         query_results : list of tuples
-            A list of tuples of the form (query_json, result_json), where
-            the query_json is the standard query json run against the model,
+            A list of tuples of the form (query, result_json), where
+            the query is the query object run against the model,
             and the result_json is the json containing corresponding result.
         """
         results = []
@@ -264,7 +263,7 @@ class EmmaaDatabaseManager(object):
         Returns
         -------
         results : list[tuple]
-            A list of tuples, each of the form: (model_id, query_json,
+            A list of tuples, each of the form: (model_id, query,
             result_json, date) representing the result of a query run on a
             model on a given date.
         """
