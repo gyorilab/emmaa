@@ -1,3 +1,4 @@
+import requests
 from inflection import camelize, underscore
 from collections import OrderedDict as _o
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
@@ -8,7 +9,7 @@ from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
 
 
-GROUNDING_URL = 'http://localhost:8001'
+GROUNDING_URL = 'http://localhost:8001/ground'
 
 
 class Query(object):
@@ -219,7 +220,7 @@ def get_agent_from_grounding_service(ag_name, url):
     rj = res.json()
     if not rj:
         raise GroundingError(f"Could not find grounding for {ag_name}.")
-    agent = Agent(name=rj[0]['entry']['entry_name'], 
+    agent = Agent(name=rj[0]['entry']['entry_name'],
                   db_refs={rj[0]['entry']['db']: rj[0]['entry']['id']})
     return agent
 

@@ -12,9 +12,8 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name, Agent
 
 from emmaa.model import load_config_from_s3
-from emmaa.answer_queries import QueryManager, GroundingError, \
-    load_model_manager_from_s3
-from emmaa.queries import PathProperty, get_agent_from_text
+from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
+from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
 
 app = Flask(__name__)
