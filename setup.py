@@ -23,7 +23,7 @@ setup(name='emmaa',
         'Programming Language :: Python :: 3.7'
         ],
       packages=find_packages(),
-      install_requires=['indra', 'boto3', 'jsonpickle', 'kappy', 'pygraphviz',
-                        'fnvhash', 'sqlalchemy', 'inflection'],
+      install_requires=['indra', 'boto3', 'jsonpickle', 'kappy==4.0.0rc1',
+                        'pygraphviz', 'fnvhash', 'sqlalchemy', 'inflection'],
       extras_require={'test': ['nose', 'coverage', 'python-coveralls']}
       )
