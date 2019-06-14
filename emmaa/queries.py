@@ -88,15 +88,12 @@ class PathProperty(Query):
     def _from_json(cls, json_dict):
         path_stmt_json = json_dict.get('path')
         path_stmt = Statement._from_json(path_stmt_json)
-        for ag in path_stmt.agent_list():
-            ag = add_db_refs(ag)
         ent_constr_json = json_dict.get('entity_constraints')
         entity_constraints = None
         if ent_constr_json:
             entity_constraints = {}
             for key, value in ent_constr_json.items():
-                entity_constraints[key] = [
-                    add_db_refs(Agent._from_json(ec)) for ec in value]
+                entity_constraints[key] = [Agent._from_json(ec) for ec in value]
         rel_constr_json = json_dict.get('relationship_constraints')
         relationship_constraints = None
         if rel_constr_json:
@@ -167,14 +164,17 @@ def query_cls_from_type(query_type):
     raise NotAQueryType(f'{query_type} is not recognized as a query type!')
 
 
-def add_db_refs(agent):
-    """Add db_refs to an Agent object and update a name if needed."""
-    grounding = get_grounding_from_name(agent.name)
+def get_agent_from_name(ag_name):
+    """Return an INDRA Agent object."""
+    ag = Agent(ag_name)
+    grounding = get_grounding_from_name(ag_name)
     if not grounding:
-        grounding = get_grounding_from_name(agent.name.upper())
-        ag.name = agent.name.upper()
-    agent.db_refs = {grounding[0]: grounding[1]}
-    return agent
+        grounding = get_grounding_from_name(ag_name.upper())
+        ag = Agent(ag_name.upper())
+    if not grounding:
+        raise GroundingError(f"Could not find grounding for {ag_name}.")
+    ag.db_refs = {grounding[0]: grounding[1]}
+    return ag
 
 
 def get_grounding_from_name(name):

@@ -14,7 +14,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, GroundingError, \
     load_model_manager_from_s3
-from emmaa.queries import PathProperty, add_db_refs
+from emmaa.queries import PathProperty, get_agent_from_name
 
 
 app = Flask(__name__)
@@ -99,16 +99,11 @@ def get_queryable_stmt_types():
 def _make_query(query_dict):
     stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
-    subj = _get_agent_from_name(query_dict['subjectSelection'])
-    obj = _get_agent_from_name(query_dict['objectSelection'])
+    subj = get_agent_from_name(query_dict['subjectSelection'])
+    obj = get_agent_from_name(query_dict['objectSelection'])
     stmt = stmt_class(subj, obj)
     query = PathProperty(path_stmt=stmt)
     return query
-
-
-def _get_agent_from_name(agent_name):
-    agent = Agent(agent_name)
-    return add_db_refs(agent)
 
 
 @app.route('/')
