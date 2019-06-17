@@ -1,6 +1,8 @@
 import json
 from indra.statements import Phosphorylation, Agent
-from emmaa.queries import Query, PathProperty
+from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
+                           get_agent_from_grounding_service,
+                           get_grounding_from_name, get_agent_from_text)
 
 
 # Tell nose to not run tests in the imported modules
@@ -50,3 +52,36 @@ def test_stringify_path_property():
     query = PathProperty(stmt, entity_constraints, relationship_contraints)
     query_str = str(query)
     assert query_str == 'PathPropertyQuery(stmt=Phosphorylation(EGFR(), ERK()). Exclude entities: PI3K(). Exclude relations: IncreaseAmount, DecreaseAmount.'
+
+
+def test_grounding_from_name():
+    assert get_grounding_from_name('MAPK1')['HGNC'] == '6871'
+    assert get_grounding_from_name('BRAF')['HGNC'] == '1097'
+
+
+def test_local_grounding():
+    agent = get_agent_from_local_grounding('MAPK1')
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAPK1'
+    assert agent.db_refs == {'HGNC': '6871'}
+    # test with lower case
+    agent = get_agent_from_local_grounding('mapk1')
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAPK1'
+    assert agent.db_refs == {'HGNC': '6871'}
+    # other agent
+    agent = get_agent_from_local_grounding('BRAF')
+    assert isinstance(agent, Agent)
+    assert agent.name == 'BRAF'
+    assert agent.db_refs == {'HGNC': '1097'}
+
+
+def test_grounding_service():
+    agent = get_agent_from_grounding_service('MAPK1', GROUNDING_SERVICE_URL)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAPK1'
+    assert agent.db_refs == {'HGNC': '6871'}
+    agent = get_agent_from_local_grounding('BRAF')
+    assert isinstance(agent, Agent)
+    assert agent.name == 'BRAF'
+    assert agent.db_refs == {'HGNC': '1097'}
