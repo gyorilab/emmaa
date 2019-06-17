@@ -81,12 +81,12 @@ class QueryManager(object):
                     model_name, query, result_json, old_result_json))
                 # Optionally notify users if there's a change in result
                 if notify:
-                    if is_diff(result_json, old_json):
-                        users = self.db.get_users(query_json)
+                    if is_query_result_diff(result_json, old_result_json):
+                        users = self.db.get_users(query)
                         for user in users:
                             self.notify_user(
-                                user, model_name, query_json,
-                                result_json, old_json)
+                                user, model_name, query,
+                                result_json, old_result_json)
         self.db.put_results(model_name, results)
 
     def get_registered_queries(self, user_email):
@@ -97,12 +97,13 @@ class QueryManager(object):
     def get_user_query_delta(
             self, user_email, filename='query_delta', report_format='str'):
         """Produce a report for all query results per user in a given format."""
+        results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
             filename = filename + '.txt'
-            self.make_str_report_per_user(user_email, filename=filename)
+            self.make_str_report_per_user(results, filename=filename)
         elif report_format == 'html':
             filename = filename + '.html'
-            self.make_html_report_per_user(user_email, filename=filename)
+            self.make_html_report_per_user(results, filename=filename)
 
     def get_report_per_query(self, model_name, query):
         try:
@@ -122,9 +123,8 @@ class QueryManager(object):
         return self.make_str_report_one_query(
             model_name, query, new_result_json, old_result_json)
 
-    def make_str_report_per_user(self, user_email, filename='query_delta.txt'):
+    def make_str_report_per_user(self, results, filename='query_delta.txt'):
         """Produce a report for all query results per user in a text file."""
-        results = self.db.get_results(user_email, latest_order=1)
         with open(filename, 'w') as f:
             for result in results:
                 model_name = result[0]
@@ -140,24 +140,23 @@ class QueryManager(object):
                 f.write(self.make_str_report_one_query(model_name, query,
                         new_result_json, old_result_json))
     
-    def make_html_report_per_user(self, user_email, filename='query_delta.html'):
+    def make_html_report_per_user(self, results, filename='query_delta.html'):
         """Produce a report for all query results per user in an html file."""
-        results = self.db.get_results(user_email, latest_order=1)
         msg = '<html><body>'
         for result in results:
-                model_name = result[0]
-                query = result[1]
-                new_result_json = result[2]
-                try:
-                    old_results = self.db.get_results_from_query(
-                                    query, [model_name], latest_order=2)
-                    old_result_json = old_results[0][2]
-                except IndexError:
-                    logger.info('No previous result was found.')
-                    old_result_json = None
-                msg += self._make_html_one_query_inner(
-                            model_name, query, new_result_json,
-                            old_result_json)
+            model_name = result[0]
+            query = result[1]
+            new_result_json = result[2]
+            try:
+                old_results = self.db.get_results_from_query(
+                                query, [model_name], latest_order=2)
+                old_result_json = old_results[0][2]
+            except IndexError:
+                logger.info('No previous result was found.')
+                old_result_json = None
+            msg += self._make_html_one_query_inner(
+                        model_name, query, new_result_json,
+                        old_result_json)
         msg += '</body></html>'
         with open(filename, 'w') as f:
             f.write(msg)
@@ -166,7 +165,7 @@ class QueryManager(object):
             self, model_name, query, new_result_json, old_result_json=None):
         """Return a string message containing information about a query and any
         change in the results."""
-        if _is_diff(new_result_json, old_result_json):
+        if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
                 msg = f'This is the first result to query {query}. ' \
                       f'\nThe result is:'
@@ -221,7 +220,7 @@ class QueryManager(object):
             self, user_email, model_name, query, new_result_json,
             old_result_json=None):
         """Create a query result delta report and send it to user."""
-        str_msg = self._make_str_report_one_query(
+        str_msg = self.make_str_report_one_query(
             model_name, query, new_result_json, old_result_json)
         html_msg = self.make_html_one_query_report(
             model_name, query, new_result_json, old_result_json)
@@ -240,8 +239,11 @@ class QueryManager(object):
         self.db.create_tables()
 
 
-def _is_diff(new_result_json, old_result_json=None):
+def is_query_result_diff(new_result_json, old_result_json=None):
     """Return True if there is a delta between results."""
+    # NOTE: this function is query-type specific so it may need to be
+    # refactored as a method of the Query class:w
+
     # Return True if this is the first result
     if not old_result_json:
         return True
@@ -286,8 +288,8 @@ def _process_result_to_str(result_json):
     # Remove the links when making text report
     msg = '\n'
     for v in result_json.values():
-            for sentence, link in v:
-                msg += sentence
+        for sentence, link in v:
+            msg += sentence
     return msg
 
 

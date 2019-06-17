@@ -24,6 +24,9 @@ class Query(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
+    def matches_key(self):
+        pass
+
     def get_hash(self):
         return make_hash(self.matches_key(), 14)
 
@@ -54,19 +57,19 @@ class PathProperty(Query):
     def __init__(self, path_stmt, entity_constraints=None,
                  relationship_constraints=None):
         self.path_stmt = path_stmt
-        self.entities = self._get_entities()
         if entity_constraints:
-            self.include_entities = entity_constraints.get('include')
-            self.exclude_entities = entity_constraints.get('exclude')
+            self.include_entities = entity_constraints.get('include', [])
+            self.exclude_entities = entity_constraints.get('exclude', [])
         else:
-            self.include_entities = None
-            self.exclude_entities = None
+            self.include_entities = []
+            self.exclude_entities = []
         if relationship_constraints:
-            self.include_rels = relationship_constraints.get('include')
-            self.exclude_rels = relationship_constraints.get('exclude')
+            self.include_rels = relationship_constraints.get('include', [])
+            self.exclude_rels = relationship_constraints.get('exclude', [])
         else:
-            self.include_rels = None
-            self.exclude_rels = None
+            self.include_rels = []
+            self.exclude_rels = []
+        self.entities = self._get_entities()
 
     def to_json(self):
         query_type = underscore(type(self).__name__)
@@ -97,7 +100,8 @@ class PathProperty(Query):
         if ent_constr_json:
             entity_constraints = {}
             for key, value in ent_constr_json.items():
-                entity_constraints[key] = [Agent._from_json(ec) for ec in value]
+                entity_constraints[key] = [Agent._from_json(ec) for ec
+                                           in value]
         rel_constr_json = json_dict.get('relationship_constraints')
         relationship_constraints = None
         if rel_constr_json:
@@ -109,13 +113,9 @@ class PathProperty(Query):
         return query
 
     def _get_entities(self):
-        """Return entities of the query.
-
-        NOTE: Right now we only return entities of the path statement her, but
-        in future we can also incorporate checking entity constraints at this
-        level.
-        """
-        return self.path_stmt.agent_list()
+        """Return entities from the path statement and the inclusion list."""
+        path_entities = self.path_stmt.agent_list()
+        return path_entities + self.include_entities
 
     def matches_key(self):
         key = self.path_stmt.matches_key()
@@ -150,6 +150,9 @@ class PathProperty(Query):
             exrels = ', '.join(self.exclude_rels)
             parts.append(f' Exclude relations: {exrels}.')
         return ''.join(parts)
+
+    def __repr__(self):
+        return str(self)
 
 
 class SimpleInterventionProperty(Query):
