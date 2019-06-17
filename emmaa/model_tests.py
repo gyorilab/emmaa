@@ -167,7 +167,8 @@ class ModelManager(object):
         applicable_stmts = []
         for query in queries:
             test = StatementCheckingTest(
-                query.path_stmt, self.model.test_config.get('statement_checking'))
+                query.path_stmt,
+                self.model.test_config.get('statement_checking'))
             if ScopeTestConnector.applicable(self, test):
                 applicable_queries.append(query)
                 applicable_stmts.append(query.path_stmt)
