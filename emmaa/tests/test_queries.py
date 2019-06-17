@@ -55,8 +55,8 @@ def test_stringify_path_property():
 
 
 def test_grounding_from_name():
-    assert get_grounding_from_name('MAPK1')['HGNC'] == '6871'
-    assert get_grounding_from_name('BRAF')['HGNC'] == '1097'
+    assert get_grounding_from_name('MAPK1') == ('HGNC', '6871')
+    assert get_grounding_from_name('BRAF') == ('HGNC', '1097')
 
 
 def test_local_grounding():
