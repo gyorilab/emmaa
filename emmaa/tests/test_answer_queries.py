@@ -135,7 +135,8 @@ def test_report_files():
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
     qm.db.put_results('test', [(query_object, query_not_appl)])
-    qm.make_str_report_per_user('tester@test.com',
+    results = qm.db.get_results('tester@test.com', latest_order=1)
+    qm.make_str_report_per_user(results,
                                 filename='test_query_delta.txt')
     with open('test_query_delta.txt', 'r') as f:
         msg = f.read()
@@ -143,7 +144,8 @@ def test_report_files():
     assert 'This is the first result to query' in msg, msg
     assert 'Query is not applicable for this model' in msg
     qm.db.put_results('test', [(query_object, test_response)])
-    qm.make_str_report_per_user('tester@test.com',
+    results = qm.db.get_results('tester@test.com', latest_order=1)
+    qm.make_str_report_per_user(results,
                                 filename='test_query_delta.txt')
     with open('test_query_delta.txt', 'r') as f:
         msg = f.read()

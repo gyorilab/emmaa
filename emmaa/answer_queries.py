@@ -195,7 +195,7 @@ class QueryManager(object):
     def _make_html_one_query_inner(
             self, model_name, query, new_result_json, old_result_json=None):
         # Create an html part for one query to be used in producing html report
-            if _is_diff(new_result_json, old_result_json):
+            if is_query_result_diff(new_result_json, old_result_json):
                 if not old_result_json:
                     msg = f'<p>This is the first result to query {query} in ' \
                           f'{model_name}. The result is:<br>'
@@ -279,7 +279,8 @@ def load_model_manager_from_s3(model_name):
     logger.info(f'Loading latest model manager for {model_name} model from '
                 f'S3.')
     obj = client.get_object(Bucket='emmaa', Key=key)
-    model_manager = pickle.loads(obj['Body'].read())
+    body = obj['Body'].read()
+    model_manager = pickle.loads(body)
     model_manager_cache[model_name] = model_manager
     return model_manager
 
