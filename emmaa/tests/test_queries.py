@@ -1,4 +1,5 @@
 import json
+import os
 from indra.statements import Phosphorylation, Agent
 from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
                            get_agent_from_grounding_service,
@@ -77,7 +78,8 @@ def test_local_grounding():
 
 
 def test_grounding_service():
-    agent = get_agent_from_grounding_service('MAPK1', GROUNDING_SERVICE_URL)
+    url = os.environ['GROUNDING_SERVICE_URL']
+    agent = get_agent_from_grounding_service('MAPK1', url)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.db_refs == {'HGNC': '6871'}
