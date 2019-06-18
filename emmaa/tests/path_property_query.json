@@ -13,6 +13,12 @@
            }
        },
      "entity_constraints": {
+       "include": [
+         {"type": "Agent",
+          "name": "MAPK1",
+          "db_refs": {"HGNC": "6871"}
+          }
+       ],
        "exclude": [
            {"type": "Agent",
             "name": "PI3K",
@@ -21,6 +27,9 @@
         ]
        },
      "relationship_constraints": {
+       "include": [
+         {"type": "Inhibition"}
+       ],
        "exclude": [
            {"type": "IncreaseAmount"},
            {"type": "DecreaseAmount"}

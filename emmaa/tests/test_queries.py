@@ -24,9 +24,10 @@ def test_path_property_from_json():
     assert query.path_stmt.sub.name == 'ERK', query.path_stmt
     assert isinstance(query.exclude_entities[0], Agent)
     assert query.exclude_entities[0].name == 'PI3K'
-    assert not query.include_entities, query.include_entities
+    assert isinstance(query.include_entities[0], Agent)
+    assert query.include_entities[0].name == 'MAPK1'
     assert set(query.exclude_rels) == set(['IncreaseAmount', 'DecreaseAmount'])
-    assert not query.include_rels, query.include_rels
+    assert query.include_rels[0] == 'Inhibition'
 
 
 def test_path_property_to_json():
