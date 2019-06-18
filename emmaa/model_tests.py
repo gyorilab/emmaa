@@ -87,6 +87,8 @@ class ModelManager(object):
         self.model_checker.statements = []
         self.model_checker.add_statements([test.stmt])
         self.get_im()
+        if not test.configs:
+            test.configs = self.model.test_config.get('statement_checking')
         return test.check(self.model_checker, self.pysb_model)
 
     def run_tests(self):
