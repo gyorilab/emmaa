@@ -9,18 +9,6 @@ from indra.statements.statements import Activation
 from indra.statements.agent import Agent
 
 
-# Tell nose to not run tests in the imported modules
-format_results.__test__ = False
-load_model_manager_from_s3.__test__ = False
-ModelManager.__test__ = False
-Activation.__test__ = False
-Agent.__test__ = False
-get_db.__test__ = False
-Query.__test__ = False
-QueryManager.__test__ = False
-is_query_result_diff.__test__ = False
-
-
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
               'subj': {'type': 'Agent', 'name': 'BRAF',
                        'db_refs': {'HGNC': '1097'}},

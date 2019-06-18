@@ -10,13 +10,7 @@ from emmaa.analyze_tests_results import TestRound, StatsGenerator
 StatementCheckingTest.__test__ = False
 run_model_tests_from_s3.__test__ = False
 load_tests_from_s3.__test__ = False
-ModelManager.__test__ = False
-PathResult.__test__ = False
-EmmaaModel.__test__ = False
-ModelChecker.__test__ = False
 TestRound.__test__ = False
-StatsGenerator.__test__ = False
-Statement.__test__ = False
 
 
 def test_load_tests_from_s3():

@@ -6,13 +6,6 @@ from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
                            get_grounding_from_name, get_agent_from_text)
 
 
-# Tell nose to not run tests in the imported modules
-Phosphorylation.__test__ = False
-Agent.__test__ = False
-Query.__test__ = False
-PathProperty.__test__ = False
-
-
 def test_path_property_from_json():
     with open('path_property_query.json', 'r') as f:
         json_dict = json.load(f)
