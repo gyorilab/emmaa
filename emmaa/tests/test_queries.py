@@ -1,5 +1,6 @@
 import json
 import os
+from nose.plugins.attrib import attr
 from indra.statements import Phosphorylation, Agent
 from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
                            get_agent_from_grounding_service,
