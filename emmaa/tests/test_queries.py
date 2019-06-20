@@ -71,6 +71,7 @@ def test_local_grounding():
     assert agent.db_refs == {'HGNC': '1097'}
 
 
+@attr('nonpublic')
 def test_grounding_service():
     url = os.environ['GROUNDING_SERVICE_URL']
     agent = get_agent_from_grounding_service('MAPK1', url)
