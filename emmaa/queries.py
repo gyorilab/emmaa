@@ -69,7 +69,7 @@ class PathProperty(Query):
         else:
             self.include_rels = []
             self.exclude_rels = []
-        self.entities = self._get_entities()
+        self.entities = self.get_entities()
 
     def to_json(self):
         query_type = underscore(type(self).__name__)
@@ -112,7 +112,7 @@ class PathProperty(Query):
         query = cls(path_stmt, entity_constraints, relationship_constraints)
         return query
 
-    def _get_entities(self):
+    def get_entities(self):
         """Return entities from the path statement and the inclusion list."""
         path_entities = self.path_stmt.agent_list()
         return path_entities + self.include_entities
