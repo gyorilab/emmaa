@@ -10,7 +10,8 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base, Result
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery
+from emmaa.queries import Query as QueryObject
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,7 @@ class EmmaaDatabaseManager(object):
             logger.warning(f"A user with email {email} already exists.")
         return user_id
 
-    def put_queries(self, user_email, query_json, model_ids, subscribe=True):
+    def put_queries(self, user_email, query, model_ids, subscribe=True):
         """Add queries to the database for a given user.
 
         Note: users are not considered, and user_id is ignored. In future, the
@@ -155,16 +156,15 @@ class EmmaaDatabaseManager(object):
         ----------
         user_email : str
             (currently unused) the email of the user that entered the queries.
-        query_json : json
-            The json dictionary containing the data needed to specify the
-            query.
+        query : emmaa.queries.Query
+            A query object containing all necessary information.
         model_ids : list[str]
             A list of the short, standard model IDs to which the user wishes
             to apply these queries.
         subscribe : bool
             True if the user wishes to subscribe to this query.
         """
-        logger.info(f"Got request to put query {query_json} for {user_email} "
+        logger.info(f"Got request to put query {query} for {user_email} "
                     f"for {model_ids} with subscribe={subscribe}")
 
         # Make sure model_ids is a list.
@@ -183,10 +183,10 @@ class EmmaaDatabaseManager(object):
         # TODO: Include user info
         queries = []
         for model_id in model_ids:
-            qh = hash_query(query_json, model_id)
+            qh = query.get_hash_with_model(model_id)
             if qh not in existing_hashes:
                 logger.info(f"Adding query on {model_id} to the db.")
-                queries.append(Query(model_id=model_id, json=query_json.copy(),
+                queries.append(Query(model_id=model_id, json=query.to_json(),
                                      hash=qh))
             else:
                 logger.info(f"Skipping {model_id}; already in db.")
@@ -205,13 +205,13 @@ class EmmaaDatabaseManager(object):
 
         Returns
         -------
-        queries : list[json]
-            A list of query json's retrieved from the database.
+        queries : list[emmaa.queries.Query]
+            A list of queries retrieved from the database.
         """
         # TODO: check whether a query is registered or not.
         with self.get_session() as sess:
             q = sess.query(Query.json).filter(Query.model_id == model_id)
-            queries = [q for q, in q.all()]
+            queries = [QueryObject._from_json(q) for q, in q.all()]
         return queries
 
     def put_results(self, model_id, query_results):
@@ -222,13 +222,13 @@ class EmmaaDatabaseManager(object):
         model_id : str
             The short, standard model ID.
         query_results : list of tuples
-            A list of tuples of the form (query_json, result_json), where
-            the query_json is the standard query json run against the model,
+            A list of tuples of the form (query, result_json), where
+            the query is the query object run against the model,
             and the result_json is the json containing corresponding result.
         """
         results = []
-        for query_json, result_json in query_results:
-            query_hash = hash_query(query_json, model_id)
+        for query, result_json in query_results:
+            query_hash = query.get_hash_with_model(model_id)
             results.append(Result(query_hash=query_hash,
                                   result_json=result_json))
 
@@ -236,19 +236,20 @@ class EmmaaDatabaseManager(object):
             sess.add_all(results)
         return
 
-    def get_results_from_query(self, query_json, model_ids):
-        logger.info(f"Got request for results of {query_json} on {model_ids}.")
-        hashes = {hash_query(query_json, model_id) for model_id in model_ids}
+    def get_results_from_query(self, query, model_ids, latest_order=1):
+        logger.info(f"Got request for results of {query} on {model_ids}.")
+        hashes = {query.get_hash_with_model(model_id) for model_id in model_ids}
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.result_json,
                             Result.date)
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
-            results = _weed_results(q.all())
+            results = _make_queries_in_results(q.all())
+            results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
         return results
 
-    def get_results(self, user_email):
+    def get_results(self, user_email, latest_order=1):
         """Get the results for which the user has registered.
 
         Note: currently users are not handled, and this will simply return
@@ -262,7 +263,7 @@ class EmmaaDatabaseManager(object):
         Returns
         -------
         results : list[tuple]
-            A list of tuples, each of the form: (model_id, query_json,
+            A list of tuples, each of the form: (model_id, query,
             result_json, date) representing the result of a query run on a
             model on a given date.
         """
@@ -271,17 +272,39 @@ class EmmaaDatabaseManager(object):
             q = (sess.query(Query.model_id, Query.json,
                             Result.result_json, Result.date)
                  .filter(Query.hash == Result.query_hash))
-            results = _weed_results(q.all())
+            results = _make_queries_in_results(q.all())
+            results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
         return results
 
+    def get_users(self, query, model_id):
+        logger.info(f"Got request for users for {query} in {model_id}.")
+        with self.get_session() as sess:
+            q = (sess.query(User.email).filter(
+                    User.id == UserQuery.user_id,
+                    Query.hash == query.get_hash_with_model(model_id)))
+            users = [q for q, in q.all()]
+        return users
 
-def _weed_results(result_iter):
+
+def _weed_results(result_iter, latest_order=1):
+    # Each element of result_iter: (model_id, query(object), result_json, date)
     result_dict = defaultdict(list)
     for res in result_iter:
-        result_dict[hash_query(res[1], res[0])].append(tuple(res))
-    results = [max(res_list, key=lambda r: r[-1])
-               for res_list in result_dict.values()]
+        result_dict[res[1].get_hash_with_model(res[0])].append(tuple(res))
+    sorted_results = [sorted(res_list, key=lambda r: r[-1])
+                      for res_list in result_dict.values()]
+    results = [result[-latest_order] for result in sorted_results]
+    return results
+
+
+def _make_queries_in_results(result_iter):
+    # Each element of result_iter: (model_id, query_json, result_json, date)
+    # Replace query_json with Query object
+    results = []
+    for res in result_iter:
+        query = QueryObject._from_json(res[1])
+        results.append((res[0], query, res[2], res[3]))
     return results
 
 
@@ -295,6 +318,8 @@ def sorted_json_string(json_thing):
     elif isinstance(json_thing, dict):
         return '{%s}' % (','.join(sorted(k + sorted_json_string(v)
                                          for k, v in json_thing.items())))
+    elif isinstance(json_thing, float):
+        return str(json_thing)
     else:
         raise TypeError(f"Invalid type: {type(json_thing)}")
 

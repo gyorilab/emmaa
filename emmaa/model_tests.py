@@ -15,7 +15,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
-from emmaa.answer_queries import answer_registered_queries
+from emmaa.answer_queries import QueryManager
 
 
 logger = logging.getLogger(__name__)
@@ -64,9 +64,11 @@ class ModelManager(object):
         self.test_results = []
         self.model_checker = ModelChecker(self.pysb_model)
 
-    def get_im(self):
+    def get_im(self, stmts):
         """Get the influence map for the model."""
-        self.model_checker.get_im(self.pysb_model)
+        self.model_checker.statements = []
+        self.model_checker.add_statements(stmts)
+        self.model_checker.get_im(force_update=True)
         self.model_checker.prune_influence_map()
         self.model_checker.prune_influence_map_degrade_bind_positive(
             self.model.assembled_stmts)
@@ -84,28 +86,15 @@ class ModelManager(object):
         debugging. For running all tests and all queries, use more efficient
         run_all_tests.
         """
-        self.model_checker.statements = []
-        self.model_checker.add_statements([test.stmt])
-        self.get_im()
+        self.get_im([test.stmt])
+        if not test.configs:
+            test.configs = self.model.test_config.get('statement_checking', {})
         return test.check(self.model_checker, self.pysb_model)
 
     def run_tests(self):
         """Run all applicable tests for the model."""
-        self.model_checker.add_statements([test.stmt for test in
-                                           self.applicable_tests])
-        self.get_im()
-        try:
-            max_path_length = \
-                self.model.test_config['statement_checking']['max_path_length']
-        except KeyError:
-            max_path_length = 5
-        try:
-            max_paths = \
-                self.model.test_config['statement_checking']['max_paths']
-        except KeyError:
-            max_paths = 1
-        logger.info('Parameters for model checking: %d, %d' %
-                    (max_path_length, max_paths))
+        self.get_im([test.stmt for test in self.applicable_tests])
+        max_path_length, max_paths = self._get_test_configs()
         results = self.model_checker.check_model(
             max_path_length=max_path_length,
             max_paths=max_paths)
@@ -131,22 +120,21 @@ class ModelManager(object):
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
-        # TODO
-        # generate links to web pages explaining result codes
         return [[(RESULT_CODES[result_code], result_codes_link)]]
 
-    def answer_query(self, stmt):
+    def answer_query(self, query):
         """Answer user query with a path if it is found."""
-        test = StatementCheckingTest(
-            stmt, self.model.test_config.get('statement_checking'))
-        if ScopeTestConnector.applicable(self, test):
-            result = self.run_one_test(test)
+        if ScopeTestConnector.applicable(self, query):
+            self.get_im([query.path_stmt])
+            max_path_length, max_paths = self._get_test_configs()
+            result = self.model_checker.check_statement(
+                query.path_stmt, max_paths, max_path_length)
             return self.process_response(result)
         else:
             return self.hash_response_list([[
                 (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
 
-    def answer_queries(self, query_stmt_pairs):
+    def answer_queries(self, queries):
         """Answer all queries registered for this model.
 
         Parameters
@@ -164,26 +152,38 @@ class ModelManager(object):
         responses = []
         applicable_queries = []
         applicable_stmts = []
-        for (query_json, stmt) in query_stmt_pairs:
-            test = StatementCheckingTest(
-                stmt, self.model.test_config.get('statement_checking'))
-            if ScopeTestConnector.applicable(self, test):
-                applicable_queries.append(query_json)
-                applicable_stmts.append(test)
+        max_path_length, max_paths = self._get_test_configs()
+        for query in queries:
+            if ScopeTestConnector.applicable(self, query):
+                applicable_queries.append(query)
+                applicable_stmts.append(query.path_stmt)
             else:
                 responses.append(
-                    (query_json, self.hash_response_list(
+                    (query, self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
-        self.model_checker.statements = []
-        self.model_checker.add_statements([test.stmt for test in
-                                           applicable_stmts])
-        self.get_im()
+        self.get_im(applicable_stmts)
         results = self.model_checker.check_model()
         for ix, (_, result) in enumerate(results):
             responses.append(
-                (applicable_queries[ix], self.process_response(result)))
+                (applicable_queries[ix],
+                 self.process_response(result)))
         return responses
+
+    def _get_test_configs(self):
+        try:
+            max_path_length = \
+                self.model.test_config['statement_checking']['max_path_length']
+        except KeyError:
+            max_path_length = 5
+        try:
+            max_paths = \
+                self.model.test_config['statement_checking']['max_paths']
+        except KeyError:
+            max_paths = 1
+        logger.info('Parameters for model checking: %d, %d' %
+                    (max_path_length, max_paths))
+        return (max_path_length, max_paths)
 
     def process_response(self, result):
         """Return a dictionary in which every key is a hash and value is a list
@@ -333,14 +333,12 @@ class StatementCheckingTest(EmmaaTest):
 
     def check(self, model_checker, pysb_model):
         """Use a model checker to check if a given model satisfies the test."""
-        # model_checker.statements = []
-        # model_checker.add_statements([self.stmt])
-        # model_checker.get_im(force_update=True)
         max_path_length = self.configs.get('max_path_length', 5)
         max_paths = self.configs.get('max_paths', 1)
         logger.info('Parameters for model checking: %s, %d' %
                     (max_path_length, max_paths))
-        res = model_checker.check_statement(self.stmt,
+        res = model_checker.check_statement(
+            self.stmt,
             max_path_length=max_path_length,
             max_paths=max_paths)
         return res
@@ -387,7 +385,7 @@ def save_model_manager_to_s3(model_name, model_manager):
 
 def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
                             upload_results=True, upload_stats=True,
-                            registered_queries=True):
+                            registered_queries=True, db_name='primary'):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -447,5 +445,6 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     if upload_stats:
         sg.save_to_s3()
     if registered_queries:
-        answer_registered_queries(model_name, model_manager=mm)
+        qm = QueryManager(db_name=db_name, model_managers=[mm])
+        qm.answer_registered_queries(model_name)
     return (mm, sg)

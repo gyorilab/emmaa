@@ -106,3 +106,7 @@ venv.bak/
 
 *.zip
 .DS_Store
+
+# Outputs of tests
+emmaa/tests/test_query_delta.txt
+emmaa/tests/test_query_delta.html

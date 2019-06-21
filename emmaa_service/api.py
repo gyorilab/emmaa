@@ -9,12 +9,12 @@ from flask import abort, Flask, request, Response
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
-    RemoveModification
+    RemoveModification, get_statement_by_name, Agent
 
-from emmaa.db import get_db
 from emmaa.model import load_config_from_s3
-from emmaa.answer_queries import answer_immediate_query, \
-    get_registered_queries, GroundingError, load_model_manager_from_s3
+from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
+from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
+
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 HERE = path.dirname(path.abspath(__file__))
 EMMAA = path.join(HERE, path.pardir)
 DASHBOARD = path.join(EMMAA, 'dashboard')
+
+
+qm = QueryManager('primary')
 
 
 # Create a template object from the template file, load once
@@ -92,6 +95,16 @@ def get_queryable_stmt_types():
     return stmt_types
 
 
+def _make_query(query_dict):
+    stmt_type = query_dict['typeSelection']
+    stmt_class = get_statement_by_name(stmt_type)
+    subj = get_agent_from_text(query_dict['subjectSelection'], True)
+    obj = get_agent_from_text(query_dict['objectSelection'], True)
+    stmt = stmt_class(subj, obj)
+    query = PathProperty(path_stmt=stmt)
+    return query
+
+
 @app.route('/')
 @app.route('/home')
 def get_home():
@@ -112,7 +125,7 @@ def get_query_page():
     stmt_types = get_queryable_stmt_types()
 
     user_email = 'joshua@emmaa.com'
-    old_results = get_registered_queries(user_email)
+    old_results = qm.get_registered_queries(user_email)
 
     return QUERIES.render(model_data=model_data, stmt_types=stmt_types,
                           old_results=old_results)
@@ -139,6 +152,7 @@ def process_query():
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
              f'not {expected_query_keys}')
+        query = _make_query(query_json)
         models = set(request.json.get('models'))
         assert models < expceted_models, \
             f'Got unexpected models: {models - expceted_models}'
@@ -156,8 +170,8 @@ def process_query():
     else:
         logger.info('Query submitted')
         try:
-            result = answer_immediate_query(
-                user_email, query_json, models, subscribe)
+            result = qm.answer_immediate_query(
+                user_email, query, models, subscribe)
         except GroundingError as e:
             logger.exception(e)
             logger.error("Invalid grounding!")

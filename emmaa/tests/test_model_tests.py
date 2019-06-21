@@ -10,13 +10,7 @@ from emmaa.analyze_tests_results import TestRound, StatsGenerator
 StatementCheckingTest.__test__ = False
 run_model_tests_from_s3.__test__ = False
 load_tests_from_s3.__test__ = False
-ModelManager.__test__ = False
-PathResult.__test__ = False
-EmmaaModel.__test__ = False
-ModelChecker.__test__ = False
 TestRound.__test__ = False
-StatsGenerator.__test__ = False
-Statement.__test__ = False
 
 
 def test_load_tests_from_s3():
@@ -31,7 +25,8 @@ def test_load_tests_from_s3():
 def test_run_tests_from_s3():
     (mm, sg) = run_model_tests_from_s3(
         'test', 'simple_model_test.pkl', upload_mm=False,
-        upload_results=False, upload_stats=False, registered_queries=False)
+        upload_results=False, upload_stats=False, registered_queries=False,
+        db_name='test')
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
     assert isinstance(mm.model_checker, ModelChecker)

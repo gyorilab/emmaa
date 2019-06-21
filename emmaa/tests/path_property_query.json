@@ -1,0 +1,38 @@
+{"type": "path_property",
+    "path": {
+       "type": "Phosphorylation",
+       "enz": {
+           "type": "Agent",
+           "name": "EGFR",
+           "db_refs": {"HGNC": "3236"}
+           },
+       "sub": {
+           "type": "Agent",
+           "name": "ERK",
+           "db_refs": {"FPLX": "ERK"}
+           }
+       },
+     "entity_constraints": {
+       "include": [
+         {"type": "Agent",
+          "name": "MAPK1",
+          "db_refs": {"HGNC": "6871"}
+          }
+       ],
+       "exclude": [
+           {"type": "Agent",
+            "name": "PI3K",
+            "db_refs": {"FPLX": "ERK"}
+           }
+        ]
+       },
+     "relationship_constraints": {
+       "include": [
+         {"type": "Inhibition"}
+       ],
+       "exclude": [
+           {"type": "IncreaseAmount"},
+           {"type": "DecreaseAmount"}
+           ]
+       }
+    }
