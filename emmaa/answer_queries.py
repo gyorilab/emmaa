@@ -299,11 +299,11 @@ def _process_result_to_html(result_json):
     response_list = []
     for v in result_json.values():
         for ix, (sentence, link) in enumerate(v):
-            response_list.append('<br>')
+            if ix > 0:
+                response_list.append('<br>')
             response_list.append(
                 f'<a href="{link}" target="_blank" '
                 f'class="status-link">{sentence}</a>')
-        response_list.append('<br>')
         response = ''.join(response_list)
     return response
 
