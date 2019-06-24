@@ -208,7 +208,7 @@ class ModelManager(object):
             for (sentence, link) in response:
                 sentences.append(sentence)
             response_str = ' '.join(sentences)
-            response_hash = fnv1a_32(response_str.encode('utf-8'))
+            response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response
         return response_dict
 
