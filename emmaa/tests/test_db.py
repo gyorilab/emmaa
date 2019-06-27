@@ -3,7 +3,7 @@ import random
 
 from nose.plugins.attrib import attr
 
-from emmaa.db import get_db, Query, Result
+from emmaa.db import Query, Result, EmmaaDatabaseManager
 from emmaa.queries import Query as QueryObject, PathProperty
 
 
@@ -20,7 +20,7 @@ test_queries = [QueryObject._from_json(qj) for qj in test_query_jsons]
 
 @attr('nonpublic')
 def _test_db():
-    db = get_db('test')
+    db = EmmaaDatabaseManager('postgresql://postgres:@localhost/emmaadb_test')
     db.drop_tables(force=True)
     db.create_tables()
     return db
