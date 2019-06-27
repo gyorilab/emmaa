@@ -64,30 +64,32 @@ class QueryManager(object):
         """
         model_manager = self.get_model_manager(model_name)
         queries = self.db.get_queries(model_name)
-        results = model_manager.answer_queries(queries)
-        # Optionally find delta between results
-        # NOTE: For now the report is presented in the logs. In future we can
-        # choose some other ways to keep track of result changes.
-        if find_delta:
-            for query, result_json in results:
-                try:
-                    old_results = self.db.get_results_from_query(
-                                    query, [model_name], latest_order=1)
-                    old_result_json = old_results[0][2]
-                except IndexError:
-                    logger.info('No previous result was found.')
-                    old_result_json = None
-                logger.info(self.make_str_report_one_query(
-                    model_name, query, result_json, old_result_json))
-                # Optionally notify users if there's a change in result
-                if notify:
-                    if is_query_result_diff(result_json, old_result_json):
-                        users = self.db.get_users(query)
-                        for user in users:
-                            self.notify_user(
-                                user, model_name, query,
-                                result_json, old_result_json)
-        self.db.put_results(model_name, results)
+        # Only do the following steps if there are queries for this model
+        if queries:
+            results = model_manager.answer_queries(queries)
+            # Optionally find delta between results
+            # NOTE: For now the report is presented in the logs. In future we can
+            # choose some other ways to keep track of result changes.
+            if find_delta:
+                for query, result_json in results:
+                    try:
+                        old_results = self.db.get_results_from_query(
+                                        query, [model_name], latest_order=1)
+                        old_result_json = old_results[0][2]
+                    except IndexError:
+                        logger.info('No previous result was found.')
+                        old_result_json = None
+                    logger.info(self.make_str_report_one_query(
+                        model_name, query, result_json, old_result_json))
+                    # Optionally notify users if there's a change in result
+                    if notify:
+                        if is_query_result_diff(result_json, old_result_json):
+                            users = self.db.get_users(query)
+                            for user in users:
+                                self.notify_user(
+                                    user, model_name, query,
+                                    result_json, old_result_json)
+            self.db.put_results(model_name, results)
 
     def get_registered_queries(self, user_email):
         """Get formatted results to queries registered by user."""
