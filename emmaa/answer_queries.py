@@ -24,8 +24,10 @@ class QueryManager(object):
         Optional list of ModelManagers to use for running queries. If not
         given, the methods will load ModelManager from S3 when needed.
     """
-    def __init__(self, db_name='primary', model_managers=None):
-        self.db = get_db(db_name)
+    def __init__(self, db=None, model_managers=None):
+        self.db = db
+        if db is None:
+            self.db = get_db('primary')
         self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(

@@ -4,9 +4,7 @@ from emmaa.answer_queries import QueryManager, format_results, \
     load_model_manager_from_s3, is_query_result_diff
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
-from emmaa.db import get_db
-from indra.statements.statements import Activation
-from indra.statements.agent import Agent
+from emmaa.tests.test_db import _get_test_db
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
@@ -52,7 +50,8 @@ def test_format_results():
 
 @attr('nonpublic')
 def test_answer_immediate_query():
-    qm = QueryManager(db_name='test')
+    db = _get_test_db()
+    qm = QueryManager(db=db)
     qm._recreate_db()
     results = qm.answer_immediate_query('tester@test.com', query_object,
                                         ['test'], subscribe=False)
@@ -67,7 +66,8 @@ def test_answer_immediate_query():
 
 @attr('nonpublic')
 def test_answer_get_registered_queries():
-    qm = QueryManager(db_name='test')
+    db = _get_test_db()
+    qm = QueryManager(db=db)
     qm._recreate_db()
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
@@ -89,7 +89,8 @@ def test_is_diff():
 
 @attr('nonpublic')
 def test_report_one_query():
-    qm = QueryManager(db_name='test')
+    db = _get_test_db()
+    qm = QueryManager(db=db)
     # Using results from db
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
@@ -118,7 +119,8 @@ def test_report_one_query():
 
 @attr('nonpublic')
 def test_report_files():
-    qm = QueryManager(db_name='test')
+    db = _get_test_db()
+    qm = QueryManager(db=db)
     qm._recreate_db()
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
