@@ -3,7 +3,7 @@ import random
 
 from nose.plugins.attrib import attr
 
-from emmaa.db import get_db, Query, Result
+from emmaa.db import Query, Result, EmmaaDatabaseManager
 from emmaa.queries import Query as QueryObject, PathProperty
 
 
@@ -18,9 +18,8 @@ test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
 test_queries = [QueryObject._from_json(qj) for qj in test_query_jsons]
 
 
-@attr('nonpublic')
-def _test_db():
-    db = get_db('test')
+def _get_test_db():
+    db = EmmaaDatabaseManager('postgresql://postgres:@localhost/emmaadb_test')
     db.drop_tables(force=True)
     db.create_tables()
     return db
@@ -28,14 +27,14 @@ def _test_db():
 
 @attr('nonpublic')
 def test_instantiation():
-    db = _test_db()
+    db = _get_test_db()
     assert db
     return
 
 
 @attr('nonpublic')
 def test_put_queries():
-    db = _test_db()
+    db = _get_test_db()
     db.put_queries('joshua', test_queries[0], ['aml', 'luad'])
     with db.get_session() as sess:
         queries = sess.query(Query).all()
@@ -44,7 +43,7 @@ def test_put_queries():
 
 @attr('nonpublic')
 def test_get_queries():
-    db = _test_db()
+    db = _get_test_db()
     for query in test_queries:
         db.put_queries('joshua', query, ['aml', 'luad'])
     queries = db.get_queries('aml')
@@ -58,7 +57,7 @@ def _get_random_result():
 
 @attr('nonpublic')
 def test_put_results():
-    db = _test_db()
+    db = _get_test_db()
     db.put_queries('joshua', test_queries[0], ['aml', 'luad'])
     queries = db.get_queries('aml')
     results = [(query, _get_random_result())
@@ -71,7 +70,7 @@ def test_put_results():
 
 @attr('nonpublic')
 def test_get_results():
-    db = _test_db()
+    db = _get_test_db()
     models = ['aml', 'luad']
 
     # Fill up the database.
@@ -92,7 +91,7 @@ def test_get_results():
 
 @attr('nonpublic')
 def test_get_latest_results():
-    db = _test_db()
+    db = _get_test_db()
     models = ['aml', 'luad']
 
     # Fill up the database.

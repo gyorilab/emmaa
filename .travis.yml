@@ -4,10 +4,20 @@ cache:
     - $HOME/.cache/pip
 python:
   - "3.6"
+services:
+  - postgresql
+addons:
+  postgresql: "9.6"
+  apt:
+    packages:
+      - libssl1.0.0
 install:
   - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
   - pip install .[test]
+before_script:
+  # Create a test database.
+  - psql -c 'create database emmaadb_test;' -U postgres
 script:
   - export AWS_DEFAULT_REGION='us-east-1'
   - export NOSEATTR="!notravis";

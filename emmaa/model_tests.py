@@ -385,7 +385,7 @@ def save_model_manager_to_s3(model_name, model_manager):
 
 def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
                             upload_results=True, upload_stats=True,
-                            registered_queries=True, db_name='primary'):
+                            registered_queries=True, db=None):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -410,6 +410,8 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     registered_queries : Optional[bool]
         If True, registered queries are fetched from the database and
         executed, the results are then saved to the database. Default: True
+    db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
+        If given over-rides the default primary database.
 
     Returns
     -------
@@ -440,11 +442,11 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     tr = TestRound(results_json_dict)
     sg = StatsGenerator(model_name, latest_round=tr)
     sg.make_stats()
-    stats_json_dict = sg.json_stats
+
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
     if registered_queries:
-        qm = QueryManager(db_name=db_name, model_managers=[mm])
+        qm = QueryManager(db=db, model_managers=[mm])
         qm.answer_registered_queries(model_name)
     return (mm, sg)

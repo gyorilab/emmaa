@@ -6,6 +6,9 @@ from emmaa.model_tests import (StatementCheckingTest, run_model_tests_from_s3,
                                load_tests_from_s3, ModelManager)
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
 
+from emmaa.tests.test_db import _get_test_db
+
+
 # Tell nose to not run tests in the imported modules
 StatementCheckingTest.__test__ = False
 run_model_tests_from_s3.__test__ = False
@@ -23,10 +26,11 @@ def test_load_tests_from_s3():
 
 @attr('nonpublic')
 def test_run_tests_from_s3():
+    db = _get_test_db()
     (mm, sg) = run_model_tests_from_s3(
         'test', 'simple_model_test.pkl', upload_mm=False,
         upload_results=False, upload_stats=False, registered_queries=False,
-        db_name='test')
+        db=db)
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
     assert isinstance(mm.model_checker, ModelChecker)
