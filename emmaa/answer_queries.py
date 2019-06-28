@@ -3,8 +3,6 @@ import pickle
 from datetime import datetime
 from emmaa.util import get_s3_client, make_date_str
 from emmaa.db import get_db
-from emmaa.queries import Query
-from indra.statements.statements import Statement
 
 
 logger = logging.getLogger(__name__)

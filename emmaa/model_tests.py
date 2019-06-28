@@ -442,7 +442,7 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
     tr = TestRound(results_json_dict)
     sg = StatsGenerator(model_name, latest_round=tr)
     sg.make_stats()
-    stats_json_dict = sg.json_stats
+
     # Optionally upload statistics to S3
     if upload_stats:
         sg.save_to_s3()
