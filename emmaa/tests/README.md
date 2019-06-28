@@ -7,7 +7,14 @@ files and functions.
 ## Test Database
 Some tests require access to a database to test the part of the EMMAA framework
 that relies on postgres database storage. To set this database up locally, you
-must first install postgres:
+must first install postgres and then create a database called `emmaadb_test`.
+
+On Mac, download and install the postgres app:
+https://postgresapp.com/downloads.html, then launch the app, and click
+Initialize. You can then run `createdb emmaadb_test` in the terminal to create
+the test database.
+
+On Linux, start by installing postgres:
 
 ```bash
 sudo apt-get update
