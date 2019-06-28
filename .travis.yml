@@ -17,9 +17,7 @@ install:
   - pip install .[test]
 before_script:
   # Create a test database.
-  - psql -c 'create database travis_db_test;' -U postgres
-  - psql -c 'CREATE extension tablefunc;' -U postgres
-  - export INDRADBTEST="postgresql://postgres:@localhost/emmaadb_test"
+  - psql -c 'create database emmaadb_test;' -U postgres
 script:
   - export AWS_DEFAULT_REGION='us-east-1'
   - export NOSEATTR="!notravis";
