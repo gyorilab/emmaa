@@ -14,11 +14,10 @@ sudo apt-get update
 sudo apt-get install postgresql
 ```
 
-You should then go the the host-based authentication (HBA) config file: 
-`pg_hba.conf`. For me, this is located at 
-`/etc/postgresql/<version>/main/pg_hba.conf`. For the sake of this test setup
-you should got to the bottom where you see several lines of the form:
-
+You should then edit the the host-based authentication (HBA) config file:
+`pg_hba.conf`, which will likely require `sudo`. For me, this file is located
+at `/etc/postgresql/<version>/main/pg_hba.conf`. For the sake of this test
+setup you should got to the bottom where you see several lines of the form:
 ```
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             postgres                                peer
