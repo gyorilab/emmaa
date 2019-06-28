@@ -22,11 +22,11 @@ setup you should got to the bottom where you see several lines of the form:
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 local   all             postgres                                peer
 ```
-And you should change it to look as it does above, changing what is likely 
-`peer` in the `METHOD` section to be `trust`. *Note that you should **not** do
-this when the database could be exposed to the outside or multiple users may be
-using the same machine*. After changing the file, you will need to reboot your
-computer.
+Change `peer` or `md5` in the `METHOD` section to be `trust`. This will allow
+you to access the test databases without a password. *Note that you should
+**not** do this when the database could be exposed to the outside or multiple
+users may be using the same machine*. After changing the file, you will need to
+reboot your computer.
 
 Once that is done, you can create the test database that EMMAA uses:
 `emmaadb_test` by entering the following command:
