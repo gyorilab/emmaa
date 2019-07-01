@@ -12,21 +12,17 @@ must first install postgres and then create a database called `emmaadb_test`.
 ### Instructions for Mac
 On Mac, download and install the postgres app:
 https://postgresapp.com/downloads.html, then launch the app, and click
-Initialize. You can then run `createdb emmaadb_test` in the terminal to create
-the test database. If you get `bash: createdb: command not found` error, try
-running the command using the absolute path:
+Initialize. Make sure you open a new terminal and run `createdb emmaadb_test`
+to create the test database. If you get `bash: createdb: command not found`
+error, try running the command using the absolute path:
 
 ```bash
 /Applications/Postgres.app/Contents/Versions/latest/bin/createdb emmaadb_test
 ```
 
-Alternatively, you can export the `$PATH` variable in you terminal or in your
-`.bash_profile` file and then run `createdb emmaadb_test`.
-After this is done, you should be able to run the tests. If you get 
-`psql: FATAL: role “postgres” does not exist` error when running the tests, run:
-```bash
-/Applications/Postgres.app/Contents/Versions/latest/bin/createuser -s postgres
-```
+or export the `$PATH` variable in you `.bash_profile` file and then run 
+`createdb emmaadb_test` in the new terminal.
+After this is done, you should be able to run the tests.
 
 ### Instructions for Linux
 On Linux, start by installing postgres:
