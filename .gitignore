@@ -110,3 +110,4 @@ venv.bak/
 # Outputs of tests
 emmaa/tests/test_query_delta.txt
 emmaa/tests/test_query_delta.html
+emmaa/tests/new_test_query_delta.txt
