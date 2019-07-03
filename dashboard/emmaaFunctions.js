@@ -11,11 +11,12 @@ var EMMMAA_BUCKET = 'emmaa';
 var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
                     'brca',     // Breast Cancer
                     'luad',     // Lung adenocarcinoma
+                    'marm_model', // MARM
                     'paad',     // Pancreas adenocarcinoma
                     'prad',     // Prostate adenocarcinoma
-                    'skcm',     // Skin cutaneous melanoma
                     'rasmodel', // RasModel
                     'rasmachine', // Ras Machine
+                    'skcm',     // Skin cutaneous melanoma
                     'test']     // TestModel (only three nodes/two edges)
 
 function grabPlainText (url, callback) {
@@ -442,15 +443,10 @@ function modelsLastUpdated(keyMapArray, endsWith) {
 
 function getModels(findModel, keyMapArray, endsWith) {
   // console.log('function getModels(findModel, keyMapArray, endsWith)')
-  var models = {'aml': [],
-                'brca': [],
-                'luad': [],
-                'paad': [],
-                'prad': [],
-                'skcm': [],
-                'rasmodel': [],
-                'rasmachine': [],
-                'test': []}
+  var models = {}
+  for (m of MODELS_ARRAY) {
+    models[m] = []
+  }
   for (keyItem of keyMapArray) {
     if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
       let model = keyItem.Key.split('/')[1]
