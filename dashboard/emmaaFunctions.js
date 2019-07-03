@@ -45,22 +45,30 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
   }
 
   endsWith = '.json';
-  maxKeys = 1000;  resultsPrefix = 'stats';
-  modelsPrefix = 'models';
+  maxKeys = MAX_KEYS;
+  resultsPrefix = 'stats';
   let s3Interface = new AWS.S3();
 
   // List model info
-  loadModelMetaData(modelInfoTableBody, EMMMAA_BUCKET, model, maxKeys, modelsPrefix, '.pkl')
+  loadModelMetaData(modelInfoTableBody, EMMMAA_BUCKET, model, maxKeys, '.pkl')
 
   // Pass tables, model and mode to function that lists the latest tests
   listObjectsInBucketUnAuthenticated('listModelTests', listTestResultsTableBody, testResultTableBody, s3Interface, EMMMAA_BUCKET, model, resultsPrefix, maxKeys, endsWith)
 }
 
-function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith) {
-  // console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
+function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
+  console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
   // wrapper function that can be called selectModel or from pageload of models.html
+
+  // Prefix needs to be precise enough that fewer than 1000 objects are returned
+  // example: models/aml/model_2018-12-13-18-11-54.pkl
+  let today = new Date();
+  let currentYear = today.toISOString().slice(0,4);
+  let s3Prefix = 'models/' + model + '/model_' + currentYear;
+  console.log('s3Prefix: ');
+  console.log(s3Prefix);
   // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
-  listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, prefix, maxKeys, endsWith)
+  listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, s3Prefix, maxKeys, endsWith)
 }
 
 function clearTables(arrayOfTableBodys) {
@@ -377,11 +385,9 @@ function listModelInfo(modelInfoTableBody, keyMapArray, bucket, model, endsWith)
   // 3. Possibly listing nodes and edges info (Q: from where? A: From the json files that don't exist yet)
 
   // Get an array of the models for model
-  modelsMapArray = getModels(model, keyMapArray, endsWith)
-  // console.log('modelsMapArray')
-  // console.log(modelsMapArray)
-  clearTable(modelInfoTableBody)
-  var lastUpdated = ''
+  modelsMapArray = getModels(model, keyMapArray, endsWith);
+  clearTable(modelInfoTableBody);
+  var lastUpdated = '';
   if (modelsMapArray[model].sort()[modelsMapArray[model].length - 1].includes('_')) {
     lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
   } else {
