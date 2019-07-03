@@ -162,12 +162,14 @@ class ModelManager(object):
                     (query, self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
-        self.get_im(applicable_stmts)
-        results = self.model_checker.check_model()
-        for ix, (_, result) in enumerate(results):
-            responses.append(
-                (applicable_queries[ix],
-                 self.process_response(result)))
+        # Only do the following steps if there are applicable queries
+        if applicable_queries:
+            self.get_im(applicable_stmts)
+            results = self.model_checker.check_model()
+            for ix, (_, result) in enumerate(results):
+                responses.append(
+                    (applicable_queries[ix],
+                     self.process_response(result)))
         return responses
 
     def _get_test_configs(self):

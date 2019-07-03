@@ -95,11 +95,13 @@ def get_queryable_stmt_types():
     return stmt_types
 
 
-def _make_query(query_dict):
+def _make_query(query_dict, use_grouding_service=True):
     stmt_type = query_dict['typeSelection']
     stmt_class = get_statement_by_name(stmt_type)
-    subj = get_agent_from_text(query_dict['subjectSelection'], True)
-    obj = get_agent_from_text(query_dict['objectSelection'], True)
+    subj = get_agent_from_text(
+        query_dict['subjectSelection'], use_grouding_service)
+    obj = get_agent_from_text(
+        query_dict['objectSelection'], use_grouding_service)
     stmt = stmt_class(subj, obj)
     query = PathProperty(path_stmt=stmt)
     return query
@@ -152,7 +154,6 @@ def process_query():
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
              f'not {expected_query_keys}')
-        query = _make_query(query_json)
         models = set(request.json.get('models'))
         assert models < expceted_models, \
             f'Got unexpected models: {models - expceted_models}'
@@ -160,6 +161,12 @@ def process_query():
         logger.exception(e)
         logger.error("Invalid query!")
         abort(Response(f'Invalid request: {str(e)}', 400))
+    try:
+        query = _make_query(query_json)
+    except GroundingError as e:
+        logger.exception(e)
+        logger.error("Invalid grounding!")
+        abort(Response(f'Invalid entity: {str(e)}', 400))
 
     is_test = 'test' in request.json or 'test' == request.json.get('tag')
 
@@ -169,13 +176,8 @@ def process_query():
 
     else:
         logger.info('Query submitted')
-        try:
-            result = qm.answer_immediate_query(
-                user_email, query, models, subscribe)
-        except GroundingError as e:
-            logger.exception(e)
-            logger.error("Invalid grounding!")
-            abort(Response(f'Invalid entity: {str(e)}', 400))
+        result = qm.answer_immediate_query(
+            user_email, query, models, subscribe)
         logger.info('Answer to query received, responding to client.')
         res = {'result': result}
 

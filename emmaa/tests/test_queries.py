@@ -1,5 +1,6 @@
 import json
 import os
+from os.path import abspath, dirname, join
 from nose.plugins.attrib import attr
 from indra.statements import Phosphorylation, Agent
 from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
@@ -8,7 +9,8 @@ from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
 
 
 def test_path_property_from_json():
-    with open('path_property_query.json', 'r') as f:
+    query_file = join(dirname(abspath(__file__)), 'path_property_query.json')
+    with open(query_file, 'r') as f:
         json_dict = json.load(f)
     query = Query._from_json(json_dict)
     assert query

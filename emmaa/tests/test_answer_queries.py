@@ -1,3 +1,4 @@
+from os.path import abspath, dirname, join
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
@@ -128,7 +129,8 @@ def test_report_files():
     results = qm.db.get_results('tester@test.com', latest_order=1)
     qm.make_str_report_per_user(results,
                                 filename='test_query_delta.txt')
-    with open('test_query_delta.txt', 'r') as f:
+    report_file = join(dirname(abspath(__file__)), 'test_query_delta.txt')
+    with open(report_file, 'r') as f:
         msg = f.read()
     assert msg
     assert 'This is the first result to query' in msg, msg
@@ -136,8 +138,10 @@ def test_report_files():
     qm.db.put_results('test', [(query_object, test_response)])
     results = qm.db.get_results('tester@test.com', latest_order=1)
     qm.make_str_report_per_user(results,
-                                filename='test_query_delta.txt')
-    with open('test_query_delta.txt', 'r') as f:
+                                filename='new_test_query_delta.txt')
+    new_report_file = join(dirname(abspath(__file__)),
+                           'new_test_query_delta.txt')
+    with open(new_report_file, 'r') as f:
         msg = f.read()
     assert msg
     assert 'A new result to query' in msg
