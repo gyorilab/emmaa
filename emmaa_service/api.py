@@ -25,7 +25,7 @@ EMMAA = path.join(HERE, path.pardir)
 DASHBOARD = path.join(EMMAA, 'dashboard')
 
 
-qm = QueryManager('primary')
+qm = QueryManager()
 
 
 # Create a template object from the template file, load once
