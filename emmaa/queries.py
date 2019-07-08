@@ -223,8 +223,8 @@ def get_agent_from_grounding_service(ag_name, url):
     rj = res.json()
     if not rj:
         raise GroundingError(f"Could not find grounding for {ag_name}.")
-    agent = Agent(name=rj[0]['entry']['entry_name'],
-                  db_refs={rj[0]['entry']['db']: rj[0]['entry']['id']})
+    agent = Agent(name=rj[0]['term']['entry_name'],
+                  db_refs={rj[0]['term']['db']: rj[0]['term']['id']})
     return agent
 
 
