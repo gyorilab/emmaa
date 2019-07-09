@@ -110,7 +110,8 @@ class TestRound(object):
         """Return a dictionary mapping a statement and its English description."""
         stmts_by_hash = {}
         for stmt in self.statements:
-            stmts_by_hash[str(stmt.get_hash(refresh=True))] = self.get_english_statement(stmt)
+            stmts_by_hash[str(stmt.get_hash(refresh=True))] = (
+                self.get_english_statement(stmt))
         return stmts_by_hash
 
     def get_english_statement(self, stmt):
