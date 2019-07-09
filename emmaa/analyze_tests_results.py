@@ -74,7 +74,7 @@ class TestRound(object):
 
     def get_stmt_hashes(self):
         """Return a list of hashes for all statements in a model."""
-        return [str(stmt.get_hash()) for stmt in self.statements]
+        return [str(stmt.get_hash(refresh=True)) for stmt in self.statements]
 
     def get_statement_types(self):
         """Return a sorted list of tuples containing a statement type and a
@@ -102,7 +102,7 @@ class TestRound(object):
         number of times this statement occured in a model."""
         stmts_evidence = {}
         for stmt in self.statements:
-            stmts_evidence[str(stmt.get_hash())] = len(stmt.evidence)
+            stmts_evidence[str(stmt.get_hash(refresh=True))] = len(stmt.evidence)
         logger.info('Sorting statements by evidence count.')
         return sorted(stmts_evidence.items(), key=lambda x: x[1], reverse=True)
 
@@ -110,7 +110,8 @@ class TestRound(object):
         """Return a dictionary mapping a statement and its English description."""
         stmts_by_hash = {}
         for stmt in self.statements:
-            stmts_by_hash[str(stmt.get_hash())] = self.get_english_statement(stmt)
+            stmts_by_hash[str(stmt.get_hash(refresh=True))] = (
+                self.get_english_statement(stmt))
         return stmts_by_hash
 
     def get_english_statement(self, stmt):
@@ -165,7 +166,7 @@ class TestRound(object):
                 return 'Fail'
 
         for ix, test in enumerate(self.tests):
-            test_hash = str(test.get_hash())
+            test_hash = str(test.get_hash(refresh=True))
             result = self.test_results[ix]
             tests_by_hash[test_hash] = [
                 self.get_english_statement(test),
@@ -190,7 +191,7 @@ class TestRound(object):
                         link_str = f'<a href="{link}">{sentence}</a>'
                         links.append(link_str)
                     paths.append(links)
-                    english_paths[str(self.tests[ix].get_hash())] = paths
+                    english_paths[str(self.tests[ix].get_hash(refresh=True))] = paths
         return english_paths
 
     def get_english_codes(self):
@@ -200,7 +201,7 @@ class TestRound(object):
         english_codes = {}
         for ix, result in enumerate(self.test_results):
             (sentence, link) = self.json_results[ix+1]['english_code'][0][0]
-            english_codes[str(self.tests[ix].get_hash())] = (
+            english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
                 [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
 
