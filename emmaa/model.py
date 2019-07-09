@@ -125,16 +125,16 @@ class EmmaaModel(object):
 
     def extend_unique(self, estmts):
         """Extend model statements only if it is not already there."""
-        source_hashes = {est.stmt.get_hash(shallow=False)
+        source_hashes = {est.stmt.get_hash(shallow=False, refresh=True)
                          for est in self.stmts}
         for estmt in estmts:
-            if estmt.stmt.get_hash(shallow=False) not in source_hashes:
+            if estmt.stmt.get_hash(shallow=False, refresh=True) not in source_hashes:
                 self.stmts.append(estmt)
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
         logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
-        self.stmts = list({estmt.stmt.get_hash(shallow=False): estmt
+        self.stmts = list({estmt.stmt.get_hash(shallow=False, refresh=True): estmt
                            for estmt in self.stmts}.values())
         logger.info(('Continuing with %d raw EmmaaStatements'
                      ' that are not exact copies') % len(self.stmts))
