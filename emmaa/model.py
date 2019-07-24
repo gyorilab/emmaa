@@ -4,7 +4,7 @@ import pickle
 import logging
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
-from indra.literature import pubmed_client
+from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.mechlinker import MechLinker
@@ -46,6 +46,7 @@ class EmmaaModel(object):
         self.stmts = []
         self.assembly_config = {}
         self.test_config = {}
+        self.reading_config = {}
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
@@ -79,6 +80,8 @@ class EmmaaModel(object):
             self.ndex_network = config['ndex']['network']
         else:
             self.ndex_network = None
+        if 'reading' in config:
+            self.reading_config = config['reading']
         if 'assembly' in config:
             self.assembly_config = config['assembly']
         if 'test' in config:
@@ -94,25 +97,49 @@ class EmmaaModel(object):
 
         Returns
         -------
-        pmid_to_terms : dict
-            A dict representing all the PMIDs returned by the searches as keys,
-            and the search terms for which the given PMID was produced as
+        ids_to_terms : dict
+            A dict representing all the literature source IDs (e.g.,
+            PMIDs or PIIS) returned by the searches as keys,
+            and the search terms for which the given ID was produced as
             values.
         """
-        term_to_pmids = {}
-        for term in self.search_terms:
+        lit_source = self.reading_config.get('literature_source')
+        if not lit_source or lit_source == 'pubmed':
+            terms_to_ids = self.search_pubmed(self.search_terms, date_limit)
+        elif lit_source == 'elsevier':
+            terms_to_ids = self.search_elsevier(self.search_terms, date_limit)
+        else:
+            raise ValueError('Unknown literature source: %s' % lit_source)
+        ids_to_terms = {}
+        for term, ids in terms_to_ids.items():
+            for id in ids:
+                try:
+                    ids_to_terms[id].append(term)
+                except KeyError:
+                    ids_to_terms[id] = [term]
+        return ids_to_terms
+
+    @staticmethod
+    def search_pubmed(search_terms, date_limit):
+        terms_to_pmids = {}
+        for term in search_terms:
             pmids = pubmed_client.get_ids(term.search_term, reldate=date_limit)
             logger.info(f'{len(pmids)} PMIDs found for {term.search_term}')
-            term_to_pmids[term] = pmids
+            terms_to_pmids[term] = pmids
             time.sleep(0.5)
-        pmid_to_terms = {}
-        for term, pmids in term_to_pmids.items():
-            for pmid in pmids:
-                try:
-                    pmid_to_terms[pmid].append(term)
-                except KeyError:
-                    pmid_to_terms[pmid] = [term]
-        return pmid_to_terms
+        return terms_to_pmids
+
+    @staticmethod
+    def search_elsevier(search_terms, date_limit):
+        # TODO: see if get_piis_for_date can be made more specific to only
+        #  search for the given date limit
+        terms_to_piis = {}
+        for term in search_terms:
+            piis = elsevier_client.get_piis_for_date(term.search_term,
+                                                     date='2019')
+            logger.info(f'{len(piis)} PIIs found for {term.search_term}')
+            terms_to_piis[term] = piis
+        return terms_to_piis
 
     def get_new_readings(self, run_reading=False, date_limit=10):
         """Search new literature, read, and add to model statements"""
