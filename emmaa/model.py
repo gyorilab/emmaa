@@ -11,6 +11,8 @@ from indra.mechlinker import MechLinker
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
+from emmaa.readers.elsevier_eidos_reader import \
+    read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client
 
 
@@ -103,8 +105,8 @@ class EmmaaModel(object):
             and the search terms for which the given ID was produced as
             values.
         """
-        lit_source = self.reading_config.get('literature_source')
-        if not lit_source or lit_source == 'pubmed':
+        lit_source = self.reading_config.get('literature_source', 'pubmed')
+        if lit_source == 'pubmed':
             terms_to_ids = self.search_pubmed(self.search_terms, date_limit)
         elif lit_source == 'elsevier':
             terms_to_ids = self.search_elsevier(self.search_terms, date_limit)
@@ -141,13 +143,19 @@ class EmmaaModel(object):
             terms_to_piis[term] = piis
         return terms_to_piis
 
-    def get_new_readings(self, run_reading=False, date_limit=10):
+    def get_new_readings(self, date_limit=10):
         """Search new literature, read, and add to model statements"""
-        pmid_to_terms = self.search_literature(date_limit=date_limit)
-        if run_reading:
-            estmts = read_pmid_search_terms(pmid_to_terms)
+        reader = self.reading_config.get('reader', 'indra_db')
+        ids_to_terms = self.search_literature(date_limit=date_limit)
+        if reader == 'aws':
+            estmts = read_pmid_search_terms(ids_to_terms)
+        elif reader == 'indra_db':
+            estmts = read_db_pmid_search_terms(ids_to_terms)
+        elif reader == 'elsevier_eidos':
+            estmts = read_elsevier_eidos_search_terms(ids_to_terms)
         else:
-            estmts = read_db_pmid_search_terms(pmid_to_terms)
+            raise ValueError('Unknown reader: %s' % reader)
+
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
