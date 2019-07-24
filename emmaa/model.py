@@ -181,6 +181,9 @@ class EmmaaModel(object):
         stmts = self.get_indra_stmts()
         stmts = ac.filter_no_hypothesis(stmts)
         stmts = ac.map_grounding(stmts)
+        # TODO: standardize names based on UN ontology in a way that matches
+        #  the name entries of search terms
+        # TODO: add configuration for scored grounding filter
         if self.assembly_config.get('filter_ungrounded'):
             stmts = ac.filter_grounded_only(stmts)
         relevance_policy = self.assembly_config.get('filter_relevance')
@@ -188,6 +191,7 @@ class EmmaaModel(object):
             stmts = self.filter_relevance(stmts, relevance_policy)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
+        # TODO: configure preassembly to WM ontology and belief scorer
         stmts = ac.run_preassembly(stmts, return_toplevel=False)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
@@ -233,6 +237,7 @@ class EmmaaModel(object):
         """Update assembled model as CX on NDEx, updates existing network."""
         if not self.assembled_stmts:
             self.run_assembly()
+        # TODO: does CX assembler handle Influences?
         cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
         cxa.make_model()
         cx_str = cxa.print_cx()
