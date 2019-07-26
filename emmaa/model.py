@@ -9,6 +9,9 @@ from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.mechlinker import MechLinker
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.preassembler import Preassembler
+from indra.belief.wm_scorer import get_eidos_scorer
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -185,16 +188,35 @@ class EmmaaModel(object):
         stmts = ac.map_grounding(stmts)
         # TODO: standardize names based on UN ontology in a way that matches
         #  the name entries of search terms
+        if self.assembly_config.get('standardize_names'):
+            ac.standardize_names_groundings(stmts)
         # TODO: add configuration for scored grounding filter
         if self.assembly_config.get('filter_ungrounded'):
-            stmts = ac.filter_grounded_only(stmts)
+            score_threshold = self.assembly_config.get('score_threshold')
+            if score_threshold:
+                stmts = ac.filter_grounded_only(
+                    stmts, score_threshold=score_threshold)
+            else:
+                stmts = ac.filter_grounded_only(stmts)
+        if self.assembly_config.get('merge_groundings'):
+            stmts = ac.merge_groundings(stmts)
+        if self.assembly_config.get('merge_deltas'):
+            stmts = ac.merge_deltas(stmts)
         relevance_policy = self.assembly_config.get('filter_relevance')
         if relevance_policy:
             stmts = self.filter_relevance(stmts, relevance_policy)
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
         # TODO: configure preassembly to WM ontology and belief scorer
-        stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        preassembly_type = self.assembly_config.get('type', 'bio')
+        if preassembly_type == 'wm':
+            hierarchies = get_wm_hierarchies()
+            belief_scorer = get_eidos_scorer()
+            stmts = ac.run_preassembly(
+                stmts, return_toplevel=False, belief_scorer=belief_scorer,
+                hierarchies=hierarchies)
+        else:
+            stmts = ac.run_preassembly(stmts, return_toplevel=False)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
