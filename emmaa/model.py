@@ -184,8 +184,10 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
+        model_type = self.assembly_config.get('type', 'bio')
         stmts = ac.filter_no_hypothesis(stmts)
-        stmts = ac.map_grounding(stmts)
+        if model_type == 'bio':
+            stmts = ac.map_grounding(stmts)
         # TODO: standardize names based on UN ontology in a way that matches
         #  the name entries of search terms
         if self.assembly_config.get('standardize_names'):
@@ -208,8 +210,7 @@ class EmmaaModel(object):
         stmts = ac.filter_human_only(stmts)
         stmts = ac.map_sequence(stmts)
         # TODO: configure preassembly to WM ontology and belief scorer
-        preassembly_type = self.assembly_config.get('type', 'bio')
-        if preassembly_type == 'wm':
+        if model_type == 'wm':
             hierarchies = get_wm_hierarchies()
             belief_scorer = get_eidos_scorer()
             stmts = ac.run_preassembly(
