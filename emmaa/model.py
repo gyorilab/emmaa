@@ -184,22 +184,15 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
-        model_type = self.assembly_config.get('type', 'bio')
         stmts = ac.filter_no_hypothesis(stmts)
-        if model_type == 'bio':
+        if not self.assembly_config.get('skip_map_grounding'):
             stmts = ac.map_grounding(stmts)
-        # TODO: standardize names based on UN ontology in a way that matches
-        #  the name entries of search terms
         if self.assembly_config.get('standardize_names'):
             ac.standardize_names_groundings(stmts)
-        # TODO: add configuration for scored grounding filter
         if self.assembly_config.get('filter_ungrounded'):
             score_threshold = self.assembly_config.get('score_threshold')
-            if score_threshold:
-                stmts = ac.filter_grounded_only(
-                    stmts, score_threshold=score_threshold)
-            else:
-                stmts = ac.filter_grounded_only(stmts)
+            stmts = ac.filter_grounded_only(
+                stmts, score_threshold=score_threshold)
         if self.assembly_config.get('merge_groundings'):
             stmts = ac.merge_groundings(stmts)
         if self.assembly_config.get('merge_deltas'):
@@ -207,10 +200,13 @@ class EmmaaModel(object):
         relevance_policy = self.assembly_config.get('filter_relevance')
         if relevance_policy:
             stmts = self.filter_relevance(stmts, relevance_policy)
-        stmts = ac.filter_human_only(stmts)
-        stmts = ac.map_sequence(stmts)
-        # TODO: configure preassembly to WM ontology and belief scorer
-        if model_type == 'wm':
+        if not self.assembly_config.get('skip_filter_human'):
+            stmts = ac.filter_human_only(stmts)
+        if not self.assembly_config.get('skip_map_sequence'):
+            stmts = ac.map_sequence(stmts)
+        # Use WM hierarchies and belief scorer for WM preassembly
+        preassembly_mode = self.assembly_config.get('preassembly_mode')
+        if preassembly_mode == 'wm':
             hierarchies = get_wm_hierarchies()
             belief_scorer = get_eidos_scorer()
             stmts = ac.run_preassembly(
