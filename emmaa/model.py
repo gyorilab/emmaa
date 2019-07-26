@@ -2,6 +2,7 @@ import json
 import time
 import pickle
 import logging
+import datetime
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client, elsevier_client
@@ -133,12 +134,13 @@ class EmmaaModel(object):
 
     @staticmethod
     def search_elsevier(search_terms, date_limit):
-        # TODO: see if get_piis_for_date can be made more specific to only
-        #  search for the given date limit
+        start_date = (
+            datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
+        start_date = start_date.isoformat(timespec='seconds') + 'Z'
         terms_to_piis = {}
         for term in search_terms:
-            piis = elsevier_client.get_piis_for_date(term.search_term,
-                                                     date='2019')
+            piis = elsevier_client.get_piis_for_date(
+                term.search_term, loaded_after=start_date)
             logger.info(f'{len(piis)} PIIs found for {term.search_term}')
             terms_to_piis[term] = piis
         return terms_to_piis
