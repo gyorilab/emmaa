@@ -385,7 +385,7 @@ def save_model_manager_to_s3(model_name, model_manager):
                       Key=f'results/{model_name}/latest_model_manager.pkl')
 
 
-def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
+def run_model_tests_from_s3(model_name, upload_mm=True,
                             upload_results=True, upload_stats=True,
                             registered_queries=True, db=None):
     """Run a given set of tests on a given model, both loaded from S3.
@@ -424,7 +424,8 @@ def run_model_tests_from_s3(model_name, test_name, upload_mm=True,
         Instance of StatsGenerator containing statistics about model and test.
     """
     model = EmmaaModel.load_from_s3(model_name)
-    tests = load_tests_from_s3(test_name)
+    test_corpus = model.test_config.get('test_corpus', 'large_corpus_tests.pkl')
+    tests = load_tests_from_s3(test_corpus)
     mm = ModelManager(model)
     if upload_mm:
         save_model_manager_to_s3(model_name, mm)
