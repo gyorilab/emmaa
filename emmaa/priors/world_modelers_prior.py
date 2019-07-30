@@ -33,8 +33,8 @@ def make_config(search_terms, human_readable_name, description,
     config['search_terms'] = [st.to_json() for st in search_terms]
     config['test'] = {'statement_checking': {
                       'max_path_length': 5,
-                      'max_paths': 1}}
-    config['test_corpus'] = 'world_modelers_tests.pkl'
+                      'max_paths': 1},
+                      'test_corpus': 'world_modelers_tests.pkl'}
     config['assembly'] = {'skip_map_grounding': True,
                           'skip_filter_human': True,
                           'skip_map_sequence': True,
