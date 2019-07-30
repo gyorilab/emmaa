@@ -12,6 +12,7 @@ from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler import Preassembler
 from indra.belief.wm_scorer import get_eidos_scorer
+from indra.statements import Association
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -184,6 +185,7 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
+        stmts = self.filter_associations(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
         if not self.assembly_config.get('skip_map_grounding'):
             stmts = ac.map_grounding(stmts)
@@ -237,6 +239,12 @@ class EmmaaModel(object):
             stmts = ml.statements
 
         self.assembled_stmts = stmts
+
+    def filter_associations(self, stmts):
+        logger.info('Filtering Associations')
+        stmts = [stmt for stmt in stmts if not isinstance(stmt, Association)]
+        logger.info('%d statements after filter...' % len(stmts))
+        return stmts
 
     def filter_relevance(self, stmts, policy=None):
         """Filter a list of Statements to ones matching a search term."""
