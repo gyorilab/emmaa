@@ -25,14 +25,23 @@ def read_elsevier_eidos_search_terms(ids_to_terms):
 def read_piis(piis):
     texts = {}
     for pii in piis:
-        xml = elsevier_client.download_article(pii, id_type='pii')
-        if not xml:
-            logger.info('Could not get article content for %s' % pii)
+        try:
+            xml = elsevier_client.download_article(pii, id_type='pii')
+            if not xml:
+                logger.info('Could not get article content for %s' % pii)
+                continue
+        except Exception as e:
+            logger.info('Could not get article content for %s because of %s'
+                        % (pii, e))
             continue
-        txt = elsevier_client.extract_text(xml)
-        if not txt:
-            logger.info('Could not extract article text for %s' % pii)
-            continue
+        try:
+            txt = elsevier_client.extract_text(xml)
+            if not txt:
+                logger.info('Could not extract article text for %s' % pii)
+                continue
+        except Exception as e:
+            logger.info('Could not extract article text for %s because of %s'
+                        % (pii, e))
         texts[pii] = txt
     logger.info('Got text back for %d articles.' % len(texts))
     return texts
