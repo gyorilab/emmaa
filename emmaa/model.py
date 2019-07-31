@@ -297,7 +297,6 @@ class EmmaaModel(object):
         """Update assembled model as CX on NDEx, updates existing network."""
         if not self.assembled_stmts:
             self.run_assembly()
-        # TODO: does CX assembler handle Influences?
         cxa = CxAssembler(self.assembled_stmts, network_name=self.name)
         cxa.make_model()
         cx_str = cxa.print_cx()
