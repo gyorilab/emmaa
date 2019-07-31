@@ -27,8 +27,7 @@ def make_search_terms(terms, ontology_file):
 def make_config(search_terms, human_readable_name, description,
                 short_name, ndex_network=None, save_to_s3=False):
     config = {}
-    if ndex_network:
-        config['ndex'] = {'network': ndex_network}
+    config['ndex'] = {'network': ndex_network if ndex_network else ''}
     config['human_readable_name'] = human_readable_name
     config['search_terms'] = [st.to_json() for st in search_terms]
     config['test'] = {'statement_checking': {
