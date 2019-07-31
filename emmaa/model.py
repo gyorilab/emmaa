@@ -128,6 +128,21 @@ class EmmaaModel(object):
 
     @staticmethod
     def search_pubmed(search_terms, date_limit):
+        """Search PubMed for given search terms.
+
+        Parameters
+        ----------
+        search_terms : list[emmaa.priors.SearchTerm]
+            A list of SearchTerm objects to search PubMed for.
+        date_limit : int
+            The number of days to search back from today.
+        
+        Returns
+        -------
+        terms_to_pmids : dict
+            A dict representing given search terms as keys and PMIDs returned
+            by searches as values.
+        """
         terms_to_pmids = {}
         for term in search_terms:
             pmids = pubmed_client.get_ids(term.search_term, reldate=date_limit)
@@ -138,6 +153,21 @@ class EmmaaModel(object):
 
     @staticmethod
     def search_elsevier(search_terms, date_limit):
+        """Search Elsevier for given search terms.
+
+        Parameters
+        ----------
+        search_terms : list[emmaa.priors.SearchTerm]
+            A list of SearchTerm objects to search PubMed for.
+        date_limit : int
+            The number of days to search back from today.
+        
+        Returns
+        -------
+        terms_to_piis : dict
+            A dict representing given search terms as keys and PIIs returned
+            by searches as values.
+        """
         start_date = (
             datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
         start_date = start_date.isoformat(timespec='seconds') + 'Z'
@@ -241,6 +271,7 @@ class EmmaaModel(object):
         self.assembled_stmts = stmts
 
     def filter_associations(self, stmts):
+        """Filter a list of Statements to exclude Associations."""
         logger.info('Filtering Associations')
         stmts = [stmt for stmt in stmts if not isinstance(stmt, Association)]
         logger.info('%d statements after filter...' % len(stmts))

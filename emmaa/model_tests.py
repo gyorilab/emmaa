@@ -398,8 +398,6 @@ def run_model_tests_from_s3(model_name, upload_mm=True,
     ----------
     model_name : str
         Name of EmmaaModel to load from S3.
-    test_name : str
-        Name of test file to load from S3.
     upload_mm : Optional[bool]
         Whether to upload a model manager instance to S3 as a pickle file.
         Default: True

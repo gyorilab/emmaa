@@ -3,6 +3,21 @@ from emmaa.model import save_config_to_s3
 
 
 def make_search_terms(terms, ontology_file):
+    """Make SearchTerm objects standardized to a given ontology from terms.
+
+    Parameters
+    ----------
+    terms : list[str]
+        A list of terms corresponding to suffixes of entries in the ontology.
+    ontology_file : str
+        A path to a file containing ontology.
+
+    Returns
+    -------
+    search_terms : set
+        A set of SearchTerm objects constructed from given terms and ontology
+        having standardized names.
+    """
     search_terms = set()
     with open(ontology_file, 'r') as f:
         lines = f.readlines()
@@ -26,6 +41,7 @@ def make_search_terms(terms, ontology_file):
 
 def make_config(search_terms, human_readable_name, description,
                 short_name, ndex_network=None, save_to_s3=False):
+    """Make a config file for WorldModelers models and optionally save to S3."""
     config = {}
     config['ndex'] = {'network': ndex_network if ndex_network else ''}
     config['human_readable_name'] = human_readable_name
