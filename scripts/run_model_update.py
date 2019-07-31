@@ -2,7 +2,7 @@ from emmaa.model import EmmaaModel
 
 
 if __name__ == '__main__':
-    cancer_types = ('paad', 'skcm', 'aml', 'luad', 'prad',
+    cancer_types = ('paad', 'skcm', 'aml', 'luad', 'prad', 'food_insecurity',
                     'rasmachine', 'brca')
 
     for ctype in cancer_types:

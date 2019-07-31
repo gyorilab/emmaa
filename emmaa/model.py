@@ -2,15 +2,22 @@ import json
 import time
 import pickle
 import logging
+import datetime
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
-from indra.literature import pubmed_client
+from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.mechlinker import MechLinker
+from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.preassembler import Preassembler
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.statements import Association
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
+from emmaa.readers.elsevier_eidos_reader import \
+    read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client
 
 
@@ -46,6 +53,7 @@ class EmmaaModel(object):
         self.stmts = []
         self.assembly_config = {}
         self.test_config = {}
+        self.reading_config = {}
         self.search_terms = []
         self.ndex_network = None
         self._load_config(config)
@@ -79,6 +87,8 @@ class EmmaaModel(object):
             self.ndex_network = config['ndex']['network']
         else:
             self.ndex_network = None
+        if 'reading' in config:
+            self.reading_config = config['reading']
         if 'assembly' in config:
             self.assembly_config = config['assembly']
         if 'test' in config:
@@ -94,33 +104,94 @@ class EmmaaModel(object):
 
         Returns
         -------
-        pmid_to_terms : dict
-            A dict representing all the PMIDs returned by the searches as keys,
-            and the search terms for which the given PMID was produced as
+        ids_to_terms : dict
+            A dict representing all the literature source IDs (e.g.,
+            PMIDs or PIIS) returned by the searches as keys,
+            and the search terms for which the given ID was produced as
             values.
         """
-        term_to_pmids = {}
-        for term in self.search_terms:
+        lit_source = self.reading_config.get('literature_source', 'pubmed')
+        if lit_source == 'pubmed':
+            terms_to_ids = self.search_pubmed(self.search_terms, date_limit)
+        elif lit_source == 'elsevier':
+            terms_to_ids = self.search_elsevier(self.search_terms, date_limit)
+        else:
+            raise ValueError('Unknown literature source: %s' % lit_source)
+        ids_to_terms = {}
+        for term, ids in terms_to_ids.items():
+            for id in ids:
+                try:
+                    ids_to_terms[id].append(term)
+                except KeyError:
+                    ids_to_terms[id] = [term]
+        return ids_to_terms
+
+    @staticmethod
+    def search_pubmed(search_terms, date_limit):
+        """Search PubMed for given search terms.
+
+        Parameters
+        ----------
+        search_terms : list[emmaa.priors.SearchTerm]
+            A list of SearchTerm objects to search PubMed for.
+        date_limit : int
+            The number of days to search back from today.
+        
+        Returns
+        -------
+        terms_to_pmids : dict
+            A dict representing given search terms as keys and PMIDs returned
+            by searches as values.
+        """
+        terms_to_pmids = {}
+        for term in search_terms:
             pmids = pubmed_client.get_ids(term.search_term, reldate=date_limit)
             logger.info(f'{len(pmids)} PMIDs found for {term.search_term}')
-            term_to_pmids[term] = pmids
+            terms_to_pmids[term] = pmids
             time.sleep(0.5)
-        pmid_to_terms = {}
-        for term, pmids in term_to_pmids.items():
-            for pmid in pmids:
-                try:
-                    pmid_to_terms[pmid].append(term)
-                except KeyError:
-                    pmid_to_terms[pmid] = [term]
-        return pmid_to_terms
+        return terms_to_pmids
 
-    def get_new_readings(self, run_reading=False, date_limit=10):
+    @staticmethod
+    def search_elsevier(search_terms, date_limit):
+        """Search Elsevier for given search terms.
+
+        Parameters
+        ----------
+        search_terms : list[emmaa.priors.SearchTerm]
+            A list of SearchTerm objects to search PubMed for.
+        date_limit : int
+            The number of days to search back from today.
+        
+        Returns
+        -------
+        terms_to_piis : dict
+            A dict representing given search terms as keys and PIIs returned
+            by searches as values.
+        """
+        start_date = (
+            datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
+        start_date = start_date.isoformat(timespec='seconds') + 'Z'
+        terms_to_piis = {}
+        for term in search_terms:
+            piis = elsevier_client.get_piis_for_date(
+                term.search_term, loaded_after=start_date)
+            logger.info(f'{len(piis)} PIIs found for {term.search_term}')
+            terms_to_piis[term] = piis
+        return terms_to_piis
+
+    def get_new_readings(self, date_limit=10):
         """Search new literature, read, and add to model statements"""
-        pmid_to_terms = self.search_literature(date_limit=date_limit)
-        if run_reading:
-            estmts = read_pmid_search_terms(pmid_to_terms)
+        reader = self.reading_config.get('reader', 'indra_db')
+        ids_to_terms = self.search_literature(date_limit=date_limit)
+        if reader == 'aws':
+            estmts = read_pmid_search_terms(ids_to_terms)
+        elif reader == 'indra_db':
+            estmts = read_db_pmid_search_terms(ids_to_terms)
+        elif reader == 'elsevier_eidos':
+            estmts = read_elsevier_eidos_search_terms(ids_to_terms)
         else:
-            estmts = read_db_pmid_search_terms(pmid_to_terms)
+            raise ValueError('Unknown reader: %s' % reader)
+
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
@@ -144,16 +215,37 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
+        stmts = self.filter_associations(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
-        stmts = ac.map_grounding(stmts)
+        if not self.assembly_config.get('skip_map_grounding'):
+            stmts = ac.map_grounding(stmts)
+        if self.assembly_config.get('standardize_names'):
+            ac.standardize_names_groundings(stmts)
         if self.assembly_config.get('filter_ungrounded'):
-            stmts = ac.filter_grounded_only(stmts)
+            score_threshold = self.assembly_config.get('score_threshold')
+            stmts = ac.filter_grounded_only(
+                stmts, score_threshold=score_threshold)
+        if self.assembly_config.get('merge_groundings'):
+            stmts = ac.merge_groundings(stmts)
+        if self.assembly_config.get('merge_deltas'):
+            stmts = ac.merge_deltas(stmts)
         relevance_policy = self.assembly_config.get('filter_relevance')
         if relevance_policy:
             stmts = self.filter_relevance(stmts, relevance_policy)
-        stmts = ac.filter_human_only(stmts)
-        stmts = ac.map_sequence(stmts)
-        stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        if not self.assembly_config.get('skip_filter_human'):
+            stmts = ac.filter_human_only(stmts)
+        if not self.assembly_config.get('skip_map_sequence'):
+            stmts = ac.map_sequence(stmts)
+        # Use WM hierarchies and belief scorer for WM preassembly
+        preassembly_mode = self.assembly_config.get('preassembly_mode')
+        if preassembly_mode == 'wm':
+            hierarchies = get_wm_hierarchies()
+            belief_scorer = get_eidos_scorer()
+            stmts = ac.run_preassembly(
+                stmts, return_toplevel=False, belief_scorer=belief_scorer,
+                hierarchies=hierarchies)
+        else:
+            stmts = ac.run_preassembly(stmts, return_toplevel=False)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
@@ -177,6 +269,13 @@ class EmmaaModel(object):
             stmts = ml.statements
 
         self.assembled_stmts = stmts
+
+    def filter_associations(self, stmts):
+        """Filter a list of Statements to exclude Associations."""
+        logger.info('Filtering Associations')
+        stmts = [stmt for stmt in stmts if not isinstance(stmt, Association)]
+        logger.info('%d statements after filter...' % len(stmts))
+        return stmts
 
     def filter_relevance(self, stmts, policy=None):
         """Filter a list of Statements to ones matching a search term."""
