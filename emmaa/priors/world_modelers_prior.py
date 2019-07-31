@@ -61,6 +61,7 @@ def make_config(search_terms, human_readable_name, description,
                           'preassembly_mode': 'wm'}
     config['reading'] = {'literature_source': 'elsevier',
                          'reader': 'elsevier_eidos'}
+    config['description'] = description
     if save_to_s3:
-        save_config_to_s3(model_name, config)
+        save_config_to_s3(short_name, config)
     return config
