@@ -12,7 +12,7 @@ from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler import Preassembler
 from indra.belief.wm_scorer import get_eidos_scorer
-from indra.statements import Influence
+from indra.statements import Event, Association
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -136,7 +136,7 @@ class EmmaaModel(object):
             A list of SearchTerm objects to search PubMed for.
         date_limit : int
             The number of days to search back from today.
-        
+
         Returns
         -------
         terms_to_pmids : dict
@@ -161,7 +161,7 @@ class EmmaaModel(object):
             A list of SearchTerm objects to search PubMed for.
         date_limit : int
             The number of days to search back from today.
-        
+
         Returns
         -------
         terms_to_piis : dict
@@ -215,7 +215,7 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
-        stmts = self.filter_stmt_types(stmts)
+        stmts = self.filter_event_association(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
         if not self.assembly_config.get('skip_map_grounding'):
             stmts = ac.map_grounding(stmts)
@@ -270,10 +270,12 @@ class EmmaaModel(object):
 
         self.assembled_stmts = stmts
 
-    def filter_stmt_types(self, stmts):
+    def filter_event_association(self, stmts):
         """Filter a list of Statements to exclude Events and Associations."""
-        logger.info('Filtering Statements that are not Influences.')
-        stmts = [stmt for stmt in stmts if isinstance(stmt, Influence)]
+        logger.info('Filtering Events and Associations.')
+        stmts = [stmt for stmt in stmts if (
+            (not isinstance(stmt, Event)) and
+            (not isinstance(stmt, Association)))]
         logger.info('%d statements after filter...' % len(stmts))
         return stmts
 
