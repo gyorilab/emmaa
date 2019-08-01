@@ -1,5 +1,4 @@
 import requests
-import os
 from inflection import camelize, underscore
 from collections import OrderedDict as _o
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
@@ -171,9 +170,9 @@ def query_cls_from_type(query_type):
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
     """Return an INDRA Agent object."""
-    url = os.environ['GROUNDING_SERVICE_URL']
+    grounding_url = "http://grounding.indra.bio/ground"
     if use_grouding_service:
-        return get_agent_from_grounding_service(ag_name, url)
+        return get_agent_from_grounding_service(ag_name, grounding_url)
     return get_agent_from_local_grounding(ag_name)
 
 
