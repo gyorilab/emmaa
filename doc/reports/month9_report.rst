@@ -3,6 +3,7 @@ ASKE Month 9 Milestone Report
 
 Generalizing EMMAA: a proof-of-principle model of food insecurity
 -----------------------------------------------------------------
+
 Until recently, all models in EMMAA represented molecular mechanisms for a
 given disease or pathway. However, the EMMAA approach can be applied to
 models in other domains. Conceptually, the EMMAA framework is a good fit for
@@ -91,3 +92,47 @@ several challenging aspects of building a good model for this domain.
 
 Extending model testing and analysis to multiple resolutions
 ------------------------------------------------------------
+
+In our Month 6 Milestone Report, we described an initial experiment to
+investigate the value of coarse-grained model testing using simple directed
+graphs. In this reporting period we have extended this concept further by
+developing a generalized framework for model checking using networks
+assembled at different levels of granularity and specificity. In particular,
+we are expanding the range of models assembled from a set of EMMAA Statements
+to include:
+
+* Directed networks
+* Signed directed networks
+* PyBEL networks (includes nodes with state information)
+* PySB models/Kappa influence maps
+
+For each of these model representations, model checking can be formulated as
+a process consisting of three steps:
+
+1. Given a (source, target) statement for checking, identify the nodes
+   associated with the source and target. Note that a source or target agent in
+   the test statement may correspond to multiple nodes in the give network
+   representation.
+2. Identify causal paths linking one or more source nodes to one or more target
+   nodes. If such a path exists, the test statement is satisfied.
+3. Collect paths from the network representation and map them back to the
+   knowledge-level (EMMAA statements) for reporting.
+
+The second step in this process, pathfinding over the causal network, is common
+to all four of the network representations listed above. However, the first and
+third steps--identifying mappings between knowledge-level statements and the
+nodes and edges in the network--are specific to each network representation.
+
+To support multi-resolution model checking we have restructured the INDRA model
+checker to support multiple model types, with the common code refactored out
+into a parent class. In addition we have created an assembler that assembles
+INDRA Statements into a new network representation with a metadata model that
+can capture the full provenance information from the source INDRA Statements.
+This network representation, a multi-digraph called the `IndraNet`, will be
+used to generate multiple coarse-grained "views" (digraph, signed digraph),
+while preserving statement metadata.
+
+In the upcoming reporting period we will complete this refactoring procedure
+and extend the EMMAA web application to generate and display test results for
+alternative realizations of each individual knowledge model.
+
