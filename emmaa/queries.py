@@ -1,4 +1,5 @@
 import requests
+import os
 from inflection import camelize, underscore
 from collections import OrderedDict as _o
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
@@ -7,9 +8,6 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
-
-
-GROUNDING_URL = 'http://localhost:8001/ground'
 
 
 class Query(object):
@@ -173,8 +171,9 @@ def query_cls_from_type(query_type):
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
     """Return an INDRA Agent object."""
+    url = os.environ['GROUNDING_SERVICE_URL']
     if use_grouding_service:
-        return get_agent_from_grounding_service(ag_name, GROUNDING_URL)
+        return get_agent_from_grounding_service(ag_name, url)
     return get_agent_from_local_grounding(ag_name)
 
 

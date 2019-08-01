@@ -173,8 +173,9 @@ class EmmaaModel(object):
         start_date = start_date.isoformat(timespec='seconds') + 'Z'
         terms_to_piis = {}
         for term in search_terms:
+            # NOTE for now limiting the search to only 5 PIIs
             piis = elsevier_client.get_piis_for_date(
-                term.search_term, loaded_after=start_date)
+                term.search_term, loaded_after=start_date)[:5]
             logger.info(f'{len(piis)} PIIs found for {term.search_term}')
             terms_to_piis[term] = piis
         return terms_to_piis
