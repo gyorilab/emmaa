@@ -65,16 +65,29 @@ several challenging aspects of building a good model for this domain.
    result in many irrelevant publications being picked up. This suggests that
    one has to constrain the domain, in addition to the specific concepts
    used as search terms when finding novel literature content.
-3. Reading with corroboration. While biology models in EMMAA rely on
+3. Machine reading infrastructure. The biology EMMAA models rely on a
+   parallelized AWS infrastructure in which multiple instances of machine
+   reading systems can process hundreds or thousands of new publications
+   each day. In contrast, the food insecurity model currently relies
+   on a single reader instance running as a service, and therefore has
+   much lower throughput. While a comparable infrastructure of readers is
+   implemented for this domain, we had to limit the number of new publications
+   that are processed each day to update the model.
+4. Reading with corroboration. While biology models in EMMAA rely on
    knowledge assembled from multiple machine reading systems as well as
    structured (often human curated) knowledge bases, the food insecurity model
    currently relies on a single reading system, Eidos. This means that any
    systematic errors specific to the reading system are prone to propagate
    into the assembled model. In the longer term, integrating more reading
    systems or knowledge sources could improve on this.
-4. Ontologies. Concepts extracted from text are grounded to an ontology, and
-   this is the same ontology that is used to assemble statements. The scope
-   and resolution of the ontology can be an important limitation.
+5. Indirect relations. As shown by the initial test set for the food
+   insecurity model, all test statements are satisfied by a single
+   causal influence statement, even ones where one might reasonably
+   expect the test to be satisfied via a chain of causal influences, e.g.,
+   "droughts cause a decrease in food availability". We believe that this
+   is due to the fact that authors routinely report indirect causal
+   influences, and the reading/assembly systems currently aren't set up
+   to effectively differentiate between direct and indirect effects.
 
 Extending model testing and analysis to multiple resolutions
 ------------------------------------------------------------
