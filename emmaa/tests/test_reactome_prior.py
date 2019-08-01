@@ -1,3 +1,4 @@
+import unittest
 from emmaa.priors import SearchTerm
 from emmaa.priors.reactome_prior import rx_id_from_up_id
 from emmaa.priors.reactome_prior import find_drugs_for_genes
@@ -6,6 +7,7 @@ from emmaa.priors.reactome_prior import get_pathways_containing_gene
 from emmaa.priors.reactome_prior import get_genes_contained_in_pathway
 
 
+@unittest.skip('Reactome ID lookup by UniProt ID has changed.')
 def test_rx_id_from_up_id():
     """Check that Uniprot ids are being successfully mapped to reactome ids
     """
