@@ -13,7 +13,7 @@ form. To demonstrate the generalizability of EMMAA, we created a model
 of causal factors influencing food insecurity.
 
 In principle, setting up a new EMMAA model only requires creating a new
-configuration file that specifies a name, and description, as well as a
+configuration file that specifies a name, a description, as well as a
 list of search terms, and any optional arguments used to configure the
 model building process. In applying EMMAA to a new domain, we extended the set
 of options that can be specified in the configuration file, including the
@@ -42,24 +42,24 @@ following:
 To set up the initial, proof-of-principle model of food insecurity, we
 first identified a set of core concepts of interest: food security, conflict,
 flooding, food production, human migration, drought, and markets. We then
-filterest a set of extractions by Eidos on a corpus of 500 documents to
+filtered a set of extractions by Eidos on a corpus of 500 documents to
 causal influences among these concepts. We also set these core concepts as
-search terms in the model's configuration file. Finally, we defined a set
+search terms in the model's configuration file. Finally, we defined a set of
 common sense statements as test conditions, for instance, "droughts cause a
 decrease in food availability" to check the model against. The model is now
 included on the EMMAA dashboard where it can be examined
 (http://emmaa.indra.bio/dashboard/food_insecurity).
 
-While this initial food insecurity models is a proof of principle for the
+While this initial food insecurity model serves as a proof of principle for the
 generality of the EMMAA concept and the underlying technologies, there are
 several challenging aspects of building a good model for this domain.
 
-1. The identification of relevant sources of information. So far, the
-   food insecurity model uses ScienceDirect to search for scientific
-   publications. However, it is likely that the bulk of timely new information
-   is available in reports (by governments, NGOs, etc.) and news stories.
-   In the longer term, this would require implementing ways to query and
-   collect text content from such sources.
+1. The identification of relevant sources of information. So far, the food
+   insecurity model uses ScienceDirect to search for scientific publications.
+   However, it is likely that a significant amount of timely new information is
+   available in reports (by governments, NGOs, etc.) and news stories.  In the
+   longer term, this would require implementing ways to query and collect text
+   content from such sources.
 2. Querying for relevant text content. We found that certain search terms
    (e.g., food insecurity) result in mostly relevant publications, while
    others, wuch as "conflict" or "markets" are too broad and ambiguous, and
@@ -71,7 +71,7 @@ several challenging aspects of building a good model for this domain.
    reading systems can process hundreds or thousands of new publications
    each day. In contrast, the food insecurity model currently relies
    on a single reader instance running as a service, and therefore has
-   much lower throughput. While a comparable infrastructure of readers is
+   much lower throughput. Before a comparable infrastructure of readers is
    implemented for this domain, we had to limit the number of new publications
    that are processed each day to update the model.
 4. Reading with corroboration. While biology models in EMMAA rely on
