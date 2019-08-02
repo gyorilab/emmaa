@@ -379,7 +379,7 @@ def load_tests_from_s3(test_name):
 
 
 def save_model_manager_to_s3(model_name, model_manager):
-    client = get_s3_client()
+    client = get_s3_client(unsigned=False)
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
                       Key=f'results/{model_name}/latest_model_manager.pkl')
@@ -434,7 +434,7 @@ def run_model_tests_from_s3(model_name, upload_mm=True,
     results_json_str = json.dumps(results_json_dict, indent=1)
     # Optionally upload test results to S3
     if upload_results:
-        client = get_s3_client()
+        client = get_s3_client(unsigned=False)
         date_str = make_date_str()
         result_key = f'results/{model_name}/results_{date_str}.json'
         logger.info(f'Uploading test results to {result_key}')

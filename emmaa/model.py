@@ -319,7 +319,7 @@ class EmmaaModel(object):
         """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}'
-        client = get_s3_client()
+        client = get_s3_client(unsigned=False)
         # Dump as pickle
         client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
                           Key=fname+'.pkl')
@@ -422,7 +422,7 @@ def save_config_to_s3(model_name, config):
     config : dict
         A JSON dict of configurations for the model.
     """
-    client = get_s3_client()
+    client = get_s3_client(unsigned=False)
     base_key = f'models/{model_name}'
     config_key = f'{base_key}/config.json'
     logger.info(f'Saving model config to {config_key}')
