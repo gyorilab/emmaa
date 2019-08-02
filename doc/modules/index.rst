@@ -10,6 +10,7 @@ EMMAA modules reference
    model
    model_tests
    test_analysis
+   queries
    answer_queries
    priors
    readers
