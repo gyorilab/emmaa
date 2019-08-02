@@ -40,7 +40,7 @@ class PathProperty(Query):
     """This type of query requires finding a mechanistic causally consistent
     path that satisfies query statement.
 
-    Parameters:
+    Parameters
     ----------
     path_stmt : indra.statements.Statement
         A path to look for in the model represented as INDRA statement.
