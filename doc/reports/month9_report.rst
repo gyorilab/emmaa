@@ -136,3 +136,43 @@ In the upcoming reporting period we will complete this refactoring procedure
 and extend the EMMAA web application to generate and display test results for
 alternative realizations of each individual knowledge model.
 
+Implementing an object model for model analysis queries
+-------------------------------------------------------
+
+We have previously specified a Model Analysis Query Language (MAQL) used
+to represent various analysis tasks that can be performed on EMMAA
+models, in either a user or machine-initiated way (see :ref:`maql`).
+
+In this reporting period, we implemented a Python object model corresponding
+to MAQL. The object model provides a structure for all the attributes needed
+to represent a query, and methods to serialize and deserialize it
+into JSON. This allows linking the web front-end, the query execution engine,
+and the back-end query storage database in a principled way through a single
+standardized format. In particular, we have implemented the PathProperty
+query class (:py:mod:`emmaa.queries.PathProperty`), and plan to extend to
+the other three query types specified in MAQL in the coming months.
+
+Detecting changes in analysis results due to model updates
+----------------------------------------------------------
+
+One of the fundamental ideas of the EMMAA framework is to be able to detect
+meaningful changes to analyses of interest as model updates happen. We have
+implemented an initial solution to this in the QueryManager
+(:py:mod:`emmaa.answer_queries.QueryManager`)
+whereby the previous results of each registered query are compared to the new
+result. Any detected changes are reported in the model update logs (currently
+not exposed in the user-facing web front-end yet). A limitation of the current
+approach is that the result of a registered query is a single "top" mechanistic
+path that satisfies the query conditions, rather than all possible paths. This
+means that in some cases, when a new path is created by a new piece of
+knowledge, it would not be detected as a change in the query results, unless
+the "top" path happens to change. We are planning to improve the change
+detection method in this direction.
+
+Further, we are working on adding a user registration functionality. Once
+user accounts and user-specific registered queries are created, the next step
+will be to create a notification system that exposes the detected changes
+in analysis results with respect to a query of interest to the user.
+
+
+
