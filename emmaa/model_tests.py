@@ -9,7 +9,7 @@ import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker
-from indra.explanation.reporting import stmts_from_path
+from indra.explanation.reporting import stmts_from_pysb_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
@@ -107,7 +107,7 @@ class ModelManager(object):
         if result.paths:
             for path in result.paths:
                 sentences = []
-                stmts = stmts_from_path(path, self.pysb_model,
+                stmts = stmts_from_pysb_path(path, self.pysb_model,
                                         self.model.assembled_stmts)
                 for stmt in stmts:
                     ea = EnglishAssembler([stmt])
