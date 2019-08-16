@@ -8,8 +8,8 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
-from indra.explanation.model_checker import ModelChecker
-from indra.explanation.reporting import stmts_from_path
+from indra.explanation.model_checker import PysbModelChecker
+from indra.explanation.reporting import stmts_from_pysb_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
@@ -53,7 +53,7 @@ class ModelManager(object):
         A list of EMMAA tests applicable for given EMMAA model
     test_results : list[indra.explanation.model_checker.PathResult]
         A list of EMMAA test results
-    model_checker : indra.explanation.model_checker.ModelChecker
+    model_checker : indra.explanation.model_checker.PysbModelChecker
         A ModelChecker to check PySB model
     """
     def __init__(self, model):
@@ -62,7 +62,7 @@ class ModelManager(object):
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.test_results = []
-        self.model_checker = ModelChecker(self.pysb_model)
+        self.model_checker = PysbModelChecker(self.pysb_model)
 
     def get_im(self, stmts):
         """Get the influence map for the model."""
@@ -107,7 +107,7 @@ class ModelManager(object):
         if result.paths:
             for path in result.paths:
                 sentences = []
-                stmts = stmts_from_path(path, self.pysb_model,
+                stmts = stmts_from_pysb_path(path, self.pysb_model,
                                         self.model.assembled_stmts)
                 for stmt in stmts:
                     ea = EnglishAssembler([stmt])
