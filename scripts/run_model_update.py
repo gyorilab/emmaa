@@ -1,12 +1,14 @@
+import argparse
 from emmaa.model import EmmaaModel
 
 
 if __name__ == '__main__':
-    cancer_types = ('paad', 'skcm', 'aml', 'luad', 'prad', 'food_insecurity',
-                    'rasmachine', 'brca')
+    parser = argparse.ArgumentParser(
+        description='Script to update a model saved on S3.')
+    parser.add_argument('-m', '--model', help='Model name', required=True)
+    args = parser.parse_args()
 
-    for ctype in cancer_types:
-        em = EmmaaModel.load_from_s3(ctype)
-        em.get_new_readings()
-        em.save_to_s3()
-        em.update_to_ndex()
+    em = EmmaaModel.load_from_s3(args.model)
+    em.get_new_readings()
+    em.save_to_s3()
+    em.update_to_ndex()
