@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     lam = boto3.client('lambda')
     objs = s3.list_objects_v2(Bucket='emmaa', Prefix='models/', Delimiter='/')
     prefixes = objs['CommonPrefixes']
-    for prefix_dict in in prefixes:
+    for prefix_dict in prefixes:
         prefix = prefix_dict['Prefix']
         config_key = f'{prefix}config.json'
         obj = client.get_object(Bucket='emmaa', Key=config_key)
@@ -59,5 +59,5 @@ def lambda_handler(event, context):
             resp = lam.invoke(FunctionName='emmaa-model-update',
                               InvocationType='RequestResponse',
                               Payload=json.dumps(payload))
-            print(resp)
-    return resp
+            print(resp['Payload'].read())
+    return {'statusCode': 200, 'result': 'SUCCESS'}
