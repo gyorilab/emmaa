@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EMMAA dashboard</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <!-- C3 css -->
+  <!-- <link rel="stylesheet" href="./static/css/c3.css"> -->
+  <link rel="stylesheet" href="https://s3.amazonaws.com/emmaa-test/c3.css">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+  <!-- Choices multiselect library: https://github.com/jshjohnson/Choices -->
+  <!-- Include Choices CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+  <!-- Include Choices JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <!-- bootstrap 4.1.3 -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+  <!-- AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
+
+  <!-- D3 -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <!-- C3 -->
+  <!-- <script src="./static/js/c3.min.js"></script> -->
+  <script src="https://s3.amazonaws.com/emmaa-test/c3.min.js"></script>
+
+  <!-- Script Files -->
+  <!-- <script src="https://indralab.github.io/aws/js/awsServices.js"></script> -->
+  <script src="https://s3.amazonaws.com/emmaa-test/awsServices.js"></script>
+  <!-- <script src="http://127.0.0.1:8000/emmaaFunctions.js"></script> -->
+  <script src="https://indralab.github.io/emmaa/dashboard/emmaaFunctions.js"></script>
+  <!-- <script src="http://127.0.0.1:8000/queryFunctions.js"></script> -->
+  <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var modelSelect = new Choices('#model-select')
+    })
+  </script>
+
+  <style>
+    a.model-link {
+      color: #000000;
+    }
+    .choices__list--multiple .choices__item {
+      background-color: #007bff;
+      border: #007bff;
+    }
+    a.stmt-dblink {
+      color: #000000;
+      text-decoration: none;
+    }
+    a.status-link {
+      color: #000000;
+      text-decoration: none;
+    }
+    a {
+      target-new: tab;
+    }
+    body > .container {
+      padding: 85px 15px 0;
+    }
+    .btn {
+      background-color: rgb(221, 221, 221)
+    }
+  </style>
+</head>
+
+<body>
+  <script type="text/javascript">
+    setEnv('emmaa') // Set environment for AWS functionalities
+    // checkSignIn() // Check sign-in
+  </script>
+
+  <!-- Page Header -->
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
+      <h5 class="my-0 mr-md-auto font-weight-normal">
+        <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
+        <a href="./query">Queries</a>
+      </h5>
+      <nav class="my-2 my-md-0 mr-md-3">
+        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+        <a class="p-2 text-dark" href="#about">About</a>
+        <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
+      </nav>
+    {% block header_desc %}
+    {% endblock %}
+    </div>
+  </header>
+
+{% block body %}
+  <div class="container" id="query-container">
+
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+      </div>
+      <div class="card-body">
+
+        <!-- model selection -->
+        <h6><b>Model selection</b></h6>
+        <div class="checkbox-container">
+          <div class="form-select">
+            <select name="model-select" id="model-select" placeholder="Select models" multiple>
+            {% for model_id, config_json in model_data %}
+              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+            {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- stmt type select -->
+        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+        <div class="form-container" style="display: inline-block; vertical-align: top;">
+          <div class="text" style="display: table;">
+            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <div class="dropdown" style="display: table-cell; padding-right: 2px">
+                <!-- WARNING: The id of the select tag goes into the query
+                dictionary, do NOT change it unless it is changed in the rest API
+                and query handling -->
+                <select class="custom-select" id="typeSelection">
+                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                  {% for stmt_type in stmt_types %}
+                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- subject -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+              <!-- object -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+              <!-- register -->
+              <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
+                <div class="checkbox">
+                  <input type="checkbox" name="register" id="register-query"><label
+                    for="register-query">Register Query</label>
+                </div>
+              </div>
+              <!-- indra docs text -->
+              <div class="text-container">
+                <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+              </div>
+              <!-- formsubmit -->
+              <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+            </form>
+          </div>
+        </div>
+
+        <div class="container">
+          <div class="container">
+            <div id="query-status-gif" style="display: none;">
+              <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
+            </div>
+            <span><i id="query-status"></i></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Query results -->
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Results</h4>
+      </div>
+      <div class="card-body" id="query-results">
+        <table class="table">
+          <thead>
+            <th>Model</th>
+            <th>Result</th>
+          </thead>
+          <tbody class="table-body" id="queryResults"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- List user queries -->
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Previous queries</h4>
+      </div>
+      <div class="card-body" id="user-queries">
+        <table class="table">
+          <thead>
+            <th>Model</th>
+            <th style="width: 29%;">Query</th>
+            <th>Status</th>
+            <th style="width: 19%;">Date</th>
+          </thead>
+          <tbody class="table-body" id="old-results">
+            {% for result in old_results %}
+            <tr>
+              <!-- model, query, response, date -->
+              <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
+              <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
+              <td>{{ result['response'] }}</td>
+              <td>{{ result['date'] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
+    <div class="container">
+      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+      <small>
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+        <p><a href="https://indralab.github.io" target="_blank">INDRALAB</a></p>
+        <p><a href="http://hits.harvard.edu" target="_blank">Harvard Program in Therapeutic Science (HiTS)</a></p>
+        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+      </small>
+    </div>
+  </footer>
+{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+{% extends "emmaa/query_template.html" %}
+{% from "login_overlay.html" import login_overlay, login_header %}
+
+{% block header_desc %}
+  {{ login_header(super(), identity) }}
+{% endblock %}
+
+{% block body %}
+    {{ login_overlay() }}
+    {{ super() }}
+{% endblock %}
