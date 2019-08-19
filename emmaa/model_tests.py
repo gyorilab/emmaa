@@ -8,7 +8,8 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
-from indra.explanation.model_checker import PysbModelChecker
+from indra.explanation.model_checker import PysbModelChecker, \
+    PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -59,27 +60,47 @@ class ModelManager(object):
     def __init__(self, model):
         self.model = model
         self.pysb_model = self.model.assemble_pysb()
+        self.pybel_model = self.model.assemble_pybel()
+        self.signed_graph = self.model.assemble_signed_graph()
+        self.unsigned_graph = self.model.assemble_unsigned_graph()
+        self.pysb_model_checker = PysbModelChecker(self.pysb_model)
+        self.pybel_model_checker = PybelModelChecker(self.pybel_model)
+        self.signed_model_checker = SignedGraphModelChecker(self.signed_graph)
+        self.unsigned_model_checker = UnsignedGraphModelChecker(
+            self.unsigned_graph)
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.test_results = []
-        self.model_checker = PysbModelChecker(self.pysb_model)
+        self.pysb_test_results = []
+        self.pybel_test_results = []
+        self.signed_test_results = []
+        self.unsigned_test_results = []
 
-    def get_im(self, stmts):
-        """Get the influence map for the model."""
-        self.model_checker.statements = []
-        self.model_checker.add_statements(stmts)
-        self.model_checker.get_im(force_update=True)
-        self.model_checker.prune_influence_map()
-        self.model_checker.prune_influence_map_degrade_bind_positive(
-            self.model.assembled_stmts)
+    # def get_im(self, stmts):
+    #     """Get the influence map for the model."""
+    #     self.model_checker.statements = []
+    #     self.model_checker.add_statements(stmts)
+    #     self.model_checker.get_im(force_update=True)
+    #     self.model_checker.prune_influence_map()
+    #     self.model_checker.prune_influence_map_degrade_bind_positive(
+    #         self.model.assembled_stmts)
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
         self.applicable_tests.append(test)
 
-    def add_result(self, result):
+    def add_result(self, test_type, result):
         """Add a result to a list of results."""
-        self.test_results.append(result)
+        if test_type == 'pysb':
+            self.pysb_test_results.append(result)
+        elif test_type == 'pybel':
+            self.pybel_test_results.append(result)
+        elif test_type == 'signed':
+            self.signed_test_results.append(result)
+        elif test_type == 'unsigned':
+            self.unsigned_test_results.append(result)
+        else:
+            raise TypeError('Test type has to be one of \'pysb\', '
+                            '\'pybel\', \'signed\' or \'unsigned\'.')
 
     def run_one_test(self, test):
         """Run one test. This can be used for running immediate query or for
