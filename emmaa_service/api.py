@@ -3,22 +3,23 @@ import argparse
 import boto3
 import logging
 from os import path, environ
-from jinja2 import Template, Environment
+from jinja2 import Template
 from botocore.exceptions import ClientError
-from flask import abort, Flask, request, Response, url_for
-from flask_jwt_extended import get_jwt_identity
+from flask import abort, Flask, request, Response, render_template
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
-    RemoveModification, get_statement_by_name, Agent
-from indra.assemblers.html import IndraHTMLLoader
+    RemoveModification, get_statement_by_name
 
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
+from indralab_auth_tools.auth import auth, resolve_auth, config_auth
+
 
 app = Flask(__name__)
+app.register_blueprint(auth)
 app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,9 @@ logger = logging.getLogger(__name__)
 TITLE = 'emmaa title'
 HERE = path.dirname(path.abspath(__file__))
 EMMAA = path.join(HERE, path.pardir)
-DASHBOARD = path.join(EMMAA, 'dashboard')
+DASHBOARD = path.join(HERE, 'dashboard')
 
-
-env = Environment(loader=IndraHTMLLoader({None: DASHBOARD, 'emmaa': DASHBOARD}))
+SC, jwt = config_auth(app)
 
 
 qm = QueryManager()
@@ -44,20 +44,8 @@ def _load_template(fname):
     return template
 
 
-# Here we can add functions to the jinja2 env.
-env.globals.update(url_for=url_for)
-
-
-def render_my_template(template, title, **kwargs):
-    kwargs['title'] = TITLE + ': ' + title
-    # kwargs['identity'] = get_jwt_identity()
-    return env.get_template(template).render(**kwargs)
-
-
-INDEX = _load_template('index.html')
 MODEL = _load_template('model.html')
-# QUERIES = _load_template('query.html')
-QUERIES = _load_template('templates/query_view.html')
+INDEX = _load_template('index.html')
 
 
 def _get_models():
@@ -147,11 +135,8 @@ def get_query_page():
     user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
-    return render_my_template(template=QUERIES,
-                              title='emmaa query page',
-                              message='This is a message from the other side')
-    # return QUERIES.render(model_data=model_data, stmt_types=stmt_types,
-    #                       old_results=old_results)
+    return render_template('query_view.html', model_data=model_data,
+                           stmt_types=stmt_types, old_results=old_results)
 
 
 @app.route('/query/submit', methods=['POST'])
