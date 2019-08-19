@@ -2,8 +2,8 @@
 {% from "auth_macros.html" import login_overlay %}
 {% from "header_template.html" import page_header %}
 
-{% block header_desc %}
-  {{ login_header(super(), identity) }}
+{% block header %}
+  {{ page_header() }}
 {% endblock %}
 
 {% block body %}
