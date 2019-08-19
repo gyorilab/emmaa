@@ -52,7 +52,7 @@ def lambda_handler(event, context):
     core_command = 'bash scripts/git_and_run.sh'
     if BRANCH is not None:
         core_command += f' --branch {BRANCH} '
-    core_command += ('python scripts/run_model_update.py --model {model_name}')
+    core_command += (f'python scripts/run_model_update.py --model {model_name}')
     print(core_command)
     cont_overrides = {
         'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
