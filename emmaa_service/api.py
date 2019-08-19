@@ -135,7 +135,7 @@ def get_query_page():
     user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
-    return render_template('query_view.html', model_data=model_data,
+    return render_template('query_template.html', model_data=model_data,
                            stmt_types=stmt_types, old_results=old_results)
 
 
