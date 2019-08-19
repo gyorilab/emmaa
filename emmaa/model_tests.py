@@ -8,13 +8,13 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
-from indra.explanation.model_checker import PysbModelChecker, \
-    PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
-from indra.explanation.reporting import stmts_from_pysb_path
+from indra.explanation.model_checker import ModelChecker
+from indra.explanation.reporting import stmts_from_pysb_path, \
+    stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
-from emmaa.util import make_date_str, get_s3_client
+from emmaa.util import make_date_str, get_s3_client, get_class_from_name
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
 from emmaa.answer_queries import QueryManager
 
@@ -59,15 +59,13 @@ class ModelManager(object):
     """
     def __init__(self, model):
         self.model = model
-        self.pysb_model = self.model.assemble_pysb()
-        self.pybel_model = self.model.assemble_pybel()
-        self.signed_graph = self.model.assemble_signed_graph()
-        self.unsigned_graph = self.model.assemble_unsigned_graph()
-        self.pysb_model_checker = PysbModelChecker(self.pysb_model)
-        self.pybel_model_checker = PybelModelChecker(self.pybel_model)
-        self.signed_model_checker = SignedGraphModelChecker(self.signed_graph)
-        self.unsigned_model_checker = UnsignedGraphModelChecker(
-            self.unsigned_graph)
+        self.mc_types = model.test_config.get('mc_types', ['pysb'])
+        for mc_type in self.mc_types:
+            setattr(self, mc_type+model,
+                    getattr(self.model, 'assemble_'+mc_type)())
+            setattr(self, mc_type+'_model_checker',
+                    get_class_from_name(mc_type, ModelChecker))
+            setattr(self, mc_type+'_test_results', [])
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.pysb_test_results = []
