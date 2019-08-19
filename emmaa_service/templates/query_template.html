@@ -81,23 +81,8 @@
     setEnv('emmaa') // Set environment for AWS functionalities
     // checkSignIn() // Check sign-in
   </script>
-
-  <!-- Page Header -->
-  <header>
-    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
-      <h5 class="my-0 mr-md-auto font-weight-normal">
-        <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-        <a href="./query">Queries</a>
-      </h5>
-      <nav class="my-2 my-md-0 mr-md-3">
-        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-        <a class="p-2 text-dark" href="#about">About</a>
-        <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
-      </nav>
-    {% block header_desc %}
-    {% endblock %}
-    </div>
-  </header>
+{% block header %}
+{% endblock %}
 
 {% block body %}
   <div class="container" id="query-container">
