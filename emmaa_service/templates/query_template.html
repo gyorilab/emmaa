@@ -1,5 +1,4 @@
 {% extends "emmaa_page_template.html" %}
-{% from "header_template.html" import page_header %}
 
 {% block additional_scripts %}
   <!-- <script src="http://127.0.0.1:8000/queryFunctions.js"></script> -->
@@ -11,10 +10,6 @@
     setEnv('emmaa') // Set environment for AWS functionalities
     // checkSignIn() // Check sign-in
   </script>
-
-{% block header %}
-  {{ page_header() }}
-{% endblock %}
 
 {% block body %}
   <div class="container" id="query-container">
