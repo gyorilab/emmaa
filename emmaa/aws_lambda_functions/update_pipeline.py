@@ -51,7 +51,7 @@ def lambda_handler(event, context):
     for prefix_dict in prefixes:
         prefix = prefix_dict['Prefix']
         config_key = f'{prefix}config.json'
-        obj = client.get_object(Bucket='emmaa', Key=config_key)
+        obj = s3.get_object(Bucket='emmaa', Key=config_key)
         config = json.loads(obj['Body'].read().decode('utf8'))
         if config.get('run_daily_update', False):
             model_name = prefix[7:-1]
