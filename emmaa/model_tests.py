@@ -72,6 +72,7 @@ class ModelManager(object):
             setattr(self, mc_type+'_test_results', [])
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
+        self.make_links = model.test_config.get('make_links', True)
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the influence map and graph for PysbModelChecker."""
@@ -109,7 +110,7 @@ class ModelManager(object):
         """Run all applicable tests for the model."""
         mc = self.get_updated_mc(
             mc_type, [test.stmt for test in self.applicable_tests])
-        logger.info(f'Running the tests with {mc.__name__}.')
+        logger.info(f'Running the tests with {mc_type} ModelChecker.')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths)
         for (stmt, result) in results:
@@ -121,24 +122,26 @@ class ModelManager(object):
         if result.paths:
             for path in result.paths:
                 sentences = []
-                if mc_type == 'pysb':
-                    stmts = stmts_from_pysb_path(path, self.pysb_model,
-                                                 self.model.assembled_stmts)
-                elif mc_type == 'pybel':
-                    stmts = stmts_from_pybel_path(path, self.pybel_model)
-                elif mc_type == 'signed_graph':
-                    stmts = stmts_from_indranet_path(
-                        path, self.signed_graph_model, True)
-                elif mc_type == 'unsigned_graph':
-                    stmts = stmts_from_indranet_path(
-                        path, self.unsigned_graph_model, False)
+                if mc_type == 'signed_graph' or mc_type == 'unsigned_graph':
+                    for i in range(len(path[:-1])):
+                        sentence = path[i][0] + ' -> ' + path[i+1][0]
+                        sentences.append((sentence))
                 else:
-                    raise TypeError('Provided MC type not recognized.')
-                for stmt in stmts:
-                    ea = EnglishAssembler([stmt])
-                    sentence = ea.make_model()
-                    link = get_statement_queries([stmt])[0] + '&format=html'
-                    sentences.append((sentence, link))
+                    if mc_type == 'pysb':
+                        stmts = stmts_from_pysb_path(
+                            path, self.pysb_model, self.model.assembled_stmts)
+                    elif mc_type == 'pybel':
+                        stmts = stmts_from_pybel_path(path, self.pybel_model)
+                    for stmt in stmts:
+                        if isinstance(stmt, list):
+                            stmt = stmt[0]
+                        ea = EnglishAssembler([stmt])
+                        sentence = ea.make_model()
+                        if self.make_links:
+                            link = get_statement_queries([stmt])[0] + '&format=html'
+                            sentences.append((sentence, link))
+                        else:
+                            sentences.append((sentence))
                 paths.append(sentences)
         return paths
 
