@@ -153,14 +153,17 @@ class ModelManager(object):
     def answer_query(self, query):
         """Answer user query with a path if it is found."""
         if ScopeTestConnector.applicable(self, query):
-            self.get_im([query.path_stmt])
-            max_path_length, max_paths = self._get_test_configs()
-            result = self.model_checker.check_statement(
-                query.path_stmt, max_paths, max_path_length)
-            return self.process_response(result)
+            results = []
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, [query.path_stmt])
+                max_path_length, max_paths = self._get_test_configs()
+                result = self.model_checker.check_statement(
+                    query.path_stmt, max_paths, max_path_length)
+                results.append((mc_type, self.process_response(result)))
+            return results
         else:
-            return self.hash_response_list([[
-                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
+            return [self.hash_response_list([[
+                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])]
 
     def answer_queries(self, queries):
         """Answer all queries registered for this model.
@@ -192,12 +195,13 @@ class ModelManager(object):
                           result_codes_link)]])))
         # Only do the following steps if there are applicable queries
         if applicable_queries:
-            self.get_im(applicable_stmts)
-            results = self.model_checker.check_model()
-            for ix, (_, result) in enumerate(results):
-                responses.append(
-                    (applicable_queries[ix],
-                     self.process_response(result)))
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, applicable_stmts)
+                results = self.model_checker.check_model()
+                for ix, (_, result) in enumerate(results):
+                    responses.append(
+                        (applicable_queries[ix], mc_type,
+                         self.process_response(result)))
         return responses
 
     def _get_test_configs(self):
