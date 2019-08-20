@@ -61,20 +61,24 @@ class ModelManager(object):
         self.model = model
         self.mc_types = model.test_config.get('mc_types', ['pysb'])
         for mc_type in self.mc_types:
-            setattr(self, mc_type+model,
+            setattr(self, mc_type+'_model',
                     getattr(self.model, 'assemble_'+mc_type)())
             setattr(self, mc_type+'_model_checker',
-                    get_class_from_name(mc_type, ModelChecker))
+                    get_class_from_name(
+                        mc_type+'_model_checker',
+                        ModelChecker)(getattr(self, mc_type+'_model')))
             setattr(self, mc_type+'_test_results', [])
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
 
-    def update_pysb_graph(self, stmts):
+    def get_updated_mc(self, mc_type, stmts):
         """Update the influence map and graph for PysbModelChecker."""
-        self.pysb_model_checker.statements = []
-        self.pysb_model_checker.add_statements(stmts)
-        self.pysb_model_checker.graph = None
-        self.pybel_model_checker.get_graph()
+        mc = getattr(self, mc_type+'_model_checker')
+        mc.statements = stmts
+        if mc_type == 'pysb':
+            mc.graph = None
+            mc.get_graph(prune_im=True, prune_im_degrade=True)
+        return mc
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
@@ -101,11 +105,9 @@ class ModelManager(object):
 
     def run_tests_per_mc(self, mc_type, max_path_length, max_paths):
         """Run all applicable tests for the model."""
-        if mc_type == 'pysb':
-            self.update_pysb_graph(
-                [test.stmt for test in self.applicable_tests])
-        mc = getattr(self, mc_type+'_model_checker')
-        mc.add_statements([test.stmt for test in self.applicable_tests])
+        mc = self.get_updated_mc(
+            mc_type, [test.stmt for test in self.applicable_tests])
+        logger.info(f'Running the tests with {mc.__name__}.')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths)
         for (stmt, result) in results:
