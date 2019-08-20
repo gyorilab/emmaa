@@ -255,16 +255,18 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json()})
+            'statements': self.assembled_stmts_to_json(),
+            'make_links': self.make_links})
         for ix, test in enumerate(self.applicable_tests):
-            results_json.append({
-                    'test_type': test.__class__.__name__,
-                    'test_json': test.to_json(),
-                    'result_json': pickler.flatten(self.test_results[ix]),
-                    'english_path': self.make_english_path(
-                                                self.test_results[ix]),
-                    'english_code': self.make_english_result_code(
-                        self.test_results[ix])})
+            test_ix_results = {'test_type': test.__class__.__name__,
+                               'test_json': test.to_json()}
+            for mc_type in self.mc_types:
+                result = getattr(self, mc_type+'_test_results')[ix]
+                test_ix_results[mc_type] = {
+                    'result_json': pickler.flatten(result),
+                    'english_path': self.make_english_path(mc_type, result),
+                    'english_code': self.make_english_result_code(result)}
+            results_json.append(test_ix_results)
         return results_json
 
 
