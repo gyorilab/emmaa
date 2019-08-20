@@ -1,17 +1,11 @@
 {% extends "emmaa_page_template.html" %}
 
-{% block additional_scripts %}
-  <!-- <script src="http://127.0.0.1:8000/queryFunctions.js"></script> -->
-  <script src="https://indralab.github.io/emmaa/dashboard/queryFunctions.js"></script>
-{% endblock %}
-
+{% block body %}
 <body>
   <script type="text/javascript">
     setEnv('emmaa') // Set environment for AWS functionalities
     // checkSignIn() // Check sign-in
   </script>
-
-{% block body %}
   <div class="container" id="query-container">
 
     <div class="card">
@@ -143,7 +137,6 @@
       </small>
     </div>
   </footer>
-{% endblock %}
-
 </body>
+{% endblock %}
 
