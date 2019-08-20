@@ -131,7 +131,9 @@ class ModelManager(object):
                         stmts = stmts_from_pysb_path(
                             path, self.pysb_model, self.model.assembled_stmts)
                     elif mc_type == 'pybel':
-                        stmts = stmts_from_pybel_path(path, self.pybel_model)
+                        stmts = stmts_from_pybel_path(
+                            path, self.pybel_model, from_db=False,
+                            stmts=self.model.assembled_stmts)
                     for stmt in stmts:
                         if isinstance(stmt, list):
                             stmt = stmt[0]
