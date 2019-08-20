@@ -1,142 +1,140 @@
 {% extends "emmaa_page_template.html" %}
 
 {% block body %}
-<body>
-  <script type="text/javascript">
-    setEnv('emmaa') // Set environment for AWS functionalities
-    // checkSignIn() // Check sign-in
-  </script>
-  <div class="container" id="query-container">
+<script type="text/javascript">
+  setEnv('emmaa') // Set environment for AWS functionalities
+  // checkSignIn() // Check sign-in
+</script>
+<div class="container" id="query-container">
 
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Model Queries</h4>
+    </div>
+    <div class="card-body">
+
+      <!-- model selection -->
+      <h6><b>Model selection</b></h6>
+      <div class="checkbox-container">
+        <div class="form-select">
+          <select name="model-select" id="model-select" placeholder="Select models" multiple>
+          {% for model_id, config_json in model_data %}
+            <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+          {% endfor %}
+          </select>
+        </div>
       </div>
-      <div class="card-body">
 
-        <!-- model selection -->
-        <h6><b>Model selection</b></h6>
-        <div class="checkbox-container">
-          <div class="form-select">
-            <select name="model-select" id="model-select" placeholder="Select models" multiple>
-            {% for model_id, config_json in model_data %}
-              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
-            {% endfor %}
-            </select>
-          </div>
-        </div>
-
-        <!-- stmt type select -->
-        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
-        <div class="form-container" style="display: inline-block; vertical-align: top;">
-          <div class="text" style="display: table;">
-            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
-              <div class="dropdown" style="display: table-cell; padding-right: 2px">
-                <!-- WARNING: The id of the select tag goes into the query
-                dictionary, do NOT change it unless it is changed in the rest API
-                and query handling -->
-                <select class="custom-select" id="typeSelection">
-                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-                  {% for stmt_type in stmt_types %}
-                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <!-- subject -->
-              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
-              <!-- object -->
-              <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
-              <!-- register -->
-              <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
-                <div class="checkbox">
-                  <input type="checkbox" name="register" id="register-query"><label
-                    for="register-query">Register Query</label>
-                </div>
-              </div>
-              <!-- indra docs text -->
-              <div class="text-container">
-                <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
-              </div>
-              <!-- formsubmit -->
-              <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
-            </form>
-          </div>
-        </div>
-
-        <div class="container">
-          <div class="container">
-            <div id="query-status-gif" style="display: none;">
-              <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
+      <!-- stmt type select -->
+      <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+      <div class="form-container" style="display: inline-block; vertical-align: top;">
+        <div class="text" style="display: table;">
+          <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+            <div class="dropdown" style="display: table-cell; padding-right: 2px">
+              <!-- WARNING: The id of the select tag goes into the query
+              dictionary, do NOT change it unless it is changed in the rest API
+              and query handling -->
+              <select class="custom-select" id="typeSelection">
+                <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                {% for stmt_type in stmt_types %}
+                <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <span><i id="query-status"></i></span>
-          </div>
+            <!-- subject -->
+            <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
+            <!-- object -->
+            <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
+            <!-- register -->
+            <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
+              <div class="checkbox">
+                <input type="checkbox" name="register" id="register-query"><label
+                  for="register-query">Register Query</label>
+              </div>
+            </div>
+            <!-- indra docs text -->
+            <div class="text-container">
+              <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+            </div>
+            <!-- formsubmit -->
+            <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+          </form>
         </div>
-
       </div>
+
+      <div class="container">
+        <div class="container">
+          <div id="query-status-gif" style="display: none;">
+            <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
+          </div>
+          <span><i id="query-status"></i></span>
+        </div>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <!-- Query results -->
+<!-- Query results -->
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Results</h4>
+    </div>
+    <div class="card-body" id="query-results">
+      <table class="table">
+        <thead>
+          <th>Model</th>
+          <th>Result</th>
+        </thead>
+        <tbody class="table-body" id="queryResults"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- List user queries -->
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Previous queries</h4>
+    </div>
+    <div class="card-body" id="user-queries">
+      <table class="table">
+        <thead>
+          <th>Model</th>
+          <th style="width: 29%;">Query</th>
+          <th>Status</th>
+          <th style="width: 19%;">Date</th>
+        </thead>
+        <tbody class="table-body" id="old-results">
+          {% for result in old_results %}
+          <tr>
+            <!-- model, query, response, date -->
+            <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
+            <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
+            <td>{{ result['response'] }}</td>
+            <td>{{ result['date'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer class="footer text-muted" id="about" style="background: #F5F5F5;">
   <div class="container">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Results</h4>
-      </div>
-      <div class="card-body" id="query-results">
-        <table class="table">
-          <thead>
-            <th>Model</th>
-            <th>Result</th>
-          </thead>
-          <tbody class="table-body" id="queryResults"></tbody>
-        </table>
-      </div>
-    </div>
+    <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+    <small>
+      <p class="float-right">
+        <a href="#">Back to top</a>
+      </p>
+      <p><a href="https://indralab.github.io" target="_blank">INDRALAB</a></p>
+      <p><a href="http://hits.harvard.edu" target="_blank">Harvard Program in Therapeutic Science (HiTS)</a></p>
+      <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+    </small>
   </div>
-
-  <!-- List user queries -->
-  <div class="container">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Previous queries</h4>
-      </div>
-      <div class="card-body" id="user-queries">
-        <table class="table">
-          <thead>
-            <th>Model</th>
-            <th style="width: 29%;">Query</th>
-            <th>Status</th>
-            <th style="width: 19%;">Date</th>
-          </thead>
-          <tbody class="table-body" id="old-results">
-            {% for result in old_results %}
-            <tr>
-              <!-- model, query, response, date -->
-              <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
-              <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
-              <td>{{ result['response'] }}</td>
-              <td>{{ result['date'] }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
-    <div class="container">
-      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
-      <small>
-        <p class="float-right">
-          <a href="#">Back to top</a>
-        </p>
-        <p><a href="https://indralab.github.io" target="_blank">INDRALAB</a></p>
-        <p><a href="http://hits.harvard.edu" target="_blank">Harvard Program in Therapeutic Science (HiTS)</a></p>
-        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
-      </small>
-    </div>
-  </footer>
-</body>
+</footer>
 {% endblock %}
 
