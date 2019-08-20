@@ -26,7 +26,9 @@ result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_c
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
+    'SUBJECT_NOT_FOUND': 'Statement subject not in model',
     'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
+    'OBJECT_NOT_FOUND': 'Statement object state not in model',
     'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
     'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
     'PATHS_FOUND': 'Path found which satisfies the test statement',
