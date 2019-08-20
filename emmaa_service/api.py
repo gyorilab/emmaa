@@ -45,7 +45,6 @@ def _load_template(fname):
 
 
 MODEL = _load_template('model.html')
-INDEX = _load_template('index.html')
 
 
 def _get_models():
@@ -117,7 +116,7 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/home')
 def get_home():
     model_data = _get_models()
-    return INDEX.render(model_data=model_data)
+    return render_template('index_template.html', model_data=model_data)
 
 
 @app.route('/dashboard/<model>')
