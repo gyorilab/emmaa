@@ -68,66 +68,68 @@ class ModelManager(object):
             setattr(self, mc_type+'_test_results', [])
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.pysb_test_results = []
-        self.pybel_test_results = []
-        self.signed_test_results = []
-        self.unsigned_test_results = []
 
-    # def get_im(self, stmts):
-    #     """Get the influence map for the model."""
-    #     self.model_checker.statements = []
-    #     self.model_checker.add_statements(stmts)
-    #     self.model_checker.get_im(force_update=True)
-    #     self.model_checker.prune_influence_map()
-    #     self.model_checker.prune_influence_map_degrade_bind_positive(
-    #         self.model.assembled_stmts)
+    def update_pysb_graph(self, stmts):
+        """Update the influence map and graph for PysbModelChecker."""
+        self.pysb_model_checker.statements = []
+        self.pysb_model_checker.add_statements(stmts)
+        self.pysb_model_checker.graph = None
+        self.pybel_model_checker.get_graph()
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
         self.applicable_tests.append(test)
 
-    def add_result(self, test_type, result):
+    def add_result(self, mc_type, result):
         """Add a result to a list of results."""
-        if test_type == 'pysb':
-            self.pysb_test_results.append(result)
-        elif test_type == 'pybel':
-            self.pybel_test_results.append(result)
-        elif test_type == 'signed':
-            self.signed_test_results.append(result)
-        elif test_type == 'unsigned':
-            self.unsigned_test_results.append(result)
-        else:
-            raise TypeError('Test type has to be one of \'pysb\', '
-                            '\'pybel\', \'signed\' or \'unsigned\'.')
+        getattr(self, mc_type+'_test_results').append(result)
 
-    def run_one_test(self, test):
-        """Run one test. This can be used for running immediate query or for
-        debugging. For running all tests and all queries, use more efficient
-        run_all_tests.
-        """
-        self.get_im([test.stmt])
-        if not test.configs:
-            test.configs = self.model.test_config.get('statement_checking', {})
-        return test.check(self.model_checker, self.pysb_model)
+    # def run_one_test(self, test):
+    #     """Run one test. This can be used for running immediate query or for
+    #     debugging. For running all tests and all queries, use more efficient
+    #     run_all_tests.
+    #     """
+    #     self.get_im([test.stmt])
+    #     if not test.configs:
+    #         test.configs = self.model.test_config.get('statement_checking', {})
+    #     return test.check(self.model_checker, self.pysb_model)
 
-    def run_tests(self):
-        """Run all applicable tests for the model."""
-        self.get_im([test.stmt for test in self.applicable_tests])
+    def run_all_tests(self):
         max_path_length, max_paths = self._get_test_configs()
-        results = self.model_checker.check_model(
-            max_path_length=max_path_length,
-            max_paths=max_paths)
-        for (stmt, result) in results:
-            self.add_result(result)
+        for mc_type in self.mc_types:
+            self.run_tests_per_mc(mc_type, max_path_length, max_paths)
 
-    def make_english_path(self, result):
+    def run_tests_per_mc(self, mc_type, max_path_length, max_paths):
+        """Run all applicable tests for the model."""
+        if mc_type == 'pysb':
+            self.update_pysb_graph(
+                [test.stmt for test in self.applicable_tests])
+        mc = getattr(self, mc_type+'_model_checker')
+        mc.add_statements([test.stmt for test in self.applicable_tests])
+        results = mc.check_model(
+            max_path_length=max_path_length, max_paths=max_paths)
+        for (stmt, result) in results:
+            self.add_result(mc_type, result)
+
+    def make_english_path(self, mc_type, result):
         """Create an English description of a path."""
         paths = []
         if result.paths:
             for path in result.paths:
                 sentences = []
-                stmts = stmts_from_pysb_path(path, self.pysb_model,
-                                        self.model.assembled_stmts)
+                if mc_type == 'pysb':
+                    stmts = stmts_from_pysb_path(path, self.pysb_model,
+                                                 self.model.assembled_stmts)
+                elif mc_type == 'pybel':
+                    stmts = stmts_from_pybel_path(path, self.pybel_model)
+                elif mc_type == 'signed_graph':
+                    stmts = stmts_from_indranet_path(
+                        path, self.signed_graph_model, True)
+                elif mc_type == 'unsigned_graph':
+                    stmts = stmts_from_indranet_path(
+                        path, self.unsigned_graph_model, False)
+                else:
+                    raise TypeError('Provided MC type not recognized.')
                 for stmt in stmts:
                     ea = EnglishAssembler([stmt])
                     sentence = ea.make_model()
