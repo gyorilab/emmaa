@@ -43,7 +43,7 @@
 
   <script>
     $(document).ready(function() {
-      var modelSelect = new Choices('#model-select')
+      let modelSelect = new Choices('#model-select');
     })
   </script>
 
@@ -78,95 +78,98 @@
   </style>
 </head>
 
-{% block header %}
-  {{ login_overlay() }}
-  <script>
-    function handle_success(type, resp_data) {
-      const user_msg = document.querySelector('#user-loginout-msg');
-      if (type === "login") {
-        const btn = document.querySelector("#loginout-button");
-        btn.innerHTML = 'Logout';
-        btn.onclick = () => {return trigger_logout()};
-        document.querySelector('#user-logoin');
-        user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
-        report_login_result(''); // clear the login result message
-      }
-      else if (type === "register") {
-        trigger_login()
-      }
-      else { // logout
-        const btn = document.querySelector("#loginout-button");
-        btn.innerHTML = 'Login';
-        btn.onclick = () => {return trigger_login()};
-        user_msg.innerHTML = ""
-      }
-    }
+<body>
 
-    function trigger_login(type=null, data=null) {
-      return login(handle_success, trigger_unchecked_login)
-    }
-
-    function trigger_unchecked_login(type=null, data=null) {
-      return login(handle_success, trigger_unchecked_login, true)
-    }
-
-    function trigger_logout() {
-      return logout(handle_success)
-      }
-  </script>
-
-  <style>
-    #loginout-button, #user-loginout-msg {
-      margin-top: 5px;
-      margin-bottom: 5px;
-    }
-
-    .no-horiz-pad {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  </style>
-
-  <header>
-    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
-      <h5 class="my-0 mr-md-auto font-weight-normal">
-        <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-        <a href="./query">Queries</a>
-      </h5>
-      <nav class="my-2 my-md-0 mr-md-3">
-        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-        <a class="p-2 text-dark" href="#about">About</a>
-        <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
-      </nav>
-      <button class="btn btn-primary"
-              onclick="return {% if identity %}trigger_logout(){% else %}trigger_login(){% endif %};"
-              id="loginout-button">
-        {% if identity %}
-          Logout
-        {%  else %}
-          Login
-        {% endif %}
-      </button>
-    </div>
-  </header>
-
-{#  <div class="row align-center">#}
-{#    <div class="col-auto no-horiz-pad">#}
-{#      {{ header }}#}
-{#    </div>#}
-{#    <div class="col text-right no-horiz-pad">#}
-{#      <span id="user-loginout-msg">#}
-{#        {% if identity %}#}
-{#          Welcome {{ identity['email'] }}!#}
-{#        {% endif %}#}
-{#      </span>#}
-{#    </div>#}
-{#  </div>#}
-{% endblock %}
-
-<div class="container">
-{% block body %}
+  {% block header %}
     {{ login_overlay() }}
-    {{ super() }}
-{% endblock %}
-</div>
+    <script>
+      function handle_success(type, resp_data) {
+        const user_msg = document.querySelector('#user-loginout-msg');
+        if (type === "login") {
+          const btn = document.querySelector("#loginout-button");
+          btn.innerHTML = 'Logout';
+          btn.onclick = () => {return trigger_logout()};
+          document.querySelector('#user-logoin');
+          user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
+          report_login_result(''); // clear the login result message
+        }
+        else if (type === "register") {
+          trigger_login()
+        }
+        else { // logout
+          const btn = document.querySelector("#loginout-button");
+          btn.innerHTML = 'Login';
+          btn.onclick = () => {return trigger_login()};
+          user_msg.innerHTML = ""
+        }
+      }
+
+      function trigger_login(type=null, data=null) {
+        return login(handle_success, trigger_unchecked_login)
+      }
+
+      function trigger_unchecked_login(type=null, data=null) {
+        return login(handle_success, trigger_unchecked_login, true)
+      }
+
+      function trigger_logout() {
+        return logout(handle_success)
+        }
+    </script>
+
+    <style>
+      #loginout-button, #user-loginout-msg {
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      .no-horiz-pad {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    </style>
+
+    <header>
+      <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
+        <h5 class="my-0 mr-md-auto font-weight-normal">
+          <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
+          <a href="./query">Queries</a>
+        </h5>
+        <nav class="my-2 my-md-0 mr-md-3">
+          <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+          <a class="p-2 text-dark" href="#about">About</a>
+          <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
+        </nav>
+        <button class="btn btn-primary"
+                onclick="return {% if identity %}trigger_logout(){% else %}trigger_login(){% endif %};"
+                id="loginout-button">
+          {% if identity %}
+            Logout
+          {%  else %}
+            Login
+          {% endif %}
+        </button>
+      </div>
+    </header>
+
+  {#  <div class="row align-center">#}
+  {#    <div class="col-auto no-horiz-pad">#}
+  {#      {{ header }}#}
+  {#    </div>#}
+  {#    <div class="col text-right no-horiz-pad">#}
+  {#      <span id="user-loginout-msg">#}
+  {#        {% if identity %}#}
+  {#          Welcome {{ identity['email'] }}!#}
+  {#        {% endif %}#}
+  {#      </span>#}
+  {#    </div>#}
+  {#  </div>#}
+  {% endblock %}
+
+  <div class="container">
+    {% block body %}
+        {{ login_overlay() }}
+        {{ super() }}
+    {% endblock %}
+  </div>
+</body>
