@@ -45,9 +45,13 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
     }
   }
 
-  endsWith = '.json';
-  maxKeys = MAX_KEYS;
-  resultsPrefix = 'stats';
+  let endsWith = '.json';
+  let maxKeys = MAX_KEYS;
+  // Prefix needs to be precise enough that fewer than 1000 objects are returned
+  //Example: stats/skcm/stats_2019-08-20-17-34-40.json
+  let today = new Date();
+  let currentYearMonth = today.toISOString().slice(0,7);
+  let resultsPrefix = `stats/${model}/stats_${currentYearMonth}`;
   let s3Interface = new AWS.S3();
 
   // List model info
@@ -64,8 +68,8 @@ function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
   // Prefix needs to be precise enough that fewer than 1000 objects are returned
   // example: models/aml/model_2018-12-13-18-11-54.pkl
   let today = new Date();
-  let currentYear = today.toISOString().slice(0,4);
-  let s3Prefix = 'models/' + model + '/model_' + currentYear;
+  let currentYearMonth = today.toISOString().slice(0,7);
+  let s3Prefix = `models/${model}/model_${currentYearMonth}`;
   console.log('s3Prefix: ');
   console.log(s3Prefix);
   // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
