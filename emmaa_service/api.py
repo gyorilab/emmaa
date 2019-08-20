@@ -122,7 +122,9 @@ def get_home():
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
     model_data = _get_models()
-    return MODEL.render(model=model, model_data=model_data)
+    return render_template('model_template.html',
+                           model=model,
+                           model_data=model_data)
 
 
 @app.route('/query')
