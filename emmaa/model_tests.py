@@ -159,7 +159,7 @@ class ModelManager(object):
                 max_path_length, max_paths = self._get_test_configs()
                 result = self.model_checker.check_statement(
                     query.path_stmt, max_paths, max_path_length)
-                results.append((mc_type, self.process_response(result)))
+                results.append((mc_type, self.process_response(mc_type, result)))
             return results
         else:
             return [self.hash_response_list([[
@@ -201,7 +201,7 @@ class ModelManager(object):
                 for ix, (_, result) in enumerate(results):
                     responses.append(
                         (applicable_queries[ix], mc_type,
-                         self.process_response(result)))
+                         self.process_response(mc_type, result)))
         return responses
 
     def _get_test_configs(self):
@@ -219,7 +219,7 @@ class ModelManager(object):
                     (max_path_length, max_paths))
         return (max_path_length, max_paths)
 
-    def process_response(self, result):
+    def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
         of tuples. Each tuple contains a sentence describing either a step in a
         path (if it was found) or result code (if a path was not found) and a
@@ -227,7 +227,7 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response_list = self.make_english_path(result)
+            response_list = self.make_english_path(mc_type, result)
         else:
             response_list = self.make_english_result_code(result)
         return self.hash_response_list(response_list)
@@ -239,8 +239,11 @@ class ModelManager(object):
         response_dict = {}
         for response in response_list:
             sentences = []
-            for (sentence, link) in response:
-                sentences.append(sentence)
+            for sentence in response:
+                if len(res) == 2:
+                    sentences.append(sentence[0])
+                else:
+                    sentences.append(sentence)
             response_str = ' '.join(sentences)
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response
