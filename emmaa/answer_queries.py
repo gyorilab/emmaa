@@ -268,9 +268,13 @@ def format_results(results):
         formatted_result['model'] = result[0]
         query = result[1]
         formatted_result['query'] = _make_query_simple_dict(query)
-        formatted_result['mc_type'] = result[2]
+        mc_type = result[2]
+        formatted_result['mc_type'] = mc_type
         response_json = result[3]
-        response = _process_result_to_html(response_json)
+        if mc_type == 'pysb' or mc_type == 'pybel':
+            response = _process_result_to_html(response_json, make_links=True)
+        else:
+            response = _process_result_to_html(response_json)
         formatted_result['response'] = response
         formatted_result['date'] = make_date_str(result[4])
         formatted_results.append(formatted_result)
