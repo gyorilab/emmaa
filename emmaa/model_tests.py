@@ -125,7 +125,7 @@ class ModelManager(object):
                 if mc_type == 'signed_graph' or mc_type == 'unsigned_graph':
                     for i in range(len(path[:-1])):
                         sentence = path[i][0] + ' -> ' + path[i+1][0]
-                        sentences.append((sentence))
+                        sentences.append((sentence, ''))
                 else:
                     if mc_type == 'pysb':
                         stmts = stmts_from_pysb_path(
@@ -143,7 +143,7 @@ class ModelManager(object):
                             link = get_statement_queries([stmt])[0] + '&format=html'
                             sentences.append((sentence, link))
                         else:
-                            sentences.append((sentence))
+                            sentences.append((sentence, ''))
                 paths.append(sentences)
         return paths
 
@@ -159,13 +159,13 @@ class ModelManager(object):
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, [query.path_stmt])
                 max_path_length, max_paths = self._get_test_configs()
-                result = self.model_checker.check_statement(
+                result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
                 results.append((mc_type, self.process_response(mc_type, result)))
             return results
         else:
-            return [self.hash_response_list([[
-                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])]
+            return [('', self.hash_response_list([[
+                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]]))]
 
     def answer_queries(self, queries):
         """Answer all queries registered for this model.
@@ -199,7 +199,7 @@ class ModelManager(object):
         if applicable_queries:
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
-                results = self.model_checker.check_model()
+                results = mc.check_model()
                 for ix, (_, result) in enumerate(results):
                     responses.append(
                         (applicable_queries[ix], mc_type,
@@ -241,11 +241,8 @@ class ModelManager(object):
         response_dict = {}
         for response in response_list:
             sentences = []
-            for sentence in response:
-                if len(res) == 2:
-                    sentences.append(sentence[0])
-                else:
-                    sentences.append(sentence)
+            for sentence, _ in response:
+                sentences.append(sentence)
             response_str = ' '.join(sentences)
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response

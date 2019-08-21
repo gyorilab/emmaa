@@ -16,8 +16,8 @@ class QueryManager(object):
 
     Parameters
     ----------
-    db_name : str
-        Name of the database to use
+    db : emmaa.db.EmmaaDatabaseManager
+        An instance of a database manager to use.
     model_managers : list[emmaa.model_tests.ModelManager]
         Optional list of ModelManagers to use for running queries. If not
         given, the methods will load ModelManager from S3 when needed.
@@ -49,10 +49,15 @@ class QueryManager(object):
         for model_name in model_names:
             if model_name not in checked_models:
                 mm = self.get_model_manager(model_name)
-                response = mm.answer_query(query)
-                new_results.append((model_name, query, response, new_date))
+                response_list = mm.answer_query(query)
+                for (mc_type, response) in response_list:
+                    new_results.append(
+                        (model_name, query, mc_type, response, new_date))
                 if subscribe:
-                    self.db.put_results(model_name, [(query, response)])
+                    self.db.put_results(
+                        model_name,
+                        [(query, mc_type, response)
+                         for mc_type, response in response_list])
         all_results = saved_results + new_results
         return format_results(all_results)
 
@@ -141,7 +146,7 @@ class QueryManager(object):
                     old_result_json = None
                 f.write(self.make_str_report_one_query(model_name, query,
                         new_result_json, old_result_json))
-    
+
     def make_html_report_per_user(self, results, filename='query_delta.html'):
         """Produce a report for all query results per user in an html file."""
         msg = '<html><body>'
@@ -263,10 +268,11 @@ def format_results(results):
         formatted_result['model'] = result[0]
         query = result[1]
         formatted_result['query'] = _make_query_simple_dict(query)
-        response_json = result[2]
+        formatted_result['mc_type'] = result[2]
+        response_json = result[3]
         response = _process_result_to_html(response_json)
         formatted_result['response'] = response
-        formatted_result['date'] = make_date_str(result[3])
+        formatted_result['date'] = make_date_str(result[4])
         formatted_results.append(formatted_result)
     return formatted_results
 
@@ -296,16 +302,19 @@ def _process_result_to_str(result_json):
     return msg
 
 
-def _process_result_to_html(result_json):
+def _process_result_to_html(result_json, make_links=False):
     # Make clickable links when making htmk report
     response_list = []
     for v in result_json.values():
         for ix, (sentence, link) in enumerate(v):
             if ix > 0:
                 response_list.append('<br>')
-            response_list.append(
-                f'<a href="{link}" target="_blank" '
-                f'class="status-link">{sentence}</a>')
+            if make_links:
+                response_list.append(
+                    f'<a href="{link}" target="_blank" '
+                    f'class="status-link">{sentence}</a>')
+            else:
+                response_list.append(f'<a>{sentence}</a>')
         response = ''.join(response_list)
     return response
 
