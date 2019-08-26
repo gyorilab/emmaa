@@ -60,7 +60,7 @@ def test_put_results():
     db = _get_test_db()
     db.put_queries('joshua', test_queries[0], ['aml', 'luad'])
     queries = db.get_queries('aml')
-    results = [(query, _get_random_result())
+    results = [(query, 'pysb', _get_random_result())
                for query in queries]
     db.put_results('aml', results)
     with db.get_session() as sess:
@@ -77,7 +77,7 @@ def test_get_results():
     for query in test_queries:
         db.put_queries('joshua', query, models)
     for model in models:
-        db.put_results(model, [(query, _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Try to get the results.
@@ -87,6 +87,7 @@ def test_get_results():
     assert all(result[0] in models for result in results)
     assert any(results[0][1].matches(q) for q in test_queries)
     assert all(isinstance(result[2], str) for result in results)
+    assert all(isinstance(result[3], str) for result in results)
 
 
 @attr('nonpublic')
@@ -98,13 +99,13 @@ def test_get_latest_results():
     for query in test_queries:
         db.put_queries('joshua', query, models)
     for model in models:
-        db.put_results(model, [(query, _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Add the same statements over again
     time.sleep(10)
     for model in models:
-        db.put_results(model, [(query, _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Try to get the results. Make sure we only get the one set.
@@ -114,3 +115,4 @@ def test_get_latest_results():
     assert all(result[0] in models for result in results)
     assert any(results[0][1].matches(q) for q in test_queries)
     assert all(isinstance(result[2], str) for result in results)
+    assert all(isinstance(result[3], str) for result in results)
