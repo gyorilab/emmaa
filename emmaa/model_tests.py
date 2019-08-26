@@ -316,7 +316,7 @@ class TestManager(object):
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_tests()
+            model_manager.run_all_tests()
 
 
 class TestConnector(object):
