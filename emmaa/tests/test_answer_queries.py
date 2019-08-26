@@ -6,6 +6,7 @@ from emmaa.answer_queries import QueryManager, format_results, \
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
+from emmaa.model import EmmaaModel
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
@@ -32,6 +33,9 @@ processed_link = '<a href="https://db.indra.bio/statements/from_agents?'\
 query_not_appl = {2413475507: [
     ('Query is not applicable for this model',
      'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html')]}
+# Create a new ModelManager for tests instead of depending on S3 version
+test_model = EmmaaModel.load_from_s3('test')
+test_mm = ModelManager(test_model)
 
 
 def test_load_model_manager_from_s3():
@@ -40,11 +44,12 @@ def test_load_model_manager_from_s3():
 
 
 def test_format_results():
-    results = [('test', query_object, test_response, datetime.now())]
+    results = [('test', query_object, 'pysb', test_response, datetime.now())]
     formatted_results = format_results(results)
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
     assert formatted_results[0]['query'] == simple_query
+    assert formatted_results[0]['mc_type'] == 'pysb'
     assert isinstance(formatted_results[0]['response'], str)
     assert isinstance(formatted_results[0]['date'], str)
 
@@ -52,8 +57,7 @@ def test_format_results():
 @attr('nonpublic')
 def test_answer_immediate_query():
     db = _get_test_db()
-    qm = QueryManager(db=db)
-    qm._recreate_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
     results = qm.answer_immediate_query('tester@test.com', query_object,
                                         ['test'], subscribe=False)
     assert len(results) == 1
@@ -68,8 +72,7 @@ def test_answer_immediate_query():
 @attr('nonpublic')
 def test_answer_get_registered_queries():
     db = _get_test_db()
-    qm = QueryManager(db=db)
-    qm._recreate_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
     qm.answer_registered_queries('test')
@@ -91,27 +94,27 @@ def test_is_diff():
 @attr('nonpublic')
 def test_report_one_query():
     db = _get_test_db()
-    qm = QueryManager(db=db)
+    qm = QueryManager(db=db, model_managers=[test_mm])
     # Using results from db
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
-    qm.db.put_results('test', [(query_object, test_response),
-                               (query_object, query_not_appl)])
-    str_msg = qm.get_report_per_query('test', query_object)
+    qm.db.put_results('test', [(query_object, 'pysb', test_response),
+                               (query_object, 'pysb', query_not_appl)])
+    str_msg = qm.get_report_per_query('test', query_object)[0]
     assert str_msg
     assert 'A new result to query' in str_msg
     assert 'Query is not applicable for this model' in str_msg
     assert 'BRAF activates MAP2K1.' in str_msg
     # String report given two responses explicitly
     str_msg = qm.make_str_report_one_query(
-        'test', query_object, test_response, query_not_appl)
+        'test', query_object, 'pysb', test_response, query_not_appl)
     assert str_msg
-    assert 'A new result to query' in str_msg
+    assert 'A new result to query' in str_msg, str_msg
     assert 'Query is not applicable for this model' in str_msg
     assert 'BRAF activates MAP2K1.' in str_msg
     # Html report given two responses explicitly
     html_msg = qm.make_html_one_query_report(
-        'test', query_object, test_response, query_not_appl)
+        'test', query_object, 'pysb', test_response, query_not_appl)
     assert html_msg
     assert 'A new result to query' in html_msg
     assert 'Query is not applicable for this model' in html_msg
@@ -121,11 +124,10 @@ def test_report_one_query():
 @attr('nonpublic')
 def test_report_files():
     db = _get_test_db()
-    qm = QueryManager(db=db)
-    qm._recreate_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
     qm.db.put_queries('tester@test.com', query_object, ['test'],
                       subscribe=True)
-    qm.db.put_results('test', [(query_object, query_not_appl)])
+    qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
     results = qm.db.get_results('tester@test.com', latest_order=1)
     qm.make_str_report_per_user(results,
                                 filename='test_query_delta.txt')
@@ -135,7 +137,7 @@ def test_report_files():
     assert msg
     assert 'This is the first result to query' in msg, msg
     assert 'Query is not applicable for this model' in msg
-    qm.db.put_results('test', [(query_object, test_response)])
+    qm.db.put_results('test', [(query_object, 'pysb', test_response)])
     results = qm.db.get_results('tester@test.com', latest_order=1)
     qm.make_str_report_per_user(results,
                                 filename='new_test_query_delta.txt')
