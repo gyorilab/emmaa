@@ -204,7 +204,7 @@ class ModelManager(object):
                     responses.append(
                         (applicable_queries[ix], mc_type,
                          self.process_response(mc_type, result)))
-        return responses
+        return sorted(responses, key=lambda x: x[0].matches_key())
 
     def _get_test_configs(self):
         try:
