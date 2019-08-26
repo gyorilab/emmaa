@@ -192,7 +192,7 @@ class ModelManager(object):
                 applicable_stmts.append(query.path_stmt)
             else:
                 responses.append(
-                    (query, self.hash_response_list(
+                    (query, '', self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
         # Only do the following steps if there are applicable queries
