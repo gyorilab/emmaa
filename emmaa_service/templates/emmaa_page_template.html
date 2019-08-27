@@ -83,8 +83,9 @@
     <header>
       <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
         <h5 class="my-0 mr-md-auto font-weight-normal">
-          <a href="./home">EMMAA Dashboard</a>&nbsp;&nbsp;&nbsp;
-          <a href="./query">Queries</a>
+          {% for link_address, link_text in link_list %}
+          <a href="{{ link_address }}">{{ link_text }}</a>&nbsp;&nbsp;&nbsp;
+          {% endfor %}
         </h5>
         {% block extend_header %}
         {% endblock %}
