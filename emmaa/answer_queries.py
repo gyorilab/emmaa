@@ -108,8 +108,10 @@ class QueryManager(object):
         """
         processed_query_mc = []
         reports = []
+        # If latest results are in db, retrieve the second latest
         if stored:
             order = 2
+        # If latest results are not in db, retrieve the latest stored
         else:
             order = 1
         for model_name, query, mc_type, new_result_json, _ in new_results:
