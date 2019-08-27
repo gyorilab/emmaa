@@ -51,7 +51,13 @@ class TestRound(object):
     def __init__(self, json_results):
         self.json_results = json_results
         self.statements = self._get_statements()
-        self.mc_types = self.json_results[0]['mc_types']
+        mc_types = self.json_results[0].get('mc_types', None)
+        if mc_types:
+            self.mc_types = mc_types
+            self.mc_support = True
+        else:
+            self.mc_types = ['pysb']
+            self.mc_support = False
         for mc_type in self.mc_types:
             setattr(self, mc_type+'_test_results',
                     getattr(self, '_get_results')(mc_type))
@@ -177,12 +183,6 @@ class TestRound(object):
                 tests_by_hash[test_hash][mc_type] = [
                         get_pass_fail(result),
                         self.get_path_or_code_by_hash(test_hash, mc_type)]
-            # result = self.test_results[ix]
-            # tests_by_hash[test_hash] = [
-            #     self.get_english_statement(test),
-            #     get_pass_fail(result),
-            #     self.get_path_or_code_by_hash(test_hash)]
-
         return tests_by_hash
 
     def get_path_descriptions(self, mc_type):
@@ -196,7 +196,11 @@ class TestRound(object):
             # a path does not exceed max length
             if result.paths:
                 paths = []
-                for path in self.json_results[ix+1][mc_type]['english_path']:
+                if self.mc_support:
+                    path_loc = self.json_results[ix+1][mc_type]['english_path']
+                else:
+                    path_loc = self.json_results[ix+1]['english_path']
+                for path in path_loc:
                     links = []
                     for (sentence, link) in path:
                         link_str = f'<a href="{link}">{sentence}</a>'
@@ -212,8 +216,12 @@ class TestRound(object):
         english_codes = {}
         results = getattr(self, mc_type+'_test_results')
         for ix, result in enumerate(results):
-            (sentence, link) = (
-                self.json_results[ix+1][mc_type]['english_code'][0][0])
+            if self.mc_support:
+                (sentence, link) = (
+                    self.json_results[ix+1][mc_type]['english_code'][0][0])
+            else:
+                (sentence, link) = (
+                    self.json_results[ix+1]['english_code'][0][0])
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
                 [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
@@ -341,8 +349,12 @@ class TestRound(object):
 
     def _get_results(self, mc_type):
         unpickler = jsonpickle.unpickler.Unpickler()
-        test_results = [unpickler.restore(result[mc_type]['result_json'])
-                        for result in self.json_results[1:]]
+        if not self.mc_support:
+            test_results = [unpickler.restore(result['result_json'])
+                            for result in self.json_results[1:]]
+        else:
+            test_results = [unpickler.restore(result[mc_type]['result_json'])
+                            for result in self.json_results[1:]]
         return test_results
 
     def _get_tests(self):
