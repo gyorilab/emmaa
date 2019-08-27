@@ -51,7 +51,10 @@ class TestRound(object):
     def __init__(self, json_results):
         self.json_results = json_results
         self.statements = self._get_statements()
-        self.test_results = self._get_results()
+        self.mc_types = self.json_results[0]['mc_types']
+        for mc_type in self.mc_types:
+            setattr(self, mc_type+'_test_results',
+                    getattr(self, '_get_results')(mc_type))
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
@@ -129,10 +132,10 @@ class TestRound(object):
         """Return a list of hashes for all applied tests."""
         return list(self.english_test_results.keys())
 
-    def get_passed_test_hashes(self):
+    def get_passed_test_hashes(self, mc_type):
         """Return a list of hashes for passed tests."""
         return [test_hash for test_hash in self.english_test_results.keys() if
-                self.english_test_results[test_hash][1] == 'Pass']
+                self.english_test_results[test_hash][mc_type][0] == 'Pass']
 
     def get_total_applied_tests(self):
         """Return a number of all applied tests."""
@@ -140,15 +143,15 @@ class TestRound(object):
         logger.info(f'{total} tests were applied.')
         return total
 
-    def get_number_passed_tests(self):
+    def get_number_passed_tests(self, mc_type):
         """Return a number of all passed tests."""
-        total = len(self.get_passed_test_hashes())
+        total = len(self.get_passed_test_hashes(mc_type))
         logger.info(f'{total} tests passed.')
         return total
 
-    def passed_over_total(self):
+    def passed_over_total(self, mc_type):
         """Return a ratio of passed over total tests."""
-        return self.get_number_passed_tests()/self.get_total_applied_tests()
+        return self.get_number_passed_tests(mc_type)/self.get_total_applied_tests()
 
     def _get_applied_tests_results(self):
         """Return a dictionary mapping a test hash and a list containing its
@@ -167,25 +170,33 @@ class TestRound(object):
 
         for ix, test in enumerate(self.tests):
             test_hash = str(test.get_hash(refresh=True))
-            result = self.test_results[ix]
-            tests_by_hash[test_hash] = [
-                self.get_english_statement(test),
-                get_pass_fail(result),
-                self.get_path_or_code_by_hash(test_hash)]
+            tests_by_hash[test_hash] = {
+                'test': self.get_english_statement(test)}
+            for mc_type in self.mc_types:
+                result = getattr(self, mc_type+'_test_results')[ix]
+                tests_by_hash[test_hash][mc_type] = [
+                        get_pass_fail(result),
+                        self.get_path_or_code_by_hash(test_hash, mc_type)]
+            # result = self.test_results[ix]
+            # tests_by_hash[test_hash] = [
+            #     self.get_english_statement(test),
+            #     get_pass_fail(result),
+            #     self.get_path_or_code_by_hash(test_hash)]
 
         return tests_by_hash
 
-    def get_path_descriptions(self):
+    def get_path_descriptions(self, mc_type):
         """Return a dictionary mapping a test hash and an English description
         of a path found.
         """
         english_paths = {}
-        for ix, result in enumerate(self.test_results):
+        results = getattr(self, mc_type+'_test_results')
+        for ix, result in enumerate(results):
             # Here we use result.paths because we can only get a description if
             # a path does not exceed max length
             if result.paths:
                 paths = []
-                for path in self.json_results[ix+1]['english_path']:
+                for path in self.json_results[ix+1][mc_type]['english_path']:
                     links = []
                     for (sentence, link) in path:
                         link_str = f'<a href="{link}">{sentence}</a>'
@@ -194,13 +205,15 @@ class TestRound(object):
                     english_paths[str(self.tests[ix].get_hash(refresh=True))] = paths
         return english_paths
 
-    def get_english_codes(self):
+    def get_english_codes(self, mc_type):
         """Return a dictionary mapping a test hash and an English description
         of a result code.
         """
         english_codes = {}
-        for ix, result in enumerate(self.test_results):
-            (sentence, link) = self.json_results[ix+1]['english_code'][0][0]
+        results = getattr(self, mc_type+'_test_results')
+        for ix, result in enumerate(results):
+            (sentence, link) = (
+                self.json_results[ix+1][mc_type]['english_code'][0][0])
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
                 [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
@@ -208,19 +221,20 @@ class TestRound(object):
     def get_english_test_by_hash(self, test_hash):
         return self.english_test_results[test_hash][0]
 
-    def get_pass_fail_by_hash(self, test_hash):
-        return self.english_test_results[test_hash][1]
+    def get_pass_fail_by_hash(self, test_hash, mc_type):
+        return self.english_test_results[test_hash][mc_type][0]
 
-    def get_path_or_code_by_hash(self, test_hash):
+    def get_path_or_code_by_hash(self, test_hash, mc_type):
         # If we have a path description return it, otherwise return code
         try:
-            result = self.get_path_descriptions()[test_hash]
+            result = self.get_path_descriptions(mc_type)[test_hash]
         except KeyError:
-            result = self.get_english_codes()[test_hash]
+            result = self.get_english_codes(mc_type)[test_hash]
         return result
 
     # Methods to find delta
-    def find_numeric_delta(self, other_round, one_round_numeric_func):
+    def find_numeric_delta(self, other_round, one_round_numeric_func,
+                           mc_type='pysb'):
         """Find a numeric delta between two rounds using a passed function.
 
         Parameters
@@ -242,11 +256,17 @@ class TestRound(object):
         """
         logger.info(f'Calculating numeric delta using {one_round_numeric_func}'
                     ' method')
-        delta = (getattr(self, one_round_numeric_func)()
-                 - getattr(other_round, one_round_numeric_func)())
+        if one_round_numeric_func == 'get_number_passed_tests' or \
+                one_round_numeric_func == 'passed_over_total':
+            kwargs = {'mc_type': mc_type}
+        else:
+            kwargs = {}
+        delta = (getattr(self, one_round_numeric_func)(**kwargs)
+                 - getattr(other_round, one_round_numeric_func)(**kwargs))
         return delta
 
-    def find_content_delta(self, other_round, content_type, add_result=False):
+    def find_content_delta(self, other_round, content_type, add_result=False,
+                           mc_type='pysb'):
         """Return a dictionary of changed items of a given content type. This
         method makes use of self.function_mapping dictionary.
 
@@ -270,13 +290,19 @@ class TestRound(object):
             a dictionary will contain lists of tuples where each tuple has an
             item and a result in Pass/Fail format.
         """
+        if content_type == 'passed_tests' or content_type == 'paths':
+            kwargs = {'mc_type': mc_type}
+        else:
+            kwargs = {}
         logger.info(f'Finding a content delta for {content_type}.')
-        # First we need to find hashes of objects we want to compare for 
+        # First we need to find hashes of objects we want to compare for
         # latest and previous rounds
-        latest_hashes = getattr(self, self.function_mapping[content_type][0])()
+        latest_hashes = getattr(
+            self, self.function_mapping[content_type][0])(**kwargs)
         logger.info(f'Found {len(latest_hashes)} hashes in current round.')
         previous_hashes = getattr(
-            other_round, other_round.function_mapping[content_type][0])()
+            other_round,
+            other_round.function_mapping[content_type][0])(**kwargs)
         logger.info(f'Found {len(previous_hashes)} hashes in other round.')
         # Find hashes unique for each of the rounds - this is delta
         added_hashes = list(set(latest_hashes) - set(previous_hashes))
@@ -285,15 +311,17 @@ class TestRound(object):
         def get_item(tr, item_hash):
             # Get an instance of an object given its hash
             return getattr(
-                    tr, tr.function_mapping[content_type][1])(item_hash)
+                    tr, tr.function_mapping[content_type][1])(
+                        item_hash, **kwargs)
 
         # Optionally add pass/fail status (applicable for tests)
         if add_result:
             added_items = [(get_item(self, item_hash),
-                            self.get_pass_fail_by_hash(item_hash))
+                            self.get_pass_fail_by_hash(item_hash, **kwargs))
                            for item_hash in added_hashes]
             removed_items = [(get_item(other_round, item_hash),
-                              other_round.get_pass_fail_by_hash(item_hash))
+                              other_round.get_pass_fail_by_hash(
+                                  item_hash, **kwargs))
                              for item_hash in removed_hashes]
         # Get lists of items added and removed in the latest round
         else:
@@ -311,9 +339,9 @@ class TestRound(object):
         serialized_stmts = self.json_results[0]['statements']
         return [Statement._from_json(stmt) for stmt in serialized_stmts]
 
-    def _get_results(self):
+    def _get_results(self, mc_type):
         unpickler = jsonpickle.unpickler.Unpickler()
-        test_results = [unpickler.restore(result['result_json'])
+        test_results = [unpickler.restore(result[mc_type]['result_json'])
                         for result in self.json_results[1:]]
         return test_results
 
