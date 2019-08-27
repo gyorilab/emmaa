@@ -29,6 +29,9 @@ HERE = path.dirname(path.abspath(__file__))
 EMMAA = path.join(HERE, path.pardir)
 DASHBOARD = path.join(HERE, 'dashboard')
 
+link_list = [('./home', 'EMMAA Dashboard'),
+             ('./query', 'Queries')]
+
 SC, jwt = config_auth(app)
 
 
@@ -116,15 +119,18 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/home')
 def get_home():
     model_data = _get_models()
-    return render_template('index_template.html', model_data=model_data)
+    return render_template('index_template.html', model_data=model_data,
+                           link_list=link_list)
 
 
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
     model_data = _get_models()
+    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
     return render_template('model_template.html',
                            model=model,
-                           model_data=model_data)
+                           model_data=model_data,
+                           link_list=mod_link_list)
 
 
 @app.route('/query')
@@ -137,7 +143,8 @@ def get_query_page():
     old_results = qm.get_registered_queries(user_email)
 
     return render_template('query_template.html', model_data=model_data,
-                           stmt_types=stmt_types, old_results=old_results)
+                           stmt_types=stmt_types, old_results=old_results,
+                           link_list=link_list)
 
 
 @app.route('/query/submit', methods=['POST'])
