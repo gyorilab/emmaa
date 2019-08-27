@@ -350,6 +350,14 @@ class TestRound(object):
                  for res in self.json_results[1:]]
         return tests
 
+    def _get_pysb_results(self):
+        # This is a temporary method to support current dashboard layout
+        pysb_results = {}
+        for test_hash, test_dict in self.english_test_results.items():
+            pysb_results[test_hash] = [
+                test_dict['test'], test_dict['pysb'][0], test_dict['pysb'][1]]
+        return pysb_results
+
 
 class StatsGenerator(object):
     """Generates statistic for a given test round.
@@ -406,7 +414,7 @@ class StatsGenerator(object):
         self.make_model_delta()
         self.make_tests_delta()
         self.make_changes_over_time()
-        
+
     def make_model_summary(self):
         """Add latest model state summary to json_stats."""
         logger.info(f'Generating model summary for {self.model_name}.')
@@ -424,12 +432,20 @@ class StatsGenerator(object):
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
-            'number_passed_tests': self.latest_round.get_number_passed_tests(),
-            'passed_ratio': self.latest_round.passed_over_total(),
-            'tests_by_hash': self.latest_round.english_test_results,
-            'passed_tests': self.latest_round.get_passed_test_hashes(),
-            'paths': self.latest_round.get_path_descriptions()
+            'tests_by_hash': self.latest_round._get_pysb_results()
         }
+        for mc_type in self.latest_round.mc_types:
+            self.json_stats['test_round_summary'][mc_type] = {
+                'number_passed_tests': (
+                    self.latest_round.get_number_passed_tests(mc_type)),
+                'passed_ratio': self.latest_round.passed_over_total(mc_type),
+                'passed_tests': (
+                    self.latest_round.get_passed_test_hashes(mc_type)),
+                'paths': self.latest_round.get_path_descriptions(mc_type)
+            }
+        # This is for backward compatibility until the dashboard is updated
+        for key, value in self.json_stats['test_round_summary']['pysb'].items():
+            self.json_stats['test_round_summary'][key] = value
 
     def make_model_delta(self):
         """Add model delta between two latest model states to json_stats."""
@@ -452,31 +468,43 @@ class StatsGenerator(object):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
         if not self.previous_round:
-            self.json_stats['tests_delta'] = {
-                'number_applied_tests_delta': 0,
-                'number_passed_tests_delta': 0,
-                'passed_ratio_delta': 0,
-                'applied_tests_delta': {'added': [], 'removed': []},
-                'pass_fail_delta': {'added': [], 'removed': []},
-                'new_paths': {'added': [], 'removed': []}
-            }
+            tests_delta = {'number_applied_tests_delta': 0}
         else:
-            self.json_stats['tests_delta'] = {
-                'number_applied_tests_delta': (
+            tests_delta = {'number_applied_tests_delta': (
                     self.latest_round.find_numeric_delta(
-                        self.previous_round, 'get_total_applied_tests')),
-                'number_passed_tests_delta': (
-                    self.latest_round.find_numeric_delta(
-                        self.previous_round, 'get_number_passed_tests')),
-                'passed_ratio_delta': self.latest_round.find_numeric_delta(
-                    self.previous_round, 'passed_over_total'),
-                'applied_tests_delta': self.latest_round.find_content_delta(
-                    self.previous_round, 'applied_tests', add_result=True),
-                'pass_fail_delta': self.latest_round.find_content_delta(
-                    self.previous_round, 'passed_tests'),
-                'new_paths': self.latest_round.find_content_delta(
-                    self.previous_round, 'paths')
-            }
+                        self.previous_round, 'get_total_applied_tests'))}
+        for mc_type in self.latest_round.mc_types:
+            if mc_type not in self.previous_round.mc_types:
+                tests_delta[mc_type] = {
+                    'number_passed_tests_delta': 0,
+                    'passed_ratio_delta': 0,
+                    'applied_tests_delta': {'added': [], 'removed': []},
+                    'pass_fail_delta': {'added': [], 'removed': []},
+                    'new_paths': {'added': [], 'removed': []}
+                }
+            else:
+                tests_delta[mc_type] = {
+                    'number_passed_tests_delta': (
+                        self.latest_round.find_numeric_delta(
+                            self.previous_round, 'get_number_passed_tests',
+                            mc_type=mc_type)),
+                    'passed_ratio_delta': self.latest_round.find_numeric_delta(
+                        self.previous_round, 'passed_over_total',
+                        mc_type=mc_type),
+                    'applied_tests_delta': (
+                        self.latest_round.find_content_delta(
+                            self.previous_round, 'applied_tests',
+                            add_result=True, mc_type=mc_type)),
+                    'pass_fail_delta': self.latest_round.find_content_delta(
+                        self.previous_round, 'passed_tests', mc_type=mc_type),
+                    'new_paths': self.latest_round.find_content_delta(
+                        self.previous_round, 'paths', mc_type=mc_type)
+                }
+        # This is for backward compatibility until the dashboard is updated
+        for key, value in tests_delta['pysb'].items():
+            tests_delta[key] = value
+
+        self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
@@ -486,22 +514,52 @@ class StatsGenerator(object):
                 'model_summary', 'number_of_statements'),
             'number_applied_tests': self.get_over_time(
                 'test_round_summary', 'number_applied_tests'),
-            'number_passed_tests': self.get_over_time(
-                'test_round_summary', 'number_passed_tests'),
-            'passed_ratio': self.get_over_time(
-                'test_round_summary', 'passed_ratio'),
             'dates': self.get_dates()
         }
+        for mc_type in self.latest_round.mc_types:
+            self.json_stats['changes_over_time'][mc_type] = {
+                'number_passed_tests': self.get_over_time(
+                    'test_round_summary', 'number_passed_tests', mc_type),
+                'passed_ratio': self.get_over_time(
+                    'test_round_summary', 'passed_ratio', mc_type)
+            }
 
-    def get_over_time(self, section, metrics):
+        # This is for backward compatibility until the dashboard is updated
+        for key, value in self.json_stats['changes_over_time']['pysb'].items():
+            self.json_stats['changes_over_time'][key] = value
+
+    def get_over_time(self, section, metrics, mc_type='pysb'):
         logger.info(f'Getting changes over time in {metrics} '
                     f'for {self.model_name}.')
-        if not self.previous_json_stats:
-            previous_data = []
+        # Not mc_type relevant data
+        if metrics == 'number_of_statements' or \
+                metrics == 'number_applied_tests':
+            # First available stats
+            if not self.previous_json_stats:
+                previous_data = []
+            else:
+                previous_data = (
+                    self.previous_json_stats['changes_over_time'][metrics])
+            previous_data.append(self.json_stats[section][metrics])
+        # Mc_type relevant data
         else:
-            previous_data = (
-                self.previous_json_stats['changes_over_time'][metrics])
-        previous_data.append(self.json_stats[section][metrics])
+            # First available stats
+            if not self.previous_json_stats:
+                previous_data = []
+            else:
+                # Retrieve old pysb results, only needed for first run
+                if mc_type == 'pysb':
+                    previous_data = (
+                        self.previous_json_stats['changes_over_time'][metrics])
+                # This mc_type wasn't available in previous stats
+                elif mc_type not in \
+                        self.previous_json_stats['changes_over_time']:
+                    previous_data = []
+                else:
+                    previous_data = (
+                        self.previous_json_stats[
+                            'changes_over_time'][mc_type][metrics])
+            previous_data.append(self.json_stats[section][mc_type][metrics])
         return previous_data
 
     def get_dates(self):
