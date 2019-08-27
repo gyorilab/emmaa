@@ -14,8 +14,10 @@ from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
+from indralab_auth_tools.auth import auth, config_auth
 
 app = Flask(__name__)
+app.register_blueprint(auth)
 app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ EMMAA_BUCKET_NAME = 'emmaa'
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 
+SC, jwt = config_auth(app)
 
 qm = QueryManager()
 
