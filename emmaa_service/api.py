@@ -2,7 +2,6 @@ import json
 import argparse
 import boto3
 import logging
-from os import path, environ
 from jinja2 import Template
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template
@@ -25,10 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
-HERE = path.dirname(path.abspath(__file__))
-EMMAA = path.join(HERE, path.pardir)
-DASHBOARD = path.join(HERE, 'dashboard')
-
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 
@@ -36,18 +31,6 @@ SC, jwt = config_auth(app)
 
 
 qm = QueryManager()
-
-
-# Create a template object from the template file, load once
-def _load_template(fname):
-    template_path = path.join(DASHBOARD, fname)
-    with open(template_path, 'rt') as f:
-        template_str = f.read()
-        template = Template(template_str)
-    return template
-
-
-MODEL = _load_template('model.html')
 
 
 def _get_models():
@@ -119,7 +102,8 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/home')
 def get_home():
     model_data = _get_models()
-    return render_template('index_template.html', model_data=model_data,
+    return render_template('index_template.html',
+                           model_data=model_data,
                            link_list=link_list)
 
 
