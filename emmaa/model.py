@@ -42,6 +42,12 @@ class EmmaaModel(object):
         A string containing the name of the model
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
+    assembly_config : dict
+        Configurations for assembling the model.
+    test_config : dict
+        Configurations for running tests on the model.
+    reading_config : dict
+        Configurations for reading the content.
     search_terms : list[emmaa.priors.SearchTerm]
         A list of SearchTerm objects containing the search terms used in the
         model.
