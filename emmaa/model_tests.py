@@ -262,6 +262,7 @@ class ModelManager(object):
         results_json.append({
             'model_name': self.model.name,
             'statements': self.assembled_stmts_to_json(),
+            'mc_types': self.mc_types,
             'make_links': self.make_links})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
