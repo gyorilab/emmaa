@@ -104,7 +104,7 @@
         <thead>
           <th>Model</th>
           <th style="width: 29%;">Query</th>
-          <th>Status</th>
+          <th>Path Found or Result Code</th>
           <th style="width: 19%;">Date</th>
         </thead>
         <tbody class="table-body" id="old-results">
@@ -113,7 +113,7 @@
             <!-- model, query, response, date -->
             <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
             <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
-            <td>{{ result['response'] }}</td>
+            <td>{{ result['response']|safe }}</td>
             <td>{{ result['date'] }}</td>
           </tr>
           {% endfor %}
