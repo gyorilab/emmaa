@@ -78,7 +78,7 @@ def test_get_results():
     for query in test_queries:
         db.put_queries('joshua', query, models)
     for model in models:
-        db.put_results(model, [(query, '', _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Try to get the results.
@@ -100,13 +100,13 @@ def test_get_latest_results():
     for query in test_queries:
         db.put_queries('joshua', query, models)
     for model in models:
-        db.put_results(model, [(query, '', _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Add the same statements over again
     time.sleep(10)
     for model in models:
-        db.put_results(model, [(query, '', _get_random_result())
+        db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
 
     # Try to get the results. Make sure we only get the one set.
