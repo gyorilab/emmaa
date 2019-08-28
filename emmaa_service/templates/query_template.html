@@ -34,34 +34,44 @@
       <div class="form-container" style="display: inline-block; vertical-align: top;">
         <div class="text" style="display: table;">
           <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
-            <div class="dropdown" style="display: table-cell; padding-right: 2px">
-              <!-- WARNING: The id of the select tag goes into the query
-              dictionary, do NOT change it unless it is changed in the rest API
-              and query handling -->
-              <select class="custom-select" id="typeSelection">
-                <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
-                {% for stmt_type in stmt_types %}
-                <option value="{{ stmt_type }}">{{ stmt_type }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <!-- subject -->
-            <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject"></div>
-            <!-- object -->
-            <div style="display: table-cell; padding-left: 2px; padding-right: 2px"><input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object"></div>
-            <!-- register -->
-            <div style="display: table-cell; padding-left: 2px; padding-right: 1px" class="register-container">
-              <div class="checkbox">
-                <input type="checkbox" name="register" id="register-query"><label
-                  for="register-query">Register Query</label>
+            <div class="row">
+              <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                  changed in the rest API and query handling -->
+                <select class="custom-select" id="typeSelection">
+                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                  {% for stmt_type in stmt_types %}
+                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- subject -->
+              <div class="col" style="padding-right: 2px">
+                <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
+              </div>
+              <!-- object -->
+              <div class="col" style="padding-left: 2px; padding-right: 2px">
+                <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
+              </div>
+              <!-- register -->
+              <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
+                <div class="checkbox">
+                  <input type="checkbox" name="register" id="register-query"><label
+                    for="register-query">Register Query</label>
+                </div>
               </div>
             </div>
             <!-- indra docs text -->
-            <div class="text-container">
-              <i>To read more about statement types, read the <a href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+            <div class="text-container row">
+              <i class="col">To read more about statement types, read the <a
+                  href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
             </div>
             <!-- formsubmit -->
-            <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+            <div class="row">
+              <div class="container">
+                <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+              </div>
+            </div>
           </form>
         </div>
       </div>
