@@ -168,8 +168,12 @@ def process_query():
 
     else:
         logger.info('Query submitted')
-        result = qm.answer_immediate_query(
-            user_email, query, models, subscribe)
+        try:
+            result = qm.answer_immediate_query(
+                user_email, query, models, subscribe)
+        except Exception as e:
+            logger.exception(e)
+            raise(e)
         logger.info('Answer to query received, responding to client.')
         res = {'result': result}
 
