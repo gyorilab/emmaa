@@ -264,7 +264,7 @@ class EmmaaDatabaseManager(object):
         Returns
         -------
         results : list[tuple]
-            A list of tuples, each of the form: (model_id, query,
+            A list of tuples, each of the form: (model_id, query, mc_type,
             result_json, date) representing the result of a query run on a
             model on a given date.
         """
