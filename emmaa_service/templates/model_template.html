@@ -1,0 +1,229 @@
+{% extends "emmaa_page_template.html" %}
+
+{% block additional_scripts %}
+<script>
+  var model = '{{ model }}'
+
+  // Check if user signed in immediately after page load
+  $(document).ready(function(){
+    clearTables(document.getElementsByClassName('table-body'))
+    console.log('document ready')
+    var return_url = window.location.href;
+    let dict_split = getDictFromUrl(return_url);
+
+    // Check sign-in
+    // checkSignIn()
+
+    var ddSelectTag = document.getElementById('modelSelectDD');
+    setModel(ddSelectTag, model);
+
+    var infoTableBody = document.getElementById('modelInfoTableBody');
+    var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
+    var testResultsTableBody = document.getElementById('modelTestResultBody');
+
+    // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
+    selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
+    });
+
+  function modelRedirect(ddSelect) {
+
+    // Get selected option
+    let newModel = '';
+    for (child of ddSelect.children) {
+      if (child.selected) {
+        newModel = child.value;
+        break;
+      }
+    }
+
+    // redirect url:
+    let redirect = window.location.href.replace(model, newModel)
+    console.log(redirect)
+    window.location.replace(redirect)
+  }
+</script>
+<style>
+  .fa-check {color: #00ff00}
+  .fa-times {color: #ff0000}
+  .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
+  a.stmt-dblink {
+    color: #000000;
+    text-decoration: none;
+  }
+  a {
+    target-new: tab;
+  }
+  body > .container {
+    padding: 85px 15px 0;
+  }
+</style>
+{% endblock %}
+
+{% block extend_header %}
+<!-- Model select dropdown -->
+<div class="input-group" style="width: 410px;">
+  <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
+    <option selected disabled hidden>Select model...</option>
+    {% for model_id, model_meta in model_data %}
+    <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+    {% endfor %}
+  </select>
+  <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
+  <div class="input-group-append">
+    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block body %}
+  <!-- Tabs -->
+<div class="container nav-container">
+  <nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+    </div>
+  </nav>
+</div>
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+    <!-- Model stuff goes here -->
+
+    <!-- This table displays model data -->
+    <div class="container" id="modelInfoTable">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Model Info</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Item</th>
+              <th>Details</th>
+            </thead>
+            <tbody class="table-body" id="modelInfoTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="modelTestResultBody"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="agentDistr"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Statement</th>
+              <th>Evidence Count</th>
+            </thead>
+            <tbody class="table-body" id="stmtEvidence"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="stmtsOverTime"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">New Added Statements</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Statement</th>
+            </thead>
+            <tbody class="table-body" id="addedStmts"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+    <!-- Test stuff goes here -->
+
+    <div class="container" id="modelTestResult">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="passedRatio"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="passedApplied"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">New Applied Tests</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Test</th>
+              <th>Status</th>
+            </thead>
+            <tbody class="table-body" id="newAppliedTests"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Test</th>
+              <th>Path Found</th>
+            </thead>
+            <tbody class="table-body" id="newPassedTests"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">All Test Results</h4>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <th>Test</th>
+              <th>Status</th>
+              <th>Path Found or Result Code</th>
+            </thead>
+            <tbody class="table-body" id="allTestResults"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

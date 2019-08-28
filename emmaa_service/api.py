@@ -2,14 +2,12 @@ import json
 import argparse
 import boto3
 import logging
-from os import path
-from jinja2 import Template
 from botocore.exceptions import ClientError
-from flask import abort, Flask, request, Response
+from flask import abort, Flask, request, Response, render_template
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
-    RemoveModification, get_statement_by_name, Agent
+    RemoveModification, get_statement_by_name
 
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
@@ -17,29 +15,16 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
 
 app = Flask(__name__)
+app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
 
-HERE = path.dirname(path.abspath(__file__))
-EMMAA = path.join(HERE, path.pardir)
-DASHBOARD = path.join(EMMAA, 'dashboard')
+TITLE = 'emmaa title'
+link_list = [('./home', 'EMMAA Dashboard'),
+             ('./query', 'Queries')]
 
 
 qm = QueryManager()
-
-
-# Create a template object from the template file, load once
-def _load_template(fname):
-    template_path = path.join(DASHBOARD, fname)
-    with open(template_path, 'rt') as f:
-        template_str = f.read()
-        template = Template(template_str)
-    return template
-
-
-INDEX = _load_template('index.html')
-MODEL = _load_template('model.html')
-QUERIES = _load_template('query.html')
 
 
 def _get_models():
@@ -111,13 +96,19 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/home')
 def get_home():
     model_data = _get_models()
-    return INDEX.render(model_data=model_data)
+    return render_template('index_template.html',
+                           model_data=model_data,
+                           link_list=link_list)
 
 
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
     model_data = _get_models()
-    return MODEL.render(model=model, model_data=model_data)
+    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    return render_template('model_template.html',
+                           model=model,
+                           model_data=model_data,
+                           link_list=mod_link_list)
 
 
 @app.route('/query')
@@ -129,8 +120,9 @@ def get_query_page():
     user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
-    return QUERIES.render(model_data=model_data, stmt_types=stmt_types,
-                          old_results=old_results)
+    return render_template('query_template.html', model_data=model_data,
+                           stmt_types=stmt_types, old_results=old_results,
+                           link_list=link_list)
 
 
 @app.route('/query/submit', methods=['POST'])

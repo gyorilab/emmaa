@@ -1,0 +1,140 @@
+{% extends "emmaa_page_template.html" %}
+
+{% block additional_scripts %}
+<script src="{{ url_for('static', filename='queryFunctions.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+<script type="text/javascript">
+  setEnv('emmaa') // Set environment for AWS functionalities
+  // checkSignIn() // Check sign-in
+</script>
+<div class="container" id="query-container">
+
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Model Queries</h4>
+    </div>
+    <div class="card-body">
+
+      <!-- model selection -->
+      <h6><b>Model selection</b></h6>
+      <div class="checkbox-container">
+        <div class="form-select">
+          <select name="model-select" id="model-select" placeholder="Select models" multiple>
+          {% for model_id, config_json in model_data %}
+            <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+          {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- stmt type select -->
+      <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+      <div class="form-container" style="display: inline-block; vertical-align: top;">
+        <div class="text" style="display: table;">
+          <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+            <div class="row">
+              <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                  changed in the rest API and query handling -->
+                <select class="custom-select" id="typeSelection">
+                  <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                  {% for stmt_type in stmt_types %}
+                  <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- subject -->
+              <div class="col" style="padding-right: 2px">
+                <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
+              </div>
+              <!-- object -->
+              <div class="col" style="padding-left: 2px; padding-right: 2px">
+                <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
+              </div>
+              <!-- register -->
+              <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
+                <div class="checkbox">
+                  <input type="checkbox" name="register" id="register-query"><label
+                    for="register-query">Register Query</label>
+                </div>
+              </div>
+            </div>
+            <!-- indra docs text -->
+            <div class="text-container row">
+              <i class="col">To read more about statement types, read the <a
+                  href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+            </div>
+            <!-- formsubmit -->
+            <div class="row">
+              <div class="container">
+                <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="container">
+          <div id="query-status-gif" style="display: none;">
+            <img src="https://indralab.github.io/emmaa/dashboard/images/ajax-loader.gif">
+          </div>
+          <span><i id="query-status"></i></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Query results -->
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Results</h4>
+    </div>
+    <div class="card-body" id="query-results">
+      <table class="table">
+        <thead>
+          <th>Model</th>
+          <th>Result</th>
+        </thead>
+        <tbody class="table-body" id="queryResults"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- List user queries -->
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Previous queries</h4>
+    </div>
+    <div class="card-body" id="user-queries">
+      <table class="table">
+        <thead>
+          <th>Model</th>
+          <th style="width: 29%;">Query</th>
+          <th>Path Found or Result Code</th>
+          <th style="width: 19%;">Date</th>
+        </thead>
+        <tbody class="table-body" id="old-results">
+          {% for result in old_results %}
+          <tr>
+            <!-- model, query, response, date -->
+            <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
+            <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
+            <td>{{ result['response']|safe }}</td>
+            <td>{{ result['date'] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
