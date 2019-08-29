@@ -165,8 +165,14 @@ def get_agent_from_text(ag_name, use_grouding_service=True):
     """Return an INDRA Agent object."""
     grounding_url = "http://grounding.indra.bio/ground"
     if use_grouding_service:
-        return get_agent_from_grounding_service(ag_name, grounding_url)
-    return get_agent_from_local_grounding(ag_name)
+        try:
+            agent = get_agent_from_grounding_service(ag_name, grounding_url)
+        except Exception as e:
+            logger.warning('Could not get agent from grounding service: %s' % e)
+            agent = get_agent_from_local_grounding(ag_name)
+    else:
+        agent = get_agent_from_local_grounding(ag_name)
+    return agent
 
 
 def get_grounding_from_name(name):
