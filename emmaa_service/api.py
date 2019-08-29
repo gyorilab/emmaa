@@ -107,6 +107,10 @@ def model_last_updated(model):
 
 
 def _file_tree_list(prefix):
+    """This function assumes the prefix is specific enough that the top level
+    dict keys of the returned structure are the filenames of the sought after
+    files, i.e. that the top level keys are 'file.txt' as explained in the
+    docstring of 'get_s3_file_tree'."""
     s3 = boto3.client('s3')
     return sorted(get_s3_file_tree(s3=s3, bucket='emmaa', prefix=prefix))
 
