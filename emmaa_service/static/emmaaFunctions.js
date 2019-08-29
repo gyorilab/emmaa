@@ -35,7 +35,6 @@ function setModel(ddSelect, model) {
 }
 
 function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) {
-  // console.log('function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect)')
   // Get selected option
   var model = '';
   for (child of ddSelect.children) {
@@ -61,7 +60,6 @@ function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTab
 }
 
 function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
-  console.log('function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, prefix, endsWith)')
   // wrapper function that can be called selectModel or from pageload of models.html
 
   // Prefix needs to be precise enough that fewer than 1000 objects are returned
@@ -69,8 +67,6 @@ function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
   let today = new Date();
   let currentYearMonth = today.toISOString().slice(0,7);
   let s3Prefix = `models/${model}/model_${currentYearMonth}`;
-  console.log('s3Prefix: ');
-  console.log(s3Prefix);
   // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
   // listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, s3Prefix, maxKeys, endsWith)
 }
@@ -120,7 +116,6 @@ function generatePassFail(rowEl, col) {
 }
 
 function linkifyFromArray(tag, linkArray) {
-  // console.log('function linkifyFromArray(tag, linkArray)')
   if (Object.prototype.toString.call(linkArray) == '[object String]') {
     return linkifyFromString(tag, linkArray);
   }
@@ -133,7 +128,6 @@ function linkifyFromArray(tag, linkArray) {
 }
 
 function linkifyFromString(tag, htmlText) {
-  // console.log('function linkifyFromString(tag, htmlText)')
   tag.innerHTML = null;
   tag.innerHTML = htmlText;
   let anchors = tag.getElementsByTagName('a')
@@ -143,7 +137,6 @@ function linkifyFromString(tag, htmlText) {
       a.target = "_blank"
     }
   }
-  // console.log(tag)
   return tag;
 }
 
@@ -156,15 +149,12 @@ function addLineBreaks(rowEl, col) {
 }
 
 function populateModelsTable(metaTableBody, json) {
-  // console.log('function populateModelsTable(metaTableBody, json)')
-  // console.log(json)
   clearTable(metaTableBody);
 
   // Get english statements from evidence text
   // Link out to restAPI html page with all statements
   let maxOutput = Math.min(json.length, 25)
   for (let i = 0; i < maxOutput; i++) {
-    // console.log('Loop ' + i)
     let plainEnglish = json[i].stmt.evidence[0].text;
     let sourceHash = json[i].stmt.evidence[0].source_hash;
     link = document.createElement('a')
@@ -185,7 +175,6 @@ function populateModelsTable(metaTableBody, json) {
 }
 
 function getTestResultJsonToTable(testResultTableBody, jsonKey) {
-  // console.log('function getTestResultJsonToTable(testResultTableBody, jsonKey)');
   let jsonPromise = getPublicJson(EMMMAA_BUCKET, jsonKey);
   jsonPromise.then(function(json){
     populateTestResultTable(testResultTableBody, json);
@@ -194,10 +183,6 @@ function getTestResultJsonToTable(testResultTableBody, jsonKey) {
 
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
-  console.log('function populateTestResultTable(tableBody, json)');
-  // console.log(tableBody)
-  console.log('test results json');
-  console.log(json);
 
   // IDs
   let stmtTypDistId = '#modelTestResultBody'
@@ -221,8 +206,6 @@ function populateTestResultTable(tableBody, json) {
     stmt_freq_array.push(pair[1])
   }
   // See example at: https://c3js.org/samples/axes_x_tick_format.html
-  // console.log('stmt_type_array: ' + stmt_type_array)
-  // console.log('stmt_freq_array: ' + stmt_freq_array)
   stmtTypeDataParams = {
     // x: 'x',
     columns: [
@@ -282,7 +265,6 @@ function populateTestResultTable(tableBody, json) {
   let newStTable = document.getElementById('addedStmts')
   clearTable(newStTable)
   var new_stmts = json.model_delta.statements_delta.added
-  // console.log(new_stmts)
   for (stmt of new_stmts) {
     // Has columns: statements
     let rowEl = addToRow([stmt])
@@ -296,7 +278,6 @@ function populateTestResultTable(tableBody, json) {
   passedRatio = passedRatio.map(function(element) {
     return (element*100).toFixed(2);
   })
-  // console.log('ratio %' + passedRatio)
   passedRatio.unshift('Passed Ratio')
 
   lineDataParams = {
@@ -408,11 +389,7 @@ function modelsLastUpdated(keyMapArray, endsWith) {
   //    sort list descending, alphabetical, order
   //    get first (i.e. latest) item
   //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
-  // console.log('Objects in bucket: ')
-  // console.log(keyMapArray)
   let modelsMapArray = getModels(null, keyMapArray, endsWith)
-  // console.log('Following objects mapped to models, filtered for object keys ending in ' + endsWith)
-  // console.log(modelsMapArray)
 
   let modelUpdateTagsArray = document.getElementsByClassName('modelUpdateInfo')
   for (tag of modelUpdateTagsArray) {
@@ -425,7 +402,6 @@ function modelsLastUpdated(keyMapArray, endsWith) {
 }
 
 function getModels(findModel, keyMapArray, endsWith) {
-  // console.log('function getModels(findModel, keyMapArray, endsWith)')
   var models = {}
   for (m of MODELS_ARRAY) {
     models[m] = []
@@ -450,8 +426,7 @@ function getModels(findModel, keyMapArray, endsWith) {
 }
 
 function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith) {
-  // console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
-  
+
   // get array of filtered object keys
   let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith);
   let sortedTestJsonsArray = testJsonsArray.sort();
@@ -483,7 +458,6 @@ function listModelTests(tableBody, testResultTableBody, keyMapArray, model, ends
 }
 
 function getArrayOfModelTests(model, keyMapArray, endsWith) {
-  // console.log('function getArrayOfModelTests(model, keyMapArray, endsWith)');
   //  for each object ket
   //    if key.endswith(endsWith) & correct prefix
   //      save to list
@@ -494,7 +468,6 @@ function getArrayOfModelTests(model, keyMapArray, endsWith) {
     }
   }
   // if (tests.length > 0) {
-  //   console.log('Non-zero array of test jsons resolved')
   //   console.log(tests)
   // }
   return tests;
@@ -518,9 +491,6 @@ https://c3js.org/
 */
 
 function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
-  // console.log('function generateBar(chartDivId, dataParams)')
-  // console.log(chartDivId)
-  // console.log(dataParams)
   var barChart = c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -544,9 +514,6 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
 }
 
 function generateLineArea(chartDivId, dataParams, chartTitle) {
-  // console.log('function generateLine(chartId, dataparams)')
-  // console.log(chartDivId)
-  // console.log(dataParams)
   var lineChart = c3.generate({
     bindto: chartDivId,
     data: dataParams,
