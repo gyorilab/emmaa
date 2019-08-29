@@ -205,7 +205,7 @@ def process_query():
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
-    expceted_models = {mid for mid, _ in _get_model_meta_data()}
+    expected_models = {mid for mid, _ in _get_model_meta_data()}
     try:
         user_email = request.json['user']['email']
         subscribe = request.json['register']
@@ -214,8 +214,8 @@ def process_query():
             (f'Did not get expected query keys: got {set(query_json.keys())} '
              f'not {expected_query_keys}')
         models = set(request.json.get('models'))
-        assert models < expceted_models, \
-            f'Got unexpected models: {models - expceted_models}'
+        assert models < expected_models, \
+            f'Got unexpected models: {models - expected_models}'
     except (KeyError, AssertionError) as e:
         logger.exception(e)
         logger.error("Invalid query!")
