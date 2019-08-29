@@ -61,14 +61,13 @@ class TestRound(object):
         self.statements = self._get_statements()
         mc_types = self.json_results[0].get('mc_types', None)
         if mc_types:
-            self.mc_types = mc_types
             self.mc_support = True
         else:
-            self.mc_types = ['pysb']
+            mc_types = ['pysb']
             self.mc_support = False
-        for mc_type in self.mc_types:
-            setattr(self, mc_type+'_test_results',
-                    getattr(self, '_get_results')(mc_type))
+        self.mc_types_results = {}
+        for mc_type in mc_types:
+            self.mc_types_results[mc_type] = self._get_results(mc_type)
         self.make_links = self.json_results[0].get('make_links', True)
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING

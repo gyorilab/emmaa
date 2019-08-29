@@ -8,7 +8,8 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
-from indra.explanation.model_checker import ModelChecker
+from indra.explanation.model_checker import PysbModelChecker, \
+    PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.english.assembler import EnglishAssembler
@@ -66,22 +67,28 @@ class ModelManager(object):
     """
     def __init__(self, model):
         self.model = model
-        self.mc_types = model.test_config.get('mc_types', ['pysb'])
-        for mc_type in self.mc_types:
-            setattr(self, mc_type+'_model',
-                    getattr(self.model, 'assemble_'+mc_type)())
-            setattr(self, mc_type+'_model_checker',
-                    get_class_from_name(
-                        mc_type+'_model_checker',
-                        ModelChecker)(getattr(self, mc_type+'_model')))
-            setattr(self, mc_type+'_test_results', [])
+        self.mc_mapping = {
+            'pysb': (self.model.assemble_pysb, PysbModelChecker),
+            'pybel': (self.model.assemble_pybel, PybelModelChecker),
+            'signed_graph': (self.model.assemble_signed_graph,
+                             SignedGraphModelChecker),
+            'unsigned_graph': (self.model.assemble_unsigned_graph,
+                               UnsignedGraphModelChecker)}
+        self.mc_types = {}
+        for mc_type in model.test_config.get('mc_types', ['pysb']):
+            self.mc_types[mc_type] = {}
+            assembled_model = self.mc_mapping[mc_type][0]()
+            self.mc_types[mc_type]['model'] = assembled_model
+            self.mc_types[mc_type]['model_checker'] = (
+                self.mc_mapping[mc_type][1](assembled_model))
+            self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.make_links = model.test_config.get('make_links', True)
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
-        mc = getattr(self, mc_type+'_model_checker')
+        mc = self.mc_types[mc_type]['model_checker']
         mc.statements = stmts
         if mc_type == 'pysb':
             mc.graph = None
@@ -94,17 +101,7 @@ class ModelManager(object):
 
     def add_result(self, mc_type, result):
         """Add a result to a list of results."""
-        getattr(self, mc_type+'_test_results').append(result)
-
-    # def run_one_test(self, test):
-    #     """Run one test. This can be used for running immediate query or for
-    #     debugging. For running all tests and all queries, use more efficient
-    #     run_all_tests.
-    #     """
-    #     self.get_im([test.stmt])
-    #     if not test.configs:
-    #         test.configs = self.model.test_config.get('statement_checking', {})
-    #     return test.check(self.model_checker, self.pysb_model)
+        self.mc_types[mc_type]['test_results'].append(result)
 
     def run_all_tests(self):
         """Run all applicable tests with all available ModelCheckers."""
@@ -266,7 +263,7 @@ class ModelManager(object):
         results_json.append({
             'model_name': self.model.name,
             'statements': self.assembled_stmts_to_json(),
-            'mc_types': self.mc_types,
+            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
             'make_links': self.make_links})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
