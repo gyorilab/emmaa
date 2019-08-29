@@ -28,7 +28,7 @@ link_list = [('./home', 'EMMAA Dashboard'),
 qm = QueryManager()
 
 
-def _get_models():
+def _get_model_meta_data():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
@@ -115,9 +115,9 @@ GLOBAL_PRELOAD = False
 model_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
-    models = _get_models()
+    model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _ in models:
+    for model, _ in model_meta_data:
         load_model_manager_from_s3(model)
 
 
@@ -151,7 +151,7 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/')
 @app.route('/home')
 def get_home():
-    model_data = _get_models()
+    model_data = _get_model_meta_data()
     return render_template('index_template.html',
                            model_data=model_data,
                            link_list=link_list)
@@ -170,13 +170,13 @@ def get_model_dashboard(model):
 @app.route('/query')
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
-    model_data = _get_models()
+    model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
     user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
-    return render_template('query_template.html', model_data=model_data,
+    return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list)
 
@@ -194,7 +194,7 @@ def process_query():
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
-    expceted_models = {mid for mid, _ in _get_models()}
+    expceted_models = {mid for mid, _ in _get_model_meta_data()}
     try:
         user_email = request.json['user']['email']
         subscribe = request.json['register']
@@ -247,9 +247,9 @@ if __name__ == '__main__':
     # TODO: make pre-loading available when running service via Gunicorn
     if args.preload and not GLOBAL_PRELOAD:
         # Load all the model configs
-        models = _get_models()
+        model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
-        for model, _ in models:
+        for model, _ in model_meta_data:
             load_model_manager_from_s3(model)
 
     print(app.url_map)  # Get all avilable urls and link them
