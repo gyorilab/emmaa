@@ -69,6 +69,7 @@ class TestRound(object):
         for mc_type in self.mc_types:
             setattr(self, mc_type+'_test_results',
                     getattr(self, '_get_results')(mc_type))
+        self.make_links = self.json_results[0].get('make_links', True)
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
@@ -134,9 +135,12 @@ class TestRound(object):
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
-        link = get_statement_queries([stmt])[0] + '&format=html'
-        link_str = f'<a href="{link}">{sentence}</a>'
-        return link_str
+        if self.make_links:
+            link = get_statement_queries([stmt])[0] + '&format=html'
+            stmt_str = f'<a href="{link}">{sentence}</a>'
+        else:
+            stmt_str = f'<a>{sentence}</a>'
+        return stmt_str
 
     def get_english_statement_by_hash(self, stmt_hash):
         return self.get_english_statements_by_hash()[stmt_hash]
@@ -209,11 +213,15 @@ class TestRound(object):
                 else:
                     path_loc = self.json_results[ix+1]['english_path']
                 for path in path_loc:
-                    links = []
+                    stmt_strs = []
                     for (sentence, link) in path:
-                        link_str = f'<a href="{link}">{sentence}</a>'
-                        links.append(link_str)
-                    paths.append(links)
+                        if self.make_links:
+                            stmt_str = f'<a href="{link}">{sentence}</a>'
+                            stmt_strs.append(stmt_str)
+                        else:
+                            stmt_str = f'<a>{sentence}</a>'
+                            stmt_strs.append(stmt_str)
+                    paths.append(stmt_strs)
                     english_paths[str(self.tests[ix].get_hash(refresh=True))] = paths
         return english_paths
 
@@ -230,6 +238,7 @@ class TestRound(object):
             else:
                 (sentence, link) = (
                     self.json_results[ix+1]['english_code'][0][0])
+            # Result codes always have links
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
                 [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
