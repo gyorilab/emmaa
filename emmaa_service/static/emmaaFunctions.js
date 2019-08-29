@@ -17,7 +17,7 @@ var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
                     'rasmodel', // RasModel
                     'rasmachine', // Ras Machine
                     'skcm',     // Skin cutaneous melanoma
-                    'test']     // TestModel (only three nodes/two edges)
+                    'test'];    // TestModel (only three nodes/two edges)
 
 function grabPlainText (url, callback) {
   return $.ajax({url: url, dataType: "text"});
@@ -75,8 +75,8 @@ function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
   // listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, s3Prefix, maxKeys, endsWith)
 }
 
-function clearTables(arrayOfTableBodys) {
-  for (tableBody of arrayOfTableBodys) {
+function clearTables(arrayOfTableBodies) {
+  for (tableBody of arrayOfTableBodies) {
     clearTable(tableBody)
   }
 }
@@ -194,10 +194,10 @@ function getTestResultJsonToTable(testResultTableBody, jsonKey) {
 
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
-  console.log('function populateTestResultTable(tableBody, json)')
+  console.log('function populateTestResultTable(tableBody, json)');
   // console.log(tableBody)
-  console.log('test results json')
-  console.log(json)
+  console.log('test results json');
+  console.log(json);
 
   // IDs
   let stmtTypDistId = '#modelTestResultBody'
@@ -453,7 +453,7 @@ function listModelTests(tableBody, testResultTableBody, keyMapArray, model, ends
   // console.log('function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith)')
   
   // get array of filtered object keys
-  let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith)
+  let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith);
   let sortedTestJsonsArray = testJsonsArray.sort();
 
   getTestResultJsonToTable(testResultTableBody, sortedTestJsonsArray[sortedTestJsonsArray.length-1]);

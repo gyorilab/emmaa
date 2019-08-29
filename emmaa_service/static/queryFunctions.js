@@ -10,14 +10,15 @@ function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)')
 
   // Get user info
+  // ToDo: Tie up with login capabilities
   userInfo = {
     name: 'joshua',
     slack_id: '123456abcdef',
     email: 'joshua@emmaa.com'
-  }
+  };
 
   // Collect model query
-  let querySel = collectQuery(queryContainer)
+  let querySel = collectQuery(queryContainer);
   if (querySel.length < 2) {
     queryNotify('Did not send query');
     return;
