@@ -5,6 +5,7 @@ import logging
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template
 
+from indra.util.aws import get_s3_file_tree
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
@@ -53,6 +54,61 @@ def get_model_config(model):
         logger.warning(f"Model {model} has no readable name. Skipping...")
         model_cache[model] = None
     return model_cache[model]
+
+
+def get_model_stats(model):
+    s3 = boto3.client('s3')
+
+    # Need jsons for model meta data and test statistics. File name examples:
+    # stats/skcm/stats_2019-08-20-17-34-40.json
+    overlap = 'stats_'
+    prefix = f'stats/{model}/stats_'
+    model_stats_files = _file_tree_list(prefix=prefix)
+    try:
+        latest_file = model_stats_files.pop()
+        while latest_file and not latest_file.endswith('.json'):
+            latest_file = model_stats_files.pop()
+    except IndexError:
+        logger.warning(f'Could not get data for model "{model}"')
+        return json.dumps('')
+
+    latest_file_key = 'stats_'.join([prefix.split(overlap)[0],
+                                     latest_file.split(overlap)[1]])
+    model_data_object = s3.get_object(Bucket='emmaa', Key=latest_file_key)
+    return json.loads(model_data_object['Body'].read().decode('utf8'))
+
+
+def model_last_updated(model):
+    """Find the most recent pickle file of model and return its creation date
+
+    Example file name:
+    models/aml/model_2018-12-13-18-11-54.pkl
+
+    Parameters
+    ----------
+    model : str
+        model name
+
+    Returns
+    -------
+    last_updated : str
+        A string of the format "YYYY-MM-DD-HH-mm-ss"
+    """
+    prefix = f'models/{model}/model_'
+    latest_model_files = _file_tree_list(prefix=prefix)
+    try:
+        latest_file = latest_model_files.pop()
+        while latest_file and not latest_file.endswith('.pkl'):
+            latest_file = latest_model_files.pop()
+        return latest_file.split('.')[0].split('_')[1]
+    except IndexError:
+        logger.warning(f'No pickle files exist for model {model}')
+        return
+
+
+def _file_tree_list(prefix):
+    s3 = boto3.client('s3')
+    return sorted(get_s3_file_tree(s3=s3, bucket='emmaa', prefix=prefix))
 
 
 GLOBAL_PRELOAD = False
