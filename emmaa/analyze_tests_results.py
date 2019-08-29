@@ -189,8 +189,8 @@ class TestRound(object):
             test_hash = str(test.get_hash(refresh=True))
             tests_by_hash[test_hash] = {
                 'test': self.get_english_statement(test)}
-            for mc_type in self.mc_types:
-                result = getattr(self, mc_type+'_test_results')[ix]
+            for mc_type in self.mc_types_results:
+                result = self.mc_types_results[mc_type][ix]
                 tests_by_hash[test_hash][mc_type] = [
                         get_pass_fail(result),
                         self.get_path_or_code_by_hash(test_hash, mc_type)]
@@ -201,7 +201,7 @@ class TestRound(object):
         of a path found.
         """
         english_paths = {}
-        results = getattr(self, mc_type+'_test_results')
+        results = self.mc_types_results[mc_type]
         for ix, result in enumerate(results):
             # Here we use result.paths because we can only get a description if
             # a path does not exceed max length
@@ -229,7 +229,7 @@ class TestRound(object):
         of a result code.
         """
         english_codes = {}
-        results = getattr(self, mc_type+'_test_results')
+        results = self.mc_types_results[mc_type]
         for ix, result in enumerate(results):
             if self.mc_support:
                 (sentence, link) = (
@@ -466,7 +466,7 @@ class StatsGenerator(object):
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'tests_by_hash': self.latest_round._get_pysb_results()
         }
-        for mc_type in self.latest_round.mc_types:
+        for mc_type in self.latest_round.mc_types_results:
             self.json_stats['test_round_summary'][mc_type] = {
                 'number_passed_tests': (
                     self.latest_round.get_number_passed_tests(mc_type)),
@@ -505,8 +505,8 @@ class StatsGenerator(object):
             tests_delta = {'number_applied_tests_delta': (
                     self.latest_round.find_numeric_delta(
                         self.previous_round, 'get_total_applied_tests'))}
-        for mc_type in self.latest_round.mc_types:
-            if mc_type not in self.previous_round.mc_types:
+        for mc_type in self.latest_round.mc_types_results:
+            if mc_type not in self.previous_round.mc_types_results:
                 tests_delta[mc_type] = {
                     'number_passed_tests_delta': 0,
                     'passed_ratio_delta': 0,
@@ -548,7 +548,7 @@ class StatsGenerator(object):
                 'test_round_summary', 'number_applied_tests'),
             'dates': self.get_dates()
         }
-        for mc_type in self.latest_round.mc_types:
+        for mc_type in self.latest_round.mc_types_results:
             self.json_stats['changes_over_time'][mc_type] = {
                 'number_passed_tests': self.get_over_time(
                     'test_round_summary', 'number_passed_tests', mc_type),

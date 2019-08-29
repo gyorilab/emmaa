@@ -132,11 +132,12 @@ class ModelManager(object):
                 else:
                     if mc_type == 'pysb':
                         stmts = stmts_from_pysb_path(
-                            path, self.pysb_model, self.model.assembled_stmts)
+                            path, self.mc_types['pysb']['model'],
+                            self.model.assembled_stmts)
                     elif mc_type == 'pybel':
                         stmts = stmts_from_pybel_path(
-                            path, self.pybel_model, from_db=False,
-                            stmts=self.model.assembled_stmts)
+                            path, self.mc_types['pybel']['model'],
+                            from_db=False, stmts=self.model.assembled_stmts)
                     for stmt in stmts:
                         if isinstance(stmt, list):
                             stmt = stmt[0]
@@ -269,7 +270,7 @@ class ModelManager(object):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
             for mc_type in self.mc_types:
-                result = getattr(self, mc_type+'_test_results')[ix]
+                result = self.mc_types[mc_type]['test_results'][ix]
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
                     'english_path': self.make_english_path(mc_type, result),
