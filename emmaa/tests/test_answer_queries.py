@@ -49,7 +49,7 @@ def test_format_results():
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
     assert formatted_results[0]['query'] == simple_query
-    assert formatted_results[0]['mc_type'] == 'pysb'
+    assert formatted_results[0]['mc_type'] == 'Pysb'
     assert isinstance(formatted_results[0]['response'], str)
     assert isinstance(formatted_results[0]['date'], str)
 
