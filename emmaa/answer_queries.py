@@ -120,20 +120,30 @@ class QueryManager(object):
             try:
                 old_results = self.db.get_results_from_query(
                     query, [model_name], order)
-                for old_result in old_results:
-                    if mc_type == old_result[2]:
-                        old_result_json = old_result[3]
-                        if report_format == 'str':
-                            report = self.make_str_report_one_query(
-                                model_name, query, mc_type, new_result_json,
-                                old_result_json)
-                        elif report_format == 'html':
-                            report = self._make_html_one_query_inner(
-                                model_name, query, mc_type, new_result_json,
-                                old_result_json)
-                        reports.append(report)
+                if old_results:
+                    for old_result in old_results:
+                        if mc_type == old_result[2]:
+                            old_result_json = old_result[3]
+                            if report_format == 'str':
+                                report = self.make_str_report_one_query(
+                                    model_name, query, mc_type,
+                                    new_result_json, old_result_json)
+                            elif report_format == 'html':
+                                report = self._make_html_one_query_inner(
+                                    model_name, query, mc_type,
+                                    new_result_json, old_result_json)
+                            reports.append(report)
+                else:
+                    logger.info('No previous result was found.')
+                    if report_format == 'str':
+                        report = self.make_str_report_one_query(
+                            model_name, query, mc_type, new_result_json, None)
+                    elif report_format == 'html':
+                        report = self._make_html_one_query_inner(
+                            model_name, query, mc_type, new_result_json, None)
+                    reports.append(report)
             except IndexError:
-                logger.info('No previous_result was found.')
+                logger.info('No result for desired date back was found.')
                 if report_format == 'str':
                     report = self.make_str_report_one_query(
                         model_name, query, mc_type, new_result_json, None)
