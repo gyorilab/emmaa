@@ -6,23 +6,6 @@ the client side work of exposing cancer network models for the end users
 */
 
 // CONSTANTS AND IDs
-var INDRA_ENGLISH_ASSEMBLY = "http://api.indra.bio:8000/assemblers/english";
-var EMMMAA_BUCKET = 'emmaa';
-var MODELS_ARRAY = ['aml',      // Acute myeloid leukemia
-                    'brca',     // Breast Cancer
-                    'luad',     // Lung adenocarcinoma
-                    'marm_model', // MARM
-                    'paad',     // Pancreas adenocarcinoma
-                    'prad',     // Prostate adenocarcinoma
-                    'rasmodel', // RasModel
-                    'rasmachine', // Ras Machine
-                    'skcm',     // Skin cutaneous melanoma
-                    'test'];    // TestModel (only three nodes/two edges)
-
-function grabPlainText (url, callback) {
-  return $.ajax({url: url, dataType: "text"});
-}
-
 function setModel(ddSelect, model) {
   // Sets the selected option
   // let ddSelect = document.getElementById('modelSelectDD');
@@ -32,43 +15,6 @@ function setModel(ddSelect, model) {
       break;
     }
   }
-}
-
-function selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) {
-  // Get selected option
-  var model = '';
-  for (child of ddSelect.children) {
-    if (child.selected) {
-      model = child.value;
-      break;
-    }
-  }
-
-  let endsWith = '.json';
-  let maxKeys = MAX_KEYS;
-  // Prefix needs to be precise enough that fewer than 1000 objects are returned
-  //Example: stats/skcm/stats_2019-08-20-17-34-40.json
-  let today = new Date();
-  let currentYearMonth = today.toISOString().slice(0,7);
-  let resultsPrefix = `stats/${model}/stats_${currentYearMonth}`;
-  let s3Interface = new AWS.S3();
-
-  // List model info
-
-  // Pass tables, model and mode to function that lists the latest tests
-  listObjectsInBucketUnAuthenticated('listModelTests', listTestResultsTableBody, testResultTableBody, s3Interface, EMMMAA_BUCKET, model, resultsPrefix, maxKeys, endsWith)
-}
-
-function loadModelMetaData(modelInfoTable, bucket, model, maxKeys, endsWith) {
-  // wrapper function that can be called selectModel or from pageload of models.html
-
-  // Prefix needs to be precise enough that fewer than 1000 objects are returned
-  // example: models/aml/model_2018-12-13-18-11-54.pkl
-  let today = new Date();
-  let currentYearMonth = today.toISOString().slice(0,7);
-  let s3Prefix = `models/${model}/model_${currentYearMonth}`;
-  // mode, tableBody, testResultTableBody, s3Interface, bucket, model, prefix, maxKeys, endsWith
-  // listObjectsInBucketUnAuthenticated('listModelInfo', modelInfoTable, null, new AWS.S3(), bucket, model, s3Prefix, maxKeys, endsWith)
 }
 
 function clearTables(arrayOfTableBodies) {
@@ -138,47 +84,6 @@ function linkifyFromString(tag, htmlText) {
     }
   }
   return tag;
-}
-
-function addLineBreaks(rowEl, col) {
-  // Adds <br> after '.' to text in specified column
-  let breakText = rowEl.children[col].textContent.replace(/\./g, '.<br>')
-  rowEl.children[col].innerHTML = null;
-  rowEl.children[col].innerHTML = breakText.substr(0, breakText.length-4); // Remove last <br>
-  return rowEl;
-}
-
-function populateModelsTable(metaTableBody, json) {
-  clearTable(metaTableBody);
-
-  // Get english statements from evidence text
-  // Link out to restAPI html page with all statements
-  let maxOutput = Math.min(json.length, 25)
-  for (let i = 0; i < maxOutput; i++) {
-    let plainEnglish = json[i].stmt.evidence[0].text;
-    let sourceHash = json[i].stmt.evidence[0].source_hash;
-    link = document.createElement('a')
-    if (sourceHash) {
-      link.textContent = 'Evidence'
-      link.href = 'https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/statements/from_hash/' + sourceHash + '?format=html' // rest api from hash
-      link.target = '_blank'
-    } else {
-      link.textContent = 'No evidence'
-    }
-
-    let tableRow = addToRow(plainEnglish, '')
-    tableRow.children[1].innerHTML = null;
-    tableRow.children[1].appendChild(link)
-
-    metaTableBody.appendChild(tableRow);
-  }
-}
-
-function getTestResultJsonToTable(testResultTableBody, jsonKey) {
-  let jsonPromise = getPublicJson(EMMMAA_BUCKET, jsonKey);
-  jsonPromise.then(function(json){
-    populateTestResultTable(testResultTableBody, json);
-  })
 }
 
 // Populate test results json to modelTestResultBody
@@ -364,10 +269,6 @@ function populateTestResultTable(tableBody, json) {
 }
 
 function listModelInfo(modelInfoTableBody, lastUpdated, ndexID) {
-  // 1. Last updated: get from listing models using already created function
-  // 2. NDEX link-out: read from config
-  // 3. Possibly listing nodes and edges info (Q: from where? A: From the json files that don't exist yet)
-
   // Add when model was last updated
   modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]))
   // Create link to ndex
@@ -382,107 +283,6 @@ function listModelInfo(modelInfoTableBody, lastUpdated, ndexID) {
 
   modelInfoTableBody.appendChild(tableRow);
 }
-
-function modelsLastUpdated(keyMapArray, endsWith) {
-  //  for each model:
-  //    get list of all pickles
-  //    sort list descending, alphabetical, order
-  //    get first (i.e. latest) item
-  //    item.split('/')[2].split('_')[1].split('.')[0] gives datetime string
-  let modelsMapArray = getModels(null, keyMapArray, endsWith)
-
-  let modelUpdateTagsArray = document.getElementsByClassName('modelUpdateInfo')
-  for (tag of modelUpdateTagsArray) {
-    let model = tag.getAttribute('id').split('Update')[0]
-    if (model) {
-      lastUpdated = modelsMapArray[model].sort()[modelsMapArray[model].length - 1].split('.')[0].split('_')[1]
-      tag.textContent = 'Last updated: ' + lastUpdated;
-    }
-  }
-}
-
-function getModels(findModel, keyMapArray, endsWith) {
-  var models = {}
-  for (m of MODELS_ARRAY) {
-    models[m] = []
-  }
-  for (keyItem of keyMapArray) {
-    if (keyItem.Key.endsWith(endsWith) & keyItem.Key.split('/').length == 3) {
-      let model = keyItem.Key.split('/')[1]
-      if (!findModel) {
-        // Save all models
-        if (model) {
-          models[model].push(keyItem.Key.split('/')[2])
-        } else console.log('Unhandled model ' + model)
-      } else {
-        // Save just the model we're interested in
-        if (findModel && findModel == model) {
-          models[model].push(keyItem.Key.split('/')[2])
-        }
-      }
-    }
-  }
-  return models;
-}
-
-function listModelTests(tableBody, testResultTableBody, keyMapArray, model, endsWith) {
-
-  // get array of filtered object keys
-  let testJsonsArray = getArrayOfModelTests(model, keyMapArray, endsWith);
-  let sortedTestJsonsArray = testJsonsArray.sort();
-
-  getTestResultJsonToTable(testResultTableBody, sortedTestJsonsArray[sortedTestJsonsArray.length-1]);
-  
-  // // loop the sorted array in reverse alphbetical order (newest first)
-  // for (let i = sortedTestJsonsArray.length-1; i >= 0; i--) {
-  //   var testString = ''
-  //   if (sortedTestJsonsArray[i].split('/')[2].includes('_')) {
-  //     testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0].split('_')[1];
-  //   } else {
-  //     testString = sortedTestJsonsArray[i].split('/')[2].split('.')[0];
-  //   }
-  //   link = document.createElement('a');
-  //   link.textContent = testString;
-  //   link.href = '#Test Result Details'
-  //   link.value = sortedTestJsonsArray[i]
-  //   link.onclick = function() { // Attach function call to link
-  //     getTestResultJsonToTable(testResultTableBody, this.value);
-  //   }
-
-  //   let tableRow = addToRow(model, '');
-  //   tableRow.children[1].innerHTML = null;
-  //   tableRow.children[1].appendChild(link);
-
-  //   tableBody.appendChild(tableRow);
-  // }
-}
-
-function getArrayOfModelTests(model, keyMapArray, endsWith) {
-  //  for each object ket
-  //    if key.endswith(endsWith) & correct prefix
-  //      save to list
-  var tests = [];
-  for (object of keyMapArray) {
-    if (object.Key.endsWith(endsWith) & object.Key.split('/')[1] == model & object.Key.split('/').length == 3) {
-      tests.push(object.Key);
-    }
-  }
-  // if (tests.length > 0) {
-  //   console.log(tests)
-  // }
-  return tests;
-}
-
-function getEnglishByJson(json_stmt_array) {
-    eng_stmt = $.ajax({
-        url: INDRA_ENGLISH_ASSEMBLY,
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(json_stmt_array),
-    });
-    return eng_stmt
-};
 
 /* c3 chart functions
 Found here:
