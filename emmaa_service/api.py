@@ -159,12 +159,23 @@ def get_home():
 
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
-    model_data = _get_models()
+    model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    last_update = model_last_updated(model=model)
+    ndex_id = 'None available'
+    for mid, mmd in model_meta_data:
+        if mid == model:
+            ndex_id = mmd['ndex']['network']
+    if ndex_id == 'None available':
+        logger.warning(f'No ndex ID found for {model}')
+    model_stats = get_model_stats(model)
     return render_template('model_template.html',
                            model=model,
-                           model_data=model_data,
-                           link_list=mod_link_list)
+                           model_data=model_meta_data,
+                           model_stats_json=model_stats,
+                           link_list=mod_link_list,
+                           model_last_updated=last_update,
+                           ndexID=ndex_id)
 
 
 @app.route('/query')
