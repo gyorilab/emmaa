@@ -2,10 +2,6 @@
 var EMMAA_API = './query/submit'
 var QUERY_STATUS_ID = 'query-status'
 
-$(document).ready(function() {
-  fillNamespaceOptions()
-})
-
 function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)')
 
@@ -134,19 +130,6 @@ function populateQueryResults(json) {
     let rowEl = addToRow([res['model'], res['mc_type'], res['response']])
     rowEl.children[1] = linkifyFromString(rowEl.children[2], rowEl.children[2].textContent)
     qrTable.appendChild(rowEl);
-  }
-}
-
-function fillNamespaceOptions() {
-  for (nsDD of document.getElementsByClassName('namespace-dropdown')) {
-    console.log(nsDD)
-    for (n_v of NAMESPACE_OPTIONS) {
-      let optionTag = document.createElement('option');
-      optionTag.value = n_v[1];
-      optionTag.textContent = n_v[0];
-      console.log(optionTag.textContent)
-      nsDD.appendChild(optionTag);
-    }
   }
 }
 
