@@ -59,6 +59,19 @@ def get_model_config(model):
 
 
 def get_model_stats(model, extension='.json'):
+    """Gets the latest statistics for the given model
+
+    Parameters
+    ----------
+    model : str
+        Model name to look for
+    extension : str
+
+    Returns
+    -------
+    model_data : json
+        The json formatted data containing the statistics for the model
+    """
     s3 = boto3.client('s3')
 
     # Need jsons for model meta data and test statistics. File name examples:
@@ -71,7 +84,7 @@ def get_model_stats(model, extension='.json'):
     return json.loads(model_data_object['Body'].read().decode('utf8'))
 
 
-def model_last_updated(model, extenstsion='.pkl'):
+def model_last_updated(model, extension='.pkl'):
     """Find the most recent pickle file of model and return its creation date
 
     Example file name:
@@ -80,7 +93,9 @@ def model_last_updated(model, extenstsion='.pkl'):
     Parameters
     ----------
     model : str
-        model name
+        Model name to look for
+    extension : str
+        The extension the model file needs to have. Default is '.pkl'
 
     Returns
     -------
@@ -91,17 +106,8 @@ def model_last_updated(model, extenstsion='.pkl'):
     return strip_out_date(find_latest_s3_file(
         bucket=EMMAA_BUCKET_NAME,
         prefix=prefix,
-        extension=extenstsion
+        extension=extension
     ))
-
-
-def _file_tree_list(prefix):
-    """This function assumes the prefix is specific enough that the top level
-    dict keys of the returned structure are the filenames of the sought after
-    files, i.e. that the top level keys are 'file.txt' as explained in the
-    docstring of 'get_s3_file_tree'."""
-    s3 = boto3.client('s3')
-    return sorted(get_s3_file_tree(s3=s3, bucket='emmaa', prefix=prefix))
 
 
 GLOBAL_PRELOAD = False
