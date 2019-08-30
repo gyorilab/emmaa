@@ -77,7 +77,8 @@ def find_latest_s3_file(bucket, prefix, extension=None):
 
 
 def find_second_latest_s3_file(bucket, prefix, extension=None):
-    """Return the key of the file with second latest date string on an S3 path"""
+    """Return the key of the file with second latest date string on an S3 path
+    """
     files = sort_s3_files_by_date(bucket, prefix, extension)
     try:
         latest = files[1]['Key']
