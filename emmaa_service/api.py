@@ -9,6 +9,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
+from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
+EMMAA_BUCKET_NAME = 'emmaa'
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 
@@ -27,7 +29,7 @@ link_list = [('./home', 'EMMAA Dashboard'),
 qm = QueryManager()
 
 
-def _get_models():
+def _get_model_meta_data():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
     model_data = []
@@ -55,13 +57,65 @@ def get_model_config(model):
     return model_cache[model]
 
 
+def get_model_stats(model, extension='.json'):
+    """Gets the latest statistics for the given model
+
+    Parameters
+    ----------
+    model : str
+        Model name to look for
+    extension : str
+
+    Returns
+    -------
+    model_data : json
+        The json formatted data containing the statistics for the model
+    """
+    s3 = get_s3_client()
+
+    # Need jsons for model meta data and test statistics. File name examples:
+    # stats/skcm/stats_2019-08-20-17-34-40.json
+    prefix = f'stats/{model}/stats_'
+    latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                          prefix=prefix,
+                                          extension=extension)
+    model_data_object = s3.get_object(Bucket='emmaa', Key=latest_file_key)
+    return json.loads(model_data_object['Body'].read().decode('utf8'))
+
+
+def model_last_updated(model, extension='.pkl'):
+    """Find the most recent pickle file of model and return its creation date
+
+    Example file name:
+    models/aml/model_2018-12-13-18-11-54.pkl
+
+    Parameters
+    ----------
+    model : str
+        Model name to look for
+    extension : str
+        The extension the model file needs to have. Default is '.pkl'
+
+    Returns
+    -------
+    last_updated : str
+        A string of the format "YYYY-MM-DD-HH-mm-ss"
+    """
+    prefix = f'models/{model}/model_'
+    return strip_out_date(find_latest_s3_file(
+        bucket=EMMAA_BUCKET_NAME,
+        prefix=prefix,
+        extension=extension
+    ))
+
+
 GLOBAL_PRELOAD = False
 model_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
-    models = _get_models()
+    model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _ in models:
+    for model, _ in model_meta_data:
         load_model_manager_from_s3(model)
 
 
@@ -95,7 +149,7 @@ def _make_query(query_dict, use_grouding_service=True):
 @app.route('/')
 @app.route('/home')
 def get_home():
-    model_data = _get_models()
+    model_data = _get_model_meta_data()
     return render_template('index_template.html',
                            model_data=model_data,
                            link_list=link_list)
@@ -103,24 +157,38 @@ def get_home():
 
 @app.route('/dashboard/<model>')
 def get_model_dashboard(model):
-    model_data = _get_models()
+    model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    last_update = model_last_updated(model=model)
+    ndex_id = 'None available'
+    for mid, mmd in model_meta_data:
+        if mid == model:
+            ndex_id = mmd['ndex']['network']
+    if ndex_id == 'None available':
+        logger.warning(f'No ndex ID found for {model}')
+    if not last_update:
+        logger.warning(f'Could not get last update for {model}')
+        last_update = 'Not available'
+    model_stats = get_model_stats(model)
     return render_template('model_template.html',
                            model=model,
-                           model_data=model_data,
-                           link_list=mod_link_list)
+                           model_data=model_meta_data,
+                           model_stats_json=model_stats,
+                           link_list=mod_link_list,
+                           model_last_updated=last_update,
+                           ndexID=ndex_id)
 
 
 @app.route('/query')
 def get_query_page():
     # TODO Should pass user specific info in the future when logged in
-    model_data = _get_models()
+    model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
     user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
-    return render_template('query_template.html', model_data=model_data,
+    return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list)
 
@@ -138,7 +206,7 @@ def process_query():
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
-    expceted_models = {mid for mid, _ in _get_models()}
+    expected_models = {mid for mid, _ in _get_model_meta_data()}
     try:
         user_email = request.json['user']['email']
         subscribe = request.json['register']
@@ -147,8 +215,8 @@ def process_query():
             (f'Did not get expected query keys: got {set(query_json.keys())} '
              f'not {expected_query_keys}')
         models = set(request.json.get('models'))
-        assert models < expceted_models, \
-            f'Got unexpected models: {models - expceted_models}'
+        assert models < expected_models, \
+            f'Got unexpected models: {models - expected_models}'
     except (KeyError, AssertionError) as e:
         logger.exception(e)
         logger.error("Invalid query!")
@@ -191,9 +259,9 @@ if __name__ == '__main__':
     # TODO: make pre-loading available when running service via Gunicorn
     if args.preload and not GLOBAL_PRELOAD:
         # Load all the model configs
-        models = _get_models()
+        model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
-        for model, _ in models:
+        for model, _ in model_meta_data:
             load_model_manager_from_s3(model)
 
     print(app.url_map)  # Get all avilable urls and link them

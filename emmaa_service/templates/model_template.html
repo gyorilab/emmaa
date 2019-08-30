@@ -2,28 +2,21 @@
 
 {% block additional_scripts %}
 <script>
-  var model = '{{ model }}'
+  let model = '{{ model }}';
+  let ndexID = '{{ ndexID }}';
 
-  // Check if user signed in immediately after page load
   $(document).ready(function(){
-    clearTables(document.getElementsByClassName('table-body'))
-    console.log('document ready')
-    var return_url = window.location.href;
-    let dict_split = getDictFromUrl(return_url);
-
-    // Check sign-in
-    // checkSignIn()
-
-    var ddSelectTag = document.getElementById('modelSelectDD');
+    clearTables(document.getElementsByClassName('table-body'));
+    console.log('document ready');
+    let ddSelectTag = document.getElementById('modelSelectDD');
     setModel(ddSelectTag, model);
 
-    var infoTableBody = document.getElementById('modelInfoTableBody');
-    var listTestResultsTableBody = document.getElementById('modelTestsTableBody');
-    var testResultsTableBody = document.getElementById('modelTestResultBody');
+    let infoTableBody = document.getElementById('modelInfoTableBody');
+    let testResultsTableBody = document.getElementById('modelTestResultBody');
 
-    // args: modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect
-    selectModel(infoTableBody, listTestResultsTableBody, testResultsTableBody, ddSelectTag)
-    });
+    listModelInfo(infoTableBody, '{{ model_last_updated }}', '{{ ndexID }}');
+    populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
+  });
 
   function modelRedirect(ddSelect) {
 
@@ -37,9 +30,9 @@
     }
 
     // redirect url:
-    let redirect = window.location.href.replace(model, newModel)
-    console.log(redirect)
-    window.location.replace(redirect)
+    let redirect = window.location.href.replace(model, newModel);
+    console.log(redirect);
+    window.location.replace(redirect);
   }
 </script>
 <style>
