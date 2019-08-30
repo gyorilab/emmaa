@@ -5,7 +5,6 @@ import logging
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template
 
-from indra.util.aws import get_s3_file_tree
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
