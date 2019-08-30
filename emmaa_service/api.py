@@ -9,7 +9,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
-from emmaa.util import find_latest_s3_file, strip_out_date
+from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
@@ -71,7 +71,7 @@ def get_model_stats(model, extension='.json'):
     model_data : json
         The json formatted data containing the statistics for the model
     """
-    s3 = boto3.client('s3')
+    s3 = get_s3_client()
 
     # Need jsons for model meta data and test statistics. File name examples:
     # stats/skcm/stats_2019-08-20-17-34-40.json
