@@ -10,6 +10,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
+from emmaa.util import find_latest_s3_file, strip_out_date
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
+EMMAA_BUCKET_NAME = 'emmaa'
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 
@@ -56,29 +58,20 @@ def get_model_config(model):
     return model_cache[model]
 
 
-def get_model_stats(model):
+def get_model_stats(model, extension='.json'):
     s3 = boto3.client('s3')
 
     # Need jsons for model meta data and test statistics. File name examples:
     # stats/skcm/stats_2019-08-20-17-34-40.json
-    overlap = 'stats_'
     prefix = f'stats/{model}/stats_'
-    model_stats_files = _file_tree_list(prefix=prefix)
-    try:
-        latest_file = model_stats_files.pop()
-        while latest_file and not latest_file.endswith('.json'):
-            latest_file = model_stats_files.pop()
-    except IndexError:
-        logger.warning(f'Could not get data for model "{model}"')
-        return json.dumps('')
-
-    latest_file_key = 'stats_'.join([prefix.split(overlap)[0],
-                                     latest_file.split(overlap)[1]])
+    latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                          prefix=prefix,
+                                          extension=extension)
     model_data_object = s3.get_object(Bucket='emmaa', Key=latest_file_key)
     return json.loads(model_data_object['Body'].read().decode('utf8'))
 
 
-def model_last_updated(model):
+def model_last_updated(model, extenstsion='.pkl'):
     """Find the most recent pickle file of model and return its creation date
 
     Example file name:
@@ -95,15 +88,11 @@ def model_last_updated(model):
         A string of the format "YYYY-MM-DD-HH-mm-ss"
     """
     prefix = f'models/{model}/model_'
-    latest_model_files = _file_tree_list(prefix=prefix)
-    try:
-        latest_file = latest_model_files.pop()
-        while latest_file and not latest_file.endswith('.pkl'):
-            latest_file = latest_model_files.pop()
-        return latest_file.split('.')[0].split('_')[1]
-    except IndexError:
-        logger.warning(f'No pickle files exist for model {model}')
-        return
+    return strip_out_date(find_latest_s3_file(
+        bucket=EMMAA_BUCKET_NAME,
+        prefix=prefix,
+        extension=extenstsion
+    ))
 
 
 def _file_tree_list(prefix):
@@ -172,6 +161,9 @@ def get_model_dashboard(model):
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
+    if not last_update:
+        logger.warning(f'Could not get last update for {model}')
+        last_update = 'Not available'
     model_stats = get_model_stats(model)
     return render_template('model_template.html',
                            model=model,
