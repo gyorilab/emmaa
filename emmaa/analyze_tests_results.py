@@ -242,7 +242,7 @@ class TestRound(object):
         return english_codes
 
     def get_english_test_by_hash(self, test_hash):
-        return self.english_test_results[test_hash][0]
+        return self.english_test_results[test_hash]['test']
 
     def get_pass_fail_by_hash(self, test_hash, mc_type):
         return self.english_test_results[test_hash][mc_type][0]
