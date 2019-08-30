@@ -1,4 +1,5 @@
 import os
+import re
 import boto3
 import logging
 from datetime import datetime
@@ -9,7 +10,17 @@ from indra.statements import get_all_descendants
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
+RE_DATEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
 logger = logging.getLogger(__name__)
+
+
+def strip_out_date(keystring):
+    """Strips out datestring of format FORMAT from a keystring"""
+    try:
+        return re.search(RE_DATEFORMAT, keystring).group()
+    except AttributeError:
+        logger.warning(f'Can\'t parse string {keystring} for date')
+        return None
 
 
 def get_date_from_str(date_str):
