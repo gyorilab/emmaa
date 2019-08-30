@@ -113,8 +113,8 @@ function submitQuery(queryDict, test) {
           queryNotify('Query failed: Internal Server Error (500)');
           break;
         default:
-          console.log('Unhandled server response: ' + xhr.status);
-          queryNotify('Query failed: ' + xhr.status)
+          console.log(`Unhandled server response: ${xhr.status}`);
+          queryNotify(`Query failed: ${xhr.status}`)
       }
     }
   });
