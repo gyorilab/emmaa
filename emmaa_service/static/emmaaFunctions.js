@@ -55,7 +55,7 @@ function generatePassFail(rowEl, col) {
     rowEl.children[col].innerHTML = null;
     rowEl.children[col].appendChild(itag);
   } else {
-    console.log('pass/fail not in column' + col)
+    console.log(`pass/fail not in column ${col}`)
   }
   return rowEl;
 }
@@ -66,7 +66,7 @@ function linkifyFromArray(tag, linkArray) {
   }
   let linkText = '';
   for (link of linkArray) {
-    linkText = linkText + link + '<br>'; // Append link
+    linkText = `${linkText}${link}<br>`; // Append link
   }
 
   return linkifyFromString(tag, linkText.substr(0, linkText.length-4)); // Remove last <br>
@@ -272,7 +272,7 @@ function listModelInfo(modelInfoTableBody, lastUpdated, ndexID) {
   // Create link to ndex
   let link = document.createElement('a');
   link.textContent = ndexID;
-  link.href = 'http://www.ndexbio.org/#/network/' + ndexID;
+  link.href = `http://www.ndexbio.org/#/network/${ndexID}`;
   link.target = '_blank';
 
   let tableRow = addToRow(['Network on NDEX', '']);
