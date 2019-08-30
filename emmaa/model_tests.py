@@ -8,12 +8,14 @@ import itertools
 import jsonpickle
 from collections import defaultdict
 from fnvhash import fnv1a_32
-from indra.explanation.model_checker import PysbModelChecker
-from indra.explanation.reporting import stmts_from_pysb_path
+from indra.explanation.model_checker import PysbModelChecker, \
+    PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
+from indra.explanation.reporting import stmts_from_pysb_path, \
+    stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from emmaa.model import EmmaaModel
-from emmaa.util import make_date_str, get_s3_client
+from emmaa.util import make_date_str, get_s3_client, get_class_from_name
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
 from emmaa.answer_queries import QueryManager
 
@@ -25,7 +27,9 @@ result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_c
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
+    'SUBJECT_NOT_FOUND': 'Statement subject not in model',
     'OBSERVABLES_NOT_FOUND': 'Statement object state not in model',
+    'OBJECT_NOT_FOUND': 'Statement object state not in model',
     'NO_PATHS_FOUND': 'No path found that satisfies the test statement',
     'MAX_PATH_LENGTH_EXCEEDED': 'Path found but exceeds search depth',
     'PATHS_FOUND': 'Path found which satisfies the test statement',
@@ -45,75 +49,103 @@ class ModelManager(object):
 
     Attributes
     ----------
-    pysb_model : pysb.Model
-        PySB model assembled from EMMAA model
+    mc_mapping : dict
+        A dictionary mapping a ModelChecker type to a corresponding method
+        for assembling the model and a ModelChecker class.
+    mc_types : dict
+        A dictionary in which each key is a type of a ModelChecker and value is
+        a dictionary containing an instance of a model, an instance of a
+        ModelChecker and a list of test results.
     entities : list[indra.statements.agent.Agent]
-        A list of entities of EMMAA model
+        A list of entities of EMMAA model.
     applicable_tests : list[emmaa.model_tests.EmmaaTest]
-        A list of EMMAA tests applicable for given EMMAA model
-    test_results : list[indra.explanation.model_checker.PathResult]
-        A list of EMMAA test results
-    model_checker : indra.explanation.model_checker.PysbModelChecker
-        A ModelChecker to check PySB model
+        A list of EMMAA tests applicable for given EMMAA model.
+    make_links : bool
+        Whether to include links to INDRA db in test results.
     """
     def __init__(self, model):
         self.model = model
-        self.pysb_model = self.model.assemble_pysb()
+        self.mc_mapping = {
+            'pysb': (self.model.assemble_pysb, PysbModelChecker),
+            'pybel': (self.model.assemble_pybel, PybelModelChecker),
+            'signed_graph': (self.model.assemble_signed_graph,
+                             SignedGraphModelChecker),
+            'unsigned_graph': (self.model.assemble_unsigned_graph,
+                               UnsignedGraphModelChecker)}
+        self.mc_types = {}
+        for mc_type in model.test_config.get('mc_types', ['pysb']):
+            self.mc_types[mc_type] = {}
+            assembled_model = self.mc_mapping[mc_type][0]()
+            self.mc_types[mc_type]['model'] = assembled_model
+            self.mc_types[mc_type]['model_checker'] = (
+                self.mc_mapping[mc_type][1](assembled_model))
+            self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.test_results = []
-        self.model_checker = PysbModelChecker(self.pysb_model)
+        self.make_links = model.test_config.get('make_links', True)
 
-    def get_im(self, stmts):
-        """Get the influence map for the model."""
-        self.model_checker.statements = []
-        self.model_checker.add_statements(stmts)
-        self.model_checker.get_im(force_update=True)
-        self.model_checker.prune_influence_map()
-        self.model_checker.prune_influence_map_degrade_bind_positive(
-            self.model.assembled_stmts)
+    def get_updated_mc(self, mc_type, stmts):
+        """Update the ModelChecker and graph with stmts for tests/queries."""
+        mc = self.mc_types[mc_type]['model_checker']
+        mc.statements = stmts
+        if mc_type == 'pysb':
+            mc.graph = None
+            mc.get_graph(prune_im=True, prune_im_degrade=True)
+        return mc
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
         self.applicable_tests.append(test)
 
-    def add_result(self, result):
+    def add_result(self, mc_type, result):
         """Add a result to a list of results."""
-        self.test_results.append(result)
+        self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_one_test(self, test):
-        """Run one test. This can be used for running immediate query or for
-        debugging. For running all tests and all queries, use more efficient
-        run_all_tests.
-        """
-        self.get_im([test.stmt])
-        if not test.configs:
-            test.configs = self.model.test_config.get('statement_checking', {})
-        return test.check(self.model_checker, self.pysb_model)
-
-    def run_tests(self):
-        """Run all applicable tests for the model."""
-        self.get_im([test.stmt for test in self.applicable_tests])
+    def run_all_tests(self):
+        """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
-        results = self.model_checker.check_model(
-            max_path_length=max_path_length,
-            max_paths=max_paths)
-        for (stmt, result) in results:
-            self.add_result(result)
+        for mc_type in self.mc_types:
+            self.run_tests_per_mc(mc_type, max_path_length, max_paths)
 
-    def make_english_path(self, result):
+    def run_tests_per_mc(self, mc_type, max_path_length, max_paths):
+        """Run all applicable tests with one ModelChecker."""
+        mc = self.get_updated_mc(
+            mc_type, [test.stmt for test in self.applicable_tests])
+        logger.info(f'Running the tests with {mc_type} ModelChecker.')
+        results = mc.check_model(
+            max_path_length=max_path_length, max_paths=max_paths)
+        for (stmt, result) in results:
+            self.add_result(mc_type, result)
+
+    def make_english_path(self, mc_type, result):
         """Create an English description of a path."""
         paths = []
         if result.paths:
             for path in result.paths:
                 sentences = []
-                stmts = stmts_from_pysb_path(path, self.pysb_model,
-                                        self.model.assembled_stmts)
-                for stmt in stmts:
-                    ea = EnglishAssembler([stmt])
-                    sentence = ea.make_model()
-                    link = get_statement_queries([stmt])[0] + '&format=html'
-                    sentences.append((sentence, link))
+                if mc_type == 'signed_graph' or mc_type == 'unsigned_graph':
+                    for i in range(len(path[:-1])):
+                        sentence = path[i][0] + ' -> ' + path[i+1][0]
+                        sentences.append((sentence, ''))
+                else:
+                    if mc_type == 'pysb':
+                        stmts = stmts_from_pysb_path(
+                            path, self.mc_types['pysb']['model'],
+                            self.model.assembled_stmts)
+                    elif mc_type == 'pybel':
+                        stmts = stmts_from_pybel_path(
+                            path, self.mc_types['pybel']['model'],
+                            from_db=False, stmts=self.model.assembled_stmts)
+                    for stmt in stmts:
+                        if isinstance(stmt, list):
+                            stmt = stmt[0]
+                        ea = EnglishAssembler([stmt])
+                        sentence = ea.make_model()
+                        if self.make_links:
+                            link = get_statement_queries([stmt])[0] + '&format=html'
+                            sentences.append((sentence, link))
+                        else:
+                            sentences.append((sentence, ''))
                 paths.append(sentences)
         return paths
 
@@ -125,29 +157,30 @@ class ModelManager(object):
     def answer_query(self, query):
         """Answer user query with a path if it is found."""
         if ScopeTestConnector.applicable(self, query):
-            self.get_im([query.path_stmt])
-            max_path_length, max_paths = self._get_test_configs()
-            result = self.model_checker.check_statement(
-                query.path_stmt, max_paths, max_path_length)
-            return self.process_response(result)
+            results = []
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, [query.path_stmt])
+                max_path_length, max_paths = self._get_test_configs()
+                result = mc.check_statement(
+                    query.path_stmt, max_paths, max_path_length)
+                results.append((mc_type, self.process_response(mc_type, result)))
+            return results
         else:
-            return self.hash_response_list([[
-                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]])
+            return [('', self.hash_response_list([[
+                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]]))]
 
     def answer_queries(self, queries):
         """Answer all queries registered for this model.
 
         Parameters
         ----------
-        query_stmt_pairs : list[tuple(json,
-                                indra.statements.statements.Statement)]
-            A list of tuples each containing a query json and an INDRA
-            statement derived from it.
+        queries : list[emmaa.queries.Query]
+            A list of queries to run.
 
         Returns
         -------
         responses : list[tuple(json, json)]
-            A list of tuples each containing a query json and a result json.
+            A list of tuples each containing a query, mc_type and result json.
         """
         responses = []
         applicable_queries = []
@@ -159,18 +192,19 @@ class ModelManager(object):
                 applicable_stmts.append(query.path_stmt)
             else:
                 responses.append(
-                    (query, self.hash_response_list(
+                    (query, '', self.hash_response_list(
                         [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
                           result_codes_link)]])))
         # Only do the following steps if there are applicable queries
         if applicable_queries:
-            self.get_im(applicable_stmts)
-            results = self.model_checker.check_model()
-            for ix, (_, result) in enumerate(results):
-                responses.append(
-                    (applicable_queries[ix],
-                     self.process_response(result)))
-        return responses
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, applicable_stmts)
+                results = mc.check_model()
+                for ix, (_, result) in enumerate(results):
+                    responses.append(
+                        (applicable_queries[ix], mc_type,
+                         self.process_response(mc_type, result)))
+        return sorted(responses, key=lambda x: x[0].matches_key())
 
     def _get_test_configs(self):
         try:
@@ -187,7 +221,7 @@ class ModelManager(object):
                     (max_path_length, max_paths))
         return (max_path_length, max_paths)
 
-    def process_response(self, result):
+    def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
         of tuples. Each tuple contains a sentence describing either a step in a
         path (if it was found) or result code (if a path was not found) and a
@@ -195,7 +229,7 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response_list = self.make_english_path(result)
+            response_list = self.make_english_path(mc_type, result)
         else:
             response_list = self.make_english_result_code(result)
         return self.hash_response_list(response_list)
@@ -207,7 +241,7 @@ class ModelManager(object):
         response_dict = {}
         for response in response_list:
             sentences = []
-            for (sentence, link) in response:
+            for sentence, _ in response:
                 sentences.append(sentence)
             response_str = ' '.join(sentences)
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
@@ -227,16 +261,19 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json()})
+            'statements': self.assembled_stmts_to_json(),
+            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
+            'make_links': self.make_links})
         for ix, test in enumerate(self.applicable_tests):
-            results_json.append({
-                    'test_type': test.__class__.__name__,
-                    'test_json': test.to_json(),
-                    'result_json': pickler.flatten(self.test_results[ix]),
-                    'english_path': self.make_english_path(
-                                                self.test_results[ix]),
-                    'english_code': self.make_english_result_code(
-                        self.test_results[ix])})
+            test_ix_results = {'test_type': test.__class__.__name__,
+                               'test_json': test.to_json()}
+            for mc_type in self.mc_types:
+                result = self.mc_types[mc_type]['test_results'][ix]
+                test_ix_results[mc_type] = {
+                    'result_json': pickler.flatten(result),
+                    'english_path': self.make_english_path(mc_type, result),
+                    'english_code': self.make_english_result_code(result)}
+            results_json.append(test_ix_results)
         return results_json
 
 
@@ -280,7 +317,7 @@ class TestManager(object):
     def run_tests(self):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_tests()
+            model_manager.run_all_tests()
 
 
 class TestConnector(object):

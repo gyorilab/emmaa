@@ -1,6 +1,7 @@
 import requests
-from inflection import camelize, underscore
+from inflection import underscore
 from collections import OrderedDict as _o
+from .util import get_class_from_name
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash
 from indra.databases.hgnc_client import get_hgnc_id
@@ -14,7 +15,7 @@ class Query(object):
     @classmethod
     def _from_json(cls, json_dict):
         query_type = json_dict.get('type')
-        query_cls = query_cls_from_type(query_type)
+        query_cls = get_class_from_name(query_type, Query)
         query = query_cls._from_json(json_dict)
         return query
 
@@ -160,20 +161,18 @@ class ComparativeInterventionProperty(Query):
     pass
 
 
-def query_cls_from_type(query_type):
-    query_classes = get_all_descendants(Query)
-    for query_class in query_classes:
-        if query_class.__name__.lower() == camelize(query_type).lower():
-            return query_class
-    raise NotAQueryType(f'{query_type} is not recognized as a query type!')
-
-
 def get_agent_from_text(ag_name, use_grouding_service=True):
     """Return an INDRA Agent object."""
     grounding_url = "http://grounding.indra.bio/ground"
     if use_grouding_service:
-        return get_agent_from_grounding_service(ag_name, grounding_url)
-    return get_agent_from_local_grounding(ag_name)
+        try:
+            agent = get_agent_from_grounding_service(ag_name, grounding_url)
+        except Exception as e:
+            logger.warning('Could not get agent from grounding service: %s' % e)
+            agent = get_agent_from_local_grounding(ag_name)
+    else:
+        agent = get_agent_from_local_grounding(ag_name)
+    return agent
 
 
 def get_grounding_from_name(name):
@@ -227,8 +226,4 @@ def get_agent_from_grounding_service(ag_name, url):
 
 
 class GroundingError(Exception):
-    pass
-
-
-class NotAQueryType(Exception):
     pass

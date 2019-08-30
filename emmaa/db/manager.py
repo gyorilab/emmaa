@@ -227,9 +227,10 @@ class EmmaaDatabaseManager(object):
             and the result_json is the json containing corresponding result.
         """
         results = []
-        for query, result_json in query_results:
+        for query, mc_type, result_json in query_results:
             query_hash = query.get_hash_with_model(model_id)
             results.append(Result(query_hash=query_hash,
+                                  mc_type=mc_type,
                                   result_json=result_json))
 
         with self.get_session() as sess:
@@ -240,8 +241,8 @@ class EmmaaDatabaseManager(object):
         logger.info(f"Got request for results of {query} on {model_ids}.")
         hashes = {query.get_hash_with_model(model_id) for model_id in model_ids}
         with self.get_session() as sess:
-            q = (sess.query(Query.model_id, Query.json, Result.result_json,
-                            Result.date)
+            q = (sess.query(Query.model_id, Query.json, Result.mc_type,
+                            Result.result_json, Result.date)
                  .filter(Result.query_hash.in_(hashes),
                          Query.hash == Result.query_hash))
             results = _make_queries_in_results(q.all())
@@ -263,13 +264,13 @@ class EmmaaDatabaseManager(object):
         Returns
         -------
         results : list[tuple]
-            A list of tuples, each of the form: (model_id, query,
+            A list of tuples, each of the form: (model_id, query, mc_type,
             result_json, date) representing the result of a query run on a
             model on a given date.
         """
         logger.info(f"Got request for results for {user_email}")
         with self.get_session() as sess:
-            q = (sess.query(Query.model_id, Query.json,
+            q = (sess.query(Query.model_id, Query.json, Result.mc_type,
                             Result.result_json, Result.date)
                  .filter(Query.hash == Result.query_hash))
             results = _make_queries_in_results(q.all())
@@ -291,7 +292,8 @@ def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter: (model_id, query(object), result_json, date)
     result_dict = defaultdict(list)
     for res in result_iter:
-        result_dict[res[1].get_hash_with_model(res[0])].append(tuple(res))
+        result_dict[(res[1].get_hash_with_model(res[0]), res[2])].append(
+            tuple(res))
     sorted_results = [sorted(res_list, key=lambda r: r[-1])
                       for res_list in result_dict.values()]
     results = [result[-latest_order] for result in sorted_results]
@@ -304,7 +306,7 @@ def _make_queries_in_results(result_iter):
     results = []
     for res in result_iter:
         query = QueryObject._from_json(res[1])
-        results.append((res[0], query, res[2], res[3]))
+        results.append((res[0], query, res[2], res[3], res[4]))
     return results
 
 

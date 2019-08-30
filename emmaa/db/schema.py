@@ -71,13 +71,13 @@ class Query(Base, EmmaaTable):
     hash : big-int
         (primary key) A 32 bit integer generated from the json and model_id.
     model_id : str
-        (10 character) The short id/acronym for the given model.
+        (20 character) The short id/acronym for the given model.
     json : json
         A json dict containing the relevant parameters defining the query.
     """
     __tablename__ = 'query'
     hash = Column(BigInteger, primary_key=True)
-    model_id = Column(String(10), nullable=False)
+    model_id = Column(String(20), nullable=False)
     json = Column(JSONB, nullable=False)
     __table_args__ = (
         UniqueConstraint('model_id', 'json', name='query-uniqueness'),
@@ -129,6 +129,8 @@ class Result(Base, EmmaaTable):
         (auto) The date the result was entered into the database.
     result_json : json
         A json dict containing the results for the query.
+    mc_type : str
+        A name of a ModelChecker used to answer the query.
     """
     __tablename__ = 'result'
     id = Column(Integer, primary_key=True)
@@ -136,3 +138,4 @@ class Result(Base, EmmaaTable):
     query = relationship(Query)
     date = Column(DateTime, default=func.now())
     result_json = Column(JSONB, nullable=False)
+    mc_type = Column(String(20), default='pysb')

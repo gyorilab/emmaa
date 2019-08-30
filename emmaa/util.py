@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 from botocore import UNSIGNED
 from botocore.client import Config
+from inflection import camelize
+from indra.statements import get_all_descendants
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
@@ -109,3 +111,16 @@ def get_s3_client(unsigned=True):
         return boto3.client('s3', config=Config(signature_version=UNSIGNED))
     else:
         return boto3.client('s3')
+
+
+def get_class_from_name(cls_name, parent_cls):
+    classes = get_all_descendants(parent_cls)
+    for cl in classes:
+        if cl.__name__.lower() == camelize(cls_name).lower():
+            return cl
+    raise NotAClassName(f'{cls_name} is not recognized as a '
+                        f'{parent_cls.__name__} type!')
+
+
+class NotAClassName(Exception):
+    pass

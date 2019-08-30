@@ -1,5 +1,5 @@
 from nose.plugins.attrib import attr
-from indra.explanation.model_checker import PathResult, ModelChecker
+from indra.explanation.model_checker import PathResult, PysbModelChecker
 from indra.statements.statements import Statement
 from emmaa.model import EmmaaModel
 from emmaa.model_tests import (StatementCheckingTest, run_model_tests_from_s3,
@@ -32,15 +32,15 @@ def test_run_tests_from_s3():
         registered_queries=False, db=db)
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
-    assert isinstance(mm.model_checker, ModelChecker)
-    assert isinstance(mm.test_results[0], PathResult)
+    assert isinstance(mm.mc_types['pysb']['model_checker'], PysbModelChecker)
+    assert isinstance(mm.mc_types['pysb']['test_results'][0], PathResult)
     assert isinstance(mm.applicable_tests[0], StatementCheckingTest)
     assert len(mm.applicable_tests) == 1
-    assert len(mm.test_results) == 1
+    assert len(mm.mc_types['pysb']['test_results']) == 1
     assert isinstance(sg, StatsGenerator)
     assert isinstance(sg.latest_round, TestRound)
-    assert isinstance(sg.latest_round.test_results[0], PathResult)
+    assert isinstance(sg.latest_round.mc_types_results['pysb'][0], PathResult)
     assert isinstance(sg.latest_round.statements[0], Statement)
     assert len(sg.latest_round.statements) == 2
-    assert len(sg.latest_round.test_results) == 1
+    assert len(sg.latest_round.mc_types_results['pysb']) == 1
     assert len(sg.latest_round.tests) == 1

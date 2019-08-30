@@ -8,6 +8,8 @@ import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.pybel import PybelAssembler
+from indra.assemblers.indranet import IndraNetAssembler
 from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler import Preassembler
@@ -40,6 +42,12 @@ class EmmaaModel(object):
         A string containing the name of the model
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
+    assembly_config : dict
+        Configurations for assembling the model.
+    test_config : dict
+        Configurations for running tests on the model.
+    reading_config : dict
+        Configurations for reading the content.
     search_terms : list[emmaa.priors.SearchTerm]
         A list of SearchTerm objects containing the search terms used in the
         model.
@@ -370,11 +378,36 @@ class EmmaaModel(object):
 
     def assemble_pysb(self):
         """Assemble the model into PySB and return the assembled model."""
-        self.run_assembly()
+        if not self.assembled_stmts:
+            self.run_assembly()
         pa = PysbAssembler()
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
         return pysb_model
+
+    def assemble_pybel(self):
+        """Assemble the model into PyBEL and return the assembled model."""
+        if not self.assembled_stmts:
+            self.run_assembly()
+        pba = PybelAssembler(self.assembled_stmts)
+        pybel_model = pba.make_model()
+        return pybel_model
+
+    def assemble_signed_graph(self):
+        """Assemble the model into signed graph and return the assembled graph."""
+        if not self.assembled_stmts:
+            self.run_assembly()
+        ia = IndraNetAssembler(self.assembled_stmts)
+        signed_graph = ia.make_model(graph_type='signed')
+        return signed_graph
+
+    def assemble_unsigned_graph(self):
+        """Assemble the model into unsigned graph and return the assembled graph."""
+        if not self.assembled_stmts:
+            self.run_assembly()
+        ia = IndraNetAssembler(self.assembled_stmts)
+        unsigned_graph = ia.make_model(graph_type='digraph')
+        return unsigned_graph
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
