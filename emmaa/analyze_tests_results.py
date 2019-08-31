@@ -148,7 +148,7 @@ class TestRound(object):
         """Return a list of hashes for all applied tests."""
         return list(self.english_test_results.keys())
 
-    def get_passed_test_hashes(self, mc_type):
+    def get_passed_test_hashes(self, mc_type='pysb'):
         """Return a list of hashes for passed tests."""
         return [test_hash for test_hash in self.english_test_results.keys() if
                 self.english_test_results[test_hash][mc_type][0] == 'Pass']
@@ -159,13 +159,13 @@ class TestRound(object):
         logger.info(f'{total} tests were applied.')
         return total
 
-    def get_number_passed_tests(self, mc_type):
+    def get_number_passed_tests(self, mc_type='pysb'):
         """Return a number of all passed tests."""
         total = len(self.get_passed_test_hashes(mc_type))
         logger.info(f'{total} tests passed.')
         return total
 
-    def passed_over_total(self, mc_type):
+    def passed_over_total(self, mc_type='pysb'):
         """Return a ratio of passed over total tests."""
         return self.get_number_passed_tests(mc_type)/self.get_total_applied_tests()
 
@@ -195,7 +195,7 @@ class TestRound(object):
                         self.get_path_or_code_by_hash(test_hash, mc_type)]
         return tests_by_hash
 
-    def get_path_descriptions(self, mc_type):
+    def get_path_descriptions(self, mc_type='pysb'):
         """Return a dictionary mapping a test hash and an English description
         of a path found.
         """
@@ -244,10 +244,10 @@ class TestRound(object):
     def get_english_test_by_hash(self, test_hash):
         return self.english_test_results[test_hash]['test']
 
-    def get_pass_fail_by_hash(self, test_hash, mc_type):
+    def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
         return self.english_test_results[test_hash][mc_type][0]
 
-    def get_path_or_code_by_hash(self, test_hash, mc_type):
+    def get_path_or_code_by_hash(self, test_hash, mc_type='pysb'):
         # If we have a path description return it, otherwise return code
         try:
             result = self.get_path_descriptions(mc_type)[test_hash]
