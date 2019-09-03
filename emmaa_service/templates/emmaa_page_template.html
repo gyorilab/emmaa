@@ -64,7 +64,7 @@
     #query-submit {
       background-color: rgb(221, 221, 221);
     }
-    button.btn-primary {
+    button.btn-primary { /* For login button */
       background-color: #007bff;
     }
   </style>
@@ -121,44 +121,44 @@
       }
     </style>
 
-    <header>
-      <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
-        <h5 class="my-0 mr-md-auto font-weight-normal">
-          {% for link_address, link_text in link_list %}
-          <a href="{{ link_address }}">{{ link_text }}</a>&nbsp;&nbsp;&nbsp;
-          {% endfor %}
-        </h5>
+    <header class="bg-white border-bottom shadow-sm fixed-top no-horiz-pad">
+      <div class="d-flex flex-row align-items-center">
+        <h5 class="d-inline-flex my-0 mr-md-auto font-weight-normal">
+        {% for link_address, link_text in link_list %}
+        <a class="p-2" href="{{ link_address }}">{{ link_text }}</a>
+        {% endfor %}
+      </h5>
         {% block extend_header %}
         {% endblock %}
-        <nav class="my-2 my-md-0 mr-md-3">
-          <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-          <a class="p-2 text-dark" href="#about">About</a>
-          <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
-        </nav>
-        <button class="btn btn-primary"
+        <nav class="d-inline-flex p-2">
+        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+        <a class="p-2 text-dark" href="#about">About</a>
+        <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
+      </nav>
+        <div class="d-inline-flex button-container p-2">
+          <button class="btn btn-primary"
                 onclick="return {% if identity %}trigger_logout(){% else %}trigger_login(){% endif %};"
                 id="loginout-button">
-          {% if identity %}
-            Logout
-          {%  else %}
-            Login
-          {% endif %}
-        </button>
+            {% if identity %}
+              Logout
+            {%  else %}
+              Login
+            {% endif %}
+          </button>
+        </div>
+      </div>
+      <div class="d-flex flex-row-reverse">
+        <div class="d-inline-flex text-container p-2 text-right">
+          <span id="user-loginout-msg">
+            {% if identity %}
+              Welcome {{ identity['email'] }}!
+            {% else %}
+              Hello anonymous user!
+            {% endif %}
+          </span>
+        </div>
       </div>
     </header>
-
-  {#  <div class="row align-center">#}
-  {#    <div class="col-auto no-horiz-pad">#}
-  {#      {{ header }}#}
-  {#    </div>#}
-  {#    <div class="col text-right no-horiz-pad">#}
-  {#      <span id="user-loginout-msg">#}
-  {#        {% if identity %}#}
-  {#          Welcome {{ identity['email'] }}!#}
-  {#        {% endif %}#}
-  {#      </span>#}
-  {#    </div>#}
-  {#  </div>#}
   {% endblock %}
 
   <div class="container">
