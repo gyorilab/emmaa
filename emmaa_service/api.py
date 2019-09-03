@@ -4,6 +4,7 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template
+from flask_jwt_extended import get_jwt_identity, jwt_optional
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -14,7 +15,7 @@ from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
-from indralab_auth_tools.auth import auth, config_auth
+from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 
 app = Flask(__name__)
 app.register_blueprint(auth)
@@ -34,7 +35,8 @@ qm = QueryManager()
 
 def _get_model_meta_data():
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
+    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
+                           Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
@@ -82,7 +84,8 @@ def get_model_stats(model, extension='.json'):
     latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                           prefix=prefix,
                                           extension=extension)
-    model_data_object = s3.get_object(Bucket='emmaa', Key=latest_file_key)
+    model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
+                                      Key=latest_file_key)
     return json.loads(model_data_object['Body'].read().decode('utf8'))
 
 
@@ -183,17 +186,19 @@ def get_model_dashboard(model):
 
 
 @app.route('/query')
+@jwt_optional
 def get_query_page():
-    # TODO Should pass user specific info in the future when logged in
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
-    user_email = 'joshua@emmaa.com'
+    # user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email)
 
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
-                           link_list=link_list)
+                           link_list=link_list, user_email=user_email)
 
 
 @app.route('/query/submit', methods=['POST'])

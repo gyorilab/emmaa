@@ -147,17 +147,15 @@
           </button>
         </div>
       </div>
+      {% if user_email %}
       <div class="d-flex flex-row-reverse">
         <div class="d-inline-flex text-container p-2 text-right">
           <span id="user-loginout-msg">
-            {% if identity %}
-              Welcome {{ identity['email'] }}!
-            {% else %}
-              Hello anonymous user!
-            {% endif %}
+            Welcome {{ user_email }}!
           </span>
         </div>
       </div>
+      {% endif %}
     </header>
   {% endblock %}
 
