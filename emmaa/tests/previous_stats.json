@@ -1,0 +1,148 @@
+{
+ "model_summary": {
+  "model_name": "test",
+  "number_of_statements": 2,
+  "stmts_type_distr": [
+   [
+    "Activation",
+    2
+   ]
+  ],
+  "agent_distr": [
+   [
+    "MAP2K1",
+    2
+   ],
+   [
+    "BRAF",
+    1
+   ],
+   [
+    "MAPK1",
+    1
+   ]
+  ],
+  "stmts_by_evidence": [
+   [
+    "-23078353002754841",
+    1
+   ],
+   [
+    "-34603994586320440",
+    1
+   ]
+  ],
+  "english_stmts": {
+   "-23078353002754841": "<a href=\"https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html\">BRAF activates MAP2K1.</a>",
+   "-34603994586320440": "<a href=\"https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html\">Active MAP2K1 activates MAPK1.</a>"
+  }
+ },
+ "test_round_summary": {
+  "number_applied_tests": 1,
+  "tests_by_hash": {
+   "2263710015126801": [
+    "<a href=\"https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6871@HGNC&type=Activation&format=html\">BRAF activates MAPK1.</a>",
+    "Pass",
+    [
+     [
+      "<a href=\"https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html\">BRAF activates MAP2K1.</a>",
+      "<a href=\"https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html\">Active MAP2K1 activates MAPK1.</a>"
+     ]
+    ]
+   ]
+  },
+  "pysb": {
+   "number_passed_tests": 1,
+   "passed_ratio": 1.0,
+   "passed_tests": [
+    "2263710015126801"
+   ],
+   "paths": {
+    "2263710015126801": [
+     [
+      "<a href=\"https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html\">BRAF activates MAP2K1.</a>",
+      "<a href=\"https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html\">Active MAP2K1 activates MAPK1.</a>"
+     ]
+    ]
+   }
+  },
+  "number_passed_tests": 1,
+  "passed_ratio": 1.0,
+  "passed_tests": [
+   "2263710015126801"
+  ],
+  "paths": {
+   "2263710015126801": [
+    [
+     "<a href=\"https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html\">BRAF activates MAP2K1.</a>",
+     "<a href=\"https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html\">Active MAP2K1 activates MAPK1.</a>"
+    ]
+   ]
+  }
+ },
+ "model_delta": {
+  "number_of_statements_delta": 0,
+  "statements_delta": {
+   "added": [],
+   "removed": []
+  }
+ },
+ "tests_delta": {
+  "number_applied_tests_delta": 0,
+  "pysb": {
+   "number_passed_tests_delta": 0,
+   "passed_ratio_delta": 0,
+   "applied_tests_delta": {
+    "added": [],
+    "removed": []
+   },
+   "pass_fail_delta": {
+    "added": [],
+    "removed": []
+   },
+   "new_paths": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "number_passed_tests_delta": 0,
+  "passed_ratio_delta": 0,
+  "applied_tests_delta": {
+   "added": [],
+   "removed": []
+  },
+  "pass_fail_delta": {
+   "added": [],
+   "removed": []
+  },
+  "new_paths": {
+   "added": [],
+   "removed": []
+  }
+ },
+ "changes_over_time": {
+  "number_of_statements": [
+   2
+  ],
+  "number_applied_tests": [
+   1
+  ],
+  "dates": [
+   "2019-09-03-18-57-15"
+  ],
+  "pysb": {
+   "number_passed_tests": [
+    1
+   ],
+   "passed_ratio": [
+    1.0
+   ]
+  },
+  "number_passed_tests": [
+   1
+  ],
+  "passed_ratio": [
+   1.0
+  ]
+ }
+}

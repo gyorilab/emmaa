@@ -1,0 +1,227 @@
+[
+ {
+  "model_name": "test",
+  "statements": [
+   {
+    "type": "Activation",
+    "subj": {
+     "name": "BRAF",
+     "db_refs": {
+      "UP": "P15056",
+      "HGNC": "1097",
+      "TEXT": "BRAF"
+     }
+    },
+    "obj": {
+     "name": "MAP2K1",
+     "db_refs": {
+      "UP": "Q02750",
+      "HGNC": "6840",
+      "TEXT": "MAP2K1"
+     }
+    },
+    "obj_activity": "activity",
+    "belief": 0.65,
+    "evidence": [
+     {
+      "source_api": "trips",
+      "text": "BRAF activates MAP2K1.",
+      "annotations": {
+       "agents": {
+        "raw_text": [
+         "BRAF",
+         "MAP2K1"
+        ],
+        "raw_grounding": [
+         {
+          "UP": "P15056",
+          "HGNC": "1097",
+          "TEXT": "BRAF"
+         },
+         {
+          "UP": "Q02750",
+          "HGNC": "6840",
+          "TEXT": "MAP2K1"
+         }
+        ]
+       },
+       "prior_uuids": [
+        "b2e03358-df3c-4d79-8ca6-26fb4c691adc"
+       ]
+      },
+      "source_hash": -6387054781600675327
+     }
+    ],
+    "id": "b2e03358-df3c-4d79-8ca6-26fb4c691adc",
+    "matches_hash": "-23078353002754841"
+   },
+   {
+    "type": "Activation",
+    "subj": {
+     "name": "MAP2K1",
+     "activity": {
+      "activity_type": "activity",
+      "is_active": true
+     },
+     "db_refs": {
+      "UP": "Q02750",
+      "HGNC": "6840",
+      "TEXT": "MAP2K1"
+     }
+    },
+    "obj": {
+     "name": "MAPK1",
+     "db_refs": {
+      "UP": "P28482",
+      "HGNC": "6871",
+      "TEXT": "MAPK1"
+     }
+    },
+    "obj_activity": "activity",
+    "belief": 0.65,
+    "evidence": [
+     {
+      "source_api": "trips",
+      "text": "Active MAP2K1 activates MAPK1.",
+      "annotations": {
+       "agents": {
+        "raw_text": [
+         "MAP2K1",
+         "MAPK1"
+        ],
+        "raw_grounding": [
+         {
+          "UP": "Q02750",
+          "HGNC": "6840",
+          "TEXT": "MAP2K1"
+         },
+         {
+          "UP": "P28482",
+          "HGNC": "6871",
+          "TEXT": "MAPK1"
+         }
+        ]
+       },
+       "prior_uuids": [
+        "2de2f5db-1b5b-455c-8000-61763562928b"
+       ]
+      },
+      "source_hash": 2597751197793371266
+     }
+    ],
+    "id": "2de2f5db-1b5b-455c-8000-61763562928b",
+    "matches_hash": "-34603994586320440"
+   }
+  ],
+  "mc_types": [
+   "pysb"
+  ],
+  "make_links": true
+ },
+ {
+  "test_type": "StatementCheckingTest",
+  "test_json": {
+   "type": "Activation",
+   "subj": {
+    "name": "BRAF",
+    "db_refs": {
+     "TEXT": "BRAF",
+     "HGNC": "1097",
+     "UP": "P15056",
+     "NCIT": "C18363"
+    }
+   },
+   "obj": {
+    "name": "MAPK1",
+    "db_refs": {
+     "TEXT": "MAPK1",
+     "HGNC": "6871",
+     "UP": "P28482",
+     "NCIT": "C21227"
+    }
+   },
+   "obj_activity": "activity",
+   "belief": 1,
+   "evidence": [
+    {
+     "source_api": "trips",
+     "text": "BRAF activates MAPK1.",
+     "source_hash": -7955391183761620577
+    }
+   ],
+   "id": "50bfda3f-24cb-4c5c-a950-0a60ed569728",
+   "matches_hash": "2263710015126801"
+  },
+  "pysb": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF_activates_MAP2K1_activity",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MAPK1_activity_active_obs",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF_activates_MAP2K1_activity",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAP2K1_act_activates_MAPK1_activity",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAPK1_activity_active_obs",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "english_path": [
+    [
+     [
+      "BRAF activates MAP2K1.",
+      "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html"
+     ],
+     [
+      "Active MAP2K1 activates MAPK1.",
+      "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html"
+     ]
+    ]
+   ],
+   "english_code": [
+    [
+     [
+      "Path found which satisfies the test statement",
+      "https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html"
+     ]
+    ]
+   ]
+  }
+ }
+]
