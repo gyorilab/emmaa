@@ -3,14 +3,12 @@
 {% block additional_scripts %}
 <script>
   let model = '{{ model }}';
-  let ndexID = '{{ ndexID }}';
 
   $(document).ready(function(){
     console.log('document ready');
     let ddSelectTag = document.getElementById('modelSelectDD');
     setModel(ddSelectTag, model);
 
-    let infoTableBody = document.getElementById('modelInfoTableBody');
     let testResultsTableBody = document.getElementById('modelTestResultBody');
 
     populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
