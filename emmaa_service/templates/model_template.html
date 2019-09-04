@@ -13,7 +13,6 @@
     let infoTableBody = document.getElementById('modelInfoTableBody');
     let testResultsTableBody = document.getElementById('modelTestResultBody');
 
-    listModelInfo(infoTableBody, '{{ model_last_updated }}', '{{ ndexID }}');
     populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
   });
 
@@ -93,7 +92,18 @@
               <th>Item</th>
               <th>Details</th>
             </thead>
-            <tbody class="table-body" id="modelInfoTableBody"></tbody>
+            <tbody class="table-body" id="modelInfoTableBody">
+              <tr>
+                <td>Last updated</td>
+                <td>{{ model_last_updated }}</td>
+              </tr>
+              <tr>
+                <td>Network on NDEX</td>
+                <td>
+                  <a href="http://www.ndexbio.org/#/network/{{ ndexID }}" target="_blank">{{ ndexID }}</a>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

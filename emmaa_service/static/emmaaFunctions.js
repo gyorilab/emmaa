@@ -369,22 +369,6 @@ function populateTestResultTable(tableBody, json) {
   });
 }
 
-function listModelInfo(modelInfoTableBody, lastUpdated, ndexID) {
-  // Add when model was last updated
-  modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]));
-  // Create link to ndex
-  let link = document.createElement('a');
-  link.textContent = ndexID;
-  link.href = `http://www.ndexbio.org/#/network/${ndexID}`;
-  link.target = '_blank';
-
-  let tableRow = addToRow(['Network on NDEX', '']);
-  tableRow.children[1].innerHTML = null;
-  tableRow.children[1].appendChild(link);
-
-  modelInfoTableBody.appendChild(tableRow);
-}
-
 /* c3 chart functions
 Found here:
 
