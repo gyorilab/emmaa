@@ -137,6 +137,8 @@ class ModelManager(object):
                             path, self.mc_types['pybel']['model'],
                             from_db=False, stmts=self.model.assembled_stmts)
                     for stmt in stmts:
+                        if not stmt:
+                            continue
                         if isinstance(stmt, list):
                             stmt = stmt[0]
                         ea = EnglishAssembler([stmt])
