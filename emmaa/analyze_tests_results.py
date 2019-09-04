@@ -241,7 +241,7 @@ class TestRound(object):
                 [[f'<a href="{link}">{sentence}</a>']])
         return english_codes
 
-    def get_english_test_by_hash(self, test_hash):
+    def get_english_test_by_hash(self, test_hash, mc_type=None):
         return self.english_test_results[test_hash]['test']
 
     def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
@@ -505,7 +505,8 @@ class StatsGenerator(object):
                     self.latest_round.find_numeric_delta(
                         self.previous_round, 'get_total_applied_tests'))}
         for mc_type in self.latest_round.mc_types_results:
-            if mc_type not in self.previous_round.mc_types_results:
+            if not self.previous_round or mc_type not in \
+                    self.previous_round.mc_types_results:
                 tests_delta[mc_type] = {
                     'number_passed_tests_delta': 0,
                     'passed_ratio_delta': 0,
