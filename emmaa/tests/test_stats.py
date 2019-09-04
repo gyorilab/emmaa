@@ -1,5 +1,6 @@
-import json
 import os
+import json
+from nose.plugins.attrib import attr
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
 
 
@@ -18,6 +19,7 @@ with open(previous_stats_file, 'r') as f:
     previous_stats = json.load(f)
 
 
+@attr('nonpublic')
 def test_test_round():
     tr = TestRound(previous_results)
     assert tr
@@ -44,6 +46,7 @@ def test_test_round():
     assert len(tr2.find_content_delta(tr, 'paths')['added']) == 1
 
 
+@attr('nonpublic')
 def test_stats_generator():
     latest_round = TestRound(new_results)
     previous_round = TestRound(previous_results)
