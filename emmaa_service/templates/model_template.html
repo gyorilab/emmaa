@@ -132,7 +132,7 @@
               <th>Evidence Count</th>
             </thead>
             <tbody class="table-body" id="stmtEvidence">
-            {% for link, ev_count in stmts_by_ev %}
+            {% for link, ev_count in stmts_counts %}
               <tr>
                 <td>{{ link|safe }}</td>
                 <td>{{ ev_count }}</td>

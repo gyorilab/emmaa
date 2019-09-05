@@ -1,7 +1,8 @@
+import re
 import json
-import argparse
 import boto3
 import logging
+import argparse
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_optional
@@ -157,6 +158,23 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
+def _add_target_blank(english_by_hash, top_statements):
+    # Matches an anchor with at least an href attribute
+    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
+    res = []
+    for h, c in top_statements:
+        html_string = english_by_hash[h]
+        m = re.search(pattern=pattern, string=html_string)
+        if m:
+            anchor_string = f'<a href="{m.group(1)}" class="stmt-dblink" ' \
+                            f'target="_blank">{m.group(2)}</a>'
+        else:
+            anchor_string = html_string
+            print(f'No pattern match in string {html_string}')
+        res.append((anchor_string, c))
+    return res
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
@@ -187,6 +205,8 @@ def get_model_dashboard(model):
         last_update = 'Not available'
     model_stats = get_model_stats(model)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
+    english_by_hash = model_stats['model_summary']['english_stmts']
+    top_stmts_counts = _add_target_blank(english_by_hash, most_supported)
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -195,6 +215,7 @@ def get_model_dashboard(model):
                            ndexID=ndex_id,
                            user_email=user.email if user else "",
                            model_last_updated=last_update,
+                           stmts_counts=top_stmts_counts,
                            stmts_by_ev=most_supported)
 
 
