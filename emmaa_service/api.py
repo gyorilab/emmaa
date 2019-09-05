@@ -158,21 +158,24 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
-def _add_target_blank(english_by_hash, top_statements):
-    # Matches an anchor with at least an href attribute
-    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
+def _fix_top_stmts(english_by_hash, top_statements):
     res = []
     for h, c in top_statements:
         html_string = english_by_hash[h]
-        m = re.search(pattern=pattern, string=html_string)
-        if m:
-            anchor_string = f'<a href="{m.group(1)}" class="stmt-dblink" ' \
-                            f'target="_blank">{m.group(2)}</a>'
-        else:
-            anchor_string = html_string
-            print(f'No pattern match in string {html_string}')
-        res.append((anchor_string, c))
+        res.append((_add_attributes_to_anchor(html_string), c))
     return res
+
+
+def _add_attributes_to_anchor(anchor_string):
+    # Matches an anchor with at least an href attribute
+    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
+    m = re.search(pattern=pattern, string=anchor_string)
+    if m:
+        return f'<a href="{m.group(1)}" class="stmt-dblink" target="_blank">' \
+               f'{m.group(2)}</a>'
+    else:
+        # Anchor without href or something else
+        return anchor_string
 
 
 @app.route('/')
@@ -206,7 +209,9 @@ def get_model_dashboard(model):
     model_stats = get_model_stats(model)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     english_by_hash = model_stats['model_summary']['english_stmts']
-    top_stmts_counts = _add_target_blank(english_by_hash, most_supported)
+    top_stmts_counts = _fix_top_stmts(english_by_hash, most_supported)
+    added_stmts = [_add_attributes_to_anchor(a) for a in model_stats[
+        'model_delta']['statements_delta']['added']]
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
