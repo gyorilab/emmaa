@@ -1,7 +1,7 @@
 {% extends "emmaa_page_template.html" %}
 
 {% block additional_scripts %}
-  <script src="{{ url_for('static', filename='queryFunctions.js') }}"></script>
+  <script src="/dev{{ url_for('static', filename='queryFunctions.js') }}"></script>
   <script>
     $(document).ready(function() {
       let modelSelect = new Choices('#model-select');
