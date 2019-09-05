@@ -132,11 +132,11 @@
               <th>Evidence Count</th>
             </thead>
             <tbody class="table-body" id="stmtEvidence">
-            {% for stmt_hash, ev_count in stmts_by_ev %}
+            {% for link, ev_count in stmts_by_ev %}
               <tr>
-                {{ model_stats_json['model_summary']['english_stmts'][stmt_hash]|safe }}
+                <td>{{ link|safe }}</td>
+                <td>{{ ev_count }}</td>
               </tr>
-              <tr>{{ ev_count }}</tr>
             {% endfor %}
             
             </tbody>
