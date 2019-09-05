@@ -221,7 +221,8 @@ def get_model_dashboard(model):
                            user_email=user.email if user else "",
                            model_last_updated=last_update,
                            stmts_counts=top_stmts_counts,
-                           stmts_by_ev=most_supported)
+                           stmts_by_ev=most_supported,
+                           added_stmts=added_stmts)
 
 
 @app.route('/query')

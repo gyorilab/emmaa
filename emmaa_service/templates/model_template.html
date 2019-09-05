@@ -160,7 +160,13 @@
             <thead>
               <th>Statement</th>
             </thead>
-            <tbody class="table-body" id="addedStmts"></tbody>
+            <tbody class="table-body" id="addedStmts">
+            {% for added_stmt in added_stmts %}
+              <tr>
+                <td>{{ added_stmt|safe }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
           </table>
         </div>
       </div>

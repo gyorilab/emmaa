@@ -192,16 +192,6 @@ function populateTestResultTable(tableBody, json) {
 
   let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '');
 
-  // Model Delta - New statements
-  let newStTable = document.getElementById('addedStmts');
-  clearTable(newStTable);
-  let new_stmts = json.model_delta.statements_delta.added;
-  for (let stmt of new_stmts) {
-    // Has columns: statements
-    let rowEl = addToRow([stmt]);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], stmt);
-    newStTable.appendChild(rowEl)
-  }
   // Tests Tab
 
   // Passed ratio line graph
