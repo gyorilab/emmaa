@@ -154,15 +154,20 @@ def _make_query(query_dict, use_grouding_service=True):
 
 @app.route('/')
 @app.route('/home')
+@jwt_optional
 def get_home():
+    user, roles = resolve_auth(dict(request.args))
     model_data = _get_model_meta_data()
-    return render_template('index_template.html',
-                           model_data=model_data,
-                           link_list=link_list)
+    return render_template('index_template.html', model_data=model_data,
+                           link_list=link_list,
+                           user_email=user.email if user else "",
+                           identity=user.identity() if user else None)
 
 
 @app.route('/dashboard/<model>')
+@jwt_optional
 def get_model_dashboard(model):
+    user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
     last_update = model_last_updated(model=model)
@@ -176,13 +181,13 @@ def get_model_dashboard(model):
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
     model_stats = get_model_stats(model)
-    return render_template('model_template.html',
-                           model=model,
+    return render_template('model_template.html', model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            link_list=mod_link_list,
-                           model_last_updated=last_update,
-                           ndexID=ndex_id)
+                           model_last_updated=last_update, ndexID=ndex_id,
+                           user_email=user.email if user else "",
+                           identity=user.identity() if user else None)
 
 
 @app.route('/query')
@@ -198,7 +203,8 @@ def get_query_page():
 
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
-                           link_list=link_list, user_email=user_email)
+                           link_list=link_list, user_email=user_email,
+                           identity=user.identity() if user else None)
 
 
 @app.route('/query/submit', methods=['POST'])
