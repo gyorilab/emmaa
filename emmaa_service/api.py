@@ -208,6 +208,7 @@ def get_query_page():
 
 
 @app.route('/query/submit', methods=['POST'])
+@jwt_optional
 def process_query():
     # Print inputs.
     logger.info('Got model query')
@@ -217,13 +218,19 @@ def process_query():
     logger.info(str(request.json))
     logger.info("------------------")
 
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     try:
-        user_email = request.json['user']['email']
-        subscribe = request.json['register']
+        # user_email = request.json['user']['email']
+        if user_email:
+            subscribe = request.json['register']
+        else:
+            subscribe = False
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
