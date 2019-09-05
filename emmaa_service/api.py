@@ -186,13 +186,16 @@ def get_model_dashboard(model):
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
     model_stats = get_model_stats(model)
-    return render_template('model_template.html', model=model,
+    most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
+    return render_template('model_template.html',
+                           model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            link_list=mod_link_list,
-                           model_last_updated=last_update, ndexID=ndex_id,
+                           ndexID=ndex_id,
                            user_email=user.email if user else "",
-                           identity=user.id if user else None)
+                           model_last_updated=last_update,
+                           stmts_by_ev=most_supported)
 
 
 @app.route('/query')

@@ -177,18 +177,6 @@ function populateTestResultTable(tableBody, json) {
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
-  // Statements by Evidence Table
-  let stEvTable = document.getElementById('stmtEvidence');
-  clearTable(stEvTable);
-  let english_stmts = json.model_summary.english_stmts;
-  let stmtByEv = json.model_summary.stmts_by_evidence;
-
-  for (let pair of stmtByEv.slice(0,10)) {
-    let rowEl = addToRow(['', pair[1]]);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], english_stmts[pair[0]]);
-    stEvTable.appendChild(rowEl)
-  }
-
   // Statements over Time line graph
   let stmtsOverTime = json.changes_over_time.number_of_statements;
   stmtsOverTime.unshift('Statements');

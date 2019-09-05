@@ -131,7 +131,15 @@
               <th>Statement</th>
               <th>Evidence Count</th>
             </thead>
-            <tbody class="table-body" id="stmtEvidence"></tbody>
+            <tbody class="table-body" id="stmtEvidence">
+            {% for stmt_hash, ev_count in stmts_by_ev %}
+              <tr>
+                {{ model_stats_json['model_summary']['english_stmts'][stmt_hash]|safe }}
+              </tr>
+              <tr>{{ ev_count }}</tr>
+            {% endfor %}
+            
+            </tbody>
           </table>
         </div>
       </div>
