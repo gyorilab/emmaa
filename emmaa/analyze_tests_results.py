@@ -135,7 +135,8 @@ class TestRound(object):
         sentence = ea.make_model()
         if self.make_links:
             link = get_statement_queries([stmt])[0] + '&format=html'
-            stmt_str = f'<a href="{link}">{sentence}</a>'
+            stmt_str = f'<a href="{link}" class="stmt-dblink" ' \
+                       f'target="_blank">{sentence}</a>'
         else:
             stmt_str = f'<a>{sentence}</a>'
         return stmt_str
@@ -214,7 +215,9 @@ class TestRound(object):
                     stmt_strs = []
                     for (sentence, link) in path:
                         if self.make_links:
-                            stmt_str = f'<a href="{link}">{sentence}</a>'
+                            stmt_str = f'<a href="{link}" ' \
+                                       f'class="stmt-dblink" ' \
+                                       f'target="_blank">{sentence}</a>'
                             stmt_strs.append(stmt_str)
                         else:
                             stmt_str = f'<a>{sentence}</a>'
@@ -238,7 +241,8 @@ class TestRound(object):
                     self.json_results[ix+1]['english_code'][0][0])
             # Result codes always have links
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
-                [[f'<a href="{link}">{sentence}</a>']])
+                [[f'<a href="{link}" class="stmt-dblink" target="_blank">'
+                  f'{sentence}</a>']])
         return english_codes
 
     def get_english_test_by_hash(self, test_hash, mc_type=None):
