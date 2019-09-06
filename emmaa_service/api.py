@@ -228,15 +228,19 @@ def process_query():
     try:
         # If user tries to register query without logging in, refuse query
         # with 401 (unauthorized)
-        if request.json['register'] and user_email:
-            # Logged in
-            subscribe = request.json['register']
+        if request.json['register']:
+            if user_email:
+                # Logged in
+                subscribe = request.json['register']
+            else:
+                # Not logged in
+                logger.warning('User not logged in! Query will not be '
+                               'registered.')
+                return jsonify({'result': 'failure',
+                                'reason': 'Invalid credentials'}), 401
+        # Does not try to register
         else:
-            # Not logged in
-            logger.warning('User not logged in! Query will not be '
-                           'registered.')
-            return jsonify({'result': 'failure',
-                            'reason': 'Invalid credentials'}), 401
+            subscribe = False
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
