@@ -13,7 +13,6 @@ function postQuery(queryContainer) {
   }
 
   // Check if user wants to register query
-  // ToDo Prompt user to log in if they are not
   let reg = document.getElementById('register-query').checked;
 
   let ajax_response = submitQuery({
@@ -94,7 +93,11 @@ function submitQuery(queryDict, test) {
           break;
         case 401:
           console.log('401 response');
-          queryNotify('Query failed: Unauthorized (401). Try to sign in again.');
+          queryNotify('Must be signed in to register queries');
+          login(
+            (type, data) => {submitQuery(queryDict, test)},
+            (type, data) => {submitQuery(queryDict, test)}
+          );
           break;
         case 404:
           console.log('404 response');

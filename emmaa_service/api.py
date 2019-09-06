@@ -3,7 +3,7 @@ import argparse
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from flask import abort, Flask, request, Response, render_template
+from flask import abort, Flask, request, Response, render_template, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_optional
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
@@ -226,11 +226,17 @@ def process_query():
                            for pos in ['subject', 'object', 'type']}
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     try:
-        # user_email = request.json['user']['email']
-        if user_email:
+        # If user tries to register query without logging in, refuse query
+        # with 401 (unauthorized)
+        if request.json['register'] and user_email:
+            # Logged in
             subscribe = request.json['register']
         else:
-            subscribe = False
+            # Not logged in
+            logger.warning('User not logged in! Query will not be '
+                           'registered.')
+            return jsonify({'result': 'failure',
+                            'reason': 'Invalid credentials'}), 401
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
