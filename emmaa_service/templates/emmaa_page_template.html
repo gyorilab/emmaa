@@ -56,7 +56,7 @@
       target-new: tab;
     }
     body > .container {
-      padding: 85px 15px 0;
+      padding: 135px 15px 0;
     }
     a.btn {
       background-color: rgb(255, 255, 255);
@@ -141,21 +141,23 @@
                 id="loginout-button">
             {% if identity %}
               Logout
-            {%  else %}
+            {% else %}
               Login
             {% endif %}
           </button>
         </div>
       </div>
-      {% if user_email %}
       <div class="d-flex flex-row-reverse">
         <div class="d-inline-flex text-container p-2 text-right">
           <span id="user-loginout-msg">
-            Welcome {{ user_email }}!
+          {% if user_email %}
+            Logged in as {{ user_email }}
+          {% else %}
+            Log in to register queries
+          {% endif %}
           </span>
         </div>
       </div>
-      {% endif %}
     </header>
   {% endblock %}
 
