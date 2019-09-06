@@ -253,9 +253,6 @@ class EmmaaDatabaseManager(object):
     def get_results(self, user_email, latest_order=1):
         """Get the results for which the user has registered.
 
-        Note: currently users are not handled, and this will simply return
-        all results.
-
         Parameters
         ----------
         user_email : str
@@ -272,7 +269,11 @@ class EmmaaDatabaseManager(object):
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
                             Result.result_json, Result.date)
-                 .filter(Query.hash == Result.query_hash))
+                 .filter(Query.hash == Result.query_hash,
+                         Query.hash == UserQuery.query_hash,
+                         UserQuery.user_id == User.id,
+                         UserQuery.subscription,
+                         User.email == user_email))
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
