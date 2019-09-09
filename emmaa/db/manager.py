@@ -149,13 +149,10 @@ class EmmaaDatabaseManager(object):
     def put_queries(self, user_email, query, model_ids, subscribe=True):
         """Add queries to the database for a given user.
 
-        Note: users are not considered, and user_id is ignored. In future, the
-        user will be recorded and used to restrict the scope of get_results.
-
         Parameters
         ----------
         user_email : str
-            (currently unused) the email of the user that entered the queries.
+            the email of the user that entered the queries.
         query : emmaa.queries.Query
             A query object containing all necessary information.
         model_ids : list[str]
@@ -176,23 +173,45 @@ class EmmaaDatabaseManager(object):
             logger.info("Not subscribing...")
             return
 
-        # Get the existing hashes.
+        # Get the existing hashes, user's id and user's previous subscriptions
         with self.get_session() as sess:
             existing_hashes = {h for h, in sess.query(Query.hash).all()}
+            user_id = sess.query(User.id).filter(User.email == user_email)
+            existing_user_queries = {h for h, in sess.query(
+                UserQuery.query_hash).filter(UserQuery.user_id == user_id)}
 
-        # TODO: Include user info
+        # User is not registered in user db
+        if not user_id:
+            logger.info(f'User {user_email} is not registered in the user '
+                        'database, aborting...')
+            return
+
         queries = []
+        user_queries = []
         for model_id in model_ids:
             qh = query.get_hash_with_model(model_id)
+
+            if qh not in existing_user_queries:
+                user_queries.append(UserQuery(user_id=user_id, query_hash=qh,
+                                              subscription=subscribe))
+                logger.info(f'Registering query on {model_id} for user '
+                            f'{user_email}')
+            else:
+                # ToDo Find old query and flip the 'subscribe' column to True
+                #  if it is False
+                logger.info(f'{user_email} already has a registration for '
+                            f'query on {model_id}')
+
             if qh not in existing_hashes:
                 logger.info(f"Adding query on {model_id} to the db.")
                 queries.append(Query(model_id=model_id, json=query.to_json(),
                                      hash=qh))
             else:
-                logger.info(f"Skipping {model_id}; already in db.")
+                logger.info(f"Query for {model_id} already in db.")
 
         with self.get_session() as sess:
             sess.add_all(queries)
+            sess.add(user_queries)
         return
 
     def get_queries(self, model_id):
