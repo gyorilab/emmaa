@@ -199,7 +199,7 @@ def get_query_page():
     stmt_types = get_queryable_stmt_types()
 
     # user_email = 'joshua@emmaa.com'
-    old_results = qm.get_registered_queries(user_email)
+    old_results = qm.get_registered_queries(user_email) if user_email else []
 
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
