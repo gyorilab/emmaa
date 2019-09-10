@@ -176,7 +176,8 @@ class EmmaaDatabaseManager(object):
         # Get the existing hashes, user's id and user's previous subscriptions
         with self.get_session() as sess:
             existing_hashes = {h for h, in sess.query(Query.hash).all()}
-            user_id = sess.query(User.id).filter(User.email == user_email)
+            (user_id,), = sess.query(User.id).filter(User.email ==
+                                                     user_email).all()
             existing_user_queries = {h for h, in sess.query(
                 UserQuery.query_hash).filter(UserQuery.user_id == user_id)}
 
