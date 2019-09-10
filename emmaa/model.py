@@ -186,6 +186,7 @@ class EmmaaModel(object):
                 term.search_term, loaded_after=start_date)[:5]
             logger.info(f'{len(piis)} PIIs found for {term.search_term}')
             terms_to_piis[term] = piis
+            time.sleep(1)
         return terms_to_piis
 
     def get_new_readings(self, date_limit=10):
