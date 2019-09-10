@@ -211,7 +211,7 @@ class EmmaaDatabaseManager(object):
 
         with self.get_session() as sess:
             sess.add_all(queries)
-            sess.add(user_queries)
+            sess.add_all(user_queries)
         return
 
     def get_queries(self, model_id):
