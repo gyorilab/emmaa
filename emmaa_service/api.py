@@ -197,6 +197,14 @@ def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    for mid, meta in model_meta_data:
+        if mid.lower() == model.lower():
+            mod_link_list.append(
+                (f'../tests/{model}',
+                 f'Test Details For {meta["human_readable_name"]}')
+            )
+            break
+
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
     for mid, mmd in model_meta_data:
@@ -229,6 +237,24 @@ def get_model_dashboard(model):
                            stmts_by_ev=most_supported,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents)
+
+
+@app.route('/tests/<model>')
+def get_model_tests_page(model):
+    model_meta_data = _get_model_meta_data()
+    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    ndex_id = 'None available'
+    for mid, mmd in model_meta_data:
+        if mid == model:
+            ndex_id = mmd['ndex']['network']
+    if ndex_id == 'None available':
+        logger.warning(f'No ndex ID found for {model}')
+    model_stats = get_model_stats(model)
+    return render_template('tests_template.html',
+                           link_list=mod_link_list,
+                           model=model,
+                           model_stats_json=model_stats,
+                           ndexID=ndex_id)
 
 
 @app.route('/query')
