@@ -1,0 +1,21 @@
+{% extends "emmaa_page_template.html" %}
+
+{% block body %}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Detailed Test Reults For {{ model }}</h4>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <th>Test</th>
+          <th>Status</th>
+          <th>Paths or Result Code</th>
+        </thead>
+        <tbody class="table-body" id="completeTestResults"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
