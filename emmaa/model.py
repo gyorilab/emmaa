@@ -156,7 +156,7 @@ class EmmaaModel(object):
             pmids = pubmed_client.get_ids(term.search_term, reldate=date_limit)
             logger.info(f'{len(pmids)} PMIDs found for {term.search_term}')
             terms_to_pmids[term] = pmids
-            time.sleep(0.5)
+            time.sleep(1)
         return terms_to_pmids
 
     @staticmethod
