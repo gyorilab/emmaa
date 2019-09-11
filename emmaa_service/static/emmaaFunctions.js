@@ -184,9 +184,7 @@ function populateTestResultTable(tableBody, json) {
   for (mt of all_model_types) {
     if (mt in json.changes_over_time) {
       let mt_changes = json.changes_over_time[mt]
-      console.log(mt_changes)
       let passedRatio = mt_changes.passed_ratio
-      console.log(passedRatio)
       passedRatio = passedRatio.map(function(element) {
         return (element*100).toFixed(2);
       })
@@ -194,8 +192,9 @@ function populateTestResultTable(tableBody, json) {
       let dif = dates.length - passedRatio.length
       for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
       passedRatio.unshift(mt)
-      columns.push(passedRatio)
-    }};
+      passedRatioColumns.push(passedRatio)
+    }
+  };
 
   lineDataParams = {
     x: 'x',
@@ -208,17 +207,24 @@ function populateTestResultTable(tableBody, json) {
   // Applied/passed area graph
   let appliedTests = json.changes_over_time.number_applied_tests;
   appliedTests.unshift('Applied Tests');
-  let passedTests = json.changes_over_time.number_passed_tests;
-  passedTests.unshift('Passed Tests');
+  let appliedPassedColumns = [dates, appliedTests]
+
+  for (mt of all_model_types) {
+    if (mt in json.changes_over_time) {
+      let mt_changes = json.changes_over_time[mt]
+      let passedTests = mt_changes.number_passed_tests;
+      var i
+      let dif = dates.length - passedTests.length
+      for (i = 1; i < dif; i++) {passedTests.unshift(null)}
+      passedTests.unshift(`${mt} Passed Tests`)
+      appliedPassedColumns.push(passedTests)
+    }
+  };
 
   let passedAppliedParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: [
-      dates,
-      passedTests,
-      appliedTests
-    ],
+    columns: appliedPassedColumns,
     type: 'area'
   };
 
