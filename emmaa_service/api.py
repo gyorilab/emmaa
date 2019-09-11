@@ -195,6 +195,7 @@ def get_model_dashboard(model):
 def get_query_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    user_id = user.id if user else None
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
@@ -204,7 +205,7 @@ def get_query_page():
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list, user_email=user_email,
-                           identity=user.identity() if user else None)
+                           user_id=user_id)
 
 
 @app.route('/query/submit', methods=['POST'])
