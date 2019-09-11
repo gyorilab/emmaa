@@ -100,6 +100,9 @@ function populateTestResultTable(tableBody, json) {
   dates.unshift('x');
 
   let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+  let current_model_types = []
+  for (mt of all_model_types) {if (mt in json.test_round_summary) {
+    current_model_types.push(mt)}};
   //  Model Tab
 
   // Stmt type distribution bar graph 
@@ -181,8 +184,7 @@ function populateTestResultTable(tableBody, json) {
   // Passed ratio line graph
   let passedRatioColumns = [dates]
 
-  for (mt of all_model_types) {
-    if (mt in json.changes_over_time) {
+  for (mt of current_model_types) {
       let mt_changes = json.changes_over_time[mt]
       let passedRatio = mt_changes.passed_ratio
       passedRatio = passedRatio.map(function(element) {
@@ -193,7 +195,6 @@ function populateTestResultTable(tableBody, json) {
       for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
       passedRatio.unshift(mt)
       passedRatioColumns.push(passedRatio)
-    }
   };
 
   lineDataParams = {
@@ -209,8 +210,7 @@ function populateTestResultTable(tableBody, json) {
   appliedTests.unshift('Applied Tests');
   let appliedPassedColumns = [dates, appliedTests]
 
-  for (mt of all_model_types) {
-    if (mt in json.changes_over_time) {
+  for (mt of current_model_types) {
       let mt_changes = json.changes_over_time[mt]
       let passedTests = mt_changes.number_passed_tests;
       var i
@@ -218,7 +218,6 @@ function populateTestResultTable(tableBody, json) {
       for (i = 1; i < dif; i++) {passedTests.unshift(null)}
       passedTests.unshift(`${mt} Passed Tests`)
       appliedPassedColumns.push(passedTests)
-    }
   };
 
   let passedAppliedParams = {
