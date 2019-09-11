@@ -187,7 +187,7 @@ def get_model_dashboard(model):
                            link_list=mod_link_list,
                            model_last_updated=last_update, ndexID=ndex_id,
                            user_email=user.email if user else "",
-                           identity=user.identity() if user else None)
+                           identity=user.id if user else None)
 
 
 @app.route('/query')
