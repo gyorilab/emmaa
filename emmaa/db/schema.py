@@ -107,7 +107,7 @@ class UserQuery(Base, EmmaaTable):
     """
     __tablename__ = 'user_query'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     user = relationship(User)
     query_hash = Column(BigInteger, ForeignKey('query.hash'), nullable=False)
     query = relationship(Query)
