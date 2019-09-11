@@ -135,13 +135,12 @@ class EmmaaDatabaseManager(object):
                     logger.debug("Table doesn't exist.")
         return True
 
-    def add_user(self, email):
-        """Add a new user's email to Emmaa's User table."""
+    def add_user(self, user_id, email):
+        """Add a new user's email and id to Emmaa's User table."""
         try:
-            new_user = User(email=email)
+            new_user = User(id=user_id, email=email)
             with self.get_session() as sess:
                 sess.add(new_user)
-                user_id = new_user.id
         except IntegrityError as e:
             logger.warning(f"A user with email {email} already exists.")
         return user_id
