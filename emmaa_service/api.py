@@ -221,6 +221,7 @@ def process_query():
 
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    user_id = user.id if user else None
 
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
@@ -270,7 +271,7 @@ def process_query():
         logger.info('Query submitted')
         try:
             result = qm.answer_immediate_query(
-                user_email, query, models, subscribe)
+                user_email, user_id, query, models, subscribe)
         except Exception as e:
             logger.exception(e)
             raise(e)

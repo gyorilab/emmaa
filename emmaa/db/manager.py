@@ -145,13 +145,17 @@ class EmmaaDatabaseManager(object):
             logger.warning(f"A user with email {email} already exists.")
         return user_id
 
-    def put_queries(self, user_email, query, model_ids, subscribe=True):
+    def put_queries(self, user_email, user_id, query, model_ids,
+                    subscribe=True):
         """Add queries to the database for a given user.
 
         Parameters
         ----------
         user_email : str
             the email of the user that entered the queries.
+        user_id : int
+            the user id of the user that entered the queries. Corresponds to
+            the user id in the User table in indralab_auth_tools
         query : emmaa.queries.Query
             A query object containing all necessary information.
         model_ids : list[str]

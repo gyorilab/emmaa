@@ -29,11 +29,11 @@ class QueryManager(object):
         self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(
-            self, user_email, query, model_names, subscribe):
+            self, user_email, user_id, query, model_names, subscribe):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
         # Store query in the database for future reference.
-        self.db.put_queries(user_email, query, model_names, subscribe)
+        self.db.put_queries(user_email, user_id, query, model_names, subscribe)
         # Check if the query has already been answered for any of given models
         # and retrieve the results from database.
         saved_results = self.db.get_results_from_query(query, model_names)
