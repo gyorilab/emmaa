@@ -174,21 +174,33 @@ class EmmaaDatabaseManager(object):
 
         if not subscribe:
             logger.info("Not subscribing...")
-            return
 
         # Get the existing hashes, user's id and user's previous subscriptions
         with self.get_session() as sess:
             existing_hashes = {h for h, in sess.query(Query.hash).all()}
-            (user_id,), = sess.query(User.id).filter(User.email ==
-                                                     user_email).all()
             existing_user_queries = {h for h, in sess.query(
                 UserQuery.query_hash).filter(UserQuery.user_id == user_id)}
 
-        # User is not registered in user db
-        if not user_id:
+        # Check if anonymous user
+        if not user_email and not user_id:
             logger.info(f'User {user_email} is not registered in the user '
-                        'database, aborting...')
-            return
+                        'database. Query will be stored as anonymous query.')
+            # Make sure user_id is a None and not any other object
+            # evaluating to False (only None register as NULL in table)
+            user_email = 'anonymous@emmaa.bio'
+            user_id = None
+
+        # Check if logged in user exist in the emmaa user table
+        if user_email and user_id:
+            try:
+                with self.get_session() as sess:
+                    (stored_user_id,), = \
+                        sess.query(User.id).filter(User.id == user_id).all()
+                    logger.info(f'User {user_email} is registered in the '
+                                f'user table.')
+            except ValueError:
+                logger.info(f'{user_email} not in user table. Adding...')
+                self.add_user(user_id=user_id, email=user_email)
 
         queries = []
         user_queries = []
