@@ -137,9 +137,9 @@
       </nav>
         <div class="d-inline-flex button-container p-2">
           <button class="btn btn-primary"
-                onclick="return {% if identity %}trigger_logout(){% else %}trigger_login(){% endif %};"
+                onclick="return {% if user_email %}trigger_logout(){% else %}trigger_login(){% endif %};"
                 id="loginout-button">
-            {% if identity %}
+            {% if user_email %}
               Logout
             {% else %}
               Login
