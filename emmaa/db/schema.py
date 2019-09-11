@@ -102,6 +102,8 @@ class UserQuery(Base, EmmaaTable):
         (auto) The date that this entry was added to the database.
     subscription : bool
         Record whether the user has subscribed to see results of this model.
+    count : int
+
     """
     __tablename__ = 'user_query'
     id = Column(Integer, primary_key=True)
@@ -111,6 +113,7 @@ class UserQuery(Base, EmmaaTable):
     query = relationship(Query)
     date = Column(DateTime, default=func.now())
     subscription = Column(Boolean, nullable=False)
+    count = Column(Integer, nullable=False)
 
 
 class Result(Base, EmmaaTable):
