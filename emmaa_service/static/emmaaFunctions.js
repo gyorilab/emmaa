@@ -99,6 +99,7 @@ function populateTestResultTable(tableBody, json) {
   dates = json.changes_over_time.dates;
   dates.unshift('x');
 
+  let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
   //  Model Tab
 
   // Stmt type distribution bar graph 
@@ -178,19 +179,28 @@ function populateTestResultTable(tableBody, json) {
   // Tests Tab
 
   // Passed ratio line graph
-  let passedRatio = json.changes_over_time.passed_ratio;
-  passedRatio = passedRatio.map(function(element) {
-    return (element*100).toFixed(2);
-  });
-  passedRatio.unshift('Passed Ratio');
+  let passedRatioColumns = [dates]
+
+  for (mt of all_model_types) {
+    if (mt in json.changes_over_time) {
+      let mt_changes = json.changes_over_time[mt]
+      console.log(mt_changes)
+      let passedRatio = mt_changes.passed_ratio
+      console.log(passedRatio)
+      passedRatio = passedRatio.map(function(element) {
+        return (element*100).toFixed(2);
+      })
+      var i
+      let dif = dates.length - passedRatio.length
+      for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
+      passedRatio.unshift(mt)
+      columns.push(passedRatio)
+    }};
 
   lineDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: [
-      dates,
-      passedRatio
-    ]
+    columns: passedRatioColumns
   };
 
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
