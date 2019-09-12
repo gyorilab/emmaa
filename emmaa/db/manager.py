@@ -225,6 +225,7 @@ class EmmaaDatabaseManager(object):
             else:
                 logger.info(f"Query for {model_id} already in db.")
 
+        # Add new queries and register them for the user
         with self.get_session() as sess:
             sess.add_all(queries)
             sess.add_all(user_queries)
