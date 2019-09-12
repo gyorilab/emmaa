@@ -103,7 +103,8 @@ class UserQuery(Base, EmmaaTable):
     subscription : bool
         Record whether the user has subscribed to see results of this model.
     count : int
-
+        Record the number of times the user associated with user id has done
+        this query
     """
     __tablename__ = 'user_query'
     id = Column(Integer, primary_key=True)
