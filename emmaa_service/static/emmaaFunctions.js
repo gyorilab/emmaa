@@ -45,19 +45,19 @@ function generatePassFail(rowEl, cols) {
   // Pass: <i class="fas fa-check"></i>
   // Fail: <i class="fas fa-times"></i>
   for (col of cols) {
-  let string = rowEl.children[col].textContent;
-  let itag = document.createElement('i');
-  if (string.toLowerCase() === 'pass') {
-    itag.className = 'fas fa-check';
-    rowEl.children[col].innerHTML = null;
-    rowEl.children[col].appendChild(itag);
-  } else if (string.toLowerCase() === 'fail') {
-    itag.className = 'fas fa-times';
-    rowEl.children[col].innerHTML = null;
-    rowEl.children[col].appendChild(itag);
-  } else {
-    console.log(`pass/fail not in column ${col}`)
-  }
+    let string = rowEl.children[col].textContent;
+    let itag = document.createElement('i');
+    if (string.toLowerCase() === 'pass') {
+      itag.className = 'fas fa-check';
+      rowEl.children[col].innerHTML = null;
+      rowEl.children[col].appendChild(itag);
+    } else if (string.toLowerCase() === 'fail') {
+      itag.className = 'fas fa-times';
+      rowEl.children[col].innerHTML = null;
+      rowEl.children[col].appendChild(itag);
+    } else {
+      console.log(`pass/fail not in column ${col}`)
+    }
   }
   return rowEl;
 }
@@ -187,16 +187,16 @@ function populateTestResultTable(tableBody, json) {
   let passedRatioColumns = [dates]
 
   for (mt of current_model_types) {
-      let mt_changes = json.changes_over_time[mt]
-      let passedRatio = mt_changes.passed_ratio
-      passedRatio = passedRatio.map(function(element) {
-        return (element*100).toFixed(2);
-      })
-      var i
-      let dif = dates.length - passedRatio.length
-      for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
-      passedRatio.unshift(mt)
-      passedRatioColumns.push(passedRatio)
+    let mt_changes = json.changes_over_time[mt]
+    let passedRatio = mt_changes.passed_ratio
+    passedRatio = passedRatio.map(function(element) {
+      return (element*100).toFixed(2);
+    })
+    var i
+    let dif = dates.length - passedRatio.length
+    for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
+    passedRatio.unshift(mt)
+    passedRatioColumns.push(passedRatio)
   };
 
   lineDataParams = {
@@ -213,13 +213,13 @@ function populateTestResultTable(tableBody, json) {
   let appliedPassedColumns = [dates, appliedTests]
 
   for (mt of current_model_types) {
-      let mt_changes = json.changes_over_time[mt]
-      let passedTests = mt_changes.number_passed_tests;
-      var i
-      let dif = dates.length - passedTests.length
-      for (i = 1; i < dif; i++) {passedTests.unshift(null)}
-      passedTests.unshift(`${mt} Passed Tests`)
-      appliedPassedColumns.push(passedTests)
+    let mt_changes = json.changes_over_time[mt]
+    let passedTests = mt_changes.number_passed_tests;
+    var i
+    let dif = dates.length - passedTests.length
+    for (i = 1; i < dif; i++) {passedTests.unshift(null)}
+    passedTests.unshift(`${mt} Passed Tests`)
+    appliedPassedColumns.push(passedTests)
   };
 
   let passedAppliedParams = {
@@ -259,18 +259,47 @@ function populateTestResultTable(tableBody, json) {
 
   // All Tests Results
   let allTestsTable = document.getElementById('allTestResults');
-  clearTable(allTestsTable)
+  // clearTable(allTestsTable)
   let testResults = json.test_round_summary.tests_by_hash;
-  let resultValues = Object.values(testResults);
-  resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
+  console.log(testResults)
+  let testHashes = Object.keys(testResults);
+  // let resultValues = Object.values(testResults);
+  // resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
 
-  for (val of resultValues) {
-    // Has columns: test; Status; Path Found;
-    let rowEl = addToRow(val);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
-    rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
-    allTestsTable.appendChild(generatePassFail(rowEl, 1))
-  }
+  // for (val of resultValues) {
+  //   // Has columns: test; Status; Path Found;
+  //   let rowEl = addToRow(val);
+  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
+  //   rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
+  //   allTestsTable.appendChild(generatePassFail(rowEl, 1))
+  // }
+  
+  // Create table with correct columns
+  let cols = []
+  let count = 0
+  th = document.createElement('th');
+  th.innerHTML = 'Test';
+  allTestsTable.appendChild(th);
+  for (mt of current_model_types) {
+    let th = document.createElement('th');
+    th.innerHTML = mt;
+    allTestsTable.appendChild(th)
+    count++
+    cols.push(count)
+  };
+
+  for (test_hash of testHashes) {
+    let newTest = [testResults[test_hash][0]];
+    for (mt of current_model_types) {
+      let isPassed = json.test_round_summary[mt]["passed_tests"].includes(test_hash)
+      if (isPassed) {mt_status = "pass"} else {mt_status = "fail"};
+      newTest.push(mt_status);
+      }
+    let rowEl = addToRow(newTest);
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], newTest[0]);
+    console.log(rowEl)
+    allTestsTable.appendChild(generatePassFail(rowEl, cols))
+    };
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
