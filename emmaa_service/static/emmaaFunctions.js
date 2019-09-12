@@ -112,9 +112,14 @@ function populateTestResultTable(tableBody, json) {
   dates.unshift('x');
 
   let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
-  let current_model_types = []
+  let current_model_types = [];
+  let cols = [];
+  let count = 0;
   for (mt of all_model_types) {if (mt in json.test_round_summary) {
-    current_model_types.push(mt)}};
+    current_model_types.push(mt)
+    count++
+    cols.push(count)}};
+
   //  Model Tab
 
   // Stmt type distribution bar graph 
@@ -271,8 +276,6 @@ function populateTestResultTable(tableBody, json) {
   // Create table with correct columns
   let allTestsTable = document.getElementById('allTestResults');
   clearTable(allTestsTable)
-  let cols = []
-  let count = 0
   th = document.createElement('th');
   th.innerHTML = 'Test';
   allTestsTable.appendChild(th);
@@ -280,8 +283,6 @@ function populateTestResultTable(tableBody, json) {
     let th = document.createElement('th');
     th.innerHTML = mt;
     allTestsTable.appendChild(th)
-    count++
-    cols.push(count)
   };
 
   // Retrieve data from json
