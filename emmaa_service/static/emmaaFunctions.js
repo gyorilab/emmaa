@@ -39,6 +39,16 @@ function addToRow(col_values) {
   return tableRow;
 }
 
+// Creates a new table row by merging the columns
+function addMergedRow(value, num_cols) {
+  let tableRow = document.createElement('tr');
+  let column = document.createElement('td')
+  column.colSpan = num_cols
+  column.innerHTML = value.bold()
+  tableRow.appendChild(column);
+  return tableRow;
+}
+
 function generatePassFail(rowEl, cols) {
   // See more at:
   // https://fontawesome.com/icons?d=gallery
