@@ -209,12 +209,14 @@ class EmmaaDatabaseManager(object):
 
             if qh not in existing_user_queries:
                 user_queries.append(UserQuery(user_id=user_id, query_hash=qh,
-                                              subscription=subscribe))
+                                              subscription=subscribe, count=1))
                 logger.info(f'Registering query on {model_id} for user '
                             f'{user_email}')
             else:
-                # ToDo Find old query and flip the 'subscribe' column to True
-                #  if it is False
+                # ToDo If query exists for user:
+                #  1: Find old query and flip the 'subscribe' column to True
+                #     if it is False
+                #  2: Increment the count by 1
                 logger.info(f'{user_email} already has a registration for '
                             f'query on {model_id}')
 
