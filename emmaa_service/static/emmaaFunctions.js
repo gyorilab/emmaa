@@ -247,17 +247,39 @@ function populateTestResultTable(tableBody, json) {
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
   // Tests Delta - New Applied Tests
+  // Create table with correct columns
   let newAppliedTable = document.getElementById('newAppliedTests');
   clearTable(newAppliedTable);
+  th = document.createElement('th');
+  th.innerHTML = 'Test';
+  newAppliedTable.appendChild(th);
+  for (mt of current_model_types) {
+    let th = document.createElement('th');
+    th.innerHTML = mt;
+    newAppliedTable.appendChild(th)
+  };
   let newAppTests = json.tests_delta.applied_tests_delta.added;
 
-  for (let pair of newAppTests) {
-    // Has columns: Test; Status;
-    let rowEl = addToRow(pair);
-    rowEl = generatePassFail(rowEl, 1);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], pair[0]);
-    newAppliedTable.appendChild(rowEl)
+  // for (let pair of newAppTests) {
+  //   // Has columns: Test; Status;
+  //   let rowEl = addToRow(pair);
+  //   rowEl = generatePassFail(rowEl, 1);
+  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], pair[0]);
+  //   newAppliedTable.appendChild(rowEl)
+  // }
+
+  for (let i = 0; i < newAppTests.length; i++) {
+    let newAppTest = [newAppTests[i][0]];
+    for (mt of current_model_types) {
+      let mt_status = json.tests_delta[mt]["applied_tests_delta"]["added"][i][1];
+      newAppTest.push(mt_status);
   }
+    let rowEl = addToRow(newAppTest);
+    rowEl.children[0] = linkifyFromString(rowEl.children[0], newAppTest[0]);
+    newAppliedTable.appendChild(generatePassFail(rowEl, cols))
+    };
+  // } 
+
   // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests');
   clearTable(newPassedTable);
