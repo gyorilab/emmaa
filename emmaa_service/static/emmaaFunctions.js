@@ -273,7 +273,7 @@ function populateTestResultTable(tableBody, json) {
     for (mt of current_model_types) {
       let mt_status = json.tests_delta[mt]["applied_tests_delta"]["added"][i][1];
       newAppTest.push(mt_status);
-  }
+      }
     let rowEl = addToRow(newAppTest);
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newAppTest[0]);
     newAppliedTable.appendChild(generatePassFail(rowEl, cols))
@@ -283,16 +283,23 @@ function populateTestResultTable(tableBody, json) {
   // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests');
   clearTable(newPassedTable);
-  let newPasTests = json.tests_delta.pass_fail_delta.added;
-  let newPaths = json.tests_delta.new_paths.added;
+  for (mt of current_model_types) {
+    let newPasTests = json.tests_delta[mt].pass_fail_delta.added;
+    let newPaths = json.tests_delta[mt].new_paths.added;
+    if (newPasTests && newPasTests.length > 0) {
+      newRow = addMergedRow(`New passed tests for ${mt} model.`, 2);
+      newPassedTable.appendChild(newRow);
+      for (let i = 0; i < newPasTests.length; i++) {
+        // Has columns: test; Path Found
+        let rowEl = addToRow(['', '']);
+        rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i]);
+        rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0]);
+        newPassedTable.appendChild(rowEl)
+      };
+    };
+  };
 
-  for (let i = 0; i < newPasTests.length; i++) {
-    // Has columns: test; Path Found
-    let rowEl = addToRow(['', '']);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i]);
-    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0]);
-    newPassedTable.appendChild(rowEl)
-  }
+  // 
 
   // All Tests Results
   // Create table with correct columns
@@ -331,7 +338,6 @@ function populateTestResultTable(tableBody, json) {
       }
     let rowEl = addToRow(newTest);
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newTest[0]);
-    console.log(rowEl)
     allTestsTable.appendChild(generatePassFail(rowEl, cols))
     };
 
