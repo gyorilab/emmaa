@@ -258,23 +258,9 @@ function populateTestResultTable(tableBody, json) {
   }
 
   // All Tests Results
-  let allTestsTable = document.getElementById('allTestResults');
-  // clearTable(allTestsTable)
-  let testResults = json.test_round_summary.tests_by_hash;
-  console.log(testResults)
-  let testHashes = Object.keys(testResults);
-  // let resultValues = Object.values(testResults);
-  // resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
-
-  // for (val of resultValues) {
-  //   // Has columns: test; Status; Path Found;
-  //   let rowEl = addToRow(val);
-  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
-  //   rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
-  //   allTestsTable.appendChild(generatePassFail(rowEl, 1))
-  // }
-  
   // Create table with correct columns
+  let allTestsTable = document.getElementById('allTestResults');
+  clearTable(allTestsTable)
   let cols = []
   let count = 0
   th = document.createElement('th');
@@ -288,6 +274,21 @@ function populateTestResultTable(tableBody, json) {
     cols.push(count)
   };
 
+  // Retrieve data from json
+  let testResults = json.test_round_summary.tests_by_hash;
+  let testHashes = Object.keys(testResults);
+  // let resultValues = Object.values(testResults);
+  // resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
+
+  // for (val of resultValues) {
+  //   // Has columns: test; Status; Path Found;
+  //   let rowEl = addToRow(val);
+  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
+  //   rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
+  //   allTestsTable.appendChild(generatePassFail(rowEl, 1))
+  // }
+
+  // Add data to a table
   for (test_hash of testHashes) {
     let newTest = [testResults[test_hash][0]];
     for (mt of current_model_types) {
