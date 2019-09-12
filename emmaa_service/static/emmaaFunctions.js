@@ -39,11 +39,12 @@ function addToRow(col_values) {
   return tableRow;
 }
 
-function generatePassFail(rowEl, col) {
+function generatePassFail(rowEl, cols) {
   // See more at:
   // https://fontawesome.com/icons?d=gallery
   // Pass: <i class="fas fa-check"></i>
   // Fail: <i class="fas fa-times"></i>
+  for (col of cols) {
   let string = rowEl.children[col].textContent;
   let itag = document.createElement('i');
   if (string.toLowerCase() === 'pass') {
@@ -56,6 +57,7 @@ function generatePassFail(rowEl, col) {
     rowEl.children[col].appendChild(itag);
   } else {
     console.log(`pass/fail not in column ${col}`)
+  }
   }
   return rowEl;
 }
