@@ -45,6 +45,7 @@ function addMergedRow(value, num_cols) {
   let column = document.createElement('td')
   column.colSpan = num_cols
   column.innerHTML = value.bold()
+  column.style.textAlign = "center"
   tableRow.appendChild(column);
   return tableRow;
 }
