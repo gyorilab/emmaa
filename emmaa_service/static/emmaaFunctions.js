@@ -97,6 +97,13 @@ function linkifyFromString(tag, htmlText) {
   return tag;
 }
 
+function toTitleCase(phrase) {
+  let newPhrase = phrase.split('_');
+  newPhrase = newPhrase.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+  newPhrase = newPhrase.join(' ');
+  return newPhrase;
+};
+
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
 
