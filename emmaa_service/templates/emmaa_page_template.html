@@ -82,7 +82,7 @@
           btn.innerHTML = 'Logout';
           btn.onclick = () => {return trigger_logout()};
           document.querySelector('#user-logoin');
-          if (document.href.split(/([?#])/)[0].endsWith('query')) {
+          if (location.href.split(/([?#])/)[0].endsWith('query')) {
             user_msg.innerHTML = `Reload the page to see your past queries`;
           } else {
             user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
