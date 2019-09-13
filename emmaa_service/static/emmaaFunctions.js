@@ -60,10 +60,12 @@ function generatePassFail(rowEl, cols) {
     if (string.toLowerCase() === 'pass') {
       itag.className = 'fas fa-check';
       rowEl.children[col].innerHTML = null;
+      rowEl.children[col].style.textAlign = "center"
       rowEl.children[col].appendChild(itag);
     } else if (string.toLowerCase() === 'fail') {
       itag.className = 'fas fa-times';
       rowEl.children[col].innerHTML = null;
+      rowEl.children[col].style.textAlign = "center"
       rowEl.children[col].appendChild(itag);
     } else {
       console.log(`pass/fail not in column ${col}`)
@@ -259,10 +261,13 @@ function populateTestResultTable(tableBody, json) {
   clearTable(newAppliedTable);
   th = document.createElement('th');
   th.innerHTML = 'Test';
+  th.style="width:40%";
   newAppliedTable.appendChild(th);
   for (mt of current_model_types) {
     let th = document.createElement('th');
     th.innerHTML = toTitleCase(mt);
+    th.style="width:15%";
+    th.style.textAlign = "center";
     newAppliedTable.appendChild(th)
   };
   let newAppTests = json.tests_delta.applied_tests_delta.added;
@@ -314,9 +319,12 @@ function populateTestResultTable(tableBody, json) {
   clearTable(allTestsTable)
   th = document.createElement('th');
   th.innerHTML = 'Test';
+  th.style="width:40%"
   allTestsTable.appendChild(th);
   for (mt of current_model_types) {
     let th = document.createElement('th');
+    th.style="width:15%"
+    th.style.textAlign = "center"
     th.innerHTML = toTitleCase(mt);
     allTestsTable.appendChild(th)
   };
