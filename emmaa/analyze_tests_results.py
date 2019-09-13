@@ -294,6 +294,43 @@ class TestRound(object):
                  - getattr(other_round, one_round_numeric_func)(**kwargs))
         return delta
 
+    def find_delta_hashes(self, other_round, content_type, **kwargs):
+        """Return a dictionary of changed hashes of a given content type. This
+        method makes use of self.function_mapping dictionary.
+
+        Parameters
+        ----------
+        other_round : emmaa.analyze_tests_results.TestRound
+            A different instance of a TestRound
+        content_type : str
+            A type of the content to find delta. Accepted values:
+            - statements
+            - applied_tests
+            - passed_tests
+            - paths
+        **kwargs : dict
+            For some of content types, additional arguments must be
+            provided sych as mc_type.
+        Returns
+        -------
+        hashes : dict
+            A dictionary containing lists of added and removed hashes of a
+            given content type between two test rounds.
+        """
+        logger.info(f'Finding a hashes delta for {content_type}.')
+        latest_hashes = getattr(
+            self, self.function_mapping[content_type][0])(**kwargs)
+        logger.info(f'Found {len(latest_hashes)} hashes in current round.')
+        previous_hashes = getattr(
+            other_round,
+            other_round.function_mapping[content_type][0])(**kwargs)
+        logger.info(f'Found {len(previous_hashes)} hashes in other round.')
+        # Find hashes unique for each of the rounds - this is delta
+        added_hashes = list(set(latest_hashes) - set(previous_hashes))
+        removed_hashes = list(set(previous_hashes) - set(latest_hashes))
+        hashes = {'added': added_hashes, 'removed': removed_hashes}
+        return hashes
+
     def find_content_delta(self, other_round, content_type, add_result=False,
                            mc_type='pysb'):
         """Return a dictionary of changed items of a given content type. This
@@ -325,19 +362,13 @@ class TestRound(object):
             kwargs = {'mc_type': mc_type}
         else:
             kwargs = {}
-        logger.info(f'Finding a content delta for {content_type}.')
+
         # First we need to find hashes of objects we want to compare for
         # latest and previous rounds
-        latest_hashes = getattr(
-            self, self.function_mapping[content_type][0])(**kwargs)
-        logger.info(f'Found {len(latest_hashes)} hashes in current round.')
-        previous_hashes = getattr(
-            other_round,
-            other_round.function_mapping[content_type][0])(**kwargs)
-        logger.info(f'Found {len(previous_hashes)} hashes in other round.')
-        # Find hashes unique for each of the rounds - this is delta
-        added_hashes = list(set(latest_hashes) - set(previous_hashes))
-        removed_hashes = list(set(previous_hashes) - set(latest_hashes))
+        hashes = self.find_delta_hashes(other_round, content_type, **kwargs)
+        added_hashes = hashes['added']
+        removed_hashes = hashes['removed']
+        logger.info(f'Finding a content delta for {content_type}.')
 
         def get_item(tr, item_hash):
             # Get an instance of an object given its hash
