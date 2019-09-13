@@ -217,7 +217,7 @@ function populateTestResultTable(tableBody, json) {
     var i
     let dif = dates.length - passedRatio.length
     for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
-    passedRatio.unshift(mt)
+    passedRatio.unshift(toTitleCase(mt))
     passedRatioColumns.push(passedRatio)
   };
 
@@ -240,7 +240,7 @@ function populateTestResultTable(tableBody, json) {
     var i
     let dif = dates.length - passedTests.length
     for (i = 1; i < dif; i++) {passedTests.unshift(null)}
-    passedTests.unshift(`${mt} Passed Tests`)
+    passedTests.unshift(`${toTitleCase(mt)} Passed Tests`)
     appliedPassedColumns.push(passedTests)
   };
 
@@ -262,7 +262,7 @@ function populateTestResultTable(tableBody, json) {
   newAppliedTable.appendChild(th);
   for (mt of current_model_types) {
     let th = document.createElement('th');
-    th.innerHTML = mt;
+    th.innerHTML = toTitleCase(mt);
     newAppliedTable.appendChild(th)
   };
   let newAppTests = json.tests_delta.applied_tests_delta.added;
@@ -294,7 +294,7 @@ function populateTestResultTable(tableBody, json) {
     let newPasTests = json.tests_delta[mt].pass_fail_delta.added;
     let newPaths = json.tests_delta[mt].new_paths.added;
     if (newPasTests && newPasTests.length > 0) {
-      newRow = addMergedRow(`New passed tests for ${mt} model.`, 2);
+      newRow = addMergedRow(`New passed tests for ${toTitleCase(mt)} model.`, 2);
       newPassedTable.appendChild(newRow);
       for (let i = 0; i < newPasTests.length; i++) {
         // Has columns: test; Path Found
@@ -317,7 +317,7 @@ function populateTestResultTable(tableBody, json) {
   allTestsTable.appendChild(th);
   for (mt of current_model_types) {
     let th = document.createElement('th');
-    th.innerHTML = mt;
+    th.innerHTML = toTitleCase(mt);
     allTestsTable.appendChild(th)
   };
 
