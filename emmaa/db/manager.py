@@ -207,18 +207,26 @@ class EmmaaDatabaseManager(object):
         for model_id in model_ids:
             qh = query.get_hash_with_model(model_id)
 
+            # Add query to UserQuery table
             if qh not in existing_user_queries:
                 user_queries.append(UserQuery(user_id=user_id, query_hash=qh,
                                               subscription=subscribe, count=1))
                 logger.info(f'Registering query on {model_id} for user '
                             f'{user_email}')
+            # Update existing query
             else:
-                # ToDo If query exists for user:
-                #  1: Find old query and flip the 'subscribe' column to True
-                #     if it is False
-                #  2: Increment the count by 1
-                logger.info(f'{user_email} already has a registration for '
-                            f'query on {model_id}')
+                logger.info(f'Updating existing query for {user_email} '
+                            f'on {model_id} ({qh})')
+                # Update subscription
+                self.update_subscription(user_id, qh, subscribe)
+
+                # Update query count
+                with self.get_session() as sess:
+                    sess.query(UserQuery).filter(
+                        UserQuery.user_id == user_id,
+                        UserQuery.query_hash == qh
+                    ).update({'count': (UserQuery.count + 1)})
+                    sess.commit()
 
             if qh not in existing_hashes:
                 logger.info(f"Adding query on {model_id} to the db.")
