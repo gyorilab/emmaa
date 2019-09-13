@@ -326,6 +326,23 @@ class EmmaaDatabaseManager(object):
             users = [q for q, in q.all()]
         return users
 
+    def update_subscription(self, user_id, query_hash, new_sub_status):
+        with self.get_session() as sess:
+            # Get current subscription
+            (curr_sub,), = sess.query(UserQuery.subscription).filter(
+                UserQuery.user_id == user_id,
+                UserQuery.query_hash == query_hash
+            )
+            # If requested subscription status is not current one, change it
+            if new_sub_status is not curr_sub:
+                sess.query(UserQuery).filter(
+                    UserQuery.user_id == user_id,
+                    UserQuery.query_hash == query_hash
+                ).update({'subscription': new_sub_status})
+                sess.commit()
+                logger.info(f'Updated subscription status to '
+                            f'{new_sub_status} for query {query_hash}')
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter: (model_id, query(object), result_json, date)
