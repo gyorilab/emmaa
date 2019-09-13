@@ -498,17 +498,16 @@ class StatsGenerator(object):
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
+            'all_test_results': self.latest_round.english_test_results,
+            # This is for backward compatibility until the dashboard is updated
             'tests_by_hash': self.latest_round._get_pysb_results()
         }
         for mc_type in self.latest_round.mc_types_results:
             self.json_stats['test_round_summary'][mc_type] = {
                 'number_passed_tests': (
                     self.latest_round.get_number_passed_tests(mc_type)),
-                'passed_ratio': self.latest_round.passed_over_total(mc_type),
-                'passed_tests': (
-                    self.latest_round.get_passed_test_hashes(mc_type)),
-                'paths': self.latest_round.get_path_descriptions(mc_type)
-            }
+                'passed_ratio': self.latest_round.passed_over_total(mc_type)}
+
         # This is for backward compatibility until the dashboard is updated
         for key, value in self.json_stats['test_round_summary']['pysb'].items():
             self.json_stats['test_round_summary'][key] = value
@@ -518,58 +517,48 @@ class StatsGenerator(object):
         logger.info(f'Generating model delta for {self.model_name}.')
         if not self.previous_round:
             self.json_stats['model_delta'] = {
-                'number_of_statements_delta': 0,
-                'statements_delta': {'added': [], 'removed': []}
-            }
+                'statements_delta': {'added': [], 'removed': []}}
         else:
             self.json_stats['model_delta'] = {
-                'number_of_statements_delta': (
-                    self.latest_round.find_numeric_delta(
-                        self.previous_round, 'get_total_statements')),
                 'statements_delta': self.latest_round.find_content_delta(
-                    self.previous_round, 'statements')
-            }
+                    self.previous_round, 'statements')}
 
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
         if not self.previous_round:
-            tests_delta = {'number_applied_tests_delta': 0}
+            tests_delta = {
+                'applied_hashes_delta': {'added': [], 'removed': []}}
         else:
-            tests_delta = {'number_applied_tests_delta': (
-                    self.latest_round.find_numeric_delta(
-                        self.previous_round, 'get_total_applied_tests'))}
+            tests_delta = {
+                'applied_hashes_delta': self.latest_round.find_delta_hashes(
+                    self.previous_round, 'applied_tests')}
+
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
                     self.previous_round.mc_types_results:
                 tests_delta[mc_type] = {
-                    'number_passed_tests_delta': 0,
-                    'passed_ratio_delta': 0,
-                    'applied_tests_delta': {'added': [], 'removed': []},
-                    'pass_fail_delta': {'added': [], 'removed': []},
-                    'new_paths': {'added': [], 'removed': []}
-                }
+                    'passed_hashes_delta': {'added': [], 'removed': []}}
             else:
                 tests_delta[mc_type] = {
-                    'number_passed_tests_delta': (
-                        self.latest_round.find_numeric_delta(
-                            self.previous_round, 'get_number_passed_tests',
-                            mc_type=mc_type)),
-                    'passed_ratio_delta': self.latest_round.find_numeric_delta(
-                        self.previous_round, 'passed_over_total',
-                        mc_type=mc_type),
-                    'applied_tests_delta': (
-                        self.latest_round.find_content_delta(
-                            self.previous_round, 'applied_tests',
-                            add_result=True, mc_type=mc_type)),
-                    'pass_fail_delta': self.latest_round.find_content_delta(
-                        self.previous_round, 'passed_tests', mc_type=mc_type),
-                    'new_paths': self.latest_round.find_content_delta(
-                        self.previous_round, 'paths', mc_type=mc_type)
-                }
+                    'passed_hashes_delta': self.latest_round.find_delta_hashes(
+                        self.previous_round, 'passed_tests', mc_type=mc_type)}
+
         # This is for backward compatibility until the dashboard is updated
-        for key, value in tests_delta['pysb'].items():
-            tests_delta[key] = value
+        if not self.previous_round:
+            tests_delta['applied_tests_delta'] = {'added': [], 'removed': []}
+            tests_delta['pass_fail_delta'] = {'added': [], 'removed': []}
+            tests_delta['new_paths'] = {'added': [], 'removed': []}
+        else:
+            tests_delta['applied_tests_delta'] = (
+                    self.latest_round.find_content_delta(
+                        self.previous_round, 'applied_tests',
+                        add_result=True, mc_type='pysb'))
+            tests_delta['pass_fail_delta'] = (
+                self.latest_round.find_content_delta(
+                    self.previous_round, 'passed_tests', mc_type='pysb'))
+            tests_delta['new_paths'] = self.latest_round.find_content_delta(
+                    self.previous_round, 'paths', mc_type='pysb')
 
         self.json_stats['tests_delta'] = tests_delta
 
