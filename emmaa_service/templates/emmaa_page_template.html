@@ -82,7 +82,12 @@
           btn.innerHTML = 'Logout';
           btn.onclick = () => {return trigger_logout()};
           document.querySelector('#user-logoin');
-          user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
+          if (document.href.split(/([?#])/)[0].endsWith('query')) {
+            user_msg.innerHTML = `Reload the page to see your past queries`;
+          } else {
+            user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
+          }
+
           report_login_result(''); // clear the login result message
         }
         else if (type === "register") {
