@@ -51,7 +51,9 @@ class User(Base, EmmaaTable):
     Parameters
     ----------
     id : int
-        (auto, primary key) A database-generated integer.
+        (from indralab_auth_tools.src.models.User.id, primary key)
+        A database-generated integer from the User table in indralab
+        auth tools.
     email : str
         The email of the user (must be unique)
     """
