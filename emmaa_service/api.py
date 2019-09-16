@@ -187,7 +187,7 @@ def get_model_dashboard(model):
                            link_list=mod_link_list,
                            model_last_updated=last_update, ndexID=ndex_id,
                            user_email=user.email if user else "",
-                           identity=user.identity() if user else None)
+                           identity=user.id if user else None)
 
 
 @app.route('/query')
@@ -195,16 +195,17 @@ def get_model_dashboard(model):
 def get_query_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    user_id = user.id if user else None
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
     # user_email = 'joshua@emmaa.com'
-    old_results = qm.get_registered_queries(user_email)
+    old_results = qm.get_registered_queries(user_email) if user_email else []
 
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list, user_email=user_email,
-                           identity=user.identity() if user else None)
+                           user_id=user_id)
 
 
 @app.route('/query/submit', methods=['POST'])
@@ -220,6 +221,7 @@ def process_query():
 
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    user_id = user.id if user else None
 
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
@@ -269,7 +271,7 @@ def process_query():
         logger.info('Query submitted')
         try:
             result = qm.answer_immediate_query(
-                user_email, query, models, subscribe)
+                user_email, user_id, query, models, subscribe)
         except Exception as e:
             logger.exception(e)
             raise(e)
