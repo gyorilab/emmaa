@@ -100,6 +100,14 @@ function linkifyFromString(tag, htmlText) {
   return tag;
 }
 
+function countPasses(results, mts) {
+  let count = 0;
+  for (mt of mts) {
+    if (results[mt][0].toLowerCase() === 'pass') {count++};
+  }
+  return count;
+};
+
 function toTitleCase(phrase) {
   let newPhrase = phrase.split('_');
   newPhrase = newPhrase.map(word => word.charAt(0).toUpperCase() + word.slice(1));
@@ -256,6 +264,9 @@ function populateTestResultTable(tableBody, json) {
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
+  // Retrieve all test results for the next tables
+  let allTestResults = json.test_round_summary.all_test_results;
+
   // Tests Delta - New Applied Tests
   // Create table with correct columns
   let newAppliedTable = document.getElementById('newAppliedTests');
@@ -271,44 +282,44 @@ function populateTestResultTable(tableBody, json) {
     th.style.textAlign = "center";
     newAppliedTable.appendChild(th)
   };
-  let newAppTests = json.tests_delta.applied_tests_delta.added;
 
-  // for (let pair of newAppTests) {
-  //   // Has columns: Test; Status;
-  //   let rowEl = addToRow(pair);
-  //   rowEl = generatePassFail(rowEl, 1);
-  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], pair[0]);
-  //   newAppliedTable.appendChild(rowEl)
-  // }
-
-  for (let i = 0; i < newAppTests.length; i++) {
-    let newAppTest = [newAppTests[i][0]];
+  let newAppHashes = json.tests_delta.applied_hashes_delta.added;
+  let newAppTests = []
+  for (testHash of newAppHashes) {newAppTests.push(allTestResults[testHash])};
+  let newAppResults = Object.values(newAppTests);
+  newAppResults.sort(function(a,b){
+    // return (a["pysb"][0] < b["pysb"][0]) ? 1 : (a["pysb"][0] > b["pysb"][0]) ? -1 : 0;});
+    return (
+      countPasses(a, current_model_types) < 
+      countPasses(b, current_model_types)) ? 1 : (
+        countPasses(a, current_model_types) >
+        countPasses(b, current_model_types)) ? -1 : 0;});
+  
+  for (test of newAppResults) {
+    let newAppTest = [test["test"]];
     for (mt of current_model_types) {
-      let mt_status = json.tests_delta[mt]["applied_tests_delta"]["added"][i][1];
-      newAppTest.push(mt_status);
-      }
+      newAppTest.push(test[mt][0]);}
     let rowEl = addToRow(newAppTest);
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newAppTest[0]);
     newAppliedTable.appendChild(generatePassFail(rowEl, cols))
     };
-  // } 
+
 
   // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests');
   clearTable(newPassedTable);
   for (mt of current_model_types) {
-    let newPasTests = json.tests_delta[mt].pass_fail_delta.added;
-    let newPaths = json.tests_delta[mt].new_paths.added;
-    if (newPasTests && newPasTests.length > 0) {
+    let newPasHashes = json.tests_delta[mt].passed_hashes_delta.added;
+    if (newPasHashes && newPasHashes.length > 0) {
       newRow = addMergedRow(`New passed tests for ${toTitleCase(mt)} model.`, 2);
       newPassedTable.appendChild(newRow);
-      for (let i = 0; i < newPasTests.length; i++) {
-        // Has columns: test; Path Found
+      for (testHash of newPasHashes) {
         let rowEl = addToRow(['', '']);
-        rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i]);
-        rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0]);
-        newPassedTable.appendChild(rowEl)
-      };
+        rowEl.children[0] = linkifyFromString(
+          rowEl.children[0], allTestResults[testHash]["test"]);
+        rowEl.children[1] = linkifyFromArray(
+          rowEl.children[1], allTestResults[testHash][mt][1][0]);
+          newPassedTable.appendChild(rowEl);};
     };
   };
 
@@ -330,32 +341,22 @@ function populateTestResultTable(tableBody, json) {
     allTestsTable.appendChild(th)
   };
 
-  // Retrieve data from json
-  let testResults = json.test_round_summary.tests_by_hash;
-  let testHashes = Object.keys(testResults);
-  // let resultValues = Object.values(testResults);
-  // resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
-
-  // for (val of resultValues) {
-  //   // Has columns: test; Status; Path Found;
-  //   let rowEl = addToRow(val);
-  //   rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
-  //   rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
-  //   allTestsTable.appendChild(generatePassFail(rowEl, 1))
-  // }
-
-  // Add data to a table
-  for (test_hash of testHashes) {
-    let newTest = [testResults[test_hash][0]];
+  let allResults = Object.values(allTestResults);
+  allResults.sort(function(a,b){
+    return (
+      countPasses(a, current_model_types) < 
+      countPasses(b, current_model_types)) ? 1 : (
+        countPasses(a, current_model_types) >
+        countPasses(b, current_model_types)) ? -1 : 0;});
+  
+  for (test of allResults) {
+    let newTest = [test["test"]];
     for (mt of current_model_types) {
-      let isPassed = json.test_round_summary[mt]["passed_tests"].includes(test_hash)
-      if (isPassed) {mt_status = "pass"} else {mt_status = "fail"};
-      newTest.push(mt_status);
-      }
-    let rowEl = addToRow(newTest);
+      newTest.push(test[mt][0]);};
+      let rowEl = addToRow(newTest);
     rowEl.children[0] = linkifyFromString(rowEl.children[0], newTest[0]);
     allTestsTable.appendChild(generatePassFail(rowEl, cols))
-    };
+  };
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
