@@ -31,11 +31,11 @@ def make_search_terms(terms, ontology_file, db_ns):
     for ont in ontologies:
         for term in terms:
             if term in ont:
-            # if ont.endswith(term):
                 search_term = ont.split('/')[-1]
                 search_term = search_term.replace('_', ' ')
                 name = search_term.capitalize()
-                st = SearchTerm(type='concept', name=name, db_refs={db_ns: ont},
+                st = SearchTerm(type='concept', name=name,
+                                db_refs={db_ns.upper(): ont},
                                 search_term='\"%s\"' % search_term)
                 search_terms.add(st)
     return search_terms
