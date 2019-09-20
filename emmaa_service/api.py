@@ -115,11 +115,15 @@ def model_last_updated(model, extension='.pkl'):
         A string of the format "YYYY-MM-DD-HH-mm-ss"
     """
     prefix = f'models/{model}/model_'
-    return strip_out_date(find_latest_s3_file(
-        bucket=EMMAA_BUCKET_NAME,
-        prefix=prefix,
-        extension=extension
-    ))
+    try:
+        return strip_out_date(find_latest_s3_file(
+            bucket=EMMAA_BUCKET_NAME,
+            prefix=prefix,
+            extension=extension
+        ))
+    except TypeError:
+        logger.info('Could not find latest update date')
+        return ''
 
 
 GLOBAL_PRELOAD = False
