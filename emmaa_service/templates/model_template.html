@@ -1,4 +1,5 @@
 {% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import path_table %}
 
 {% block additional_scripts %}
 <script>
@@ -85,24 +86,7 @@
           <h4 class="my-0 font-weight-normal">Model Info</h4>
         </div>
         <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Item</th>
-              <th>Details</th>
-            </thead>
-            <tbody class="table-body" id="modelInfoTableBody">
-              <tr>
-                <td>Last updated</td>
-                <td>{{ model_last_updated }}</td>
-              </tr>
-              <tr>
-                <td>Network on NDEX</td>
-                <td>
-                  <a href="http://www.ndexbio.org/#/network/{{ ndexID }}" target="_blank">{{ ndexID }}</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {{ path_table(model_info_contents, ["Item", "Details"], "modelInfoTableBody") }}
         </div>
       </div>
       <div class="card">
