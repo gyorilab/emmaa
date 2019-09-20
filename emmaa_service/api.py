@@ -11,6 +11,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
+from emmaa.db import get_db
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
@@ -33,10 +34,8 @@ FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
                          'unsigned_graph': 'Unsigned Graph'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
-
 SC, jwt = config_auth(app)
-
-qm = QueryManager()
+qm = QueryManager(db=get_db('dev'))
 
 
 def _get_model_meta_data():
