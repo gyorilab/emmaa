@@ -18,9 +18,11 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
+from indralab_web_templates.path_templates import path_temps
 
 app = Flask(__name__)
 app.register_blueprint(auth)
+app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
@@ -205,6 +207,10 @@ def get_model_dashboard(model):
     if not last_update:
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
+    model_info_contents = [
+        [('', 'Last Updated'), ('', last_update)],
+        [('', 'Network on Ndex'),
+         (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
     model_stats = get_model_stats(model)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     english_by_hash = model_stats['model_summary']['english_stmts']
@@ -221,7 +227,8 @@ def get_model_dashboard(model):
                            model_last_updated=last_update,
                            stmts_counts=top_stmts_counts,
                            stmts_by_ev=most_supported,
-                           added_stmts=added_stmts)
+                           added_stmts=added_stmts,
+                           model_info_contents=model_info_contents)
 
 
 @app.route('/query')
