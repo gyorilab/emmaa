@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
-EMMAA_BUCKET_NAME = 'emmaa'
+EMMAA_BUCKET_NAME = 'emmaa-test'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
                          'pybel': 'PyBEL',
