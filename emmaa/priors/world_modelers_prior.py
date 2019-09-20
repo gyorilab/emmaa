@@ -19,6 +19,7 @@ def make_search_terms(terms, ontology_file, db_ns):
         having standardized names.
     """
     search_terms = set()
+    search_names = set()
     with open(ontology_file, 'r') as f:
         lines = f.readlines()
     ontologies = []
@@ -37,7 +38,9 @@ def make_search_terms(terms, ontology_file, db_ns):
                 st = SearchTerm(type='concept', name=name,
                                 db_refs={db_ns.upper(): ont},
                                 search_term='\"%s\"' % search_term)
-                search_terms.add(st)
+                if name not in search_names:
+                    search_terms.add(st)
+                    search_names.add(name)
     return search_terms
 
 
