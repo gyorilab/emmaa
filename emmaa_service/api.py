@@ -281,6 +281,8 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex'),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
     model_stats = get_model_stats(model)
+    current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
+                           model_stats['test_round_summary']]
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     english_by_hash = model_stats['model_summary']['english_stmts']
     top_stmts_counts = _fix_top_stmts(english_by_hash, most_supported)
@@ -296,7 +298,9 @@ def get_model_dashboard(model):
                            model_last_updated=last_update,
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
-                           model_info_contents=model_info_contents)
+                           model_info_contents=model_info_contents,
+                           model_types=current_model_types,
+                           new_applied_tests=_new_applied_tests(model_stats))
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>')
