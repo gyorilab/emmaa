@@ -93,7 +93,9 @@ function submitQuery(queryDict, test) {
           break;
         case 401:
           console.log('401 response');
-          queryNotify('Must be signed in to register queries');
+          let msg = 'Must be signed in to subscribe to queries';
+          queryNotify(msg);
+          if (queryDict.register) report_login_result(msg);
           login(
             (type, data) => {submitQuery(queryDict, test)},
             (type, data) => {submitQuery(queryDict, test)}
