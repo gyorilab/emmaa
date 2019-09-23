@@ -98,28 +98,7 @@
           <div class="container" id="agentDistr"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Statement</th>
-              <th>Evidence Count</th>
-            </thead>
-            <tbody class="table-body" id="stmtEvidence">
-            {% for link, ev_count in stmts_counts %}
-              <tr>
-                <td>{{ link|safe }}</td>
-                <td>{{ ev_count }}</td>
-              </tr>
-            {% endfor %}
-            
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
