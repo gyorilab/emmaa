@@ -218,7 +218,9 @@ class EmmaaDatabaseManager(object):
                 logger.info(f'Updating existing query for {user_email} '
                             f'on {model_id} ({qh})')
                 # Update subscription
-                self.update_subscription(user_id, qh, subscribe)
+                # Here: set subscribe to True, handle un-subscribe elsewhere
+                if subscribe:
+                    self.update_subscription(user_id, qh, subscribe)
 
                 # Update query count
                 with self.get_session() as sess:
