@@ -245,44 +245,6 @@ function populateTestResultTable(tableBody, json) {
   // Retrieve all test results for the next tables
   let allTestResults = json.test_round_summary.all_test_results;
 
-  // Tests Delta - New Applied Tests
-  // Create table with correct columns
-  let newAppliedTable = document.getElementById('newAppliedTests');
-  clearTable(newAppliedTable);
-  th = document.createElement('th');
-  th.innerHTML = 'Test';
-  th.style="width:40%";
-  newAppliedTable.appendChild(th);
-  for (mt of current_model_types) {
-    let th = document.createElement('th');
-    th.innerHTML = toTitleCase(mt);
-    th.style="width:15%";
-    th.style.textAlign = "center";
-    newAppliedTable.appendChild(th)
-  };
-
-  let newAppHashes = json.tests_delta.applied_hashes_delta.added;
-  let newAppTests = []
-  for (testHash of newAppHashes) {newAppTests.push(allTestResults[testHash])};
-  let newAppResults = Object.values(newAppTests);
-  newAppResults.sort(function(a,b){
-    // return (a["pysb"][0] < b["pysb"][0]) ? 1 : (a["pysb"][0] > b["pysb"][0]) ? -1 : 0;});
-    return (
-      countPasses(a, current_model_types) < 
-      countPasses(b, current_model_types)) ? 1 : (
-        countPasses(a, current_model_types) >
-        countPasses(b, current_model_types)) ? -1 : 0;});
-  
-  for (test of newAppResults) {
-    let newAppTest = [test["test"]];
-    for (mt of current_model_types) {
-      newAppTest.push(test[mt][0]);}
-    let rowEl = addToRow(newAppTest);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], newAppTest[0]);
-    newAppliedTable.appendChild(generatePassFail(rowEl, cols))
-    };
-
-
   // Tests Delta - New Passed Tests
   let newPassedTable = document.getElementById('newPassedTests');
   clearTable(newPassedTable);
