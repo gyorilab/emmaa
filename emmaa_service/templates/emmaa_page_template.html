@@ -76,18 +76,10 @@
     {{ login_overlay(url_prefix="/dev") }}
     <script>
       function handle_success(type, resp_data) {
-        const user_msg = document.querySelector('#user-loginout-msg');
         if (type === "login") {
           const btn = document.querySelector("#loginout-button");
           btn.innerHTML = 'Logout';
           btn.onclick = () => {return trigger_logout()};
-          document.querySelector('#user-logoin');
-          if (location.href.split(/([?#])/)[0].endsWith('query')) {
-            user_msg.innerHTML = `Reload the page to see your past queries`;
-          } else {
-            user_msg.innerHTML = `Welcome, ${resp_data.user_email}`;
-          }
-
           report_login_result(''); // clear the login result message
         }
         else if (type === "register") {
@@ -97,7 +89,6 @@
           const btn = document.querySelector("#loginout-button");
           btn.innerHTML = 'Login';
           btn.onclick = () => {return trigger_login()};
-          user_msg.innerHTML = ""
         }
       }
 
@@ -150,17 +141,6 @@
               Login
             {% endif %}
           </button>
-        </div>
-      </div>
-      <div class="d-flex flex-row-reverse">
-        <div class="d-inline-flex text-container p-2 text-right">
-          <span id="user-loginout-msg">
-          {% if user_email %}
-            Logged in as {{ user_email }}
-          {% else %}
-            Log in to register queries
-          {% endif %}
-          </span>
         </div>
       </div>
     </header>
