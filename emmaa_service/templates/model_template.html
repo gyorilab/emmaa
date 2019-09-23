@@ -107,27 +107,7 @@
           <div class="container" id="stmtsOverTime"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Added Statements</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Statement</th>
-              </tr>
-            </thead>
-            <tbody class="table-body" id="addedStmts">
-            {% for added_stmt in added_stmts %}
-              <tr>
-                <td>{{ added_stmt|safe }}</td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
     </div>
 
   </div>
