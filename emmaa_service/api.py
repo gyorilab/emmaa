@@ -262,7 +262,7 @@ def get_model_dashboard(model):
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     english_by_hash = model_stats['model_summary']['english_stmts']
     top_stmts_counts = _fix_top_stmts(english_by_hash, most_supported)
-    added_stmts = [_add_attributes_to_anchor(a) for a in model_stats[
+    added_stmts = [[_extract_stmt_link(a)] for a in model_stats[
         'model_delta']['statements_delta']['added']]
     return render_template('model_template.html',
                            model=model,
