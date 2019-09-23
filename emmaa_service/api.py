@@ -179,6 +179,16 @@ def _add_attributes_to_anchor(anchor_string):
         return anchor_string
 
 
+def _extract_stmt_link(anchor_string):
+    # Matches an anchor with at least an href attribute
+    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
+    m = re.search(pattern=pattern, string=anchor_string)
+    if m:
+        return (m.group(1), m.group(2))
+    else:
+        return ('', anchor_string)
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
