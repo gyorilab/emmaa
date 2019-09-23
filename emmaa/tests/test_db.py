@@ -35,7 +35,7 @@ def test_instantiation():
 @attr('nonpublic')
 def test_put_queries():
     db = _get_test_db()
-    db.put_queries('joshua', test_queries[0], ['aml', 'luad'])
+    db.put_queries('joshua', 1, test_queries[0], ['aml', 'luad'])
     with db.get_session() as sess:
         queries = sess.query(Query).all()
     assert len(queries) == 2, len(queries)
@@ -45,7 +45,7 @@ def test_put_queries():
 def test_get_queries():
     db = _get_test_db()
     for query in test_queries:
-        db.put_queries('joshua', query, ['aml', 'luad'])
+        db.put_queries('joshua', 1, query, ['aml', 'luad'])
     queries = db.get_queries('aml')
     assert len(queries) == 2, len(queries)
     assert all(isinstance(query, PathProperty) for query in queries)
@@ -59,7 +59,7 @@ def _get_random_result():
 @attr('nonpublic')
 def test_put_results():
     db = _get_test_db()
-    db.put_queries('joshua', test_queries[0], ['aml', 'luad'])
+    db.put_queries('joshua', 1, test_queries[0], ['aml', 'luad'])
     queries = db.get_queries('aml')
     results = [(query, '', _get_random_result())
                for query in queries]
@@ -76,7 +76,7 @@ def test_get_results():
 
     # Fill up the database.
     for query in test_queries:
-        db.put_queries('joshua', query, models)
+        db.put_queries('joshua', 1, query, models)
     for model in models:
         db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
@@ -98,7 +98,7 @@ def test_get_latest_results():
 
     # Fill up the database.
     for query in test_queries:
-        db.put_queries('joshua', query, models)
+        db.put_queries('joshua', 1, query, models)
     for model in models:
         db.put_results(model, [(query, 'pysb', _get_random_result())
                                for query in test_queries])
