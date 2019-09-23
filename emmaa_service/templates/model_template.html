@@ -131,18 +131,7 @@
           <div class="container" id="passedApplied"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Applied Tests</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-            </thead>
-            <tbody class="table-body" id="newAppliedTests"></tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(new_applied_tests, "New Applied Tests", None, model_types, "newAppliedTests") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
