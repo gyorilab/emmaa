@@ -1,5 +1,5 @@
 {% extends "emmaa_page_template.html" %}
-{% from "path_macros.html" import path_table %}
+{% from "path_macros.html" import path_table, path_card %}
 
 {% block additional_scripts %}
 <script>
@@ -80,15 +80,8 @@
     <!-- Model stuff goes here -->
 
     <!-- This table displays model data -->
-    <div class="container" id="modelInfoTable">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Model Info</h4>
-        </div>
-        <div class="card-body">
-          {{ path_table(model_info_contents, ["Item", "Details"], "modelInfoTableBody") }}
-        </div>
-      </div>
+    <div class="container">
+      {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
