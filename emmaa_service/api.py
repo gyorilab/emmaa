@@ -169,7 +169,7 @@ def _fix_top_stmts(english_by_hash, top_statements):
     res = []
     for h, c in top_statements:
         html_string = english_by_hash[h]
-        res.append((_add_attributes_to_anchor(html_string), c))
+        res.append((_extract_stmt_link(html_string), ('', str(c))))
     return res
 
 
@@ -273,7 +273,6 @@ def get_model_dashboard(model):
                            user_email=user.email if user else "",
                            model_last_updated=last_update,
                            stmts_counts=top_stmts_counts,
-                           stmts_by_ev=most_supported,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents)
 
