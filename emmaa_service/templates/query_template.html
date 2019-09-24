@@ -10,6 +10,11 @@
 {% endblock %}
 
 {% block body %}
+<style>
+  label {
+    margin-bottom: 0;
+  }
+</style>
 <div class="container" id="query-container">
 
   <div class="card">
@@ -35,7 +40,7 @@
       <div class="form-container" style="display: inline-block; vertical-align: top;">
         <div class="text" style="display: table;">
           <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
-            <div class="row">
+            <div class="row" style="align-items: center">
               <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                 <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                   changed in the rest API and query handling -->
