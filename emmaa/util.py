@@ -136,3 +136,23 @@ def get_class_from_name(cls_name, parent_cls):
 
 class NotAClassName(Exception):
     pass
+
+
+def update_subscription(user_query, new_sub_status):
+    """Update a UserQuery object's subscription status
+
+    user_query : `emmaa.db.schema.UserQuery`
+        The UserQuery object to be updated
+    new_sub_status : Bool
+        The subscription status to change to
+
+    Returns
+    -------
+    user_query : UserQuery(object)
+        The updated UserQuery object
+    """
+    if new_sub_status is not user_query.subscription:
+        user_query.subscription = new_sub_status
+        logger.info(f'Updated subscription status to '
+                    f'{new_sub_status} for query {user_query.query_hash}')
+    return user_query
