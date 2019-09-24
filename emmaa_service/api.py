@@ -241,10 +241,11 @@ def _new_passed_tests(model_stats_json, current_model_types):
     all_test_results = model_stats_json['test_round_summary'][
         'all_test_results']
     for mt in current_model_types:
-        mt_rows = [[[('', f'New passed tests for {mt} model.')]]]
-        # mt_rows = []
         new_passed_hashes = model_stats_json['tests_delta'][mt][
             'passed_hashes_delta']['added']
+        if not new_passed_hashes:
+            continue
+        mt_rows = [[[('', f'New passed tests for {mt} model.')]]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
             path = test[mt][1][0]
@@ -252,7 +253,7 @@ def _new_passed_tests(model_stats_json, current_model_types):
                        _process_path(path)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
-    return mt_rows
+    return new_passed_tests
 
 
 def _process_path(path):
@@ -443,20 +444,20 @@ def process_query():
     return Response(json.dumps(res), mimetype='application/json')
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
-    parser.add_argument('--host', default='0.0.0.0')
-    parser.add_argument('--port', default=5000, type=int)
-    parser.add_argument('--preload', action='store_true')
-    args = parser.parse_args()
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
+#     parser.add_argument('--host', default='0.0.0.0')
+#     parser.add_argument('--port', default=5000, type=int)
+#     parser.add_argument('--preload', action='store_true')
+#     args = parser.parse_args()
 
-    # TODO: make pre-loading available when running service via Gunicorn
-    if args.preload and not GLOBAL_PRELOAD:
-        # Load all the model configs
-        model_meta_data = _get_model_meta_data()
-        # Load all the model mamangers for queries
-        for model, _ in model_meta_data:
-            load_model_manager_from_s3(model)
+#     # TODO: make pre-loading available when running service via Gunicorn
+#     if args.preload and not GLOBAL_PRELOAD:
+#         # Load all the model configs
+#         model_meta_data = _get_model_meta_data()
+#         # Load all the model mamangers for queries
+#         for model, _ in model_meta_data:
+#             load_model_manager_from_s3(model)
 
-    print(app.url_map)  # Get all avilable urls and link them
-    app.run(host=args.host, port=args.port)
+#     print(app.url_map)  # Get all avilable urls and link them
+#     app.run(host=args.host, port=args.port)
