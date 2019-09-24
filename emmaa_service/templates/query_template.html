@@ -135,7 +135,7 @@
             <!-- model, query, response, date -->
             <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
             <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
-            <td>{{ result['mc_type'] }}</td>
+            <td>{{ model_names[result['mc_type']] }}</td>
             <td>{{ result['response']|safe }}</td>
             <td>{{ result['date'] }}</td>
           </tr>

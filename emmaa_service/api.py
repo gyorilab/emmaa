@@ -210,7 +210,7 @@ def get_query_page():
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list, user_email=user_email,
-                           user_id=user_id)
+                           user_id=user_id, model_names=FORMATTED_MODEL_NAMES)
 
 
 @app.route('/query/submit', methods=['POST'])
