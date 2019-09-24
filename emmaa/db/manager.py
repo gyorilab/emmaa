@@ -175,12 +175,6 @@ class EmmaaDatabaseManager(object):
         if not subscribe:
             logger.info("Not subscribing...")
 
-        # Get the existing hashes, user's id and user's previous subscriptions
-        with self.get_session() as sess:
-            existing_hashes = {h for h, in sess.query(Query.hash).all()}
-            existing_user_queries = {h for h, in sess.query(
-                UserQuery.query_hash).filter(UserQuery.user_id == user_id)}
-
         # Check if anonymous user
         if not user_email and not user_id:
             logger.info(f'User {user_email} is not registered in the user '
@@ -190,57 +184,65 @@ class EmmaaDatabaseManager(object):
             user_email = 'anonymous@emmaa.bio'
             user_id = None
 
-        # Check if logged in user exist in the emmaa user table
-        if user_email and user_id:
-            try:
-                with self.get_session() as sess:
-                    (stored_user_id,), = \
-                        sess.query(User.id).filter(User.id == user_id).all()
+        # Open database session
+        with self.get_session() as sess:
+            # Get existing hashes, user's id and user's subscriptions
+            existing_hashes = {h for h, in sess.query(Query.hash).all()}
+            existing_user_queries = {h for h, in sess.query(
+                UserQuery.query_hash).filter(UserQuery.user_id == user_id)}
+
+            # Check if logged in user is in the emmaa user table
+            if user_email and user_id:
+                res = \
+                    sess.query(User.id).filter(User.id == user_id).all()
+                if res.all():
                     logger.info(f'User {user_email} is registered in the '
                                 f'user table.')
-            except ValueError:
-                logger.info(f'{user_email} not in user table. Adding...')
-                self.add_user(user_id=user_id, email=user_email)
+                else:
+                    logger.info(f'{user_email} not in user table. Adding...')
+                    self.add_user(user_id=user_id, email=user_email)
 
-        queries = []
-        user_queries = []
-        for model_id in model_ids:
-            qh = query.get_hash_with_model(model_id)
+            new_queries = []
+            new_user_queries = []
+            for model_id in model_ids:
+                qh = query.get_hash_with_model(model_id)
 
-            # Add query to UserQuery table
-            if qh not in existing_user_queries:
-                user_queries.append(UserQuery(user_id=user_id, query_hash=qh,
-                                              subscription=subscribe, count=1))
-                logger.info(f'Registering query on {model_id} for user '
-                            f'{user_email}')
-            # Update existing query
-            else:
-                logger.info(f'Updating existing query for {user_email} '
-                            f'on {model_id} ({qh})')
-                # Update subscription
-                # Here: set subscribe to True, handle un-subscribe elsewhere
-                if subscribe:
-                    self.update_subscription(user_id, qh, subscribe)
+                # Add to queries if not present
+                if qh not in existing_hashes:
+                    logger.info(f"Adding query on {model_id} to the db.")
+                    new_queries.append(Query(model_id=model_id,
+                                             json=query.to_json(),
+                                             hash=qh))
+                else:
+                    logger.info(f"Query for {model_id} already in db.")
 
-                # Update query count
-                with self.get_session() as sess:
-                    sess.query(UserQuery).filter(
+                # Add query to UserQuery table or update existing one
+                if qh not in existing_user_queries:
+                    new_user_queries.append(UserQuery(user_id=user_id,
+                                                      query_hash=qh,
+                                                      subscription=subscribe,
+                                                      count=1))
+                    logger.info(f'Registering query on {model_id} for user '
+                                f'{user_email}')
+                # Update existing query
+                else:
+                    user_query = sess.query(UserQuery).filter(
                         UserQuery.user_id == user_id,
                         UserQuery.query_hash == qh
-                    ).update({'count': (UserQuery.count + 1)})
-                    sess.commit()
+                    ).all()[0]
+                    logger.info(f'Updating existing query for {user_email} '
+                                f'on {model_id} ({qh})')
+                    # Update subscription
+                    # Set subscribe to True, handle un-subscribe elsewhere
+                    if subscribe:
+                        user_query = update_subscription(user_query, subscribe)
 
-            if qh not in existing_hashes:
-                logger.info(f"Adding query on {model_id} to the db.")
-                queries.append(Query(model_id=model_id, json=query.to_json(),
-                                     hash=qh))
-            else:
-                logger.info(f"Query for {model_id} already in db.")
+                    # Update query count
+                    user_query.count += 1
 
-        # Add new queries and register them for the user
-        with self.get_session() as sess:
-            sess.add_all(queries)
-            sess.add_all(user_queries)
+            # Add new queries and register them for the user
+            sess.add_all(new_queries)
+            sess.add_all(new_user_queries)
         return
 
     def get_queries(self, model_id):
@@ -335,23 +337,6 @@ class EmmaaDatabaseManager(object):
                     Query.hash == query.get_hash_with_model(model_id)))
             users = [q for q, in q.all()]
         return users
-
-    def update_subscription(self, user_id, query_hash, new_sub_status):
-        with self.get_session() as sess:
-            # Get current subscription
-            (curr_sub,), = sess.query(UserQuery.subscription).filter(
-                UserQuery.user_id == user_id,
-                UserQuery.query_hash == query_hash
-            )
-            # If requested subscription status is not current one, change it
-            if new_sub_status is not curr_sub:
-                sess.query(UserQuery).filter(
-                    UserQuery.user_id == user_id,
-                    UserQuery.query_hash == query_hash
-                ).update({'subscription': new_sub_status})
-                sess.commit()
-                logger.info(f'Updated subscription status to '
-                            f'{new_sub_status} for query {query_hash}')
 
 
 def _weed_results(result_iter, latest_order=1):
