@@ -173,18 +173,6 @@ def _fix_top_stmts(english_by_hash, top_statements):
     return res
 
 
-def _add_attributes_to_anchor(anchor_string):
-    # Matches an anchor with at least an href attribute
-    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
-    m = re.search(pattern=pattern, string=anchor_string)
-    if m:
-        return f'<a href="{m.group(1)}" class="stmt-dblink" target="_blank">' \
-               f'{m.group(2)}</a>'
-    else:
-        # Anchor without href or something else
-        return anchor_string
-
-
 def _extract_stmt_link(anchor_string):
     # Matches an anchor with at least an href attribute
     pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
@@ -296,9 +284,7 @@ def get_model_dashboard(model):
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            link_list=mod_link_list,
-                           ndexID=ndex_id,
                            user_email=user.email if user else "",
-                           model_last_updated=last_update,
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
