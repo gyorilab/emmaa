@@ -263,41 +263,6 @@ function populateTestResultTable(tableBody, json) {
     };
   };
 
-  // 
-
-  // All Tests Results
-  // Create table with correct columns
-  let allTestsTable = document.getElementById('allTestResults');
-  clearTable(allTestsTable)
-  th = document.createElement('th');
-  th.innerHTML = 'Test';
-  th.style="width:40%"
-  allTestsTable.appendChild(th);
-  for (mt of current_model_types) {
-    let th = document.createElement('th');
-    th.style="width:15%"
-    th.style.textAlign = "center"
-    th.innerHTML = toTitleCase(mt);
-    allTestsTable.appendChild(th)
-  };
-
-  let allResults = Object.values(allTestResults);
-  allResults.sort(function(a,b){
-    return (
-      countPasses(a, current_model_types) < 
-      countPasses(b, current_model_types)) ? 1 : (
-        countPasses(a, current_model_types) >
-        countPasses(b, current_model_types)) ? -1 : 0;});
-  
-  for (test of allResults) {
-    let newTest = [test["test"]];
-    for (mt of current_model_types) {
-      newTest.push(test[mt][0]);};
-      let rowEl = addToRow(newTest);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], newTest[0]);
-    allTestsTable.appendChild(generatePassFail(rowEl, cols))
-  };
-
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
