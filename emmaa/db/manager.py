@@ -396,3 +396,23 @@ def hash_query(query_json, model_id):
     """Create an FNV-1a 32-bit hash from the query json and model_id."""
     unique_string = model_id + ':' + sorted_json_string(query_json)
     return fnv1a_32(unique_string.encode('utf-8'))
+
+
+def update_subscription(user_query, new_sub_status):
+    """Update a UserQuery object's subscription status
+
+    user_query : `emmaa.db.schema.UserQuery`
+        The UserQuery object to be updated
+    new_sub_status : Bool
+        The subscription status to change to
+
+    Returns
+    -------
+    user_query : UserQuery(object)
+        The updated UserQuery object
+    """
+    if new_sub_status is not user_query.subscription:
+        user_query.subscription = new_sub_status
+        logger.info(f'Updated subscription status to '
+                    f'{new_sub_status} for query {user_query.query_hash}')
+    return user_query
