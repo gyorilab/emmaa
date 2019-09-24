@@ -132,20 +132,7 @@
         </div>
       </div>
       {{ path_card(new_applied_tests, "New Applied Tests", None, model_types, "newAppliedTests") }}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Test</th>
-              <th>Top Path Found</th>
-            </thead>
-            <tbody class="table-body" id="newPassedTests"></tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(new_passed_tests, "New Passed Tests", None, ["Test", "Top Path"], "newPassedTests", true)}}
       {{ path_card(all_test_results, "All Test Results", None, model_types, "allTestResults") }}
     </div>
 
