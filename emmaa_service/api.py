@@ -236,6 +236,32 @@ def _format_table_array(tests_json, model_types):
     return table_array
 
 
+def _new_passed_tests(model_stats_json, current_model_types):
+    new_passed_tests = []
+    all_test_results = model_stats_json['test_round_summary'][
+        'all_test_results']
+    for mt in current_model_types:
+        mt_rows = [[[('', f'New passed tests for {mt} model.')]]]
+        # mt_rows = []
+        new_passed_hashes = model_stats_json['tests_delta'][mt][
+            'passed_hashes_delta']['added']
+        for test_hash in new_passed_hashes:
+            test = all_test_results[test_hash]
+            path = test[mt][1][0]
+            new_row = [[_extract_stmt_link(test['test'])],
+                       _process_path(path)]
+            mt_rows.append(new_row)
+        new_passed_tests += mt_rows
+    return mt_rows
+
+
+def _process_path(path):
+    path_row = []
+    for step in path:
+        path_row.append(_extract_stmt_link(step))
+    return path_row
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
@@ -289,12 +315,12 @@ def get_model_dashboard(model):
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
                            model_types=["Test", *current_model_types],
-                           new_applied_tests=
-                               _new_applied_tests(model_stats,
-                                                  current_model_types),
-                           all_test_results=
-                               _format_table_array(all_new_tests,
-                                                   current_model_types))
+                           new_applied_tests=_new_applied_tests(
+                               model_stats, current_model_types),
+                           all_test_results=_format_table_array(
+                               all_new_tests, current_model_types),
+                           new_passed_tests=_new_passed_tests(
+                               model_stats, current_model_types))
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>')
