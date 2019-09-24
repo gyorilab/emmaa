@@ -242,26 +242,6 @@ function populateTestResultTable(tableBody, json) {
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
-  // Retrieve all test results for the next tables
-  let allTestResults = json.test_round_summary.all_test_results;
-
-  // Tests Delta - New Passed Tests
-  let newPassedTable = document.getElementById('newPassedTests');
-  clearTable(newPassedTable);
-  for (mt of current_model_types) {
-    let newPasHashes = json.tests_delta[mt].passed_hashes_delta.added;
-    if (newPasHashes && newPasHashes.length > 0) {
-      newRow = addMergedRow(`New passed tests for ${toTitleCase(mt)} model.`, 2);
-      newPassedTable.appendChild(newRow);
-      for (testHash of newPasHashes) {
-        let rowEl = addToRow(['', '']);
-        rowEl.children[0] = linkifyFromString(
-          rowEl.children[0], allTestResults[testHash]["test"]);
-        rowEl.children[1] = linkifyFromArray(
-          rowEl.children[1], allTestResults[testHash][mt][1][0]);
-          newPassedTable.appendChild(rowEl);};
-    };
-  };
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
