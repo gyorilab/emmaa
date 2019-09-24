@@ -299,7 +299,7 @@ def get_model_dashboard(model):
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
-                           model_types=current_model_types,
+                           model_types=["Test", *current_model_types],
                            new_applied_tests=_new_applied_tests(model_stats))
 
 
