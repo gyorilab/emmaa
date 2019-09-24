@@ -194,8 +194,8 @@ class EmmaaDatabaseManager(object):
             # Check if logged in user is in the emmaa user table
             if user_email and user_id:
                 res = \
-                    sess.query(User.id).filter(User.id == user_id).all()
-                if res.all():
+                    sess.query(User.id).filter(User.id == user_id).first()
+                if res:
                     logger.info(f'User {user_email} is registered in the '
                                 f'user table.')
                 else:
@@ -229,7 +229,7 @@ class EmmaaDatabaseManager(object):
                     user_query = sess.query(UserQuery).filter(
                         UserQuery.user_id == user_id,
                         UserQuery.query_hash == qh
-                    ).all()[0]
+                    ).first()
                     logger.info(f'Updating existing query for {user_email} '
                                 f'on {model_id} ({qh})')
                     # Update subscription
