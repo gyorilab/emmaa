@@ -225,26 +225,27 @@ def _get_test_results(stats_json, model_id, test_hash):
         _format_path_list(tests[model_id][1])
 
 
-def _new_applied_tests(model_stats_json):
+def _new_applied_tests(model_stats_json, model_types):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
     #           each tuple is a (href, link_text) pair
-    current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
-                           model_stats_json['test_round_summary']]
-    new_app_tests = []
     all_test_results = model_stats_json['test_round_summary'][
         'all_test_results']
     new_app_hashes = model_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
-    for test_hash in new_app_hashes:
-        test = all_test_results[test_hash]
-        new_row = [_extract_stmt_link(test['test'])]
-        for model in current_model_types:
-            new_row.append(('', test[model][0]))
+    new_app_tests = [all_test_results[th] for th in new_app_hashes]
+    return _format_table_array(new_app_tests, model_types)
 
-        new_app_tests.append(new_row)
-    return new_app_tests
+
+def _format_table_array(tests_json, model_types):
+    table_array = []
+    for test in tests_json:
+        new_row = [_extract_stmt_link(test['test'])]
+        for model in model_types:
+            new_row.append(('', test[model][0]))
+        table_array.append(new_row)
+    return table_array
 
 
 @app.route('/')
@@ -281,6 +282,8 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex'),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
     model_stats = get_model_stats(model)
+    all_new_tests = [v for v in model_stats['test_round_summary'][
+        'all_test_results'].values()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
@@ -300,7 +303,12 @@ def get_model_dashboard(model):
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
                            model_types=["Test", *current_model_types],
-                           new_applied_tests=_new_applied_tests(model_stats))
+                           new_applied_tests=
+                               _new_applied_tests(model_stats,
+                                                  current_model_types),
+                           all_test_results=
+                               _format_table_array(all_new_tests,
+                                                   current_model_types))
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>')
