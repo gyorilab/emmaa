@@ -297,8 +297,7 @@ def format_results(results):
         formatted_result['model'] = result[0]
         query = result[1]
         formatted_result['query'] = _make_query_simple_dict(query)
-        mc_type = result[2]
-        formatted_result['mc_type'] = ' '.join(mc_type.split('_')).capitalize()
+        formatted_result['mc_type'] = result[2]
         response_json = result[3]
         response = _process_result_to_html(response_json)
         formatted_result['response'] = response
