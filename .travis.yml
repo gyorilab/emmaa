@@ -14,7 +14,10 @@ addons:
 install:
   - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
-  - pip install git+https://github.com/indralab/ui_util.git
+  - git clone https://github.com/indralab/ui_util.git
+  - cd ui_util/indralab_auth_tools
+  - pip install .
+  - cd ../..
   - pip install .[test]
 before_script:
   # Create a test database.
