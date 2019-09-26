@@ -66,12 +66,16 @@ class ModelManager(object):
     def __init__(self, model):
         self.model = model
         self.mc_mapping = {
-            'pysb': (self.model.assemble_pysb, PysbModelChecker),
-            'pybel': (self.model.assemble_pybel, PybelModelChecker),
+            'pysb': (self.model.assemble_pysb, PysbModelChecker,
+                     stmts_from_pysb_path),
+            'pybel': (self.model.assemble_pybel, PybelModelChecker,
+                      stmts_from_pybel_path),
             'signed_graph': (self.model.assemble_signed_graph,
-                             SignedGraphModelChecker),
+                             SignedGraphModelChecker,
+                             stmts_from_indranet_path),
             'unsigned_graph': (self.model.assemble_unsigned_graph,
-                               UnsignedGraphModelChecker)}
+                               UnsignedGraphModelChecker,
+                               stmts_from_indranet_path)}
         self.mc_types = {}
         for mc_type in model.test_config.get('mc_types', ['pysb']):
             self.mc_types[mc_type] = {}
@@ -151,6 +155,22 @@ class ModelManager(object):
                 paths.append(sentences)
         return paths
 
+    def make_path_json(self, mc_type, result):
+        paths = []
+        for path in result.paths:
+            path_json = {}
+            report_function = self.mc_mapping[mc_type][2]
+            model = self.mc_types[mc_type]['model']
+            stmts = self.model.assembled_stmts
+            if mc_type == 'pysb':
+                report_stmts = report_function(path, model, stmts)
+                path_stmts = [[st] for st in report_stmts]
+            elif mc_type == 'pybel':
+                path_stmts = report_function(path, model, False, stmts)
+            elif mc_type == 'signed_graph':
+                path_stmts = report_function(path, model, True, False, stmts)
+            elif mc_type == 'unsigned_graph':
+                path_stmts = report_function(path, model, False, False, stmts)
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
