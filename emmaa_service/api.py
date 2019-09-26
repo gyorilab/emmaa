@@ -211,13 +211,6 @@ def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
-    for mid, meta in model_meta_data:
-        if mid.lower() == model.lower():
-            mod_link_list.append(
-                (f'../tests/{model}',
-                 f'Test Details For {meta["human_readable_name"]}')
-            )
-            break
 
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
