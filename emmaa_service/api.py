@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+from urllib import parse
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_optional
@@ -192,6 +193,36 @@ def _extract_stmt_link(anchor_string):
         return (m.group(1), m.group(2))
     else:
         return ('', anchor_string)
+
+
+def _get_test_results(stats_json, model_id, test_hash):
+    # This is a helper function that mostly makes sure the path_list has the
+    # right structure. As we gradually change the json structure,
+    # this function should handle less and less of the json structuring.
+    # Returns the results for the test with hash test_hash for model type
+    # model_type.
+
+    def _format_path_list(unformatted_path_list):
+        formatted_path_list = []
+        for path in unformatted_path_list:
+            path_dict = {"edge_list": []}
+            path_string = ""
+            for n, edge in enumerate(path):
+                href, txt = _extract_stmt_link(edge)
+                query_dict = parse.parse_qs(href.split('?')[1])
+                subj = query_dict['subject'][0]
+                obj = query_dict['object'][0]
+                path_string += f"{subj}-{obj}" if n == 0 else f"-{obj}"
+                path_dict["edge_list"].append(
+                    {"edge": f"{subj}-{obj}", "stmts": [(href, txt)]})
+            path_dict["path"] = path_string
+            formatted_path_list.append(path_dict)
+        return formatted_path_list
+
+    tests = stats_json['test_round_summary']['all_test_results'][test_hash]
+    return _extract_stmt_link(tests['test']),\
+        tests[model_id][0],\
+        _format_path_list(tests[model_id][1])
 
 
 @app.route('/')
