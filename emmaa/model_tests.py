@@ -159,6 +159,8 @@ class ModelManager(object):
         paths = []
         for path in result.paths:
             path_json = {}
+            path_nodes = []
+            edge_list = []
             report_function = self.mc_mapping[mc_type][2]
             model = self.mc_types[mc_type]['model']
             stmts = self.model.assembled_stmts
@@ -171,6 +173,24 @@ class ModelManager(object):
                 path_stmts = report_function(path, model, True, False, stmts)
             elif mc_type == 'unsigned_graph':
                 path_stmts = report_function(path, model, False, False, stmts)
+            for i, step in enumerate(path_stmts):
+                edge_dict = {}
+                edge_nodes = [ag.name for ag in step[0].agent_list()]
+                if i == 0:
+                    path_nodes.append((edge_nodes[0], edge_nodes[1]))
+                else:
+                    path_nodes.append(edge_nodes[1])
+                step_sentences = []
+                for stmt in step:
+                    ea = EnglishAssembler([stmt])
+                    sentence = ea.make_model()
+                    if self.make_links:
+                        link = get_statement_queries([stmt])[0] + '&format=html'
+                        step_sentences.append((sentence, link))
+                    else:
+                        step_sentences.append((sentence, ''))
+            
+                
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
