@@ -1,3 +1,4 @@
+{% from "auth_macros.html" import login_overlay %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +10,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
   <!-- C3 css -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='c3.css') }}">
+  <link rel="stylesheet" href="/dev{{ url_for('static', filename='c3.css') }}">
 
   <!-- Optional theme -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -27,10 +28,10 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
 
   <!-- C3 -->
-  <script src="{{ url_for('static', filename='c3.min.js') }}"></script>
+  <script src="/dev{{ url_for('static', filename='c3.min.js') }}"></script>
 
   <!-- Script Files -->
-  <script src="{{ url_for('static', filename='emmaaFunctions.js') }}"></script>
+  <script src="/dev{{ url_for('static', filename='emmaaFunctions.js') }}"></script>
 
   {% block additional_scripts %}
   {% endblock %}
@@ -57,11 +58,14 @@
     body > .container {
       padding: 85px 15px 0;
     }
-    .btn {
+    a.btn {
       background-color: rgb(255, 255, 255);
     }
     #query-submit {
       background-color: rgb(221, 221, 221);
+    }
+    button.btn-primary { /* For login button */
+      background-color: #007bff;
     }
   </style>
 </head>
@@ -69,26 +73,82 @@
 <body>
 
   {% block header %}
-    <header>
-      <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm navbar fixed-top">
-        <h5 class="my-0 mr-md-auto font-weight-normal">
-          {% for link_address, link_text in link_list %}
-          <a href="{{ link_address }}">{{ link_text }}</a>&nbsp;&nbsp;&nbsp;
-          {% endfor %}
-        </h5>
+    {{ login_overlay(url_prefix="/dev") }}
+    <script>
+      function handle_success(type, resp_data) {
+        if (type === "login") {
+          const btn = document.querySelector("#loginout-button");
+          btn.innerHTML = 'Logout';
+          btn.onclick = () => {return trigger_logout()};
+          report_login_result(''); // clear the login result message
+        }
+        else if (type === "register") {
+          trigger_login()
+        }
+        else { // logout
+          const btn = document.querySelector("#loginout-button");
+          btn.innerHTML = 'Login';
+          btn.onclick = () => {return trigger_login()};
+        }
+      }
+
+      function trigger_login(type=null, data=null) {
+        return login(handle_success, trigger_unchecked_login)
+      }
+
+      function trigger_unchecked_login(type=null, data=null) {
+        return login(handle_success, trigger_unchecked_login, true)
+      }
+
+      function trigger_logout() {
+        return logout(handle_success)
+        }
+    </script>
+
+    <style>
+      #loginout-button {
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      .no-horiz-pad {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    </style>
+
+    <header class="bg-white border-bottom shadow-sm fixed-top no-horiz-pad">
+      <div class="d-flex flex-row align-items-center">
+        <h5 class="d-inline-flex my-0 mr-md-auto font-weight-normal">
+        {% for link_address, link_text in link_list %}
+        <a class="p-2" href="{{ link_address }}">{{ link_text }}</a>
+        {% endfor %}
+      </h5>
         {% block extend_header %}
         {% endblock %}
-        <nav class="my-2 my-md-0 mr-md-3">
-          <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
-          <a class="p-2 text-dark" href="#about">About</a>
-          <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
-        </nav>
+        <nav class="d-inline-flex p-2">
+        <a class="p-2 text-dark" href="https://emmaa.readthedocs.io/en/latest/dashboard/index.html" target="_blank">Help</a>
+        <a class="p-2 text-dark" href="#about">About</a>
+        <a class="p-2 text-dark" href="https://sorger.med.harvard.edu/data/bgyori/emmaa_dashboard_intro.mov">Demo</a>
+      </nav>
+        <div class="d-inline-flex button-container p-2">
+          <button class="btn btn-primary"
+                onclick="return {% if user_email %}trigger_logout(){% else %}trigger_login(){% endif %};"
+                id="loginout-button">
+            {% if user_email %}
+              Logout
+            {% else %}
+              Login
+            {% endif %}
+          </button>
+        </div>
       </div>
     </header>
   {% endblock %}
 
   <div class="container">
     {% block body %}
+      {{ login_overlay() }}
     {% endblock %}
   </div>
 

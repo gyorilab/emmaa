@@ -1,7 +1,7 @@
 {% extends "emmaa_page_template.html" %}
 
 {% block additional_scripts %}
-  <script src="{{ url_for('static', filename='queryFunctions.js') }}"></script>
+  <script src="/dev{{ url_for('static', filename='queryFunctions.js') }}"></script>
   <script>
     $(document).ready(function() {
       let modelSelect = new Choices('#model-select');
@@ -10,6 +10,11 @@
 {% endblock %}
 
 {% block body %}
+<style>
+  label {
+    margin-bottom: 0;
+  }
+</style>
 <div class="container" id="query-container">
 
   <div class="card">
@@ -35,7 +40,7 @@
       <div class="form-container" style="display: inline-block; vertical-align: top;">
         <div class="text" style="display: table;">
           <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
-            <div class="row">
+            <div class="row" style="align-items: center">
               <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                 <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                   changed in the rest API and query handling -->
@@ -58,7 +63,7 @@
               <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
                 <div class="checkbox">
                   <input type="checkbox" name="register" id="register-query"><label
-                    for="register-query">Register Query</label>
+                    for="register-query">Subscribe To Query</label>
                 </div>
               </div>
             </div>
@@ -130,7 +135,7 @@
             <!-- model, query, response, date -->
             <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
             <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
-            <td>{{ result['mc_type'] }}</td>
+            <td>{{ model_names[result['mc_type']] }}</td>
             <td>{{ result['response']|safe }}</td>
             <td>{{ result['date'] }}</td>
           </tr>

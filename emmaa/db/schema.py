@@ -51,7 +51,9 @@ class User(Base, EmmaaTable):
     Parameters
     ----------
     id : int
-        (auto, primary key) A database-generated integer.
+        (from indralab_auth_tools.src.models.User.id, primary key)
+        A database-generated integer from the User table in indralab
+        auth tools.
     email : str
         The email of the user (must be unique)
     """
@@ -102,15 +104,19 @@ class UserQuery(Base, EmmaaTable):
         (auto) The date that this entry was added to the database.
     subscription : bool
         Record whether the user has subscribed to see results of this model.
+    count : int
+        Record the number of times the user associated with user id has done
+        this query
     """
     __tablename__ = 'user_query'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     user = relationship(User)
     query_hash = Column(BigInteger, ForeignKey('query.hash'), nullable=False)
     query = relationship(Query)
     date = Column(DateTime, default=func.now())
     subscription = Column(Boolean, nullable=False)
+    count = Column(Integer, nullable=False)
 
 
 class Result(Base, EmmaaTable):

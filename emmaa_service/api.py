@@ -3,7 +3,8 @@ import argparse
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from flask import abort, Flask, request, Response, render_template
+from flask import abort, Flask, request, Response, render_template, jsonify
+from flask_jwt_extended import get_jwt_identity, jwt_optional
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -14,24 +15,33 @@ from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
+from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 
 app = Flask(__name__)
+app.register_blueprint(auth)
 app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
 EMMAA_BUCKET_NAME = 'emmaa'
+ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
+                         'pybel': 'PyBEL',
+                         'signed_graph': 'Signed Graph',
+                         'unsigned_graph': 'Unsigned Graph'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 
+SC, jwt = config_auth(app)
 
 qm = QueryManager()
 
 
 def _get_model_meta_data():
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket='emmaa', Prefix='models/', Delimiter='/')
+    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
+                           Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
@@ -79,7 +89,8 @@ def get_model_stats(model, extension='.json'):
     latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                           prefix=prefix,
                                           extension=extension)
-    model_data_object = s3.get_object(Bucket='emmaa', Key=latest_file_key)
+    model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
+                                      Key=latest_file_key)
     return json.loads(model_data_object['Body'].read().decode('utf8'))
 
 
@@ -148,15 +159,20 @@ def _make_query(query_dict, use_grouding_service=True):
 
 @app.route('/')
 @app.route('/home')
+@jwt_optional
 def get_home():
+    user, roles = resolve_auth(dict(request.args))
     model_data = _get_model_meta_data()
-    return render_template('index_template.html',
-                           model_data=model_data,
-                           link_list=link_list)
+    return render_template('index_template.html', model_data=model_data,
+                           link_list=link_list,
+                           user_email=user.email if user else "",
+                           identity=user.identity() if user else None)
 
 
 @app.route('/dashboard/<model>')
+@jwt_optional
 def get_model_dashboard(model):
+    user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
     last_update = model_last_updated(model=model)
@@ -170,30 +186,35 @@ def get_model_dashboard(model):
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
     model_stats = get_model_stats(model)
-    return render_template('model_template.html',
-                           model=model,
+    return render_template('model_template.html', model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            link_list=mod_link_list,
-                           model_last_updated=last_update,
-                           ndexID=ndex_id)
+                           model_last_updated=last_update, ndexID=ndex_id,
+                           user_email=user.email if user else "",
+                           identity=user.id if user else None)
 
 
 @app.route('/query')
+@jwt_optional
 def get_query_page():
-    # TODO Should pass user specific info in the future when logged in
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    user_id = user.id if user else None
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
-    user_email = 'joshua@emmaa.com'
-    old_results = qm.get_registered_queries(user_email)
+    # user_email = 'joshua@emmaa.com'
+    old_results = qm.get_registered_queries(user_email) if user_email else []
 
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
-                           link_list=link_list)
+                           link_list=link_list, user_email=user_email,
+                           user_id=user_id, model_names=FORMATTED_MODEL_NAMES)
 
 
 @app.route('/query/submit', methods=['POST'])
+@jwt_optional
 def process_query():
     # Print inputs.
     logger.info('Got model query')
@@ -203,13 +224,30 @@ def process_query():
     logger.info(str(request.json))
     logger.info("------------------")
 
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    user_id = user.id if user else None
+
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     try:
-        user_email = request.json['user']['email']
-        subscribe = request.json['register']
+        # If user tries to register query without logging in, refuse query
+        # with 401 (unauthorized)
+        if request.json['register']:
+            if user_email:
+                # Logged in
+                subscribe = request.json['register']
+            else:
+                # Not logged in
+                logger.warning('User not logged in! Query will not be '
+                               'registered.')
+                return jsonify({'result': 'failure',
+                                'reason': 'Invalid credentials'}), 401
+        # Does not try to register
+        else:
+            subscribe = False
         query_json = request.json['query']
         assert set(query_json.keys()) == expected_query_keys, \
             (f'Did not get expected query keys: got {set(query_json.keys())} '
@@ -238,7 +276,7 @@ def process_query():
         logger.info('Query submitted')
         try:
             result = qm.answer_immediate_query(
-                user_email, query, models, subscribe)
+                user_email, user_id, query, models, subscribe)
         except Exception as e:
             logger.exception(e)
             raise(e)

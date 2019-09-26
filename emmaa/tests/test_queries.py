@@ -5,7 +5,7 @@ from nose.plugins.attrib import attr
 from indra.statements import Phosphorylation, Agent
 from emmaa.queries import (Query, PathProperty, get_agent_from_local_grounding,
                            get_agent_from_grounding_service,
-                           get_grounding_from_name, get_agent_from_text)
+                           get_grounding_from_name, get_agent_from_text,)
 
 
 def test_path_property_from_json():
@@ -76,12 +76,11 @@ def test_local_grounding():
 
 @attr('nonpublic')
 def test_grounding_service():
-    url = os.environ['GROUNDING_SERVICE_URL']
-    agent = get_agent_from_grounding_service('MAPK1', url)
+    agent = get_agent_from_text('MAPK1', use_grouding_service=True)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.db_refs == {'HGNC': '6871'}
-    agent = get_agent_from_local_grounding('BRAF')
+    agent = get_agent_from_text('BRAF', use_grouding_service=True)
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
     assert agent.db_refs == {'HGNC': '1097'}

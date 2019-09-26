@@ -49,7 +49,7 @@ def test_format_results():
     assert len(formatted_results) == 1
     assert formatted_results[0]['model'] == 'test'
     assert formatted_results[0]['query'] == simple_query
-    assert formatted_results[0]['mc_type'] == 'Pysb'
+    assert formatted_results[0]['mc_type'] == 'pysb'
     assert isinstance(formatted_results[0]['response'], str)
     assert isinstance(formatted_results[0]['date'], str)
 
@@ -58,7 +58,7 @@ def test_format_results():
 def test_answer_immediate_query():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    results = qm.answer_immediate_query('tester@test.com', query_object,
+    results = qm.answer_immediate_query('tester@test.com', 1, query_object,
                                         ['test'], subscribe=False)
     assert len(results) == 1
     assert results[0]['model'] == 'test'
@@ -73,7 +73,7 @@ def test_answer_immediate_query():
 def test_answer_get_registered_queries():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    qm.db.put_queries('tester@test.com', query_object, ['test'],
+    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
                       subscribe=True)
     qm.answer_registered_queries('test')
     results = qm.get_registered_queries('tester@test.com')
@@ -96,7 +96,7 @@ def test_report_one_query():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     # Using results from db
-    qm.db.put_queries('tester@test.com', query_object, ['test'],
+    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
                       subscribe=True)
     qm.db.put_results('test', [(query_object, 'pysb', test_response),
                                (query_object, 'pysb', query_not_appl)])
@@ -125,7 +125,7 @@ def test_report_one_query():
 def test_report_files():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    qm.db.put_queries('tester@test.com', query_object, ['test'],
+    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
                       subscribe=True)
     qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
     results = qm.db.get_results('tester@test.com', latest_order=1)
