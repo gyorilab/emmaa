@@ -210,8 +210,8 @@ def _get_test_results(stats_json, model_id, test_hash):
 
     tests = stats_json['test_round_summary']['all_test_results'][test_hash]
     return _extract_stmt_link(tests['test']),\
-        tests[model_id][0],\
-        _format_path_list(tests[model_id][1])
+        tests[model_id][0], \
+        tests[model_id][1]
 
 
 def _new_applied_tests(model_stats_json, model_types, model_name):
