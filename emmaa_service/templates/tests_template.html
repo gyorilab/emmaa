@@ -20,13 +20,15 @@
     {% endfor %}
   </select>
   <div class="input-group-append">
-    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelTypeSelectDD'), '{{ model_type }}')" type="button">Load Type</button>
+    <button class="btn btn-outline-secondary"
+            onClick="modelRedirect(document.getElementById('modelTypeSelectDD'), '{{ model_type }}')"
+            type="button">Load Type</button>
   </div>
 </div>
 {% endblock %}
 
 {% block body %}
 <div class="container">
-  {{ detailed_paths(path_list, test, model, model_type, formatted_names, "test_card", "test_result")}}
+  {{ detailed_paths(path_list, test, model, model_type, formatted_names, test_status, "test_card", "test_result")}}
 </div>
 {% endblock %}
