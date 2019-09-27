@@ -213,7 +213,7 @@ def _get_test_results(stats_json, model_id, test_hash):
         _format_path_list(tests[model_id][1])
 
 
-def _new_applied_tests(model_stats_json, model_types):
+def _new_applied_tests(model_stats_json, model_types, model_name):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -222,16 +222,22 @@ def _new_applied_tests(model_stats_json, model_types):
         'all_test_results']
     new_app_hashes = model_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
-    new_app_tests = [all_test_results[th] for th in new_app_hashes]
-    return _format_table_array(new_app_tests, model_types)
+    new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
+    return _format_table_array(new_app_tests, model_types, model_name)
 
 
-def _format_table_array(tests_json, model_types):
+def _format_table_array(tests_json, model_types, model_name):
+    # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
-    for test in tests_json:
+    for th, test in tests_json:
         new_row = [_extract_stmt_link(test['test'])]
-        for model in model_types:
-            new_row.append(('', test[model][0]))
+        for mt in model_types:
+            if test[mt][0].lower() == 'pass':
+                new_row.append((f'/tests/{model_name}/{mt}/{th}',
+                                test[mt][0]))
+            else:
+                new_row.append(('', test[mt][0]))
+
         table_array.append(new_row)
     return table_array
 
@@ -297,8 +303,8 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex'),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
     model_stats = get_model_stats(model)
-    all_new_tests = [v for v in model_stats['test_round_summary'][
-        'all_test_results'].values()]
+    all_new_tests = [(k, v) for k, v in model_stats['test_round_summary'][
+        'all_test_results'].items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
@@ -317,9 +323,13 @@ def get_model_dashboard(model):
                            model_info_contents=model_info_contents,
                            model_types=["Test", *current_model_types],
                            new_applied_tests=_new_applied_tests(
-                               model_stats, current_model_types),
+                               model_stats_json=model_stats,
+                               model_types=current_model_types,
+                               model_name=model),
                            all_test_results=_format_table_array(
-                               all_new_tests, current_model_types),
+                               tests_json=all_new_tests,
+                               model_types=current_model_types,
+                               model_name=model),
                            new_passed_tests=_new_passed_tests(
                                model_stats, current_model_types))
 
