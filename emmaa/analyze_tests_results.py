@@ -243,6 +243,7 @@ class TestRound(object):
             (text, link) = (
                 self.json_results[ix+1][mc_type]['english_code'][0][0])
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = text
+        return english_codes
 
     def get_english_test_by_hash(self, test_hash, mc_type=None):
         return self.english_test_results[test_hash]['test']
@@ -423,9 +424,10 @@ class TestRound(object):
         # This is a temporary method to support current dashboard layout
         pysb_results = {}
         for test_hash, test_dict in self.english_test_results.items():
+
             pysb_results[test_hash] = [
                 test_dict['test'], test_dict['pysb'][0],
-                self.get_path_or_code_by_hash_old_way('pysb')]
+                self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
         return pysb_results
 
 

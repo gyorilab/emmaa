@@ -68,18 +68,11 @@ def test_stats_generator():
     assert len(test_round_summary['tests_by_hash']) == 2
     assert test_round_summary['pysb']['number_passed_tests'] == 2
     assert test_round_summary['pysb']['passed_ratio'] == 1.0
-    assert len(test_round_summary['pysb']['passed_tests']) == 2
-    assert len(test_round_summary['pysb']['paths']) == 2
     model_delta = sg.json_stats['model_delta']
-    assert model_delta['number_of_statements_delta'] == 2
     assert len(model_delta['statements_delta']['added']) == 2
     tests_delta = sg.json_stats['tests_delta']
-    assert tests_delta['number_applied_tests_delta'] == 1
-    assert tests_delta['pysb']['number_passed_tests_delta'] == 1
-    assert tests_delta['pysb']['passed_ratio_delta'] == 0
-    assert len(tests_delta['pysb']['applied_tests_delta']['added']) == 1
-    assert len(tests_delta['pysb']['pass_fail_delta']['added']) == 1
-    assert len(tests_delta['pysb']['new_paths']['added']) == 1
+    assert len(tests_delta['applied_hashes_delta']['added']) == 1
+    assert len(tests_delta['pysb']['passed_hashes_delta']['added']) == 1
     changes = sg.json_stats['changes_over_time']
     assert changes['number_of_statements'] == [2, 4]
     assert changes['number_applied_tests'] == [1, 2]
