@@ -178,18 +178,20 @@ class ModelManager(object):
                 for i, step in enumerate(path_stmts):
                     edge_nodes = []
                     stmt_type = type(step[0]).__name__
-                    for i, ag in enumerate(step[0].agent_list()):
+                    for j, ag in enumerate(step[0].agent_list()):
                         edge_nodes.append(ag.name)
-                        if i == (len(step[0].agent_list()) - 1):
+                        if j == (len(step[0].agent_list()) - 1):
                             break
                         if stmt_type in ARROW_DICT:
                             edge_nodes.append(ARROW_DICT[stmt_type])
                         else:
                             edge_nodes.append(u"\u2192")
                     if i == 0:
-                        path_nodes.append((n for n in edge_nodes))
+                        for n in edge_nodes:
+                            path_nodes.append(n)
                     else:
-                        path_nodes.append(n for n in edge_nodes[2:])
+                        for n in edge_nodes[1:]:
+                            path_nodes.append(n)
                     step_sentences = []
                     for stmt in step:
                         ea = EnglishAssembler([stmt])
@@ -200,10 +202,10 @@ class ModelManager(object):
                         else:
                             step_sentences.append(('', sentence))
                     edge_dict = {'edge': ' '.join(edge_nodes),
-                                'stmts': step_sentences}
+                                 'stmts': step_sentences}
                     edge_list.append(edge_dict)
                 path_json = {'path': ' '.join(path_nodes),
-                            'edge_list': edge_list}
+                             'edge_list': edge_list}
                 paths.append(path_json)
         return paths
 
