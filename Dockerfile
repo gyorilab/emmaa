@@ -20,11 +20,6 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
     cd pgcopy && \
     python setup.py install
 
-# Install indralab_auth_tools
-RUN git clone https://github.com/indralab/ui_util.git && \
-    cd ui_util/indralab_auth_tools && \
-    pip install .
-
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
