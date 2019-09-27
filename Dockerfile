@@ -21,7 +21,7 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
     python setup.py install
 
 # Install indralab_auth_tools
-RUN clone https://github.com/indralab/ui_util.git && \
+RUN git clone https://github.com/indralab/ui_util.git && \
     cd ui_util/indralab_auth_tools && \
     pip install .
 
