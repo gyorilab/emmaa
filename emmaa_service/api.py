@@ -359,7 +359,8 @@ def get_model_tests_page(model, model_type, test_hash):
                            ndexID=ndex_id,
                            test=test,
                            test_status=test_status,
-                           path_list=path_list)
+                           path_list=path_list,
+                           formatted_names=FORMATTED_MODEL_NAMES)
 
 
 @app.route('/query')
