@@ -180,7 +180,7 @@ class ModelManager(object):
                     stmt_type = type(step[0]).__name__
                     for i, ag in enumerate(step[0].agent_list()):
                         edge_nodes.append(ag.name)
-                        if i == len(step[0].agent_list() - 1):
+                        if i == (len(step[0].agent_list()) - 1):
                             break
                         if stmt_type in ARROW_DICT:
                             edge_nodes.append(ARROW_DICT[stmt_type])
