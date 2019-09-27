@@ -232,11 +232,7 @@ def _format_table_array(tests_json, model_types, model_name):
     for th, test in tests_json:
         new_row = [_extract_stmt_link(test['test'])]
         for mt in model_types:
-            if test[mt][0].lower() == 'pass':
-                new_row.append((f'/tests/{model_name}/{mt}/{th}',
-                                test[mt][0]))
-            else:
-                new_row.append(('', test[mt][0]))
+            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0]))
 
         table_array.append(new_row)
     return table_array
