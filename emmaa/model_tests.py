@@ -37,7 +37,9 @@ RESULT_CODES = {
     'MAX_PATHS_ZERO': 'Path found but not reconstructed',
     'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
 }
-
+ARROW_DICT = {'Complex': u"\u034D",
+              'Inhibition': u"\u22A3",
+              'DecreaseAmount': u"\u22A3"}
 
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
@@ -157,40 +159,54 @@ class ModelManager(object):
 
     def make_path_json(self, mc_type, result):
         paths = []
-        for path in result.paths:
-            path_json = {}
-            path_nodes = []
-            edge_list = []
-            report_function = self.mc_mapping[mc_type][2]
-            model = self.mc_types[mc_type]['model']
-            stmts = self.model.assembled_stmts
-            if mc_type == 'pysb':
-                report_stmts = report_function(path, model, stmts)
-                path_stmts = [[st] for st in report_stmts]
-            elif mc_type == 'pybel':
-                path_stmts = report_function(path, model, False, stmts)
-            elif mc_type == 'signed_graph':
-                path_stmts = report_function(path, model, True, False, stmts)
-            elif mc_type == 'unsigned_graph':
-                path_stmts = report_function(path, model, False, False, stmts)
-            for i, step in enumerate(path_stmts):
-                edge_dict = {}
-                edge_nodes = [ag.name for ag in step[0].agent_list()]
-                if i == 0:
-                    path_nodes.append((edge_nodes[0], edge_nodes[1]))
-                else:
-                    path_nodes.append(edge_nodes[1])
-                step_sentences = []
-                for stmt in step:
-                    ea = EnglishAssembler([stmt])
-                    sentence = ea.make_model()
-                    if self.make_links:
-                        link = get_statement_queries([stmt])[0] + '&format=html'
-                        step_sentences.append((sentence, link))
+        if result.paths:
+            for path in result.paths:
+                path_nodes = []
+                edge_list = []
+                report_function = self.mc_mapping[mc_type][2]
+                model = self.mc_types[mc_type]['model']
+                stmts = self.model.assembled_stmts
+                if mc_type == 'pysb':
+                    report_stmts = report_function(path, model, stmts)
+                    path_stmts = [[st] for st in report_stmts]
+                elif mc_type == 'pybel':
+                    path_stmts = report_function(path, model, False, stmts)
+                elif mc_type == 'signed_graph':
+                    path_stmts = report_function(path, model, True, False, stmts)
+                elif mc_type == 'unsigned_graph':
+                    path_stmts = report_function(path, model, False, False, stmts)
+                for i, step in enumerate(path_stmts):
+                    edge_nodes = []
+                    stmt_type = type(step[0]).__name__
+                    for i, ag in enumerate(step[0].agent_list()):
+                        edge_nodes.append(ag.name)
+                        if i == len(step[0].agent_list() - 1):
+                            break
+                        if stmt_type in ARROW_DICT:
+                            edge_nodes.append(ARROW_DICT[stmt_type])
+                        else:
+                            edge_nodes.append(u"\u2192")
+                    if i == 0:
+                        path_nodes.append((n for n in edge_nodes))
                     else:
-                        step_sentences.append((sentence, ''))
-            
-                
+                        path_nodes.append(n for n in edge_nodes[2:])
+                    step_sentences = []
+                    for stmt in step:
+                        ea = EnglishAssembler([stmt])
+                        sentence = ea.make_model()
+                        if self.make_links:
+                            link = get_statement_queries([stmt])[0] + '&format=html'
+                            step_sentences.append((link, sentence))
+                        else:
+                            step_sentences.append(('', sentence))
+                    edge_dict = {'edge': ' '.join(edge_nodes),
+                                'stmts': step_sentences}
+                    edge_list.append(edge_dict)
+                path_json = {'path': ' '.join(path_nodes),
+                            'edge_list': edge_list}
+                paths.append(path_json)
+        return paths
+
     def make_english_result_code(self, result):
         """Get an English explanation of a result code."""
         result_code = result.result_code
@@ -314,7 +330,8 @@ class ModelManager(object):
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
                     'english_path': self.make_english_path(mc_type, result),
-                    'english_code': self.make_english_result_code(result)}
+                    'english_code': self.make_english_result_code(result),
+                    'path_json': self.make_path_json(mc_type, result)}
             results_json.append(test_ix_results)
         return results_json
 
