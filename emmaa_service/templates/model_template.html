@@ -14,23 +14,6 @@
 
     populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
   });
-
-  function modelRedirect(ddSelect) {
-
-    // Get selected option
-    let newModel = '';
-    for (child of ddSelect.children) {
-      if (child.selected) {
-        newModel = child.value;
-        break;
-      }
-    }
-
-    // redirect url:
-    let redirect = window.location.href.replace(model, newModel);
-    console.log(redirect);
-    window.location.replace(redirect);
-  }
 </script>
 <style>
   .fa-check {color: #00ff00}
@@ -60,7 +43,7 @@
   </select>
   <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
   <div class="input-group-append">
-    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
+    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'), '{{ model_id }}')" type="button">Load Model</button>
   </div>
 </div>
 {% endblock %}

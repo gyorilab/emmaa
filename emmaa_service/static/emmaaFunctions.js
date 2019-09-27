@@ -16,6 +16,23 @@ function setModel(ddSelect, model) {
   }
 }
 
+function modelRedirect(ddSelect, current_model) {
+
+  // Get selected option
+  let newModel = '';
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      newModel = child.value;
+      break;
+    }
+  }
+
+  // redirect url:
+  let redirect = window.location.href.replace(current_model, newModel);
+  console.log(redirect);
+  window.location.replace(redirect);
+}
+
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
     clearTable(tableBody)

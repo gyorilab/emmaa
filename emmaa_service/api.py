@@ -354,6 +354,7 @@ def get_model_tests_page(model, model_type, test_hash):
                            link_list=mod_link_list,
                            model=model,
                            model_type=model_type,
+                           all_model_types=ALL_MODEL_TYPES,
                            test_hash=test_hash,
                            model_stats_json=model_stats,
                            ndexID=ndex_id,
