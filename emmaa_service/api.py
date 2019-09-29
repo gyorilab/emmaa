@@ -166,14 +166,6 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
-def _fix_top_stmts(english_by_hash, top_statements):
-    res = []
-    for h, c in top_statements:
-        html_string = english_by_hash[h]
-        res.append((_extract_stmt_link(html_string), ('', str(c))))
-    return res
-
-
 def _extract_stmt_link(anchor_string):
     # Matches an anchor with at least an href attribute
     pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
@@ -231,7 +223,7 @@ def _format_table_array(tests_json, model_types, model_name):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        new_row = [_extract_stmt_link(test['test'])]
+        new_row = [test['test']]
         for mt in model_types:
             new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0]))
 
@@ -252,7 +244,7 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
             path = test[mt][1][0]['path']
-            new_row = [_extract_stmt_link(test['test']),
+            new_row = [test['test'],
                        (f'/tests/{model_name}/{mt}/{test_hash}', path)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
@@ -297,11 +289,13 @@ def get_model_dashboard(model):
         'all_test_results'].items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
+    all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    english_by_hash = model_stats['model_summary']['english_stmts']
-    top_stmts_counts = _fix_top_stmts(english_by_hash, most_supported)
-    added_stmts = [[_extract_stmt_link(a)] for a in model_stats[
-        'model_delta']['statements_delta']['added']]
+    top_stmts_counts = [
+        (all_stmts[h], ('', str(c))) for h, c in most_supported]
+    added_stmts_hashes = model_stats['model_delta']['statements_hashes_delta'][
+        'added']
+    added_stmts = [all_stmts[h] for h in added_stmts_hashes]
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
