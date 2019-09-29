@@ -452,13 +452,13 @@ class TestRound(object):
             else:
                 return 'Fail'
 
-            for ix, test in enumerate(self.tests):
-                test_hash = str(test.get_hash(refresh=True))
-                result = self.mc_types_results['pysb'][ix]
-                pysb_results[test_hash] = [
-                    self.get_english_statement_old_way(test),
-                    get_pass_fail(result),
-                    self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
+        for ix, test in enumerate(self.tests):
+            test_hash = str(test.get_hash(refresh=True))
+            result = self.mc_types_results['pysb'][ix]
+            pysb_results[test_hash] = [
+                self.get_english_statement_old_way(test),
+                get_pass_fail(result),
+                self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
         return pysb_results
 
 
