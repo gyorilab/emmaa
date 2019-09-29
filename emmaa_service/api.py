@@ -176,34 +176,34 @@ def _extract_stmt_link(anchor_string):
         return ('', anchor_string)
 
 
-def _get_test_results(stats_json, model_id, test_hash):
-    # This is a helper function that mostly makes sure the path_list has the
-    # right structure. As we gradually change the json structure,
-    # this function should handle less and less of the json structuring.
-    # Returns the results for the test with hash test_hash for model type
-    # model_type.
+# def _get_test_results(stats_json, model_id, test_hash):
+#     # This is a helper function that mostly makes sure the path_list has the
+#     # right structure. As we gradually change the json structure,
+#     # this function should handle less and less of the json structuring.
+#     # Returns the results for the test with hash test_hash for model type
+#     # model_type.
 
-    def _format_path_list(unformatted_path_list):
-        formatted_path_list = []
-        for path in unformatted_path_list:
-            path_dict = {"edge_list": []}
-            path_string = ""
-            for n, edge in enumerate(path):
-                href, txt = _extract_stmt_link(edge)
-                query_dict = parse.parse_qs(href.split('?')[1])
-                subj = query_dict['subject'][0]
-                obj = query_dict['object'][0]
-                path_string += f"{subj}-{obj}" if n == 0 else f"-{obj}"
-                path_dict["edge_list"].append(
-                    {"edge": f"{subj}-{obj}", "stmts": [(href, txt)]})
-            path_dict["path"] = path_string
-            formatted_path_list.append(path_dict)
-        return formatted_path_list
+#     def _format_path_list(unformatted_path_list):
+#         formatted_path_list = []
+#         for path in unformatted_path_list:
+#             path_dict = {"edge_list": []}
+#             path_string = ""
+#             for n, edge in enumerate(path):
+#                 href, txt = _extract_stmt_link(edge)
+#                 query_dict = parse.parse_qs(href.split('?')[1])
+#                 subj = query_dict['subject'][0]
+#                 obj = query_dict['object'][0]
+#                 path_string += f"{subj}-{obj}" if n == 0 else f"-{obj}"
+#                 path_dict["edge_list"].append(
+#                     {"edge": f"{subj}-{obj}", "stmts": [(href, txt)]})
+#             path_dict["path"] = path_string
+#             formatted_path_list.append(path_dict)
+#         return formatted_path_list
 
-    tests = stats_json['test_round_summary']['all_test_results'][test_hash]
-    return _extract_stmt_link(tests['test']),\
-        tests[model_id][0], \
-        tests[model_id][1]
+#     tests = stats_json['test_round_summary']['all_test_results'][test_hash]
+#     return _extract_stmt_link(tests['test']),\
+#         tests[model_id][0], \
+#         tests[model_id][1]
 
 
 def _new_applied_tests(model_stats_json, model_types, model_name):
@@ -243,8 +243,12 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
         mt_rows = [[('', f'New passed tests for {mt} model.')]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
-            path = test[mt][1][0]['path']
-            new_row = [test['test'],
+            path_loc = test[mt][1]
+            if isinstance(path_loc, list):
+                path = path_loc[0]['path']
+            else:
+                path = path_loc
+            new_row = [(test['test']),
                        (f'/tests/{model_name}/{mt}/{test_hash}', path)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
@@ -295,7 +299,7 @@ def get_model_dashboard(model):
         (all_stmts[h], ('', str(c))) for h, c in most_supported]
     added_stmts_hashes = model_stats['model_delta']['statements_hashes_delta'][
         'added']
-    added_stmts = [all_stmts[h] for h in added_stmts_hashes]
+    added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -331,9 +335,12 @@ def get_model_tests_page(model, model_type, test_hash):
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     model_stats = get_model_stats(model)
-    test, test_status, path_list = _get_test_results(model_stats,
-                                                     model_type,
-                                                     test_hash)
+    # test, test_status, path_list = _get_test_results(model_stats,
+    #                                                  model_type,
+    #                                                  test_hash)
+    current_test = model_stats['test_round_summary']['all_test_results'][test_hash]
+    test = current_test["test"]
+    test_status, path_list = current_test[model_type]
     return render_template('tests_template.html',
                            link_list=mod_link_list,
                            model=model,
