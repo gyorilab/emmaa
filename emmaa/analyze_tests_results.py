@@ -149,7 +149,7 @@ class TestRound(object):
         return self.get_english_statements_by_hash_()[stmt_hash]
 
     # Test Summary Methods
-    def get_applied_test_hashes(Fizself):
+    def get_applied_test_hashes(self):
         """Return a list of hashes for all applied tests."""
         return list(self.english_test_results.keys())
 
@@ -232,7 +232,10 @@ class TestRound(object):
         results = self.mc_types_results[mc_type]
         for ix, result in enumerate(results):
             if result.paths:
-                paths = self.json_results[ix+1][mc_type]['path_json']
+                try:
+                    paths = self.json_results[ix+1][mc_type]['path_json']
+                except KeyError:
+                    paths = []
                 paths_by_test[str(self.tests[ix].get_hash(refresh=True))] = paths
         return paths_by_test
 
@@ -255,7 +258,10 @@ class TestRound(object):
         english_codes = {}
         results = self.mc_types_results[mc_type]
         for ix, result in enumerate(results):
-            code = self.json_results[ix+1][mc_type]['result_code']
+            try:
+                code = self.json_results[ix+1][mc_type]['result_code']
+            except KeyError:
+                code = result.result_code
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = code
         return english_codes
 

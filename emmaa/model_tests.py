@@ -215,7 +215,8 @@ class ModelManager(object):
         return [[(RESULT_CODES[result_code], result_codes_link)]]
 
     def make_result_code(self, result):
-        return RESULT_CODES[result.result_code]
+        result_code = result.result_code
+        return RESULT_CODES[result_code]
 
     def answer_query(self, query):
         """Answer user query with a path if it is found."""
