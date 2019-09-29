@@ -452,7 +452,6 @@ class TestRound(object):
             else:
                 return 'Fail'
 
-        for test_hash, test_dict in self.english_test_results.items():
             for ix, test in enumerate(self.tests):
                 test_hash = str(test.get_hash(refresh=True))
                 result = self.mc_types_results['pysb'][ix]
