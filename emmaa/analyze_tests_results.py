@@ -127,7 +127,7 @@ class TestRound(object):
             stmt_str = f'<a href="{link}" class="stmt-dblink" ' \
                        f'target="_blank">{sentence}</a>'
         else:
-            stmt_str = f'<a>{sentence}</a>'
+            stmt_str = sentence
         return stmt_str
 
     def get_english_statement_by_hash(self, stmt_hash):
