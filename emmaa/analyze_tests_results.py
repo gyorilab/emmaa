@@ -146,7 +146,7 @@ class TestRound(object):
         return (link, sentence)
 
     def get_english_statement_by_hash(self, stmt_hash):
-        return self.get_english_statements_by_hash_()[stmt_hash]
+        return self.get_english_statements_by_hash_old_way()[stmt_hash]
 
     # Test Summary Methods
     def get_applied_test_hashes(self):
