@@ -129,11 +129,11 @@ class TestRound(object):
         return stmts_by_hash
 
     def get_english_statement_old_way(self, stmt):
-        for link, sentence in self.get_english_statement(stmt):
-            if link:
-                stmt_str = f'<a href="{link}">{sentence}</a>'
-            else:
-                stmt_str = f'<a>{sentence}</a>'
+        link, sentence = self.get_english_statement(stmt)
+        if link:
+            stmt_str = f'<a href="{link}">{sentence}</a>'
+        else:
+            stmt_str = f'<a>{sentence}</a>'
         return stmt_str
 
     def get_english_statement(self, stmt):
@@ -149,7 +149,7 @@ class TestRound(object):
         return self.get_english_statements_by_hash_()[stmt_hash]
 
     # Test Summary Methods
-    def get_applied_test_hashes(self):
+    def get_applied_test_hashes(Fizself):
         """Return a list of hashes for all applied tests."""
         return list(self.english_test_results.keys())
 
