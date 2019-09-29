@@ -214,6 +214,9 @@ class ModelManager(object):
         result_code = result.result_code
         return [[(RESULT_CODES[result_code], result_codes_link)]]
 
+    def make_result_code(self, result):
+        return RESULT_CODES[result.result_code]
+
     def answer_query(self, query):
         """Answer user query with a path if it is found."""
         if ScopeTestConnector.applicable(self, query):
@@ -331,9 +334,11 @@ class ModelManager(object):
                 result = self.mc_types[mc_type]['test_results'][ix]
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
+                    'path_json': self.make_path_json(mc_type, result),
+                    'result_code': self.make_result_code(result),
+                    # This is for backward compatibility until the dashboard is updated
                     'english_path': self.make_english_path(mc_type, result),
-                    'english_code': self.make_english_result_code(result),
-                    'path_json': self.make_path_json(mc_type, result)}
+                    'english_code': self.make_english_result_code(result)}
             results_json.append(test_ix_results)
         return results_json
 

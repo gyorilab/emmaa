@@ -18,7 +18,7 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'statements': ('get_stmt_hashes', 'get_english_statement_by_hash'),
     'applied_tests': ('get_applied_test_hashes', 'get_english_test_by_hash'),
     'passed_tests': ('get_passed_test_hashes', 'get_english_test_by_hash'),
-    'paths': ('get_passed_test_hashes', 'get_path_or_code_by_hash')
+    'paths': ('get_passed_test_hashes', 'get_path_or_code_by_hash_old_way')
 }
 
 
@@ -60,6 +60,7 @@ class TestRound(object):
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
+        self.pysb_results = self._get_pysb_results()
 
     @classmethod
     def load_from_s3_key(cls, key):
@@ -145,7 +146,7 @@ class TestRound(object):
         return (link, sentence)
 
     def get_english_statement_by_hash(self, stmt_hash):
-        return self.get_english_statements_by_hash()[stmt_hash]
+        return self.get_english_statements_by_hash_()[stmt_hash]
 
     # Test Summary Methods
     def get_applied_test_hashes(self):
@@ -254,13 +255,12 @@ class TestRound(object):
         english_codes = {}
         results = self.mc_types_results[mc_type]
         for ix, result in enumerate(results):
-            (text, link) = (
-                self.json_results[ix+1][mc_type]['english_code'][0][0])
-            english_codes[str(self.tests[ix].get_hash(refresh=True))] = text
+            code = self.json_results[ix+1][mc_type]['result_code']
+            english_codes[str(self.tests[ix].get_hash(refresh=True))] = code
         return english_codes
 
     def get_english_test_by_hash(self, test_hash, mc_type=None):
-        return self.english_test_results[test_hash]['test']
+        return self.pysb_results[test_hash]
 
     def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
         return self.english_test_results[test_hash][mc_type][0]
@@ -522,7 +522,9 @@ class StatsGenerator(object):
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
-            'english_stmts': self.latest_round.get_english_statements_by_hash()
+            'english_stmts': (
+                self.latest_round.get_english_statements_by_hash_old_way()),
+            'all_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
     def make_test_summary(self):
