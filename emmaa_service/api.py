@@ -239,7 +239,7 @@ def _format_table_array(tests_json, model_types, model_name):
     return table_array
 
 
-def _new_passed_tests(model_stats_json, current_model_types):
+def _new_passed_tests(model_name, model_stats_json, current_model_types):
     new_passed_tests = []
     all_test_results = model_stats_json['test_round_summary'][
         'all_test_results']
@@ -248,22 +248,15 @@ def _new_passed_tests(model_stats_json, current_model_types):
             'passed_hashes_delta']['added']
         if not new_passed_hashes:
             continue
-        mt_rows = [[[('', f'New passed tests for {mt} model.')]]]
+        mt_rows = [[('', f'New passed tests for {mt} model.')]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
-            path = test[mt][1][0]
-            new_row = [[_extract_stmt_link(test['test'])],
-                       _process_path(path)]
+            path = test[mt][1][0]['path']
+            new_row = [_extract_stmt_link(test['test']),
+                       (f'/tests/{model_name}/{mt}/{test_hash}', path)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
     return new_passed_tests
-
-
-def _process_path(path):
-    path_row = []
-    for step in path:
-        path_row.append(_extract_stmt_link(step))
-    return path_row
 
 
 @app.route('/')
@@ -328,7 +321,7 @@ def get_model_dashboard(model):
                                model_types=current_model_types,
                                model_name=model),
                            new_passed_tests=_new_passed_tests(
-                               model_stats, current_model_types))
+                               model, model_stats, current_model_types))
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>')
