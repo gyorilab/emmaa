@@ -119,16 +119,30 @@ class TestRound(object):
                 self.get_english_statement(stmt))
         return stmts_by_hash
 
+    def get_english_statements_by_hash_old_way(self):
+        """Return a dictionary mapping a statement and its English description."""
+        stmts_by_hash = {}
+        for stmt in self.statements:
+            stmts_by_hash[str(stmt.get_hash(refresh=True))] = (
+                self.get_english_statement_old_way(stmt))
+        return stmts_by_hash
+
+    def get_english_statement_old_way(self, stmt):
+        for link, sentence in self.get_english_statement(stmt):
+            if link:
+                stmt_str = f'<a href="{link}">{sentence}</a>'
+            else:
+                stmt_str = f'<a>{sentence}</a>'
+        return stmt_str
+
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
         if self.make_links:
             link = get_statement_queries([stmt])[0] + '&format=html'
-            stmt_str = f'<a href="{link}" class="stmt-dblink" ' \
-                       f'target="_blank">{sentence}</a>'
         else:
-            stmt_str = sentence
-        return stmt_str
+            link = ''
+        return (link, sentence)
 
     def get_english_statement_by_hash(self, stmt_hash):
         return self.get_english_statements_by_hash()[stmt_hash]
@@ -423,11 +437,23 @@ class TestRound(object):
     def _get_pysb_results(self):
         # This is a temporary method to support current dashboard layout
         pysb_results = {}
-        for test_hash, test_dict in self.english_test_results.items():
 
-            pysb_results[test_hash] = [
-                test_dict['test'], test_dict['pysb'][0],
-                self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
+        def get_pass_fail(res):
+            # Here use result.path_found because we care if the path was found
+            # and do not care about path length
+            if res.path_found:
+                return 'Pass'
+            else:
+                return 'Fail'
+
+        for test_hash, test_dict in self.english_test_results.items():
+            for ix, test in enumerate(self.tests):
+                test_hash = str(test.get_hash(refresh=True))
+                result = self.mc_types_results['pysb'][ix]
+                pysb_results[test_hash] = [
+                    self.get_english_statement_old_way(test),
+                    get_pass_fail(result),
+                    self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
         return pysb_results
 
 
@@ -523,9 +549,14 @@ class StatsGenerator(object):
         logger.info(f'Generating model delta for {self.model_name}.')
         if not self.previous_round:
             self.json_stats['model_delta'] = {
+                'statements_hashes_delta': {'added': [], 'removed': []},
+                # This is for backward compatibility until the dashboard is updated
                 'statements_delta': {'added': [], 'removed': []}}
         else:
             self.json_stats['model_delta'] = {
+                'statements_hashes_delta': self.latest_round.find_delta_hashes(
+                    self.previous_round, 'statements'),
+                # This is for backward compatibility until the dashboard is updated
                 'statements_delta': self.latest_round.find_content_delta(
                     self.previous_round, 'statements')}
 
