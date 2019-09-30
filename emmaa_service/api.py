@@ -209,7 +209,8 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
             'passed_hashes_delta']['added']
         if not new_passed_hashes:
             continue
-        mt_rows = [[('', f'New passed tests for {mt} model.')]]
+        mt_rows = [[('', f'New passed tests for '
+                         f'{FORMATTED_MODEL_NAMES[mt]} model.')]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
             path_loc = test[mt][1]
