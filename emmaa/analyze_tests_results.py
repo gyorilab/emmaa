@@ -15,11 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 CONTENT_TYPE_FUNCTION_MAPPING = {
-    'statements': ('get_stmt_hashes', 'get_english_statement_by_hash'),
-    'applied_tests': ('get_applied_test_hashes', 'get_english_test_by_hash'),
-    'passed_tests': ('get_passed_test_hashes', 'get_english_test_by_hash'),
-    'paths': ('get_passed_test_hashes', 'get_path_or_code_by_hash_old_way')
-}
+    'statements': 'get_stmt_hashes',
+    'applied_tests': 'get_applied_test_hashes',
+    'passed_tests': 'get_passed_test_hashes',
+    'paths': 'get_passed_test_hashes'}
 
 
 class TestRound(object):
@@ -60,7 +59,6 @@ class TestRound(object):
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
-        self.pysb_results = self._get_pysb_results()
 
     @classmethod
     def load_from_s3_key(cls, key):
@@ -120,22 +118,6 @@ class TestRound(object):
                 self.get_english_statement(stmt))
         return stmts_by_hash
 
-    def get_english_statements_by_hash_old_way(self):
-        """Return a dictionary mapping a statement and its English description."""
-        stmts_by_hash = {}
-        for stmt in self.statements:
-            stmts_by_hash[str(stmt.get_hash(refresh=True))] = (
-                self.get_english_statement_old_way(stmt))
-        return stmts_by_hash
-
-    def get_english_statement_old_way(self, stmt):
-        link, sentence = self.get_english_statement(stmt)
-        if link:
-            stmt_str = f'<a href="{link}">{sentence}</a>'
-        else:
-            stmt_str = f'<a>{sentence}</a>'
-        return stmt_str
-
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
@@ -144,9 +126,6 @@ class TestRound(object):
         else:
             link = ''
         return (link, sentence)
-
-    def get_english_statement_by_hash(self, stmt_hash):
-        return self.get_english_statements_by_hash_old_way()[stmt_hash]
 
     # Test Summary Methods
     def get_applied_test_hashes(self):
@@ -200,33 +179,6 @@ class TestRound(object):
                         self.get_path_or_code_by_hash(test_hash, mc_type)]
         return tests_by_hash
 
-    def get_path_descriptions_old_way(self, mc_type='pysb'):
-        """Return a dictionary mapping a test hash and an English description
-        of a path found.
-        """
-        english_paths = {}
-        results = self.mc_types_results[mc_type]
-        for ix, result in enumerate(results):
-            # Here we use result.paths because we can only get a description if
-            # a path does not exceed max length
-            if result.paths:
-                paths = []
-                path_loc = self.json_results[ix+1][mc_type]['english_path']
-                for path in path_loc:
-                    stmt_strs = []
-                    for (sentence, link) in path:
-                        if self.make_links:
-                            stmt_str = f'<a href="{link}" ' \
-                                       f'class="stmt-dblink" ' \
-                                       f'target="_blank">{sentence}</a>'
-                            stmt_strs.append(stmt_str)
-                        else:
-                            stmt_str = f'<a>{sentence}</a>'
-                            stmt_strs.append(stmt_str)
-                    paths.append(stmt_strs)
-                    english_paths[str(self.tests[ix].get_hash(refresh=True))] = paths
-        return english_paths
-
     def get_path_descriptions(self, mc_type='pysb'):
         paths_by_test = {}
         results = self.mc_types_results[mc_type]
@@ -239,21 +191,6 @@ class TestRound(object):
                 paths_by_test[str(self.tests[ix].get_hash(refresh=True))] = paths
         return paths_by_test
 
-    def get_english_codes_old_way(self, mc_type):
-        """Return a dictionary mapping a test hash and an English description
-        of a result code.
-        """
-        english_codes = {}
-        results = self.mc_types_results[mc_type]
-        for ix, result in enumerate(results):
-            (sentence, link) = (
-                self.json_results[ix+1][mc_type]['english_code'][0][0])
-            # Result codes always have links
-            english_codes[str(self.tests[ix].get_hash(refresh=True))] = (
-                [[f'<a href="{link}" class="stmt-dblink" target="_blank">'
-                  f'{sentence}</a>']])
-        return english_codes
-
     def get_english_codes(self, mc_type):
         english_codes = {}
         results = self.mc_types_results[mc_type]
@@ -265,9 +202,6 @@ class TestRound(object):
             english_codes[str(self.tests[ix].get_hash(refresh=True))] = code
         return english_codes
 
-    def get_english_test_by_hash(self, test_hash, mc_type=None):
-        return self.pysb_results[test_hash][0]
-
     def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
         return self.english_test_results[test_hash][mc_type][0]
 
@@ -277,14 +211,6 @@ class TestRound(object):
             result = self.get_path_descriptions(mc_type)[test_hash]
         except KeyError:
             result = self.get_english_codes(mc_type)[test_hash]
-        return result
-
-    def get_path_or_code_by_hash_old_way(self, test_hash, mc_type='pysb'):
-        # If we have a path description return it, otherwise return code
-        try:
-            result = self.get_path_descriptions_old_way(mc_type)[test_hash]
-        except KeyError:
-            result = self.get_english_codes_old_way(mc_type)[test_hash]
         return result
 
     # Methods to find delta
@@ -347,82 +273,17 @@ class TestRound(object):
         """
         logger.info(f'Finding a hashes delta for {content_type}.')
         latest_hashes = getattr(
-            self, self.function_mapping[content_type][0])(**kwargs)
+            self, self.function_mapping[content_type])(**kwargs)
         logger.info(f'Found {len(latest_hashes)} hashes in current round.')
         previous_hashes = getattr(
             other_round,
-            other_round.function_mapping[content_type][0])(**kwargs)
+            other_round.function_mapping[content_type])(**kwargs)
         logger.info(f'Found {len(previous_hashes)} hashes in other round.')
         # Find hashes unique for each of the rounds - this is delta
         added_hashes = list(set(latest_hashes) - set(previous_hashes))
         removed_hashes = list(set(previous_hashes) - set(latest_hashes))
         hashes = {'added': added_hashes, 'removed': removed_hashes}
         return hashes
-
-    def find_content_delta(self, other_round, content_type, add_result=False,
-                           mc_type='pysb'):
-        """Return a dictionary of changed items of a given content type. This
-        method makes use of self.function_mapping dictionary.
-
-        Parameters
-        ----------
-        other_round : emmaa.analyze_tests_results.TestRound
-            A different instance of a TestRound
-        content_type : str
-            A type of the content to find delta. Accepted values:
-            - statements
-            - applied_tests
-            - passed_tests
-            - paths
-        add_result : bool
-            Optionally add a Pass/Fail format result to a test.
-        mc_type : str
-            A name of a ModelChecker used to run tests.
-
-        Returns
-        -------
-            A dictionary containing lists of added and removed items of a given
-            content type between two test rounds. If add_result is set to True,
-            a dictionary will contain lists of tuples where each tuple has an
-            item and a result in Pass/Fail format.
-        """
-        if content_type == 'passed_tests' or content_type == 'paths':
-            kwargs = {'mc_type': mc_type}
-        else:
-            kwargs = {}
-
-        # First we need to find hashes of objects we want to compare for
-        # latest and previous rounds
-        hashes = self.find_delta_hashes(other_round, content_type, **kwargs)
-        added_hashes = hashes['added']
-        removed_hashes = hashes['removed']
-        logger.info(f'Finding a content delta for {content_type}.')
-
-        def get_item(tr, item_hash):
-            # Get an instance of an object given its hash
-            return getattr(
-                    tr, tr.function_mapping[content_type][1])(
-                        item_hash, **kwargs)
-
-        # Optionally add pass/fail status (applicable for tests)
-        if add_result:
-            added_items = [(get_item(self, item_hash),
-                            self.get_pass_fail_by_hash(item_hash, **kwargs))
-                           for item_hash in added_hashes]
-            removed_items = [(get_item(other_round, item_hash),
-                              other_round.get_pass_fail_by_hash(
-                                  item_hash, **kwargs))
-                             for item_hash in removed_hashes]
-        # Get lists of items added and removed in the latest round
-        else:
-            added_items = [
-                get_item(self, item_hash) for item_hash in added_hashes]
-            removed_items = [
-                get_item(other_round, item_hash) for item_hash in
-                removed_hashes]
-        logger.info(f'Found {len(added_items)} added and {len(removed_items)} '
-                    f'removed items of {content_type}.')
-        return {'added': added_items, 'removed': removed_items}
 
     # Helping methods
     def _get_statements(self):
@@ -439,27 +300,6 @@ class TestRound(object):
         tests = [Statement._from_json(res['test_json'])
                  for res in self.json_results[1:]]
         return tests
-
-    def _get_pysb_results(self):
-        # This is a temporary method to support current dashboard layout
-        pysb_results = {}
-
-        def get_pass_fail(res):
-            # Here use result.path_found because we care if the path was found
-            # and do not care about path length
-            if res.path_found:
-                return 'Pass'
-            else:
-                return 'Fail'
-
-        for ix, test in enumerate(self.tests):
-            test_hash = str(test.get_hash(refresh=True))
-            result = self.mc_types_results['pysb'][ix]
-            pysb_results[test_hash] = [
-                self.get_english_statement_old_way(test),
-                get_pass_fail(result),
-                self.get_path_or_code_by_hash_old_way(test_hash, 'pysb')]
-        return pysb_results
 
 
 class StatsGenerator(object):
@@ -527,8 +367,6 @@ class StatsGenerator(object):
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
-            'english_stmts': (
-                self.latest_round.get_english_statements_by_hash_old_way()),
             'all_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
@@ -537,34 +375,22 @@ class StatsGenerator(object):
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
-            'all_test_results': self.latest_round.english_test_results,
-            # This is for backward compatibility until the dashboard is updated
-            'tests_by_hash': self.latest_round._get_pysb_results()
-        }
+            'all_test_results': self.latest_round.english_test_results}
         for mc_type in self.latest_round.mc_types_results:
             self.json_stats['test_round_summary'][mc_type] = {
                 'number_passed_tests': (
                     self.latest_round.get_number_passed_tests(mc_type)),
                 'passed_ratio': self.latest_round.passed_over_total(mc_type)}
 
-        # This is for backward compatibility until the dashboard is updated
-        for key, value in self.json_stats['test_round_summary']['pysb'].items():
-            self.json_stats['test_round_summary'][key] = value
-
     def make_model_delta(self):
         """Add model delta between two latest model states to json_stats."""
         logger.info(f'Generating model delta for {self.model_name}.')
         if not self.previous_round:
             self.json_stats['model_delta'] = {
-                'statements_hashes_delta': {'added': [], 'removed': []},
-                # This is for backward compatibility until the dashboard is updated
-                'statements_delta': {'added': [], 'removed': []}}
+                'statements_hashes_delta': {'added': [], 'removed': []}}
         else:
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': self.latest_round.find_delta_hashes(
-                    self.previous_round, 'statements'),
-                # This is for backward compatibility until the dashboard is updated
-                'statements_delta': self.latest_round.find_content_delta(
                     self.previous_round, 'statements')}
 
     def make_tests_delta(self):
@@ -587,23 +413,6 @@ class StatsGenerator(object):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': self.latest_round.find_delta_hashes(
                         self.previous_round, 'passed_tests', mc_type=mc_type)}
-
-        # This is for backward compatibility until the dashboard is updated
-        if not self.previous_round:
-            tests_delta['applied_tests_delta'] = {'added': [], 'removed': []}
-            tests_delta['pass_fail_delta'] = {'added': [], 'removed': []}
-            tests_delta['new_paths'] = {'added': [], 'removed': []}
-        else:
-            tests_delta['applied_tests_delta'] = (
-                    self.latest_round.find_content_delta(
-                        self.previous_round, 'applied_tests',
-                        add_result=True, mc_type='pysb'))
-            tests_delta['pass_fail_delta'] = (
-                self.latest_round.find_content_delta(
-                    self.previous_round, 'passed_tests', mc_type='pysb'))
-            tests_delta['new_paths'] = self.latest_round.find_content_delta(
-                    self.previous_round, 'paths', mc_type='pysb')
-
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
@@ -614,19 +423,13 @@ class StatsGenerator(object):
                 'model_summary', 'number_of_statements'),
             'number_applied_tests': self.get_over_time(
                 'test_round_summary', 'number_applied_tests'),
-            'dates': self.get_dates()
-        }
+            'dates': self.get_dates()}
         for mc_type in self.latest_round.mc_types_results:
             self.json_stats['changes_over_time'][mc_type] = {
                 'number_passed_tests': self.get_over_time(
                     'test_round_summary', 'number_passed_tests', mc_type),
                 'passed_ratio': self.get_over_time(
-                    'test_round_summary', 'passed_ratio', mc_type)
-            }
-
-        # This is for backward compatibility until the dashboard is updated
-        for key, value in self.json_stats['changes_over_time']['pysb'].items():
-            self.json_stats['changes_over_time'][key] = value
+                    'test_round_summary', 'passed_ratio', mc_type)}
 
     def get_over_time(self, section, metrics, mc_type='pysb'):
         logger.info(f'Getting changes over time in {metrics} '
@@ -647,12 +450,8 @@ class StatsGenerator(object):
             if not self.previous_json_stats:
                 previous_data = []
             else:
-                # Retrieve old pysb results, only needed for first run
-                if mc_type == 'pysb':
-                    previous_data = (
-                        self.previous_json_stats['changes_over_time'][metrics])
                 # This mc_type wasn't available in previous stats
-                elif mc_type not in \
+                if mc_type not in \
                         self.previous_json_stats['changes_over_time']:
                     previous_data = []
                 else:

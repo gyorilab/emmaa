@@ -371,10 +371,7 @@ class ModelManager(object):
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
                     'path_json': self.make_path_json(mc_type, result),
-                    'result_code': self.make_result_code(result),
-                    # This is for backward compatibility until the dashboard is updated
-                    'english_path': self.make_english_path(mc_type, result),
-                    'english_code': self.make_english_result_code(result)}
+                    'result_code': self.make_result_code(result)}
             results_json.append(test_ix_results)
         return results_json
 
