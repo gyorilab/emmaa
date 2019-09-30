@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
-EMMAA_BUCKET_NAME = 'emmaa-test'
+EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
