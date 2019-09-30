@@ -14,7 +14,7 @@ from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
-from indra.statements import Statement, Agent
+from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name
@@ -221,12 +221,17 @@ class ModelManager(object):
                 agent_names = group[0][1]
                 if len(agent_names) != 2:
                     continue
-                try:
+                if stmt_type == 'Influence':
                     stmt = get_class_from_name(stmt_type, Statement)(
-                        Agent(agent_names[0]), Agent(agent_names[1]))
-                except ValueError:
-                    stmt = get_class_from_name(stmt_type, Statement)(
-                        [Agent(ag_name) for ag_name in agent_names])
+                        Event(Concept(agent_names[0])),
+                        Event(Concept(agent_names[1])))
+                else:
+                    try:
+                        stmt = get_class_from_name(stmt_type, Statement)(
+                            Agent(agent_names[0]), Agent(agent_names[1]))
+                    except ValueError:
+                        stmt = get_class_from_name(stmt_type, Statement)(
+                            [Agent(ag_name) for ag_name in agent_names])
                 new_stmts.append(stmt)
             stmts = new_stmts
         for stmt in stmts:
