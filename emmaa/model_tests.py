@@ -219,6 +219,8 @@ class ModelManager(object):
             for group in groups:
                 stmt_type = group[0][-1]
                 agent_names = group[0][1]
+                if len(agent_names) != 2:
+                    continue
                 stmt = get_class_from_name(stmt_type, Statement)(
                     Agent(agent_names[0]), Agent(agent_names[1]))
                 new_stmts.append(stmt)
