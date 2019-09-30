@@ -1,5 +1,5 @@
-ASKE Month 9 Milestone Report
-=============================
+ASKE Month 11 Milestone Report
+==============================
 
 Deployment of multiple-resolution model testing and analysis
 ------------------------------------------------------------
@@ -50,3 +50,18 @@ in which users are notified about relevant new discoveries if
 the inclusion of these discoveries result in meaningful changes in
 the context of prior knowledge (i.e., a model) with respect to a
 scientific question.
+
+An improved food insecurity model
+---------------------------------
+This month we migrated the food insecurity model to use the new World Modelers
+ontology (https://github.com/WorldModelers/Ontologies), and expanded its
+set of search terms. This significantly increased the models' size and the
+granularity of concepts over which it represents causal influences:
+
+.. image:: ../_static/images/food_insec_model_size.png
+
+Below is a snapshot of the network view of the model on NDEx
+(https://ndexbio.org/#/network/478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf)
+as of 9/27/2019:
+
+.. image:: ../_static/images/food_insec_model_ndex.png
