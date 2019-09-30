@@ -5,6 +5,11 @@ the client side work of exposing cancer network models for the end users
 
 */
 
+const FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
+                         'pybel': 'PyBEL',
+                         'signed_graph': 'Signed Graph',
+                         'unsigned_graph': 'Unsigned Graph'}
+
 function setModel(ddSelect, model) {
   // Sets the selected option
   // let ddSelect = document.getElementById('modelSelectDD');
@@ -223,7 +228,7 @@ function populateTestResultTable(tableBody, json) {
     var i
     let dif = dates.length - passedRatio.length
     for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
-    passedRatio.unshift(toTitleCase(mt))
+    passedRatio.unshift(FORMATTED_MODEL_NAMES[mt]);
     passedRatioColumns.push(passedRatio)
   };
 
@@ -246,7 +251,7 @@ function populateTestResultTable(tableBody, json) {
     let i;
     let dif = dates.length - passedTests.length;
     for (i = 1; i < dif; i++) {passedTests.unshift(null)}
-    passedTests.unshift(`${toTitleCase(mt)} Passed Tests`);
+    passedTests.unshift(`${FORMATTED_MODEL_NAMES[mt]} Passed Tests`);
     appliedPassedColumns.push(passedTests)
   }
 
