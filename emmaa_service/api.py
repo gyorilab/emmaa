@@ -171,39 +171,9 @@ def _extract_stmt_link(anchor_string):
     pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
     m = re.search(pattern=pattern, string=anchor_string)
     if m:
-        return (m.group(1), m.group(2))
+        return m.group(1), m.group(2)
     else:
-        return ('', anchor_string)
-
-
-# def _get_test_results(stats_json, model_id, test_hash):
-#     # This is a helper function that mostly makes sure the path_list has the
-#     # right structure. As we gradually change the json structure,
-#     # this function should handle less and less of the json structuring.
-#     # Returns the results for the test with hash test_hash for model type
-#     # model_type.
-
-#     def _format_path_list(unformatted_path_list):
-#         formatted_path_list = []
-#         for path in unformatted_path_list:
-#             path_dict = {"edge_list": []}
-#             path_string = ""
-#             for n, edge in enumerate(path):
-#                 href, txt = _extract_stmt_link(edge)
-#                 query_dict = parse.parse_qs(href.split('?')[1])
-#                 subj = query_dict['subject'][0]
-#                 obj = query_dict['object'][0]
-#                 path_string += f"{subj}-{obj}" if n == 0 else f"-{obj}"
-#                 path_dict["edge_list"].append(
-#                     {"edge": f"{subj}-{obj}", "stmts": [(href, txt)]})
-#             path_dict["path"] = path_string
-#             formatted_path_list.append(path_dict)
-#         return formatted_path_list
-
-#     tests = stats_json['test_round_summary']['all_test_results'][test_hash]
-#     return _extract_stmt_link(tests['test']),\
-#         tests[model_id][0], \
-#         tests[model_id][1]
+        return '', anchor_string
 
 
 def _new_applied_tests(model_stats_json, model_types, model_name):
@@ -297,8 +267,8 @@ def get_model_dashboard(model):
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [
         (all_stmts[h], ('', str(c))) for h, c in most_supported]
-    added_stmts_hashes = model_stats['model_delta']['statements_hashes_delta'][
-        'added']
+    added_stmts_hashes = \
+        model_stats['model_delta']['statements_hashes_delta']['added']
     added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
     return render_template('model_template.html',
                            model=model,
@@ -335,7 +305,8 @@ def get_model_tests_page(model, model_type, test_hash):
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     model_stats = get_model_stats(model)
-    current_test = model_stats['test_round_summary']['all_test_results'][test_hash]
+    current_test = \
+        model_stats['test_round_summary']['all_test_results'][test_hash]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     test = current_test["test"]
