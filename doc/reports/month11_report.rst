@@ -4,6 +4,30 @@ ASKE Month 9 Milestone Report
 Deployment of multiple-resolution model testing and analysis
 ------------------------------------------------------------
 
+In previous reporting periods we have described our progress towards developing
+a capability to check 
+
+assembled at different levels of granularity and specificity. In particular,
+we are expanding the range of models assembled from a set of EMMAA Statements
+to include:
+
+
+During this reporting period we have implemented multiple-resolution model
+checking for all models hosted in the EMMAA web application. After processing
+new literature and assembling the corpus of relevant EMMAA statements,
+each knowledge-level model 
+
+* Directed networks
+* Signed directed networks
+* PyBEL networks (includes nodes with state information)
+* PySB models/Kappa influence maps
+
+
+.. image:: ../_static/images/test_matrix.png
+
+.. image:: ../_static/images/multi_model_node_table.png
+
+.. image:: ../_static/images/new_passed_tests_multi_model.png
 
 User-specific query registration and subscription
 -------------------------------------------------
