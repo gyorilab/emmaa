@@ -172,12 +172,16 @@ class ModelManager(object):
                 if mc_type == 'pysb':
                     report_stmts = report_function(path, model, stmts)
                     path_stmts = [[st] for st in report_stmts]
+                    merge = False
                 elif mc_type == 'pybel':
                     path_stmts = report_function(path, model, False, stmts)
+                    merge = False
                 elif mc_type == 'signed_graph':
                     path_stmts = report_function(path, model, True, False, stmts)
+                    merge = True
                 elif mc_type == 'unsigned_graph':
                     path_stmts = report_function(path, model, False, False, stmts)
+                    merge = True
                 for i, step in enumerate(path_stmts):
                     edge_nodes = []
                     if len(step) < 1:
@@ -198,7 +202,7 @@ class ModelManager(object):
                     else:
                         for n in edge_nodes[1:]:
                             path_nodes.append(n)
-                    step_sentences = self._make_path_stmts(step)
+                    step_sentences = self._make_path_stmts(step, merge=merge)
                     edge_dict = {'edge': ' '.join(edge_nodes),
                                  'stmts': step_sentences}
                     edge_list.append(edge_dict)
