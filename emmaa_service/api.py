@@ -327,7 +327,7 @@ def get_model_tests_page(model, model_type, test_hash):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
     model_meta_data = _get_model_meta_data()
-    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+    mod_link_list = [('../../../.' + t[0], t[1]) for t in link_list]
     ndex_id = 'None available'
     for mid, mmd in model_meta_data:
         if mid == model:
