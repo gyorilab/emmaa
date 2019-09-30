@@ -37,9 +37,10 @@ RESULT_CODES = {
     'MAX_PATHS_ZERO': 'Path found but not reconstructed',
     'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
 }
-ARROW_DICT = {'Complex': u"\u034D",
+ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
               'DecreaseAmount': u"\u22A3"}
+
 
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
@@ -177,9 +178,12 @@ class ModelManager(object):
                     path_stmts = report_function(path, model, False, False, stmts)
                 for i, step in enumerate(path_stmts):
                     edge_nodes = []
+                    if len(step) < 1:
+                        continue
                     stmt_type = type(step[0]).__name__
                     for j, ag in enumerate(step[0].agent_list()):
-                        edge_nodes.append(ag.name)
+                        if ag is not None:
+                            edge_nodes.append(ag.name)
                         if j == (len(step[0].agent_list()) - 1):
                             break
                         if stmt_type in ARROW_DICT:
