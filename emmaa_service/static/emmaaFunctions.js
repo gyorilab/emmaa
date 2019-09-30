@@ -238,17 +238,19 @@ function populateTestResultTable(tableBody, json) {
   // Applied/passed area graph
   let appliedTests = json.changes_over_time.number_applied_tests;
   appliedTests.unshift('Applied Tests');
-  let appliedPassedColumns = [dates, appliedTests]
+  let appliedPassedColumns = [dates];
 
   for (mt of current_model_types) {
-    let mt_changes = json.changes_over_time[mt]
+    let mt_changes = json.changes_over_time[mt];
     let passedTests = mt_changes.number_passed_tests;
-    var i
-    let dif = dates.length - passedTests.length
+    let i;
+    let dif = dates.length - passedTests.length;
     for (i = 1; i < dif; i++) {passedTests.unshift(null)}
-    passedTests.unshift(`${toTitleCase(mt)} Passed Tests`)
+    passedTests.unshift(`${toTitleCase(mt)} Passed Tests`);
     appliedPassedColumns.push(passedTests)
-  };
+  }
+
+  appliedPassedColumns.push(appliedTests);
 
   let passedAppliedParams = {
     x: 'x',
