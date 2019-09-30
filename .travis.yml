@@ -17,6 +17,8 @@ install:
   - git clone https://github.com/indralab/ui_util.git
   - cd ui_util/indralab_auth_tools
   - pip install .
+  - cd ../indralab_web_templates
+  - pip install .
   - cd ../..
   - pip install .[test]
 before_script:

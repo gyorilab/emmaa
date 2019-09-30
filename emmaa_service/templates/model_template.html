@@ -1,39 +1,19 @@
 {% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import path_table, path_card %}
 
 {% block additional_scripts %}
 <script>
   let model = '{{ model }}';
-  let ndexID = '{{ ndexID }}';
 
   $(document).ready(function(){
-    clearTables(document.getElementsByClassName('table-body'));
     console.log('document ready');
     let ddSelectTag = document.getElementById('modelSelectDD');
     setModel(ddSelectTag, model);
 
-    let infoTableBody = document.getElementById('modelInfoTableBody');
     let testResultsTableBody = document.getElementById('modelTestResultBody');
 
-    listModelInfo(infoTableBody, '{{ model_last_updated }}', '{{ ndexID }}');
     populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
   });
-
-  function modelRedirect(ddSelect) {
-
-    // Get selected option
-    let newModel = '';
-    for (child of ddSelect.children) {
-      if (child.selected) {
-        newModel = child.value;
-        break;
-      }
-    }
-
-    // redirect url:
-    let redirect = window.location.href.replace(model, newModel);
-    console.log(redirect);
-    window.location.replace(redirect);
-  }
 </script>
 <style>
   .fa-check {color: #00ff00}
@@ -63,7 +43,7 @@
   </select>
   <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
   <div class="input-group-append">
-    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'))" type="button">Load Model</button>
+    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'), '{{ model }}')" type="button">Load Model</button>
   </div>
 </div>
 {% endblock %}
@@ -83,21 +63,8 @@
     <!-- Model stuff goes here -->
 
     <!-- This table displays model data -->
-    <div class="container" id="modelInfoTable">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Model Info</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Item</th>
-              <th>Details</th>
-            </thead>
-            <tbody class="table-body" id="modelInfoTableBody"></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="container">
+      {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
@@ -114,20 +81,7 @@
           <div class="container" id="agentDistr"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Statement</th>
-              <th>Evidence Count</th>
-            </thead>
-            <tbody class="table-body" id="stmtEvidence"></tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
@@ -136,19 +90,7 @@
           <div class="container" id="stmtsOverTime"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Added Statements</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Statement</th>
-            </thead>
-            <tbody class="table-body" id="addedStmts"></tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
     </div>
 
   </div>
@@ -172,49 +114,9 @@
           <div class="container" id="passedApplied"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Applied Tests</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Test</th>
-              <th>Status</th>
-            </thead>
-            <tbody class="table-body" id="newAppliedTests"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Passed Tests</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Test</th>
-              <th>Path Found</th>
-            </thead>
-            <tbody class="table-body" id="newPassedTests"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">All Test Results</h4>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <thead>
-              <th>Test</th>
-              <th>Status</th>
-              <th>Path Found or Result Code</th>
-            </thead>
-            <tbody class="table-body" id="allTestResults"></tbody>
-          </table>
-        </div>
-      </div>
+      {{ path_card(new_applied_tests, "New Applied Tests", None, model_types, "newAppliedTests") }}
+      {{ path_card(new_passed_tests, "New Passed Tests", None, ["Test", "Top Path"], "newPassedTests", true)}}
+      {{ path_card(all_test_results, "All Test Results", None, model_types, "allTestResults") }}
     </div>
 
   </div>

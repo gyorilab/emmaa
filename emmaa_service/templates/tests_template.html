@@ -1,0 +1,34 @@
+{% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import detailed_paths %}
+
+{% block additional_scripts %}
+<script>
+  $(document).ready(function(){
+    let ddTypeSelectTag = document.getElementById('modelTypeSelectDD');
+    setModel(ddTypeSelectTag, '{{ model_type }}')
+  });
+</script>
+{% endblock %}
+
+{% block extend_header %}
+<!-- Model type select dropdown -->
+<div class="d-inline-flex p-2 input-group" style="width: 300px;">
+  <select class="custom-select" id="modelTypeSelectDD" aria-label="Example select with button addon">
+    <option selected disabled hidden>Select model...</option>
+    {% for mt in all_model_types %}
+    <option value="{{ mt }}">{{ formatted_names[mt] }}</option>
+    {% endfor %}
+  </select>
+  <div class="input-group-append">
+    <button class="btn btn-outline-secondary"
+            onClick="modelRedirect(document.getElementById('modelTypeSelectDD'), '{{ model_type }}')"
+            type="button">Load Type</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  {{ detailed_paths(path_list, test, model, model_type, formatted_names, test_status, "test_card", "test_result")}}
+</div>
+{% endblock %}

@@ -1,7 +1,9 @@
+import re
 import json
-import argparse
 import boto3
 import logging
+import argparse
+from urllib import parse
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_optional
@@ -16,9 +18,11 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
+from indralab_web_templates.path_templates import path_temps
 
 app = Flask(__name__)
 app.register_blueprint(auth)
+app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 logger = logging.getLogger(__name__)
 
@@ -26,15 +30,15 @@ logger = logging.getLogger(__name__)
 TITLE = 'emmaa title'
 EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
+                   'RIGHTWARDS ARROW': '\u2192'}
 FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
                          'pybel': 'PyBEL',
                          'signed_graph': 'Signed Graph',
                          'unsigned_graph': 'Unsigned Graph'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
-
 SC, jwt = config_auth(app)
-
 qm = QueryManager()
 
 
@@ -113,11 +117,15 @@ def model_last_updated(model, extension='.pkl'):
         A string of the format "YYYY-MM-DD-HH-mm-ss"
     """
     prefix = f'models/{model}/model_'
-    return strip_out_date(find_latest_s3_file(
-        bucket=EMMAA_BUCKET_NAME,
-        prefix=prefix,
-        extension=extension
-    ))
+    try:
+        return strip_out_date(find_latest_s3_file(
+            bucket=EMMAA_BUCKET_NAME,
+            prefix=prefix,
+            extension=extension
+        ))
+    except TypeError:
+        logger.info('Could not find latest update date')
+        return ''
 
 
 GLOBAL_PRELOAD = False
@@ -157,6 +165,66 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
+def _extract_stmt_link(anchor_string):
+    # Matches an anchor with at least an href attribute
+    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
+    m = re.search(pattern=pattern, string=anchor_string)
+    if m:
+        return m.group(1), m.group(2)
+    else:
+        return '', anchor_string
+
+
+def _new_applied_tests(model_stats_json, model_types, model_name):
+    # Extract new applied tests into:
+    #   list of tests (one per row)
+    #       each test is a list of tuples (one tuple per column)
+    #           each tuple is a (href, link_text) pair
+    all_test_results = model_stats_json['test_round_summary'][
+        'all_test_results']
+    new_app_hashes = model_stats_json['tests_delta']['applied_hashes_delta'][
+        'added']
+    new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
+    return _format_table_array(new_app_tests, model_types, model_name)
+
+
+def _format_table_array(tests_json, model_types, model_name):
+    # tests_json needs to have the structure: [(test_hash, tests)]
+    table_array = []
+    for th, test in tests_json:
+        new_row = [test['test']]
+        for mt in model_types:
+            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0]))
+
+        table_array.append(new_row)
+    return table_array
+
+
+def _new_passed_tests(model_name, model_stats_json, current_model_types):
+    new_passed_tests = []
+    all_test_results = model_stats_json['test_round_summary'][
+        'all_test_results']
+    for mt in current_model_types:
+        new_passed_hashes = model_stats_json['tests_delta'][mt][
+            'passed_hashes_delta']['added']
+        if not new_passed_hashes:
+            continue
+        mt_rows = [[('', f'New passed tests for '
+                         f'{FORMATTED_MODEL_NAMES[mt]} model.')]]
+        for test_hash in new_passed_hashes:
+            test = all_test_results[test_hash]
+            path_loc = test[mt][1]
+            if isinstance(path_loc, list):
+                path = path_loc[0]['path']
+            else:
+                path = path_loc
+            new_row = [(test['test']),
+                       (f'/tests/{model_name}/{mt}/{test_hash}', path)]
+            mt_rows.append(new_row)
+        new_passed_tests += mt_rows
+    return new_passed_tests
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
@@ -175,6 +243,7 @@ def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     mod_link_list = [('.' + t[0], t[1]) for t in link_list]
+
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
     for mid, mmd in model_meta_data:
@@ -185,14 +254,77 @@ def get_model_dashboard(model):
     if not last_update:
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
+    model_info_contents = [
+        [('', 'Last Updated'), ('', last_update)],
+        [('', 'Network on Ndex'),
+         (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
     model_stats = get_model_stats(model)
-    return render_template('model_template.html', model=model,
+    all_new_tests = [(k, v) for k, v in model_stats['test_round_summary'][
+        'all_test_results'].items()]
+    current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
+                           model_stats['test_round_summary']]
+    all_stmts = model_stats['model_summary']['all_stmts']
+    most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
+    top_stmts_counts = [
+        (all_stmts[h], ('', str(c))) for h, c in most_supported]
+    added_stmts_hashes = \
+        model_stats['model_delta']['statements_hashes_delta']['added']
+    added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
+    return render_template('model_template.html',
+                           model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            link_list=mod_link_list,
-                           model_last_updated=last_update, ndexID=ndex_id,
                            user_email=user.email if user else "",
-                           identity=user.id if user else None)
+                           stmts_counts=top_stmts_counts,
+                           added_stmts=added_stmts,
+                           model_info_contents=model_info_contents,
+                           model_types=["Test", *[FORMATTED_MODEL_NAMES[mt]
+                                                  for mt in 
+                                                  current_model_types]],
+                           new_applied_tests=_new_applied_tests(
+                               model_stats_json=model_stats,
+                               model_types=current_model_types,
+                               model_name=model),
+                           all_test_results=_format_table_array(
+                               tests_json=all_new_tests,
+                               model_types=current_model_types,
+                               model_name=model),
+                           new_passed_tests=_new_passed_tests(
+                               model, model_stats, current_model_types))
+
+
+@app.route('/tests/<model>/<model_type>/<test_hash>')
+def get_model_tests_page(model, model_type, test_hash):
+    if model_type not in ALL_MODEL_TYPES:
+        abort(Response(f'Model type {model_type} does not exist', 404))
+    model_meta_data = _get_model_meta_data()
+    mod_link_list = [('../../../.' + t[0], t[1]) for t in link_list]
+    ndex_id = 'None available'
+    for mid, mmd in model_meta_data:
+        if mid == model:
+            ndex_id = mmd['ndex']['network']
+    if ndex_id == 'None available':
+        logger.warning(f'No ndex ID found for {model}')
+    model_stats = get_model_stats(model)
+    current_test = \
+        model_stats['test_round_summary']['all_test_results'][test_hash]
+    current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
+                           model_stats['test_round_summary']]
+    test = current_test["test"]
+    test_status, path_list = current_test[model_type]
+    return render_template('tests_template.html',
+                           link_list=mod_link_list,
+                           model=model,
+                           model_type=model_type,
+                           all_model_types=current_model_types,
+                           test_hash=test_hash,
+                           model_stats_json=model_stats,
+                           ndexID=ndex_id,
+                           test=test,
+                           test_status=test_status,
+                           path_list=path_list,
+                           formatted_names=FORMATTED_MODEL_NAMES)
 
 
 @app.route('/query')

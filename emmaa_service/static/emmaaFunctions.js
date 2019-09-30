@@ -5,6 +5,11 @@ the client side work of exposing cancer network models for the end users
 
 */
 
+const FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
+                         'pybel': 'PyBEL',
+                         'signed_graph': 'Signed Graph',
+                         'unsigned_graph': 'Unsigned Graph'}
+
 function setModel(ddSelect, model) {
   // Sets the selected option
   // let ddSelect = document.getElementById('modelSelectDD');
@@ -14,6 +19,23 @@ function setModel(ddSelect, model) {
       break;
     }
   }
+}
+
+function modelRedirect(ddSelect, current_model) {
+
+  // Get selected option
+  let newModel = '';
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      newModel = child.value;
+      break;
+    }
+  }
+
+  // redirect url:
+  let redirect = window.location.href.replace(current_model, newModel);
+  console.log(redirect);
+  window.location.replace(redirect);
 }
 
 function clearTables(arrayOfTableBodies) {
@@ -39,23 +61,38 @@ function addToRow(col_values) {
   return tableRow;
 }
 
-function generatePassFail(rowEl, col) {
+// Creates a new table row by merging the columns
+function addMergedRow(value, num_cols) {
+  let tableRow = document.createElement('tr');
+  let column = document.createElement('td')
+  column.colSpan = num_cols
+  column.innerHTML = value.bold()
+  column.style.textAlign = "center"
+  tableRow.appendChild(column);
+  return tableRow;
+}
+
+function generatePassFail(rowEl, cols) {
   // See more at:
   // https://fontawesome.com/icons?d=gallery
   // Pass: <i class="fas fa-check"></i>
   // Fail: <i class="fas fa-times"></i>
-  let string = rowEl.children[col].textContent;
-  let itag = document.createElement('i');
-  if (string.toLowerCase() === 'pass') {
-    itag.className = 'fas fa-check';
-    rowEl.children[col].innerHTML = null;
-    rowEl.children[col].appendChild(itag);
-  } else if (string.toLowerCase() === 'fail') {
-    itag.className = 'fas fa-times';
-    rowEl.children[col].innerHTML = null;
-    rowEl.children[col].appendChild(itag);
-  } else {
-    console.log(`pass/fail not in column ${col}`)
+  for (col of cols) {
+    let string = rowEl.children[col].textContent;
+    let itag = document.createElement('i');
+    if (string.toLowerCase() === 'pass') {
+      itag.className = 'fas fa-check';
+      rowEl.children[col].innerHTML = null;
+      rowEl.children[col].style.textAlign = "center"
+      rowEl.children[col].appendChild(itag);
+    } else if (string.toLowerCase() === 'fail') {
+      itag.className = 'fas fa-times';
+      rowEl.children[col].innerHTML = null;
+      rowEl.children[col].style.textAlign = "center"
+      rowEl.children[col].appendChild(itag);
+    } else {
+      console.log(`pass/fail not in column ${col}`)
+    }
   }
   return rowEl;
 }
@@ -85,6 +122,21 @@ function linkifyFromString(tag, htmlText) {
   return tag;
 }
 
+function countPasses(results, mts) {
+  let count = 0;
+  for (mt of mts) {
+    if (results[mt][0].toLowerCase() === 'pass') {count++};
+  }
+  return count;
+};
+
+function toTitleCase(phrase) {
+  let newPhrase = phrase.split('_');
+  newPhrase = newPhrase.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+  newPhrase = newPhrase.join(' ');
+  return newPhrase;
+};
+
 // Populate test results json to modelTestResultBody
 function populateTestResultTable(tableBody, json) {
 
@@ -98,6 +150,15 @@ function populateTestResultTable(tableBody, json) {
   // Dates
   dates = json.changes_over_time.dates;
   dates.unshift('x');
+
+  let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+  let current_model_types = [];
+  let cols = [];
+  let count = 0;
+  for (mt of all_model_types) {if (mt in json.test_round_summary) {
+    current_model_types.push(mt)
+    count++
+    cols.push(count)}};
 
   //  Model Tab
 
@@ -138,18 +199,6 @@ function populateTestResultTable(tableBody, json) {
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
-  // Statements by Evidence Table
-  let stEvTable = document.getElementById('stmtEvidence');
-  clearTable(stEvTable);
-  let english_stmts = json.model_summary.english_stmts;
-  let stmtByEv = json.model_summary.stmts_by_evidence;
-
-  for (let pair of stmtByEv.slice(0,10)) {
-    let rowEl = addToRow(['', pair[1]]);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], english_stmts[pair[0]]);
-    stEvTable.appendChild(rowEl)
-  }
-
   // Statements over Time line graph
   let stmtsOverTime = json.changes_over_time.number_of_statements;
   stmtsOverTime.unshift('Statements');
@@ -165,32 +214,28 @@ function populateTestResultTable(tableBody, json) {
 
   let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '');
 
-  // Model Delta - New statements
-  let newStTable = document.getElementById('addedStmts');
-  clearTable(newStTable);
-  let new_stmts = json.model_delta.statements_delta.added;
-  for (let stmt of new_stmts) {
-    // Has columns: statements
-    let rowEl = addToRow([stmt]);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], stmt);
-    newStTable.appendChild(rowEl)
-  }
   // Tests Tab
 
   // Passed ratio line graph
-  let passedRatio = json.changes_over_time.passed_ratio;
-  passedRatio = passedRatio.map(function(element) {
-    return (element*100).toFixed(2);
-  });
-  passedRatio.unshift('Passed Ratio');
+  let passedRatioColumns = [dates]
+
+  for (mt of current_model_types) {
+    let mt_changes = json.changes_over_time[mt]
+    let passedRatio = mt_changes.passed_ratio
+    passedRatio = passedRatio.map(function(element) {
+      return (element*100).toFixed(2);
+    })
+    var i
+    let dif = dates.length - passedRatio.length
+    for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
+    passedRatio.unshift(FORMATTED_MODEL_NAMES[mt]);
+    passedRatioColumns.push(passedRatio)
+  };
 
   lineDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: [
-      dates,
-      passedRatio
-    ]
+    columns: passedRatioColumns
   };
 
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
@@ -198,62 +243,29 @@ function populateTestResultTable(tableBody, json) {
   // Applied/passed area graph
   let appliedTests = json.changes_over_time.number_applied_tests;
   appliedTests.unshift('Applied Tests');
-  let passedTests = json.changes_over_time.number_passed_tests;
-  passedTests.unshift('Passed Tests');
+  let appliedPassedColumns = [dates];
+
+  for (mt of current_model_types) {
+    let mt_changes = json.changes_over_time[mt];
+    let passedTests = mt_changes.number_passed_tests;
+    let i;
+    let dif = dates.length - passedTests.length;
+    for (i = 1; i < dif; i++) {passedTests.unshift(null)}
+    passedTests.unshift(`${FORMATTED_MODEL_NAMES[mt]} Passed Tests`);
+    appliedPassedColumns.push(passedTests)
+  }
+
+  appliedPassedColumns.push(appliedTests);
 
   let passedAppliedParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: [
-      dates,
-      passedTests,
-      appliedTests
-    ],
+    columns: appliedPassedColumns,
     type: 'area'
   };
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
-  // Tests Delta - New Applied Tests
-  let newAppliedTable = document.getElementById('newAppliedTests');
-  clearTable(newAppliedTable);
-  let newAppTests = json.tests_delta.applied_tests_delta.added;
-
-  for (let pair of newAppTests) {
-    // Has columns: Test; Status;
-    let rowEl = addToRow(pair);
-    rowEl = generatePassFail(rowEl, 1);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], pair[0]);
-    newAppliedTable.appendChild(rowEl)
-  }
-  // Tests Delta - New Passed Tests
-  let newPassedTable = document.getElementById('newPassedTests');
-  clearTable(newPassedTable);
-  let newPasTests = json.tests_delta.pass_fail_delta.added;
-  let newPaths = json.tests_delta.new_paths.added;
-
-  for (let i = 0; i < newPasTests.length; i++) {
-    // Has columns: test; Path Found
-    let rowEl = addToRow(['', '']);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], newPasTests[i]);
-    rowEl.children[1] = linkifyFromArray(rowEl.children[1], newPaths[i][0]);
-    newPassedTable.appendChild(rowEl)
-  }
-
-  // All Tests Results
-  let allTestsTable = document.getElementById('allTestResults');
-  clearTable(allTestsTable)
-  let testResults = json.test_round_summary.tests_by_hash;
-  let resultValues = Object.values(testResults);
-  resultValues.sort(function(a,b){return (a[1] < b[1]) ? 1 : (a[1] > b[1]) ? -1 : 0;});
-
-  for (val of resultValues) {
-    // Has columns: test; Status; Path Found;
-    let rowEl = addToRow(val);
-    rowEl.children[0] = linkifyFromString(rowEl.children[0], val[0]);
-    rowEl.children[2] = linkifyFromArray(rowEl.children[2], val[2][0]);
-    allTestsTable.appendChild(generatePassFail(rowEl, 1))
-  }
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
@@ -264,22 +276,6 @@ function populateTestResultTable(tableBody, json) {
     lineChart.flush();
     areaChart.flush();
   });
-}
-
-function listModelInfo(modelInfoTableBody, lastUpdated, ndexID) {
-  // Add when model was last updated
-  modelInfoTableBody.appendChild(addToRow(['Last updated', lastUpdated]));
-  // Create link to ndex
-  let link = document.createElement('a');
-  link.textContent = ndexID;
-  link.href = `http://www.ndexbio.org/#/network/${ndexID}`;
-  link.target = '_blank';
-
-  let tableRow = addToRow(['Network on NDEX', '']);
-  tableRow.children[1].innerHTML = null;
-  tableRow.children[1].appendChild(link);
-
-  modelInfoTableBody.appendChild(tableRow);
 }
 
 /* c3 chart functions
