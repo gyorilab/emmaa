@@ -417,20 +417,20 @@ def process_query():
     return Response(json.dumps(res), mimetype='application/json')
 
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
-#     parser.add_argument('--host', default='0.0.0.0')
-#     parser.add_argument('--port', default=5000, type=int)
-#     parser.add_argument('--preload', action='store_true')
-#     args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--port', default=5000, type=int)
+    parser.add_argument('--preload', action='store_true')
+    args = parser.parse_args()
 
-#     # TODO: make pre-loading available when running service via Gunicorn
-#     if args.preload and not GLOBAL_PRELOAD:
-#         # Load all the model configs
-#         model_meta_data = _get_model_meta_data()
-#         # Load all the model mamangers for queries
-#         for model, _ in model_meta_data:
-#             load_model_manager_from_s3(model)
+    # TODO: make pre-loading available when running service via Gunicorn
+    if args.preload and not GLOBAL_PRELOAD:
+        # Load all the model configs
+        model_meta_data = _get_model_meta_data()
+        # Load all the model mamangers for queries
+        for model, _ in model_meta_data:
+            load_model_manager_from_s3(model)
 
-#     print(app.url_map)  # Get all avilable urls and link them
-#     app.run(host=args.host, port=args.port)
+    print(app.url_map)  # Get all avilable urls and link them
+    app.run(host=args.host, port=args.port)
