@@ -335,17 +335,16 @@ def get_model_tests_page(model, model_type, test_hash):
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     model_stats = get_model_stats(model)
-    # test, test_status, path_list = _get_test_results(model_stats,
-    #                                                  model_type,
-    #                                                  test_hash)
     current_test = model_stats['test_round_summary']['all_test_results'][test_hash]
+    current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
+                           model_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
     return render_template('tests_template.html',
                            link_list=mod_link_list,
                            model=model,
                            model_type=model_type,
-                           all_model_types=ALL_MODEL_TYPES,
+                           all_model_types=current_model_types,
                            test_hash=test_hash,
                            model_stats_json=model_stats,
                            ndexID=ndex_id,
