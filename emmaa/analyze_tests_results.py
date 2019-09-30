@@ -266,7 +266,7 @@ class TestRound(object):
         return english_codes
 
     def get_english_test_by_hash(self, test_hash, mc_type=None):
-        return self.pysb_results[test_hash]
+        return self.pysb_results[test_hash][0]
 
     def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
         return self.english_test_results[test_hash][mc_type][0]
