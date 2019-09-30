@@ -12,7 +12,7 @@ processing new literature and assembling the corpus of relevant EMMAA
 statements, the system the knowledge-level information into the following types
 of causal representations:
 
-* *Directed networks*. This model type is a simple directed graph with unsigned, directed edges between entities (molecular entities and biological processes in the case of biological networks).
+* *Unsigned directed networks*. This model type is a simple directed graph with unsigned, directed edges between entities (molecular entities and biological processes in the case of biological networks).
 
 * *Signed directed networks*. Similar to the unsigned, directed network, in
   that it is a directed graph over entities and processes, but each edge is
@@ -38,16 +38,61 @@ of causal representations:
   PySB/Kappa model is subject to specific preconditions for activity and hence
   this representation is the most causally constrained. Until this reporting
   period, PySB/Kappa models were the only form of model representation subject
-  to automatic testing EMMAA.  The baseline representation of EMMAA modelsc
+  to automatic testing EMMAA. 
+
+Each of these four causal network representations represent entities and causal
+influences differently; the first step in automated checking of causal queries
+is therefore to ground the entities in the *query* to nodes in the particular
+network representation. For example, in the causal query "How does
+phosphorylated BRAF increase MAPK1 activity", the subject node is
+"phosphorylated BRAF" and the object node is "MAPK1 activity" (Figure 1). In
+the unsigned and signed directed networks, these two concepts map simply to the
+nodes for BRAF and MAPK1, because these networks do not distinguish based on
+entity state. In the PyBEL network, there are multiple nodes consistent with
+"phosphorylated BRAF", including `p(BRAF, pmod(P, S, 602))` (representing BRAF
+phosphorylated at serine 602) and `p(BRAF, pmod(P))` representing BRAF
+phosphorylated at an unknown site; similarly, there are multiple nodes
+corresponding to "MAPK1 activity", including `act(MAPK1)` and `kin(MAPK1)`,
+representing the generic molecular and specific kinase activity of MAPK1,
+respectively. For the PySB/Kappa influence map, there are multiple rules
+consistent with phosphorylated BRAF as source nodes, and multiple observables
+corresponding to MAPK1 being in a state consistent with its activity. Checking
+the model involves identifying these subject and object nodes and then
+searching for paths linking any subject node to any object node. If any such
+path is found, then this represents a candidate causal explanation in that
+representation.
 
 .. image:: ../_static/images/multi_model_node_table.png
+    :scale: 50%
 
+*Figure 1: Network nodes associated with the subject and object of the causal
+query "How does phosphorylated BRAF increase MAPK1 activity?" using the four
+causal representations deployed in this reporting period.*
 
+In addition to generating the model testing results on the back end, the EMMAA
+web application now presents the results of multi-resolution model checking to
+the user. The `Tests` tab of the model landing page now highlights the
+proportion of passed tests for each model type (Figure 2). As expected, the
+least stringent causal representation (unsigned graph) generally yields the
+highest proportion of passing tests, while the most stringent (PySB) is the
+lowest.
+
+.. image:: ../_static/images/multi_model_tests_pct.png
+
+*Figure 2: Update test report graph highlighting the percentage of applied
+tests passed in each of the four causal representations.*
+
+In addition, the test report page now displays tests results as a matrix rather
+than a simple list (Figure 3). Each icon is hyperlinked to a test details page
+showing information about the test and the causal paths found to explain the
+causal query.
 
 .. image:: ../_static/images/test_matrix.png
 
+*Figure 3: Test result matrix with the green and red icons indicating whether
+the given test passed or failed in the specific model representation,
+respectively.*
 
-.. image:: ../_static/images/new_passed_tests_multi_model.png
 
 User-specific query registration and subscription
 -------------------------------------------------
