@@ -184,8 +184,11 @@ def _new_applied_tests(model_stats_json, model_types, model_name):
         'all_test_results']
     new_app_hashes = model_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
+    if len(new_app_hashes) == 0:
+        return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(new_app_tests, model_types, model_name)
+    return = _format_table_array(new_app_tests, model_types, model_name)
+
 
 
 def _format_table_array(tests_json, model_types, model_name):
@@ -222,7 +225,9 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
                        (f'/tests/{model_name}/{mt}/{test_hash}', path)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
-    return new_passed_tests
+    if len(new_passed_tests) > 0:
+        return new_passed_tests
+    return 'No new tests were passed'
 
 
 @app.route('/')
@@ -269,7 +274,10 @@ def get_model_dashboard(model):
         (all_stmts[h], ('', str(c))) for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
-    added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
+    if len(added_stmts_hashes) > 0:
+        added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
+    else:
+        added_stmts = 'No new statements were added'
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
