@@ -8,13 +8,12 @@ from emmaa.priors.reactome_prior import get_pathways_containing_gene
 from emmaa.priors.reactome_prior import get_genes_contained_in_pathway
 
 
-@unittest.skip('Reactome ID lookup by UniProt ID has changed.')
 def test_rx_id_from_up_id():
     """Check that Uniprot ids are being successfully mapped to reactome ids
     """
-    test_cases = [('P01116', 'R-HSA-62719'),   # KRAS
-                  ('P04637', 'R-HSA-69488'),   # TP53
-                  ('Q13485', 'R-HSA-177103')]  # SMAD4
+    test_cases = [('P01116', 'R-HSA-9653079'),   # KRAS
+                  ('P04637', 'R-HSA-69507'),   # TP53
+                  ('Q13485', 'R-HSA-2187323')]  # SMAD4
     for up_id, rx_id in test_cases:
         all_rx_ids = rx_id_from_up_id(up_id)
         assert rx_id in all_rx_ids
