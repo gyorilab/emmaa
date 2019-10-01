@@ -28,6 +28,8 @@ def test_get_pathways_containing_genes():
     assert all([re.match(pattern, pathway_id) for pathway_id in KRAS_pathways])
     # Check if function returns a reasonable number of pathways
     assert len(KRAS_pathways) > 3
+    # Signaling Downstream of RAS mutants
+    assert 'R-HSA-9649948.1' in KRAS_pathways
     
 
 def test_get_genes_contained_in_pathway():
@@ -38,23 +40,32 @@ def test_get_genes_contained_in_pathway():
     assert all([re.match(pattern, up_id) for up_id in RAS_mutants_genes])
     # Check that function returns a reasonable number of genes
     assert len(RAS_mutants_genes) > 30
+    # KRAS
+    assert 'P01116' in RAS_mutants_genes
 
 
 def test_make_prior_from_genes():
     # KRAS prior
-    prior = make_prior_from_genes(['KRAS'])
-
+    prior1 = make_prior_from_genes(['KRAS'])
+    # BRCA prior
+    prior2 = make_prior_from_genes(['TP53', 'PIK3CA', 'GATA3', 'CBFB', 'CDH1'])
     # make sure there are results
-    assert prior
-
+    assert prior1
     # make sure the prior is a list of SearchTerms
-    assert all(isinstance(term, SearchTerm) for term in prior)
-
+    assert all(isinstance(term, SearchTerm) for term in prior1)
     # if we get fewer than 40 genes for KRAS it's likely something is wrong
-    assert len(prior) > 40
+    assert len(prior1) > 40
     # test that the prior contains some of the usual suspects
-    gene_names = set(term.name for term in prior)
-    assert set(['KRAS', 'RAF1', 'MAPK1', 'BRAF']) <= set(gene_names)
+    gene_names = set(term.name for term in prior1)
+    assert set(['KRAS', 'RAF1', 'MAPK1', 'BRAF']) <= gene_names
+
+    assert prior2
+    assert all(isinstance(term, SearchTerm) for term in prior2)
+    assert len(prior2) > 1000
+    gene_names = set(term.name for term in prior2)
+    assert set(['COL1A1', 'ESR1', 'EGFR', 'HRAS']) <= gene_names
+    # some genes expressed only in the brain
+    assert not (gene_names & set(['BARHL1', 'NEUROD2']))
 
 
 def test_find_drugs_for_genes():
