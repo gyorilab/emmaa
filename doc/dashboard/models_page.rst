@@ -25,10 +25,9 @@ The model tab contains model info with the date the model was last updated and
 links to the NDEx website where a network view of the model can be examined.
 The page also displays properties of the current state of the model, namely,
 the distribution of statement types, the top 10 agents in the model, and the
-statements with the most evidential support from various knowledge sources.
-Further, the page shows how the number of statements in the model has evolved
-over time, and which statements were added to the model during the most recent
-update.
+statements with the most support from various knowledge bases. Further, the
+page shows how the number of statements in the model has evolved over time,
+and which statements were added to the model during the most recent update.
 
 .. figure:: ../_static/images/aml_model_tab.png
   :align: center
@@ -40,25 +39,27 @@ Tests Tab
 ---------
 
 The tests tab contains two related plots: one showing the evolution over time
-of the  percentage of applicable tests that passed, and another showing the
+of the percentage of applicable tests that passed, and another showing the
 absolute number of tests that were applied to the model and the number of tests
 that passed in each of supported model types. For the first few months of the
-project, the tests were run on a PySB model assembled from EMMAA model 
-statements. Later three other model types were added, namely, PyBEL graph, 
-signed directed graph and unsigned directed graph.
+project, the tests were only run on a PySB model assembled from EMMAA model
+statements. Later three additional model types were added, namely, PyBEL
+graph, signed directed graph and unsigned directed graph.
 
 .. figure:: ../_static/images/rasmachine_tests_tab_top.png
   :align: center
   :figwidth: 100 %
 
-  *The top of the tests tab showing the percentage of tests passed and applied
-  and passed tests in different model types* 
+  *The top of the tests tab showing the percentage of tests passed together
+  with applied and passed tests in different model types*
 
 If any new tests were applied in the latest test run of the model
-they are shown under *New Applied Tests* A green check mark is shown for tests
-that passed and a red cross is shown for the tests that did not. The marks can
-be clicked on and link to a detailed test page where the detailed path(s) or a
-reason for the model not having passed the test will be shown.
+they are shown under *New Applied Tests*. A green check mark is shown for
+tests that passed and a red cross is shown for the tests that did not. The
+marks can be clicked on and link to a detailed test results page where the
+detailed path(s) or a reason for the model not having passed the test will be
+shown. To read more about the detailed test results page, see:
+:ref:`detailed_tests_page`.
 
 .. figure:: ../_static/images/new_applied_tests.png
   :align: center
@@ -68,9 +69,9 @@ reason for the model not having passed the test will be shown.
   a test status per each model type*
 
 New tests that passed for any of the model types are shown under 
-*New Passed Tests* along with the top path found. To see the statements
-supporting the path, one can click on a path and be redirected to a detailed
-test page.
+*New Passed Tests* along with the top path found. The statements supporting
+the path are can be seen by clicking on a path which links out to the detailed
+test results page for the test.
 
 .. figure:: ../_static/images/new_applied_tests.png
   :align: center
@@ -80,7 +81,7 @@ test page.
 
 Further down, all tests applied to the model are shown. Similarly to new
 applied tests, this table also contains green and red marks indicating the test
-status and linking to detailed test page.
+status, linking to detailed test results page.
 
 .. figure:: ../_static/images/all_test_results.png
   :align: center
