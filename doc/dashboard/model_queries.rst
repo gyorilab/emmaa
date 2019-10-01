@@ -55,17 +55,17 @@ navigation bar. When clicking the login button, an overlay shows up asking
 for credentials. A user can also create an account by clicking "Register" if
 they don't already have an account.
 
-.. figure:: ../_static/images/login_window.png
-  :align: center
-  :figwidth: 50 %
+.. rst-class:: center
 
-  *The login tab of the login overlay.*
+   |p1| |p2|
 
-.. figure:: ../_static/images/registration_window.png
-  :align: center
-  :figwidth: 50 %
+.. |p1| image:: ../_static/images/login_window.png
+   :width: 30 %
 
-  *The registration tab of the login overlay.*
+.. |p2| image:: ../_static/images/registration_window.png
+   :width: 30 %
+
+*The login and registration tabs of the login overlay.*
 
 Subscribing to a Query
 ----------------------
