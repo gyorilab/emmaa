@@ -126,8 +126,12 @@ granularity of concepts over which it represents causal influences:
 
 .. image:: ../_static/images/food_insec_model_size.png
 
+*Figure 4: Size of the food insecurity model over time.*
+
 Below is a snapshot of the network view of the model on NDEx
-(https://ndexbio.org/#/network/478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf)
-as of 9/27/2019:
+(https://ndexbio.org/#/network/478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf):
 
 .. image:: ../_static/images/food_insec_model_ndex.png
+
+
+*Figure 5: Snapshot of the food insecurity model as of 9/27/2019.*
