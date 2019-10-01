@@ -5,14 +5,16 @@ Deployment of multiple-resolution model testing and analysis
 ------------------------------------------------------------
 
 We have previously described our progress towards developing a capability to
-check EMMAA model using causal representations at different levels of
-granularity. During this reporting period we have deployed multiple-resolution
+check EMMAA models using causal representations at different levels of
+resolution. During this reporting period we have deployed multiple-resolution
 model checking for all models hosted in the EMMAA web application. After
 processing new literature and assembling the corpus of relevant EMMAA
-statements, the system the knowledge-level information into the following types
-of causal representations:
+statements, the system assembles the knowledge-level information into the
+following types of causal representations:
 
-* *Unsigned directed networks*. This model type is a simple directed graph with unsigned, directed edges between entities (molecular entities and biological processes in the case of biological networks).
+* *Unsigned directed networks*. This model type is a simple directed graph with
+  unsigned, directed edges between entities (molecular entities and biological
+  processes in the case of biological networks).
 
 * *Signed directed networks*. Similar to the unsigned, directed network, in
   that it is a directed graph over entities and processes, but each edge is
@@ -20,7 +22,7 @@ of causal representations:
   negative regulation of activity or amount.
 
 * *PyBEL networks*. A PyBEL network is a particular network representation of
-  casaul information encoded in the Biological Expression Language (see
+  causal information encoded in the Biological Expression Language (see
   https://pybel.readthedocs.io). PyBEL networks are also signed and directed,
   but the nodes in the network have *state*: for a given protein `X`, the
   mutated, modified, or active forms of `X` are represented by distinct nodes.
@@ -74,7 +76,7 @@ web application now presents the results of multi-resolution model checking to
 the user. The `Tests` tab of the model landing page now highlights the
 proportion of passed tests for each model type (Figure 2). As expected, the
 least stringent causal representation (unsigned graph) generally yields the
-highest proportion of passing tests, while the most stringent (PySB) is the
+highest proportion of passing tests, while the most stringent (PySB) yields the
 lowest.
 
 .. image:: ../_static/images/multi_model_tests_pct.png
@@ -92,7 +94,6 @@ causal query.
 *Figure 3: Test result matrix with the green and red icons indicating whether
 the given test passed or failed in the specific model representation,
 respectively.*
-
 
 User-specific query registration and subscription
 -------------------------------------------------
