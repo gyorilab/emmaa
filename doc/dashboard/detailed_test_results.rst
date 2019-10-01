@@ -1,3 +1,5 @@
+.. _detailed_tests_page:
+
 EMMAA Detailed Test Results
 ===========================
 
