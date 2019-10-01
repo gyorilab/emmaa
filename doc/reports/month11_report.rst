@@ -79,9 +79,9 @@ least stringent causal representation (unsigned graph) generally yields the
 highest proportion of passing tests, while the most stringent (PySB) yields the
 lowest.
 
-.. image:: ../_static/images/multi_model_tests_pct.png
+.. image:: ../_static/images/rasmachine_tests_tab_top.png
 
-*Figure 2: Update test report graph highlighting the percentage of applied
+*Figure 2: Test report graph highlighting the percentage of applied
 tests passed in each of the four causal representations.*
 
 In addition, the test report page now displays tests results as a matrix rather
