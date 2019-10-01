@@ -52,14 +52,13 @@ signed directed graph and unsigned directed graph.
   :figwidth: 100 %
 
   *The top of the tests tab showing the percentage of tests passed and applied
-  and passed tests in different model types* A green check mark is
-  shown for tests that passed and a red cross is shown for the tests that did
-  not. The marks can be clicked on and link to a detailed test page where the
-  detailed path(s) or a reson for the model not having passed the test will be
-  shown.
+  and passed tests in different model types* 
 
 If any new tests were applied in the latest test run of the model
-they are shown under *New Applied Tests*
+they are shown under *New Applied Tests* A green check mark is shown for tests
+that passed and a red cross is shown for the tests that did not. The marks can
+be clicked on and link to a detailed test page where the detailed path(s) or a
+reason for the model not having passed the test will be shown.
 
 .. figure:: ../_static/images/new_applied_tests.png
   :align: center
