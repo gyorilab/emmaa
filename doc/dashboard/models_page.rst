@@ -42,33 +42,48 @@ Tests Tab
 The tests tab contains two related plots: one showing the evolution over time
 of the  percentage of applicable tests that passed, and another showing the
 absolute number of tests that were applied to the model and the number of tests
-that passed. 
+that passed in each of supported model types. For the first few months of the
+project, the tests were run on a PySB model assembled from EMMAA model 
+statements. Later three other model types were added, namely, PyBEL graph, 
+signed directed graph and unsigned directed graph.
 
-.. figure:: ../_static/images/aml_tests_tab_top.png
+.. figure:: ../_static/images/rasmachine_tests_tab_top.png
   :align: center
   :figwidth: 100 %
 
   *The top of the tests tab showing the percentage of tests passed and applied
-  and passed tests*
+  and passed tests in different model types* A green check mark is
+  shown for tests that passed and a red cross is shown for the tests that did
+  not. The marks can be clicked on and link to a detailed test page where the
+  detailed path(s) or a reson for the model not having passed the test will be
+  shown.
 
 If any new tests were applied in the latest test run of the model
-they are shown under *New Applied Tests*, while the new tests that passed are
-shown under *New Passed Tests*.
+they are shown under *New Applied Tests*
 
-.. figure:: ../_static/images/aml_tests_tab_tests.png
+.. figure:: ../_static/images/new_applied_tests.png
   :align: center
   :figwidth: 100 %
-
+  
   *If new tests were applied, they will be shown together with a breakdown of
-  which tests passed*
+  a test status per each model type*
 
-Further down, all tests applied to the model are shown. A green check mark is
-shown for tests that passed, along with an English language summary of how,
-specifically, the model satisfies the test condition. For tests that didn't
-pass, a red cross is shown, along with the reason for the model not having
-passed the test (e.g., "Statement subject not in model").
+New tests that passed for any of the model types are shown under 
+*New Passed Tests* along with the top path found. To see the statements
+supporting the path, one can click on a path and be redirected to a detailed
+test page.
 
-.. figure:: ../_static/images/aml_tests_all_tests.png
+.. figure:: ../_static/images/new_applied_tests.png
+  :align: center
+  :figwidth: 100 %
+  
+  *If new tests were passed, they will be shown together with a top path*
+
+Further down, all tests applied to the model are shown. Similarly to new
+applied tests, this table also contains green and red marks indicating the test
+status and linking to detailed test page.
+
+.. figure:: ../_static/images/all_test_results.png
   :align: center
   :figwidth: 100 %
 
