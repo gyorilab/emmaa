@@ -51,9 +51,9 @@ Logging In and Registering a User
 ---------------------------------
 
 A user can log in by clicking the "Login" button to the right on the
-navigation bar. When clicking a the login button, an overlay shows up asking
-for credentials. A user can also create an account by registering if they
-don't already have an account.
+navigation bar. When clicking the login button, an overlay shows up asking
+for credentials. A user can also create an account by clicking "Register" if
+they don't already have an account.
 
 .. figure:: ../_static/images/login_window.png
   :align: center
@@ -71,10 +71,10 @@ Subscribing to a Query
 ----------------------
 
 When logged in, a user can register a query for subscription. To register a
-subscribe to a query, the tick box for "Subscribe To Query" has to be ticked
-when the query is submitted. After submission, the query is associated with
-the logged in user. When returning to the page, the queries associated with
-the user will be loaded together with the latest result of those queries.
+subscription to a query, the tick box for "Subscribe To Query" has to be
+ticked when the query is submitted. After submission, the query is associated
+with the logged in user. When returning to the page, the subscribed queries
+will be loaded together with their latest results.
 
 .. figure:: ../_static/images/subscribed_queries.png
   :align: center
