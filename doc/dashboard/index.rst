@@ -30,3 +30,4 @@ works.
    models_page
    model_queries
    response_codes
+   detailed_test_results

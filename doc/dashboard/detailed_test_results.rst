@@ -1,5 +1,5 @@
-EMMAA Model Queries
-===================
+EMMAA Detailed Test Results
+===========================
 
 The detailed test results page shows a test result at a high detail for a
 specific model and model type. The left column describes the path found that
