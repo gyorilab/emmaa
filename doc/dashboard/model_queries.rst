@@ -57,13 +57,13 @@ they don't already have an account.
 
 .. figure:: ../_static/images/login_window.png
   :align: center
-  :figwidth: 100 %
+  :figwidth: 50 %
 
   *The login tab of the login overlay.*
 
 .. figure:: ../_static/images/registration_window.png
   :align: center
-  :figwidth: 100 %
+  :figwidth: 50 %
 
   *The registration tab of the login overlay.*
 
