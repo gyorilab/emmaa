@@ -47,9 +47,38 @@ minute so please be patient when posting queries.
 
   *While the query resolves, a small animation is shown.*
 
+Logging In and Registering a User
+---------------------------------
+
+A user can log in by clicking the "Login" button to the right on the
+navigation bar. When clicking a the login button, an overlay shows up asking
+for credentials. A user can also create an account by registering if they
+don't already have one.
+
+.. figure:: ../_static/images/login_window.png
+  :align: center
+  :figwidth: 100 %
+
+  *The login tab of the login overlay.*
+
+.. figure:: ../_static/images/registration_window.png
+  :align: center
+  :figwidth: 100 %
+
+  *The registration tab of the login overlay.*
+
 Subscribing to a Query
 ----------------------
 
-If logged in, a user can register a query for subscription. With this option,
-when returning to the page, previous queries will be loaded with their
-latest result.
+When logged in, a user can register a query for subscription. To subscribe to
+a query, the tick box for "Subscribe To Query" has to be ticked when the query
+is submitted. After submission, the query is associated with the logged in
+user. When returning to the page, the queries previously associated with the
+user will be loaded together with their latest result.
+
+.. figure:: ../_static/images/subscribed_queries.png
+  :align: center
+  :figwidth: 100 %
+
+  *Subscribed queries, here for the query Activation(FLT3, KRAS) of the AML
+  cancer model*
