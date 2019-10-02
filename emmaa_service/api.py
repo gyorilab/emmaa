@@ -35,6 +35,8 @@ LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
+pass_fail_msg = 'Click to see detailed results for this test'
+stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
 qm = QueryManager()
 
