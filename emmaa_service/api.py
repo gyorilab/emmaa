@@ -35,6 +35,8 @@ LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
+pass_fail_msg = 'Click to see detailed results for this test'
+stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
 qm = QueryManager()
 
@@ -195,9 +197,11 @@ def _format_table_array(tests_json, model_types, model_name):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        new_row = [test['test']]
+        new_row = [(*test['test'], stmt_db_link_msg)
+                   if len(test['test']) == 2 else test['test']]
         for mt in model_types:
-            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0]))
+            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0],
+                            pass_fail_msg))
         table_array.append(new_row)
     return sorted(table_array, reverse=True, key=_sort_pass_fail)
 
@@ -212,7 +216,8 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
         if not new_passed_hashes:
             continue
         mt_rows = [[('', f'New passed tests for '
-                         f'{FORMATTED_TYPE_NAMES[mt]} model.')]]
+                         f'{FORMATTED_TYPE_NAMES[mt]} model.',
+                     '')]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
             path_loc = test[mt][1]
@@ -220,8 +225,10 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
                 path = path_loc[0]['path']
             else:
                 path = path_loc
-            new_row = [(test['test']),
-                       (f'/tests/{model_name}/{mt}/{test_hash}', path)]
+            new_row = [(*test['test'], stmt_db_link_msg)
+                       if len(test['test']) == 2 else test['test'],
+                       (f'/tests/{model_name}/{mt}/{test_hash}', path,
+                        pass_fail_msg)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
     if len(new_passed_tests) > 0:
@@ -259,9 +266,10 @@ def get_model_dashboard(model):
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
     model_info_contents = [
-        [('', 'Last Updated'), ('', last_update)],
-        [('', 'Network on Ndex'),
-         (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id)]]
+        [('', 'Last Updated', ''), ('', last_update, '')],
+        [('', 'Network on Ndex', ''),
+         (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
+          'Click to see network on Ndex')]]
     model_stats = get_model_stats(model)
     all_new_tests = [(k, v) for k, v in model_stats['test_round_summary'][
         'all_test_results'].items()]
@@ -269,12 +277,15 @@ def get_model_dashboard(model):
                            model_stats['test_round_summary']]
     all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [
-        (all_stmts[h], ('', str(c))) for h, c in most_supported]
+    top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
+                         if len(all_stmts[h]) == 2 else all_stmts[h],
+                         ('', str(c), '')) for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [[(all_stmts[h])] for h in added_stmts_hashes]
+        added_stmts = [[(*all_stmts[h], stmt_db_link_msg)
+                        if len(all_stmts[h]) == 2 else all_stmts[h]] for h in
+                       added_stmts_hashes]
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
