@@ -16,6 +16,7 @@ from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
 from emmaa.model import load_config_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
+from emmaa.answer_queries import FORMATTED_TYPE_NAMES
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -32,10 +33,6 @@ EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
-FORMATTED_MODEL_NAMES = {'pysb': 'PySB',
-                         'pybel': 'PyBEL',
-                         'signed_graph': 'Signed Graph',
-                         'unsigned_graph': 'Unsigned Graph'}
 link_list = [('./home', 'EMMAA Dashboard'),
              ('./query', 'Queries')]
 SC, jwt = config_auth(app)
@@ -211,7 +208,7 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
         if not new_passed_hashes:
             continue
         mt_rows = [[('', f'New passed tests for '
-                         f'{FORMATTED_MODEL_NAMES[mt]} model.')]]
+                         f'{FORMATTED_TYPE_NAMES[mt]} model.')]]
         for test_hash in new_passed_hashes:
             test = all_test_results[test_hash]
             path_loc = test[mt][1]
@@ -285,8 +282,8 @@ def get_model_dashboard(model):
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
-                           model_types=["Test", *[FORMATTED_MODEL_NAMES[mt]
-                                                  for mt in 
+                           model_types=["Test", *[FORMATTED_TYPE_NAMES[mt]
+                                                  for mt in
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
                                model_stats_json=model_stats,
@@ -330,7 +327,7 @@ def get_model_tests_page(model, model_type, test_hash):
                            test=test,
                            test_status=test_status,
                            path_list=path_list,
-                           formatted_names=FORMATTED_MODEL_NAMES)
+                           formatted_names=FORMATTED_TYPE_NAMES)
 
 
 @app.route('/query')
@@ -348,7 +345,7 @@ def get_query_page():
     return render_template('query_template.html', model_data=model_meta_data,
                            stmt_types=stmt_types, old_results=old_results,
                            link_list=link_list, user_email=user_email,
-                           user_id=user_id, model_names=FORMATTED_MODEL_NAMES)
+                           user_id=user_id, model_names=FORMATTED_TYPE_NAMES)
 
 
 @app.route('/query/submit', methods=['POST'])

@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 model_manager_cache = {}
 
+FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
+                         'pybel': 'PyBEL',
+                         'signed_graph': 'Signed Graph',
+                         'unsigned_graph': 'Unsigned Graph'}
+
 
 class QueryManager(object):
     """Manager to run queries and interact with the database.
