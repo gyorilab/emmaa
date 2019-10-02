@@ -376,8 +376,7 @@ def process_query():
                 subscribe = request.json['register']
             else:
                 # Not logged in
-                logger.warning('User not logged in! Query will not be '
-                               'registered.')
+                logger.warning('User not logged in! Query handling aborted.')
                 return jsonify({'result': 'failure',
                                 'reason': 'Invalid credentials'}), 401
         # Does not try to register
