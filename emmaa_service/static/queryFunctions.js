@@ -97,9 +97,13 @@ function submitQuery(queryDict, test) {
           queryNotify(msg);
           if (queryDict.register) report_login_result(msg);
           login(
-            (type, data) => {submitQuery(queryDict, test)},
+            (type, data) => {
+              submitQuery(queryDict, test);
+              handle_success(type, data);
+            },
             (type, data) => {submitQuery(queryDict, test)}
           );
+
           break;
         case 404:
           console.log('404 response');
