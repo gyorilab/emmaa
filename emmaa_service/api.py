@@ -39,6 +39,10 @@ SC, jwt = config_auth(app)
 qm = QueryManager()
 
 
+def _sort_pass_fail(r):
+    return tuple(r[n+1][1] for n in range(len(r)-1))
+
+
 def _get_model_meta_data():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
@@ -195,7 +199,7 @@ def _format_table_array(tests_json, model_types, model_name):
         for mt in model_types:
             new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0]))
         table_array.append(new_row)
-    return table_array
+    return sorted(table_array, reverse=True, key=_sort_pass_fail)
 
 
 def _new_passed_tests(model_name, model_stats_json, current_model_types):
