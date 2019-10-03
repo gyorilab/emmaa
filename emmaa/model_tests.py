@@ -244,7 +244,7 @@ class ModelManager(object):
                 link = get_statement_queries([stmt])[0] + '&format=html'
                 sentences.append((link, sentence, ''))
             elif self.link_type == 'elsevier':
-                pii = stmt.evidence[0].get('pii', None)
+                pii = stmt.evidence[0].annotations.get('pii', None)
                 if pii:
                     link = elsevier_url + pii
                     sentences.append((link, sentence, stmt.evidence[0].text))

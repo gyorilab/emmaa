@@ -125,7 +125,7 @@ class TestRound(object):
             link = get_statement_queries([stmt])[0] + '&format=html'
             evid_text = ''
         elif self.link_type == 'elsevier':
-            pii = stmt.evidence[0].get('pii', None)
+            pii = stmt.evidence[0].annotations.get('pii', None)
             if pii:
                 link = elsevier_url + pii
             else:
