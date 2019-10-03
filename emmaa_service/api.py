@@ -316,14 +316,7 @@ def get_model_dashboard(model):
 def get_model_tests_page(model, model_type, test_hash):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    model_meta_data = _get_model_meta_data()
     mod_link_list = [('../../../.' + t[0], t[1]) for t in link_list]
-    ndex_id = 'None available'
-    for mid, mmd in model_meta_data:
-        if mid == model:
-            ndex_id = mmd['ndex']['network']
-    if ndex_id == 'None available':
-        logger.warning(f'No ndex ID found for {model}')
     model_stats = get_model_stats(model)
     current_test = \
         model_stats['test_round_summary']['all_test_results'][test_hash]
@@ -338,7 +331,6 @@ def get_model_tests_page(model, model_type, test_hash):
                            all_model_types=current_model_types,
                            test_hash=test_hash,
                            model_stats_json=model_stats,
-                           ndexID=ndex_id,
                            test=test,
                            test_status=test_status,
                            path_list=path_list,
