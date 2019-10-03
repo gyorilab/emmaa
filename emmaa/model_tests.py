@@ -247,9 +247,9 @@ class ModelManager(object):
                 pii = stmt.evidence[0].get('pii', None)
                 if pii:
                     link = elsevier_url + pii
-                    sentences.append((link, sentence, evid[0].text))
+                    sentences.append((link, sentence, stmt.evidence[0].text))
                 else:
-                    sentences.append(('', sentence, evid[0].text))
+                    sentences.append(('', sentence, stmt.evidence[0].text))
         return sentences
 
     def make_english_result_code(self, result):
@@ -370,7 +370,7 @@ class ModelManager(object):
             'model_name': self.model.name,
             'statements': self.assembled_stmts_to_json(),
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'make_links': self.make_links})
+            'link_type': self.link_type})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}

@@ -6,6 +6,7 @@ from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         find_latest_s3_files, find_number_of_files_on_s3,
                         make_date_str, get_s3_client)
+from emmaa.model_tests import elsevier_url
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -55,7 +56,7 @@ class TestRound(object):
         self.mc_types_results = {}
         for mc_type in mc_types:
             self.mc_types_results[mc_type] = self._get_results(mc_type)
-        self.make_links = self.json_results[0].get('make_links', True)
+        self.link_type = self.json_results[0].get('link_type', 'indra_db')
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
@@ -121,11 +122,17 @@ class TestRound(object):
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
-        if self.make_links:
+        if self.link_type == 'indra_db':
             link = get_statement_queries([stmt])[0] + '&format=html'
-        else:
-            link = ''
-        return (link, sentence)
+            evid_text = ''
+        elif self.link_type == 'elsevier':
+            pii = stmt.evidence[0].get('pii', None)
+            if pii:
+                link = elsevier_url + pii
+            else:
+                link = ''
+            evid_text = stmt.evidence[0].text
+        return (link, sentence, evid_text)
 
     # Test Summary Methods
     def get_applied_test_hashes(self):
