@@ -19,8 +19,7 @@ from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name
-from emmaa.analyze_tests_results import TestRound, StatsGenerator, \
-    elsevier_url
+from emmaa.analyze_tests_results import elsevier_url
 from emmaa.answer_queries import QueryManager
 
 
