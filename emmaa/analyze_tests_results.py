@@ -481,3 +481,22 @@ class StatsGenerator(object):
         obj = client.get_object(Bucket='emmaa', Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
+
+
+def generate_model_stats_on_s3(model_name, upload_stats=True):
+    """Generate statistics for latest round of tests.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of EmmaaModel.
+    upload_stats : Optional[bool]
+        Whether to upload latest statistics about model and a test.
+        Default: True
+    """
+    sg = StatsGenerator(model_name)
+    sg.make_stats()
+    # Optionally upload stats to S3
+    if upload_stats:
+        sg.save_to_s3()
+    return sg
