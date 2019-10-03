@@ -535,8 +535,8 @@ def save_model_manager_to_s3(model_name, model_manager):
 
 
 def run_model_tests_from_s3(model_name, upload_mm=True,
-                            upload_results=True, upload_stats=True,
-                            registered_queries=True, db=None):
+                            upload_results=True, registered_queries=True,
+                            db=None):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -553,9 +553,6 @@ def run_model_tests_from_s3(model_name, upload_mm=True,
     upload_results : Optional[bool]
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests. Default: True
-    upload_stats : Optional[bool]
-        Whether to upload latest statistics about model and a test.
-        Default: True
     registered_queries : Optional[bool]
         If True, registered queries are fetched from the database and
         executed, the results are then saved to the database. Default: True
@@ -567,36 +564,25 @@ def run_model_tests_from_s3(model_name, upload_mm=True,
     emmaa.model_tests.ModelManager
         Instance of ModelManager containing the model data, list of applied
         tests and the test results.
-    emmaa.analyze_test_results.StatsGenerator
-        Instance of StatsGenerator containing statistics about model and test.
     """
     model = EmmaaModel.load_from_s3(model_name)
     test_corpus = model.test_config.get('test_corpus', 'large_corpus_tests.pkl')
     tests = load_tests_from_s3(test_corpus)
     mm = ModelManager(model)
+    # Optionally upload model manager to S3
     if upload_mm:
+        # NOTE we're saving the ModelManager object before identifying and
+        # running applicable tests - it contains assembled models and model
+        # checkers but does not contain test and test results (less memory)
         save_model_manager_to_s3(model_name, mm)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
-    results_json_dict = mm.results_to_json()
-    results_json_str = json.dumps(results_json_dict, indent=1)
     # Optionally upload test results to S3
     if upload_results:
-        client = get_s3_client(unsigned=False)
-        date_str = make_date_str()
-        result_key = f'results/{model_name}/results_{date_str}.json'
-        logger.info(f'Uploading test results to {result_key}')
-        client.put_object(Bucket='emmaa', Key=result_key,
-                          Body=results_json_str.encode('utf8'))
-    tr = TestRound(results_json_dict)
-    sg = StatsGenerator(model_name, latest_round=tr)
-    sg.make_stats()
-
-    # Optionally upload statistics to S3
-    if upload_stats:
-        sg.save_to_s3()
+        mm.upload_results()
+    # Optionally answer registered queries
     if registered_queries:
         qm = QueryManager(db=db, model_managers=[mm])
         qm.answer_registered_queries(model_name)
-    return (mm, sg)
+    return mm
