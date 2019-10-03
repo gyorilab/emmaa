@@ -18,7 +18,8 @@ from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name
-from emmaa.analyze_tests_results import TestRound, StatsGenerator
+from emmaa.analyze_tests_results import TestRound, StatsGenerator, \
+    elsevier_url
 from emmaa.answer_queries import QueryManager
 
 
@@ -26,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
-elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',

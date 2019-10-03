@@ -6,7 +6,6 @@ from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         find_latest_s3_files, find_number_of_files_on_s3,
                         make_date_str, get_s3_client)
-from emmaa.model_tests import elsevier_url
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -20,7 +19,7 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
     'paths': 'get_passed_test_hashes'}
-
+elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 
 class TestRound(object):
     """Analyzes the results of one test round.
