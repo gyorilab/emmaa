@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
+elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -92,6 +93,7 @@ class ModelManager(object):
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.make_links = model.test_config.get('make_links', True)
+        self.link_type = model.test_config.get('link_type', 'indra_db')
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -219,12 +221,13 @@ class ModelManager(object):
             for group in groups:
                 stmt_type = group[0][-1]
                 agent_names = group[0][1]
+                evid = stmts[0].evidence
                 if len(agent_names) != 2:
                     continue
                 if stmt_type == 'Influence':
                     stmt = get_class_from_name(stmt_type, Statement)(
                         Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])))
+                        Event(Concept(agent_names[1])), evidence=evid)
                 else:
                     try:
                         stmt = get_class_from_name(stmt_type, Statement)(
@@ -237,11 +240,16 @@ class ModelManager(object):
         for stmt in stmts:
             ea = EnglishAssembler([stmt])
             sentence = ea.make_model()
-            if self.make_links:
+            if self.link_type == 'indra_db':
                 link = get_statement_queries([stmt])[0] + '&format=html'
-                sentences.append((link, sentence))
-            else:
-                sentences.append(('', sentence))
+                sentences.append((link, sentence, ''))
+            elif self.link_type == 'elsevier':
+                pii = stmt.evidence[0].get('pii', None)
+                if pii:
+                    link = elsevier_url + pii
+                    sentences.append((link, sentence, evid[0].text))
+                else:
+                    sentences.append(('', sentence, evid[0].text))
         return sentences
 
     def make_english_result_code(self, result):
