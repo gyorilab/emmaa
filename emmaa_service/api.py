@@ -244,8 +244,7 @@ def get_home():
     model_data = _get_model_meta_data()
     return render_template('index_template.html', model_data=model_data,
                            link_list=link_list,
-                           user_email=user.email if user else "",
-                           identity=user.identity() if user else None)
+                           user_email=user.email if user else "")
 
 
 @app.route('/dashboard/<model>')
