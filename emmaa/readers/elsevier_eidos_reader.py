@@ -30,6 +30,8 @@ def read_elsevier_eidos_search_terms(piis_to_terms):
     estmts = []
     for pii, stmts in pii_stmts.items():
         for stmt in stmts:
+            for evid in stmt.evidence:
+                evid.annotations['pii'] = pii
             es = EmmaaStatement(stmt, date, piis_to_terms[pii])
             estmts.append(es)
     return estmts

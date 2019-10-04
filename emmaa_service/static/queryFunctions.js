@@ -97,9 +97,13 @@ function submitQuery(queryDict, test) {
           queryNotify(msg);
           if (queryDict.register) report_login_result(msg);
           login(
-            (type, data) => {submitQuery(queryDict, test)},
+            (type, data) => {
+              submitQuery(queryDict, test);
+              handle_success(type, data);
+            },
             (type, data) => {submitQuery(queryDict, test)}
           );
+
           break;
         case 404:
           console.log('404 response');
@@ -123,7 +127,7 @@ function populateQueryResults(json) {
   let qrTable = document.getElementById('queryResults');
   clearTable(qrTable);
   for (let res of json.result) {
-    let rowEl = addToRow([res['model'], res['mc_type'], res['response']])
+    let rowEl = addToRow([res['model'], res['model_type_name'], res['response']]);
     rowEl.children[1] = linkifyFromString(rowEl.children[2], rowEl.children[2].textContent);
     qrTable.appendChild(rowEl);
   }

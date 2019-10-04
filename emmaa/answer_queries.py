@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 model_manager_cache = {}
 
+FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
+                         'pybel': 'PyBEL',
+                         'signed_graph': 'Signed Graph',
+                         'unsigned_graph': 'Unsigned Graph'}
+
 
 class QueryManager(object):
     """Manager to run queries and interact with the database.
@@ -298,6 +303,7 @@ def format_results(results):
         query = result[1]
         formatted_result['query'] = _make_query_simple_dict(query)
         formatted_result['mc_type'] = result[2]
+        formatted_result['model_type_name'] = FORMATTED_TYPE_NAMES[result[2]]
         response_json = result[3]
         response = _process_result_to_html(response_json)
         formatted_result['response'] = response

@@ -18,7 +18,8 @@ from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name
-from emmaa.analyze_tests_results import TestRound, StatsGenerator
+from emmaa.analyze_tests_results import TestRound, StatsGenerator, \
+    elsevier_url
 from emmaa.answer_queries import QueryManager
 
 
@@ -92,6 +93,7 @@ class ModelManager(object):
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.make_links = model.test_config.get('make_links', True)
+        self.link_type = model.test_config.get('link_type', 'indra_db')
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -219,12 +221,13 @@ class ModelManager(object):
             for group in groups:
                 stmt_type = group[0][-1]
                 agent_names = group[0][1]
+                evid = stmts[0].evidence
                 if len(agent_names) != 2:
                     continue
                 if stmt_type == 'Influence':
                     stmt = get_class_from_name(stmt_type, Statement)(
                         Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])))
+                        Event(Concept(agent_names[1])), evidence=evid)
                 else:
                     try:
                         stmt = get_class_from_name(stmt_type, Statement)(
@@ -237,11 +240,16 @@ class ModelManager(object):
         for stmt in stmts:
             ea = EnglishAssembler([stmt])
             sentence = ea.make_model()
-            if self.make_links:
+            if self.link_type == 'indra_db':
                 link = get_statement_queries([stmt])[0] + '&format=html'
-                sentences.append((link, sentence))
-            else:
-                sentences.append(('', sentence))
+                sentences.append((link, sentence, ''))
+            elif self.link_type == 'elsevier':
+                pii = stmt.evidence[0].annotations.get('pii', None)
+                if pii:
+                    link = elsevier_url + pii
+                    sentences.append((link, sentence, stmt.evidence[0].text))
+                else:
+                    sentences.append(('', sentence, stmt.evidence[0].text))
         return sentences
 
     def make_english_result_code(self, result):
@@ -362,7 +370,7 @@ class ModelManager(object):
             'model_name': self.model.name,
             'statements': self.assembled_stmts_to_json(),
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'make_links': self.make_links})
+            'link_type': self.link_type})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}

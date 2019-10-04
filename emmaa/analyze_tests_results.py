@@ -19,7 +19,7 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
     'paths': 'get_passed_test_hashes'}
-
+elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 
 class TestRound(object):
     """Analyzes the results of one test round.
@@ -55,7 +55,7 @@ class TestRound(object):
         self.mc_types_results = {}
         for mc_type in mc_types:
             self.mc_types_results[mc_type] = self._get_results(mc_type)
-        self.make_links = self.json_results[0].get('make_links', True)
+        self.link_type = self.json_results[0].get('link_type', 'indra_db')
         self.tests = self._get_tests()
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
         self.english_test_results = self._get_applied_tests_results()
@@ -121,11 +121,17 @@ class TestRound(object):
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
-        if self.make_links:
+        if self.link_type == 'indra_db':
             link = get_statement_queries([stmt])[0] + '&format=html'
-        else:
-            link = ''
-        return (link, sentence)
+            evid_text = ''
+        elif self.link_type == 'elsevier':
+            pii = stmt.evidence[0].annotations.get('pii', None)
+            if pii:
+                link = elsevier_url + pii
+            else:
+                link = ''
+            evid_text = stmt.evidence[0].text
+        return (link, sentence, evid_text)
 
     # Test Summary Methods
     def get_applied_test_hashes(self):
