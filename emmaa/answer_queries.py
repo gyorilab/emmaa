@@ -296,19 +296,41 @@ def is_query_result_diff(new_result_json, old_result_json=None):
 
 def format_results(results):
     """Format db output to a standard json structure."""
-    formatted_results = []
+    # formatted_results = []
+    # for result in results:
+    #     formatted_result = {}
+    #     formatted_result['model'] = result[0]
+    #     query = result[1]
+    #     formatted_result['query'] = _make_query_simple_dict(query)
+    #     formatted_result['mc_type'] = result[2]
+    #     formatted_result['model_type_name'] = FORMATTED_TYPE_NAMES[result[2]]
+    #     response_json = result[3]
+    #     response = _process_result_to_html(response_json)
+    #     formatted_result['response'] = response
+    #     formatted_result['date'] = make_date_str(result[4])
+    #     formatted_results.append(formatted_result)
+    # return formatted_results
+
+    formatted_results = {}
     for result in results:
-        formatted_result = {}
-        formatted_result['model'] = result[0]
+        model = result[0]
         query = result[1]
-        formatted_result['query'] = _make_query_simple_dict(query)
-        formatted_result['mc_type'] = result[2]
-        formatted_result['model_type_name'] = FORMATTED_TYPE_NAMES[result[2]]
+        query_hash = query.get_hash_with_model(model)
+        if query_hash not in formatted_results:
+            formatted_results[query_hash] = {
+                'query': _make_query_simple_dict(query),
+                'model': model,
+                'date': make_date_str(result[4])}
+        mc_type = result[2]
         response_json = result[3]
-        response = _process_result_to_html(response_json)
-        formatted_result['response'] = response
-        formatted_result['date'] = make_date_str(result[4])
-        formatted_results.append(formatted_result)
+        if mc_type == '' and \
+                response_json == 'Query is not applicable for this model':
+            formatted_results[query_hash]['n_a'] = response_json
+        elif isinstance(response_json, str) and \
+                not response_json == 'Path found but exceeds search depth':
+            formatted_results[query_hash][mc_type] = ['Fail', response_json]
+        else:
+            formatted_results[query_hash][mc_type] = ['Pass', response_json]
     return formatted_results
 
 
