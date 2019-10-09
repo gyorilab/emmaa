@@ -209,6 +209,20 @@ def _format_table_array(tests_json, model_types, model_name):
     return sorted(table_array, reverse=True, key=_sort_pass_fail)
 
 
+def _format_query_results(formatted_results):
+    result_array = []
+    for qh, res in formatted_results.items():
+        model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
+        model = res['model']
+        new_res = [('', res["query"], ''),
+                   (f'/{model}', model, f'Click to see details about {model}')]
+        for mt in model_types:
+            new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
+                            'Click to see detailed results for this query'))
+        result_array.append(new_res)
+    return result_array
+
+
 def _new_passed_tests(model_name, model_stats_json, current_model_types):
     new_passed_tests = []
     all_test_results = model_stats_json['test_round_summary'][
@@ -350,9 +364,21 @@ def get_query_page():
     # user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email) if user_email else []
 
-    return render_template('query_template.html', model_data=model_meta_data,
-                           stmt_types=stmt_types, old_results=old_results,
-                           link_list=link_list, user_email=user_email)
+@app.route('/query/<model>/<model_type>/<query_hash>')
+def get_query_tests_page(model, model_type, query_hash):
+    raw_query_json = session['raw_query_result']
+    detailed_results = raw_query_json[query_hash][model_type]
+    return render_template('tests_template.html',
+                           link_list=link_list,
+                           model=model,
+                           model_type=model_type,
+                           all_model_types=ALL_MODEL_TYPES,
+                           test_hash=query_hash,
+                           model_stats_json=raw_query_json,
+                           test=('', raw_query_json['query'], 'No link'),
+                           test_status=detailed_results[0],
+                           path_list=detailed_results[1],
+                           formatted_names=FORMATTED_TYPE_NAMES)
 
 
 @app.route('/query/submit', methods=['POST'])
@@ -426,7 +452,8 @@ def process_query():
         redir_url = '/query'
 
         # Replace existing entry
-        session['immediate_query_result'] = result
+        session['immediate_query_result'] = _format_query_results(result)
+        session['raw_query_result'] = result
         res = {'redirectURL': redir_url}
 
     logger.info('Result: %s' % str(res))
