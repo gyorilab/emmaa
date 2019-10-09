@@ -414,5 +414,5 @@ def _make_query_simple_dict(query):
 def _make_query_str(query):
     stmt = query.path_stmt
     subj, obj = stmt.agent_list()
-    query_str = type(stmt).__name__ + '(' + subj.name, + ', ' + obj.name + ')'
-    return query_str
+    parts = [type(stmt).__name__, '(', subj.name, ', ', obj.name, ')']
+    return ''.join(parts)
