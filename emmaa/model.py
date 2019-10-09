@@ -227,6 +227,16 @@ class EmmaaModel(object):
         stmts = self.get_indra_stmts()
         stmts = self.filter_event_association(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
+        if not self.assembly_config.get('skip_map_grounding'):
+            stmts = ac.map_grounding(stmts)
+        if self.assembly_config.get('filter_ungrounded'):
+            score_threshold = self.assembly_config.get('score_threshold')
+            stmts = ac.filter_grounded_only(
+                stmts, score_threshold=score_threshold)
+        if not self.assembly_config.get('skip_filter_human'):
+            stmts = ac.filter_human_only(stmts)
+        if not self.assembly_config.get('skip_map_sequence'):
+            stmts = ac.map_sequence(stmts)
         # Use WM hierarchies and belief scorer for WM preassembly
         preassembly_mode = self.assembly_config.get('preassembly_mode')
         if preassembly_mode == 'wm':
@@ -240,12 +250,6 @@ class EmmaaModel(object):
             stmts = ac.run_preassembly(stmts, return_toplevel=False)
         if self.assembly_config.get('standardize_names'):
             ac.standardize_names_groundings(stmts)
-        if not self.assembly_config.get('skip_map_grounding'):
-            stmts = ac.map_grounding(stmts)
-        if self.assembly_config.get('filter_ungrounded'):
-            score_threshold = self.assembly_config.get('score_threshold')
-            stmts = ac.filter_grounded_only(
-                stmts, score_threshold=score_threshold)
         if self.assembly_config.get('merge_groundings'):
             stmts = ac.merge_groundings(stmts)
         if self.assembly_config.get('merge_deltas'):
@@ -253,10 +257,6 @@ class EmmaaModel(object):
         relevance_policy = self.assembly_config.get('filter_relevance')
         if relevance_policy:
             stmts = self.filter_relevance(stmts, relevance_policy)
-        if not self.assembly_config.get('skip_filter_human'):
-            stmts = ac.filter_human_only(stmts)
-        if not self.assembly_config.get('skip_map_sequence'):
-            stmts = ac.map_sequence(stmts)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
