@@ -85,7 +85,10 @@ function submitQuery(queryDict, test) {
         case 200:
           console.log('200 response');
           queryNotify('Query resolved');
-          populateQueryResults(xhr.responseJSON);
+          if (xhr.responseJSON.redirectURL) {
+            window.location.replace(xhr.responseJSON.redirectURL);
+          }
+          // populateQueryResults(xhr.responseJSON);
           break;
         case 400:
           console.log('400 response');
