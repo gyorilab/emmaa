@@ -342,16 +342,7 @@ def format_results(results):
         else:
             formatted_results[query_hash][mc_type] = ['Pass', response]
 
-    result_array = []
-    for qh, res in formatted_results.items():
-        model = res['model']
-        new_res = [('', res["query"], ''),
-                   (f'/{model}', model, f'Click to see details about {model}')]
-        for mt in model_types:
-            new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
-                            'Click to see detailed results for this query'))
-        result_array.append(new_res)
-    return result_array
+    return formatted_results
 
 
 def load_model_manager_from_s3(model_name):
