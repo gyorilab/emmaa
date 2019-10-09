@@ -238,22 +238,22 @@ class QueryManager(object):
                     msg = f'<p>This is the first result to query {query} in ' \
                           f'{model_name} with {mc_type} model checker. ' \
                           f'The result is:<br>'
-                    msg += _process_result_to_html(new_result_json)
+                    msg += _process_result_to_str(new_result_json)
                     msg += '</p>'
                 else:
                     msg = f'<p>A new result to query {query} in ' \
                           f'{model_name} was found with {mc_type} ' \
                           f'model checker.<br>'
                     msg += '<br>Previous result was:<br>'
-                    msg += _process_result_to_html(old_result_json)
+                    msg += _process_result_to_str(old_result_json)
                     msg += '<br>New result is:<br>'
-                    msg += _process_result_to_html(new_result_json)
+                    msg += _process_result_to_str(new_result_json)
                     msg += '</p>'
             else:
                 msg = f'<p>A result to query {query} in ' \
                       f'{model_name} from {mc_type} model checker did not ' \
                       f'change. The result is:<br>'
-                msg += _process_result_to_html(new_result_json)
+                msg += _process_result_to_str(new_result_json)
                 msg += '</p>'
             return msg
 
@@ -323,14 +323,20 @@ def format_results(results):
                 'date': make_date_str(result[4])}
         mc_type = result[2]
         response_json = result[3]
+        response = []
+        for v in response_json.values:
+            if isinstance(v, str):
+                response = v
+            elif isinstance(v, dict):
+                response.append(v)
         if mc_type == '' and \
-                response_json == 'Query is not applicable for this model':
-            formatted_results[query_hash]['n_a'] = response_json
-        elif isinstance(response_json, str) and \
-                not response_json == 'Path found but exceeds search depth':
-            formatted_results[query_hash][mc_type] = ['Fail', response_json]
+                response == 'Query is not applicable for this model':
+            formatted_results[query_hash]['n_a'] = response
+        elif isinstance(response, str) and \
+                not response == 'Path found but exceeds search depth':
+            formatted_results[query_hash][mc_type] = ['Fail', response]
         else:
-            formatted_results[query_hash][mc_type] = ['Pass', response_json]
+            formatted_results[query_hash][mc_type] = ['Pass', response]
     return formatted_results
 
 
@@ -351,29 +357,31 @@ def load_model_manager_from_s3(model_name):
 
 
 def _process_result_to_str(result_json):
-    # Remove the links when making text report
     msg = '\n'
     for v in result_json.values():
-        for sentence, link in v:
-            msg += sentence
+        if isinstance(v, str):
+            msg += v
+        elif isinstance(v, dict):
+            msg += v['path']
+            msg += '\n'
     return msg
 
 
-def _process_result_to_html(result_json):
-    # Make clickable links when making htmk report
-    response_list = []
-    for v in result_json.values():
-        for ix, (sentence, link) in enumerate(v):
-            if ix > 0:
-                response_list.append('<br>')
-            if link:
-                response_list.append(
-                    f'<a href="{link}" target="_blank" '
-                    f'class="status-link">{sentence}</a>')
-            else:
-                response_list.append(f'<a>{sentence}</a>')
-        response = ''.join(response_list)
-    return response
+# def _process_result_to_html(result_json):
+#     # Make clickable links when making htmk report
+#     response_list = []
+#     for v in result_json.values():
+#         for ix, (sentence, link) in enumerate(v):
+#             if ix > 0:
+#                 response_list.append('<br>')
+#             if link:
+#                 response_list.append(
+#                     f'<a href="{link}" target="_blank" '
+#                     f'class="status-link">{sentence}</a>')
+#             else:
+#                 response_list.append(f'<a>{sentence}</a>')
+#         response = ''.join(response_list)
+#     return response
 
 
 def _make_query_simple_dict(query):
