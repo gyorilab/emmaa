@@ -33,8 +33,8 @@ EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
-link_list = [('./home', 'EMMAA Dashboard'),
-             ('./query', 'Queries')]
+link_list = [('/home', 'EMMAA Dashboard'),
+             ('/query', 'Queries')]
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
@@ -291,7 +291,7 @@ def get_model_dashboard(model):
                            model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
-                           link_list=mod_link_list,
+                           link_list=link_list,
                            user_email=user.email if user else "",
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
@@ -324,7 +324,7 @@ def get_model_tests_page(model, model_type, test_hash):
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
     return render_template('tests_template.html',
-                           link_list=mod_link_list,
+                           link_list=link_list,
                            model=model,
                            model_type=model_type,
                            all_model_types=current_model_types,
