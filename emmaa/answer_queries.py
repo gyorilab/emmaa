@@ -310,7 +310,7 @@ def format_results(results):
     #     formatted_result['date'] = make_date_str(result[4])
     #     formatted_results.append(formatted_result)
     # return formatted_results
-
+    model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
     for result in results:
         model = result[0]
@@ -331,25 +331,25 @@ def format_results(results):
                 response.append(v)
         if mc_type == '' and \
                 response == 'Query is not applicable for this model':
-            formatted_results[query_hash]['n_a'] = response
+            for mt in model_types:
+                formatted_results[query_hash][mt] = ['n_a', response]
+        elif isinstance(response, str) and \
+                response == 'Statement type not handled':
+            formatted_results[query_hash][mc_type] = ['n_a', response]
         elif isinstance(response, str) and \
                 not response == 'Path found but exceeds search depth':
             formatted_results[query_hash][mc_type] = ['Fail', response]
         else:
             formatted_results[query_hash][mc_type] = ['Pass', response]
 
-    model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     result_array = []
     for qh, res in formatted_results.items():
         model = res['model']
         new_res = [('', res["query"], ''),
                    (f'/{model}', model, f'Click to see details about {model}')]
-        if 'n_a' in res:
-            new_res.append(('', 'n_a', ''))
-        else:
-            for mt in model_types:
-                new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
-                                'Click to see detailed results for this query'))
+        for mt in model_types:
+            new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
+                            'Click to see detailed results for this query'))
         result_array.append(new_res)
     return result_array
 
