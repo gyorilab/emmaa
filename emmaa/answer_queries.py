@@ -318,7 +318,7 @@ def format_results(results):
         query_hash = query.get_hash_with_model(model)
         if query_hash not in formatted_results:
             formatted_results[query_hash] = {
-                'query': _make_query_simple_dict(query),
+                'query': _make_query_str(query),
                 'model': model,
                 'date': make_date_str(result[4])}
         mc_type = result[2]
@@ -340,10 +340,11 @@ def format_results(results):
 
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     result_array = []
-    for qh, res in formatted_results.values():
-        new_res = [('', res['query'], ''),
-                   (f'/{res['model']}', res['model'],
-                    f'Click to see details about {res['model']}')]
+    for qh, res in formatted_results.items():
+        model = res['model']
+        new_res = [('', res["query"], ''),
+                   (f'/{model}', model,
+                    f'Click to see details about {model}')]
         if 'n_a' in res:
             new_res.append('', 'n_a', '')
         else:
@@ -408,3 +409,10 @@ def _make_query_simple_dict(query):
     query_dict['subjectSelection'] = subj.name
     query_dict['objectSelection'] = obj.name
     return query_dict
+
+
+def _make_query_str(query):
+    stmt = query.path_stmt
+    subj, obj = stmt.agent_list()
+    query_str = type(stmt).__name__ + '(' + subj.name, + ', ' + obj.name + ')'
+    return query_str
