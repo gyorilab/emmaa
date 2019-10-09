@@ -324,7 +324,7 @@ def format_results(results):
         mc_type = result[2]
         response_json = result[3]
         response = []
-        for v in response_json.values:
+        for v in response_json.values():
             if isinstance(v, str):
                 response = v
             elif isinstance(v, dict):
