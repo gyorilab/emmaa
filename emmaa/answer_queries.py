@@ -343,10 +343,9 @@ def format_results(results):
     for qh, res in formatted_results.items():
         model = res['model']
         new_res = [('', res["query"], ''),
-                   (f'/{model}', model,
-                    f'Click to see details about {model}')]
+                   (f'/{model}', model, f'Click to see details about {model}')]
         if 'n_a' in res:
-            new_res.append('', 'n_a', '')
+            new_res.append(('', 'n_a', ''))
         else:
             for mt in model_types:
                 new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
