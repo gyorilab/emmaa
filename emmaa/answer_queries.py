@@ -337,7 +337,21 @@ def format_results(results):
             formatted_results[query_hash][mc_type] = ['Fail', response]
         else:
             formatted_results[query_hash][mc_type] = ['Pass', response]
-    return formatted_results
+
+    model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+    result_array = []
+    for qh, res in formatted_results.values():
+        new_res = [('', res['query'], ''),
+                   (f'/{res['model']}', res['model'],
+                    f'Click to see details about {res['model']}')]
+        if 'n_a' in res:
+            new_res.append('', 'n_a', '')
+        else:
+            for mt in model_types:
+                new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
+                                'Click to see detailed results for this query'))
+        result_array.append(new_res)
+    return result_array
 
 
 def load_model_manager_from_s3(model_name):
