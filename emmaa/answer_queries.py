@@ -37,6 +37,9 @@ class QueryManager(object):
             self, user_email, user_id, query, model_names, subscribe):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
+        # Retrieve query-model hashes
+        query_hashes = [
+            query.get_hash_with_model(model) for model in model_names]
         # Store query in the database for future reference.
         self.db.put_queries(user_email, user_id, query, model_names, subscribe)
         # Check if the query has already been answered for any of given models
@@ -45,9 +48,9 @@ class QueryManager(object):
         if not saved_results:
             saved_results = []
         checked_models = {res[0] for res in saved_results}
-        # If the query was answered for all models before, return the results.
+        # If the query was answered for all models before, return the hashes.
         if checked_models == set(model_names):
-            return format_results(saved_results)
+            return query_hashes
         # Run queries mechanism for models for which result was not found.
         new_results = []
         new_date = datetime.now()
@@ -57,12 +60,9 @@ class QueryManager(object):
                 mm = self.get_model_manager(model_name)
                 response_list = mm.answer_query(query)
                 for (mc_type, response) in response_list:
-                    new_results.append(
-                        (model_name, query, mc_type, response, new_date))
                     results_to_store.append((query, mc_type, response))
                 self.db.put_results(model_name, results_to_store)
-        all_results = saved_results + new_results
-        return format_results(all_results)
+        return query_hashes
 
     def answer_registered_queries(
             self, model_name, find_delta=True, notify=False):
