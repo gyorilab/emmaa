@@ -361,9 +361,17 @@ def get_query_page():
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
+    if session.get('raw_query_result'):
+        res = list(session['raw_query_result'].values())[0]
+        immediate_table_headers =\
+            ['Query', 'Model', *[mt for mt in ALL_MODEL_TYPES if mt in res]]
+    else:
+        immediate_table_headers = None
+    # Subscribed results
     # user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email) if user_email else []
     return render_template('query_template.html',
+                           immediate_table_headers=immediate_table_headers,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
                            old_results=old_results,
