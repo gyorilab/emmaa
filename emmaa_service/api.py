@@ -367,14 +367,21 @@ def get_query_page():
         immediate_table_headers = None
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    old_results = qm.get_registered_queries(user_email) if user_email else []
+    subscribed_results = qm.get_registered_queries(user_email)\
+        if user_email else {}
+    subscribed_headers =\
+        ['Model', 'Query'] + \
+        [mt for mt in list(subscribed_results.values())[0]
+         if mt in ALL_MODEL_TYPES] if subscribed_results else []
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
-                           old_results=old_results,
+                           subscribed_results=_format_query_results(subscribed_results),
+                           subscribed_headers=subscribed_headers,
                            link_list=link_list,
                            user_email=user_email)
+
 
 @app.route('/query/<model>/<model_type>/<query_hash>')
 def get_query_tests_page(model, model_type, query_hash):
