@@ -292,10 +292,15 @@ class EmmaaDatabaseManager(object):
     def get_results_from_query(self, query, model_ids, latest_order=1):
         logger.info(f"Got request for results of {query} on {model_ids}.")
         hashes = {query.get_hash_with_model(model_id) for model_id in model_ids}
+        return self.get_results_from_hashes(hashes)
+
+    def get_results_from_hashes(self, query_hashes, latest_order=1):
+        logger.info(f"Got request for results of queries with hashes "
+                    f"{query_hashes}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
                             Result.result_json, Result.date)
-                 .filter(Result.query_hash.in_(hashes),
+                 .filter(Result.query_hash.in_(query_hashes),
                          Query.hash == Result.query_hash))
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
