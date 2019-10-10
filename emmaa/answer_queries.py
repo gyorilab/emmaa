@@ -296,20 +296,6 @@ def is_query_result_diff(new_result_json, old_result_json=None):
 
 def format_results(results):
     """Format db output to a standard json structure."""
-    # formatted_results = []
-    # for result in results:
-    #     formatted_result = {}
-    #     formatted_result['model'] = result[0]
-    #     query = result[1]
-    #     formatted_result['query'] = _make_query_simple_dict(query)
-    #     formatted_result['mc_type'] = result[2]
-    #     formatted_result['model_type_name'] = FORMATTED_TYPE_NAMES[result[2]]
-    #     response_json = result[3]
-    #     response = _process_result_to_html(response_json)
-    #     formatted_result['response'] = response
-    #     formatted_result['date'] = make_date_str(result[4])
-    #     formatted_results.append(formatted_result)
-    # return formatted_results
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
     for result in results:
@@ -370,35 +356,6 @@ def _process_result_to_str(result_json):
             msg += v['path']
             msg += '\n'
     return msg
-
-
-# def _process_result_to_html(result_json):
-#     # Make clickable links when making htmk report
-#     response_list = []
-#     for v in result_json.values():
-#         for ix, (sentence, link) in enumerate(v):
-#             if ix > 0:
-#                 response_list.append('<br>')
-#             if link:
-#                 response_list.append(
-#                     f'<a href="{link}" target="_blank" '
-#                     f'class="status-link">{sentence}</a>')
-#             else:
-#                 response_list.append(f'<a>{sentence}</a>')
-#         response = ''.join(response_list)
-#     return response
-
-
-def _make_query_simple_dict(query):
-    """Turn Query object into a simple dictionary for easier representation on
-    the dashboard."""
-    query_dict = {}
-    stmt = query.path_stmt
-    query_dict['typeSelection'] = type(stmt).__name__
-    subj, obj = stmt.agent_list()
-    query_dict['subjectSelection'] = subj.name
-    query_dict['objectSelection'] = obj.name
-    return query_dict
 
 
 def _make_query_str(query):

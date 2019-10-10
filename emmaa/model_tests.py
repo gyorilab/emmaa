@@ -128,40 +128,6 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
-    # def make_english_path(self, mc_type, result):
-    #     """Create an English description of a path."""
-    #     paths = []
-    #     if result.paths:
-    #         for path in result.paths:
-    #             sentences = []
-    #             if mc_type == 'signed_graph' or mc_type == 'unsigned_graph':
-    #                 for i in range(len(path[:-1])):
-    #                     sentence = path[i][0] + ' -> ' + path[i+1][0]
-    #                     sentences.append((sentence, ''))
-    #             else:
-    #                 if mc_type == 'pysb':
-    #                     stmts = stmts_from_pysb_path(
-    #                         path, self.mc_types['pysb']['model'],
-    #                         self.model.assembled_stmts)
-    #                 elif mc_type == 'pybel':
-    #                     stmts = stmts_from_pybel_path(
-    #                         path, self.mc_types['pybel']['model'],
-    #                         from_db=False, stmts=self.model.assembled_stmts)
-    #                 for stmt in stmts:
-    #                     if not stmt:
-    #                         continue
-    #                     if isinstance(stmt, list):
-    #                         stmt = stmt[0]
-    #                     ea = EnglishAssembler([stmt])
-    #                     sentence = ea.make_model()
-    #                     if self.make_links:
-    #                         link = get_statement_queries([stmt])[0] + '&format=html'
-    #                         sentences.append((sentence, link))
-    #                     else:
-    #                         sentences.append((sentence, ''))
-    #             paths.append(sentences)
-    #     return paths
-
     def make_path_json(self, mc_type, result):
         paths = []
         if result.paths:
@@ -251,11 +217,6 @@ class ModelManager(object):
                 else:
                     sentences.append(('', sentence, stmt.evidence[0].text))
         return sentences
-
-    # def make_english_result_code(self, result):
-    #     """Get an English explanation of a result code."""
-    #     result_code = result.result_code
-    #     return [[(RESULT_CODES[result_code], result_codes_link)]]
 
     def make_result_code(self, result):
         result_code = result.result_code
