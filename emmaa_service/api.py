@@ -367,18 +367,19 @@ def get_query_page():
         immediate_table_headers = None
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
+    subscribed_headers = []
     if user_email:
         sub_res = qm.get_registered_queries(user_email)
         if sub_res:
             subscribed_results = _format_query_results(sub_res)
+            subscribed_headers = \
+                ['Model', 'Query'] + \
+                [mt for mt in list(sub_res.values())[0]
+                 if mt in ALL_MODEL_TYPES]
         else:
             subscribed_results = 'You have no subscribed queries'
     else:
         subscribed_results = 'Please log in to see your subscribed queries'
-    subscribed_headers =\
-        ['Model', 'Query'] + \
-        [mt for mt in list(subscribed_results.values())[0]
-         if mt in ALL_MODEL_TYPES] if subscribed_results else []
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            model_data=model_meta_data,
