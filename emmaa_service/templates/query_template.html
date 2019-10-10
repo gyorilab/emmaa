@@ -101,33 +101,6 @@
 {% if session['immediate_query_result'] %}
   {{ path_card(session['immediate_query_result'], 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
 {% endif %}
-{#  <div class="card">#}
-{#    <div class="card-header">#}
-{#      <h4 class="my-0 font-weight-normal">Results</h4>#}
-{#    </div>#}
-{#    <div class="card-body" id="query-results">#}
-{#    {% if session['immediate_query_result'] %}#}
-{#      <table class="table">#}
-{#        <thead>#}
-{#          <th>Model</th>#}
-{#          <th>Model Type</th>#}
-{#          <th>Result</th>#}
-{#        </thead>#}
-{#        <tbody class="table-body" id="queryResults">#}
-{#          {% for res in session['immediate_query_result'] %}#}
-{#            <tr>#}
-{#              <td>{{ res['model'] }}</td>#}
-{#              <td>{{ res['model_type_name'] }}</td>#}
-{#              <td>{{ res['response']|safe }}</td>#}
-{#            </tr>#}
-{#          {% endfor %}#}
-{#        </tbody>#}
-{#      </table>#}
-{#    {% else %}#}
-{#      <i>No query response</i>#}
-{#    {% endif %}#}
-{#    </div>#}
-{#  </div>#}
 </div>
 <!-- List user queries -->
 <div class="container">
