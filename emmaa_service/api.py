@@ -215,7 +215,8 @@ def _format_query_results(formatted_results):
         model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
         model = res['model']
         new_res = [('', res["query"], ''),
-                   (f'/{model}', model, f'Click to see details about {model}')]
+                   (f'/dashboard/{model}', model,
+                    f'Click to see details about {model}')]
         for mt in model_types:
             new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
                             'Click to see detailed results for this query'))
