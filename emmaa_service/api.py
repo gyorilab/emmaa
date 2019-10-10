@@ -3,7 +3,6 @@ import json
 import boto3
 import logging
 import argparse
-from urllib import parse
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
@@ -270,7 +269,6 @@ def get_home():
 def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
 
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
@@ -333,7 +331,6 @@ def get_model_dashboard(model):
 def get_model_tests_page(model, model_type, test_hash):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    mod_link_list = [('../../../.' + t[0], t[1]) for t in link_list]
     model_stats = get_model_stats(model)
     current_test = \
         model_stats['test_round_summary']['all_test_results'][test_hash]
