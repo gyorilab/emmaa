@@ -399,16 +399,16 @@ def get_query_page():
 
 @app.route('/query/<model>/<model_type>/<query_hash>')
 def get_query_tests_page(model, model_type, query_hash):
-    raw_query_json = session['raw_query_result']
-    detailed_results = raw_query_json[query_hash][model_type]
+    queried_hashes = session['query_hashes']
+    results = qm.retrieve_results_from_hashes(queried_hashes)
+    detailed_results = results[query_hash][model_type]
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
                            model_type=model_type,
                            all_model_types=ALL_MODEL_TYPES,
                            test_hash=query_hash,
-                           model_stats_json=raw_query_json,
-                           test=('', raw_query_json['query'], 'No link'),
+                           test=('', results[query_hash]['query'], 'No link'),
                            test_status=detailed_results[0],
                            path_list=detailed_results[1],
                            formatted_names=FORMATTED_TYPE_NAMES)
