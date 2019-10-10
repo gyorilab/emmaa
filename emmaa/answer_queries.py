@@ -53,16 +53,14 @@ class QueryManager(object):
         new_date = datetime.now()
         for model_name in model_names:
             if model_name not in checked_models:
+                results_to_store = []
                 mm = self.get_model_manager(model_name)
                 response_list = mm.answer_query(query)
                 for (mc_type, response) in response_list:
                     new_results.append(
                         (model_name, query, mc_type, response, new_date))
-                if subscribe:
-                    self.db.put_results(
-                        model_name,
-                        [(query, mc_type, response)
-                         for mc_type, response in response_list])
+                    results_to_store.append((query, mc_type, response))
+                self.db.put_results(model_name, results_to_store)
         all_results = saved_results + new_results
         return format_results(all_results)
 
