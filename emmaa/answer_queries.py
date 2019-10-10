@@ -94,7 +94,7 @@ class QueryManager(object):
     def retrieve_results_from_hashes(self, query_hashes):
         """Retrieve results from a db given a list of query-model hashes."""
         results = self.db.get_results_from_hashes(query_hashes)
-        return format_results
+        return format_results(results)
 
     def make_reports_from_results(
             self, new_results, stored=True, report_format='str'):
