@@ -98,9 +98,7 @@
 
 <!-- Query results -->
 <div class="container">
-{% if session['immediate_query_result'] %}
-  {{ path_card(session['immediate_query_result'], 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
-{% endif %}
+{{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
 </div>
 <!-- List user queries -->
 <div class="container">

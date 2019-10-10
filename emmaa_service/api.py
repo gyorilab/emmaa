@@ -359,12 +359,18 @@ def get_query_page():
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
-    if session.get('raw_query_result'):
-        res = list(session['raw_query_result'].values())[0]
-        immediate_table_headers =\
-            ['Query', 'Model', *[mt for mt in ALL_MODEL_TYPES if mt in res]]
+    # Queried results
+    if session.get('query_hashes'):
+        queried_hashes = session['query_hashes']
+        qr = qm.retrieve_results_from_hashes(queried_hashes)
+        immediate_table_headers = ['Query', 'Model'] + \
+                                  [mt for mt in ALL_MODEL_TYPES if mt in
+                                   list(qr.values())[0]]
+        queried_results = _format_query_results(qr)
     else:
+        queried_results = 'Results for submitted queries'
         immediate_table_headers = None
+
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
     subscribed_headers = []
@@ -382,6 +388,7 @@ def get_query_page():
         subscribed_results = 'Please log in to see your subscribed queries'
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
+                           immediate_query_result=queried_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
                            subscribed_results=subscribed_results,
@@ -478,8 +485,7 @@ def process_query():
         redir_url = '/query'
 
         # Replace existing entry
-        session['immediate_query_result'] = _format_query_results(result)
-        session['raw_query_result'] = result
+        session['query_hashes'] = result
         res = {'redirectURL': redir_url}
 
     logger.info('Result: %s' % str(res))
