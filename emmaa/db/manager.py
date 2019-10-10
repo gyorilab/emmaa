@@ -258,9 +258,11 @@ class EmmaaDatabaseManager(object):
         queries : list[emmaa.queries.Query]
             A list of queries retrieved from the database.
         """
-        # TODO: check whether a query is registered or not.
         with self.get_session() as sess:
-            q = sess.query(Query.json).filter(Query.model_id == model_id)
+            q = sess.query(Query.json).filter(
+                Query.model_id == model_id,
+                Query.hash == UserQuery.query_hash,
+                UserQuery.subscription)
             queries = [QueryObject._from_json(q) for q, in q.all()]
         return queries
 
