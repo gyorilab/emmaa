@@ -363,6 +363,12 @@ def get_query_page():
 
     # user_email = 'joshua@emmaa.com'
     old_results = qm.get_registered_queries(user_email) if user_email else []
+    return render_template('query_template.html',
+                           model_data=model_meta_data,
+                           stmt_types=stmt_types,
+                           old_results=old_results,
+                           link_list=link_list,
+                           user_email=user_email)
 
 @app.route('/query/<model>/<model_type>/<query_hash>')
 def get_query_tests_page(model, model_type, query_hash):
