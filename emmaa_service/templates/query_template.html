@@ -104,8 +104,8 @@
 </div>
 <!-- List user queries -->
 <div class="container">
-{% if old_results %}
-  {{ path_card(old_results, 'Subscribed Queries', 'user-queries', table_headers=[], table_id=None, merge=false) }}
+{% if subscribed_results %}
+  {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers=[], table_id=None, merge=false) }}
 {% endif %}
 </div>
 {% endblock %}
