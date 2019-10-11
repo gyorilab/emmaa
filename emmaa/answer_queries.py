@@ -330,7 +330,11 @@ def format_results(results):
             formatted_results[query_hash][mc_type] = ['Fail', response]
         else:
             formatted_results[query_hash][mc_type] = ['Pass', response]
-
+    # Loop through the results again to make sure all model types are there
+    for qh in formatted_results:
+        for mt in model_types:
+            if mt not in formatted_results[qh]:
+                formatted_results[qh][mt] = ['n_a', 'Model type not supported']
     return formatted_results
 
 
