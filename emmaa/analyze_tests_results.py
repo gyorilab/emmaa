@@ -171,6 +171,8 @@ class TestRound(object):
             # and do not care about path length
             if res.path_found:
                 return 'Pass'
+            elif res.result_code == 'STATEMENT_TYPE_NOT_HANDLED':
+                return 'n_a'
             else:
                 return 'Fail'
 
