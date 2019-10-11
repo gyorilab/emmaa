@@ -410,9 +410,7 @@ def get_query_page():
 @app.route('/query/<model>/<model_type>/<query_hash>')
 def get_query_tests_page(model, model_type, query_hash):
     query_hash = int(query_hash)
-    queried_hashes = [int(h) for h in session['query_hashes']]\
-        if query_hash in session.get('query_hashes', []) else []
-    results = qm.retrieve_results_from_hashes(queried_hashes)
+    results = qm.retrieve_results_from_hashes([query_hash])
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
     card_title = ('', results[query_hash]['query'] if results else '', '')
