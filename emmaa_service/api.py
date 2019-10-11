@@ -374,8 +374,10 @@ def get_query_page():
         qr = qm.retrieve_results_from_hashes(queried_hashes)
         immediate_table_headers = ['Query', 'Model'] + [
             FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-            list(qr.values())[0]]
-        queried_results = _format_query_results(qr)
+            list(qr.values())[0]] if qr else []
+        queried_results = _format_query_results(qr) if qr else\
+            'No stashed results for subscribed queries. Please re-run query ' \
+            'to see latest result.'
     else:
         queried_results = 'Results for submitted queries'
         immediate_table_headers = None
