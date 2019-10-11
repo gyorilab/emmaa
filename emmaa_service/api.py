@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import boto3
@@ -27,7 +28,7 @@ app = Flask(__name__)
 app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
-app.config['SECRET_KEY'] = CONFIG_DICT['EMMAA_SERVICE_SESSION_KEY']
+app.config['SECRET_KEY'] = os.environ['EMMAA_SERVICE_SESSION_KEY']
 logger = logging.getLogger(__name__)
 
 
