@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+from datetime import timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
@@ -251,6 +252,14 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
     if len(new_passed_tests) > 0:
         return new_passed_tests
     return 'No new tests were passed'
+
+
+# Deletes session after the specified time
+@app.before_request
+def session_expiration_check():
+    session.permanent = True
+    session.modified = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
 
 
 @app.route('/')
