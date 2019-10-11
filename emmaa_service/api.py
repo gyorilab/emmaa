@@ -217,7 +217,7 @@ def _format_query_results(formatted_results):
                    (f'/dashboard/{model}', model,
                     f'Click to see details about {model}')]
         for mt in model_types:
-            new_res.append((f'/tests/{model}/{mt}/{qh}', res[mt][0],
+            new_res.append((f'/query/{model}/{mt}/{qh}', res[mt][0],
                             'Click to see detailed results for this query'))
         result_array.append(new_res)
     return result_array
