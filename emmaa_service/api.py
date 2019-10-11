@@ -372,9 +372,9 @@ def get_query_page():
     if session.get('query_hashes'):
         queried_hashes = session['query_hashes']
         qr = qm.retrieve_results_from_hashes(queried_hashes)
-        immediate_table_headers = ['Query', 'Model'] + \
-                                  [mt for mt in ALL_MODEL_TYPES if mt in
-                                   list(qr.values())[0]]
+        immediate_table_headers = ['Query', 'Model'] + [
+            FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+            list(qr.values())[0]]
         queried_results = _format_query_results(qr)
     else:
         queried_results = 'Results for submitted queries'
@@ -389,7 +389,7 @@ def get_query_page():
             subscribed_results = _format_query_results(sub_res)
             subscribed_headers = \
                 ['Model', 'Query'] + \
-                [mt for mt in list(sub_res.values())[0]
+                [FORMATTED_TYPE_NAMES[mt] for mt in list(sub_res.values())[0]
                  if mt in ALL_MODEL_TYPES]
         else:
             subscribed_results = 'You have no subscribed queries'
