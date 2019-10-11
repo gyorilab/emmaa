@@ -292,7 +292,7 @@ class EmmaaDatabaseManager(object):
     def get_results_from_query(self, query, model_ids, latest_order=1):
         logger.info(f"Got request for results of {query} on {model_ids}.")
         hashes = {query.get_hash_with_model(model_id) for model_id in model_ids}
-        return self.get_results_from_hashes(hashes)
+        return self.get_results_from_hashes(hashes, latest_order=latest_order)
 
     def get_results_from_hashes(self, query_hashes, latest_order=1):
         logger.info(f"Got request for results of queries with hashes "
