@@ -29,10 +29,6 @@ test_response = {
              'stmts': [
                  ['https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html',
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
-processed_link = '<a href="https://db.indra.bio/statements/from_agents?'\
-    'subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html" '\
-                 'target="_blank" class="status-link">'\
-                 'BRAF activates MAP2K1.</a>'
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
 fail_response = {'521653329': 'No path found that satisfies the test statement'}
 # Create a new ModelManager for tests instead of depending on S3 version
