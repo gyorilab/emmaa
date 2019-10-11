@@ -28,7 +28,7 @@ app = Flask(__name__)
 app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
-app.config['SECRET_KEY'] = os.environ['EMMAA_SERVICE_SESSION_KEY']
+app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
 
 
