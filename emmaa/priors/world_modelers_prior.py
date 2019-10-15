@@ -56,7 +56,8 @@ def make_config(search_terms, human_readable_name, description,
                       'max_paths': 1},
                       'test_corpus': 'world_modelers_tests.pkl',
                       'mc_types': ['pysb', 'signed_graph', 'unsigned_graph'],
-                      'make_links': False}
+                      'make_links': False,
+                      'link_type': 'elsevier'}
     config['assembly'] = {'skip_map_grounding': True,
                           'skip_filter_human': True,
                           'skip_map_sequence': True,
