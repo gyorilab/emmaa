@@ -1,5 +1,8 @@
 from emmaa.priors import SearchTerm
 from emmaa.model import save_config_to_s3
+from emmaa.model_tests import StatementCheckingTest
+from indra.sources.eidos import process_text
+from indra.tools.assemble_corpus import standardize_names_groundings
 
 
 def make_search_terms(terms, ontology_file, db_ns):
@@ -74,3 +77,14 @@ def make_config(search_terms, human_readable_name, description,
     if save_to_s3:
         save_config_to_s3(short_name, config)
     return config
+
+
+def reground_tests(tests, webservice):
+    """Reground tests to updated ontology."""
+    stmts = [test.stmt for test in tests]
+    texts = [stmt.evidence[0].text for stmt in stmts]
+    text = ' '.join(texts)
+    new_stmts = process_text(text, webservice=webservice).statements
+    new_stmts = standardize_names_groundings(new_stmts)
+    new_tests = [StatementCheckingTest(stmt) for stmt in new_stmts]
+    return new_tests
