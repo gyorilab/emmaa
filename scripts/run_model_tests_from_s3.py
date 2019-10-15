@@ -9,5 +9,4 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', help='Model name', required=True)
     args = parser.parse_args()
 
-    run_model_tests_from_s3(
-        args.model, upload_results=True, upload_stats=True)
+    run_model_tests_from_s3(args.model, upload_mm=True, upload_results=True)
