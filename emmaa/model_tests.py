@@ -551,11 +551,6 @@ def run_model_tests_from_s3(model_name, upload_mm=True, upload_results=True,
     upload_results : Optional[bool]
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests. Default: True
-    registered_queries : Optional[bool]
-        If True, registered queries are fetched from the database and
-        executed, the results are then saved to the database. Default: True
-    db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
-        If given over-rides the default primary database.
 
     Returns
     -------
@@ -579,8 +574,4 @@ def run_model_tests_from_s3(model_name, upload_mm=True, upload_results=True,
     # Optionally upload test results to S3
     if upload_results:
         mm.upload_results()
-    # Optionally answer registered queries
-    if registered_queries:
-        qm = QueryManager(db=db, model_managers=[mm])
-        qm.answer_registered_queries(model_name)
     return mm
