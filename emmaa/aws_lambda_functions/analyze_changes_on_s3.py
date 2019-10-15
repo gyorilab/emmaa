@@ -78,7 +78,7 @@ def lambda_handler(event, context):
                         core_command]
             }
         now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-        ret = batch.submit_job(jobName=f'{model_name}_{now_str}',
+        ret = batch.submit_job(jobName=f'{model_name}_tests_{now_str}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
                                containerOverrides=cont_overrides)
         job_id = ret['jobId']
