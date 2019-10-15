@@ -372,3 +372,18 @@ def _process_result_to_str(result_json):
 def _make_query_str(query):
     ea = EnglishAssembler([query.path_stmt])
     return ea.make_model()
+
+
+def answer_queries_from_s3(model_name, db=None):
+    """Answer registered queries with model manager on s3.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of EmmaaModel to answer queries for.
+    db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
+        If given over-rides the default primary database.
+    """
+    mm = load_model_manager_from_s3(model_name)
+    qm = QueryManager(db=db, model_managers=[mm])
+    qm.answer_registered_queries(model_name, find_delta=False)
