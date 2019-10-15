@@ -27,9 +27,7 @@ def test_load_tests_from_s3():
 @attr('nonpublic')
 def test_run_tests_from_s3():
     db = _get_test_db()
-    (mm, sg) = run_model_tests_from_s3(
-        'test', upload_mm=False, upload_results=False, upload_stats=False,
-        registered_queries=False, db=db)
+    mm = run_model_tests_from_s3('test', upload_mm=False, upload_results=False)
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
     assert isinstance(mm.mc_types['pysb']['model_checker'], PysbModelChecker)
@@ -37,10 +35,3 @@ def test_run_tests_from_s3():
     assert isinstance(mm.applicable_tests[0], StatementCheckingTest)
     assert len(mm.applicable_tests) == 1
     assert len(mm.mc_types['pysb']['test_results']) == 1
-    assert isinstance(sg, StatsGenerator)
-    assert isinstance(sg.latest_round, TestRound)
-    assert isinstance(sg.latest_round.mc_types_results['pysb'][0], PathResult)
-    assert isinstance(sg.latest_round.statements[0], Statement)
-    assert len(sg.latest_round.statements) == 2
-    assert len(sg.latest_round.mc_types_results['pysb']) == 1
-    assert len(sg.latest_round.tests) == 1
