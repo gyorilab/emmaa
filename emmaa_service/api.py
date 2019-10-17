@@ -390,7 +390,7 @@ def get_query_page():
         if sub_res:
             subscribed_results = _format_query_results(sub_res)
             subscribed_headers = \
-                ['Model', 'Query'] + \
+                ['Query', 'Model'] + \
                 [FORMATTED_TYPE_NAMES[mt] for mt in list(sub_res.values())[0]
                  if mt in ALL_MODEL_TYPES]
         else:
