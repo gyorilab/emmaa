@@ -14,7 +14,7 @@ test_query = {'type': 'path_property', 'path': {'type': 'Activation',
                        'db_refs': {'HGNC': '1097'}},
               'obj': {'type': 'Agent', 'name': 'MAPK1',
                       'db_refs': {'HGNC': '6871'}}}}
-simple_query = 'Activation(BRAF, MAPK1)'
+simple_query = 'BRAF activates MAPK1.'
 query_object = Query._from_json(test_query)
 
 test_response = {
