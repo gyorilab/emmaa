@@ -1,8 +1,11 @@
-import logging
 import pickle
+import logging
 from datetime import datetime
-from emmaa.util import get_s3_client, make_date_str
+
+from indra.assemblers.english import EnglishAssembler
+
 from emmaa.db import get_db
+from emmaa.util import get_s3_client, make_date_str
 
 
 logger = logging.getLogger(__name__)
@@ -366,7 +369,5 @@ def _process_result_to_str(result_json):
 
 
 def _make_query_str(query):
-    stmt = query.path_stmt
-    subj, obj = stmt.agent_list()
-    parts = [type(stmt).__name__, '(', subj.name, ', ', obj.name, ')']
-    return ''.join(parts)
+    ea = EnglishAssembler([query.path_stmt])
+    return ea.make_model()
