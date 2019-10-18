@@ -84,7 +84,8 @@ class QueryManager(object):
             # NOTE: For now the report is presented in the logs. In future we
             # can choose some other ways to keep track of result changes.
             if find_delta:
-                reports = self.make_reports_from_results(new_results, False, 'str')
+                reports = self.make_reports_from_results(new_results, False,
+                                                         'str')
                 for report in reports:
                     logger.info(report)
             self.db.put_results(model_name, results)
@@ -167,7 +168,7 @@ class QueryManager(object):
 
     def get_user_query_delta(
             self, user_email, filename='query_delta', report_format='str'):
-        """Produce a report for all query results per user in a given format."""
+        """Produce a report for all query results per user in a given format"""
         results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
             filename = filename + '.txt'
