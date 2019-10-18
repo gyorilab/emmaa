@@ -1,8 +1,11 @@
-import logging
 import pickle
+import logging
 from datetime import datetime
-from emmaa.util import get_s3_client, make_date_str
+
+from indra.assemblers.english import EnglishAssembler
+
 from emmaa.db import get_db
+from emmaa.util import get_s3_client, make_date_str
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +84,8 @@ class QueryManager(object):
             # NOTE: For now the report is presented in the logs. In future we
             # can choose some other ways to keep track of result changes.
             if find_delta:
-                reports = self.make_reports_from_results(new_results, False, 'str')
+                reports = self.make_reports_from_results(new_results, False,
+                                                         'str')
                 for report in reports:
                     logger.info(report)
             self.db.put_results(model_name, results)
@@ -164,7 +168,7 @@ class QueryManager(object):
 
     def get_user_query_delta(
             self, user_email, filename='query_delta', report_format='str'):
-        """Produce a report for all query results per user in a given format."""
+        """Produce a report for all query results per user in a given format"""
         results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
             filename = filename + '.txt'
@@ -366,7 +370,5 @@ def _process_result_to_str(result_json):
 
 
 def _make_query_str(query):
-    stmt = query.path_stmt
-    subj, obj = stmt.agent_list()
-    parts = [type(stmt).__name__, '(', subj.name, ', ', obj.name, ')']
-    return ''.join(parts)
+    ea = EnglishAssembler([query.path_stmt])
+    return ea.make_model()
