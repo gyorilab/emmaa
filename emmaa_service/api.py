@@ -1,12 +1,14 @@
+import os
 import re
 import json
 import boto3
 import logging
 import argparse
-from urllib import parse
+from datetime import timedelta
 from botocore.exceptions import ClientError
-from flask import abort, Flask, request, Response, render_template, jsonify
-from flask_jwt_extended import get_jwt_identity, jwt_optional
+from flask import abort, Flask, request, Response, render_template, jsonify,\
+    session
+from flask_jwt_extended import jwt_optional
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -25,6 +27,7 @@ app = Flask(__name__)
 app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
 
 
@@ -33,8 +36,8 @@ EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
-link_list = [('./home', 'EMMAA Dashboard'),
-             ('./query', 'Queries')]
+link_list = [('/home', 'EMMAA Dashboard'),
+             ('/query', 'Queries')]
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
@@ -206,6 +209,21 @@ def _format_table_array(tests_json, model_types, model_name):
     return sorted(table_array, reverse=True, key=_sort_pass_fail)
 
 
+def _format_query_results(formatted_results):
+    result_array = []
+    for qh, res in formatted_results.items():
+        model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
+        model = res['model']
+        new_res = [('', res["query"], ''),
+                   (f'/dashboard/{model}', model,
+                    f'Click to see details about {model}')]
+        for mt in model_types:
+            new_res.append((f'/query/{model}/{mt}/{qh}', res[mt][0],
+                            'Click to see detailed results for this query'))
+        result_array.append(new_res)
+    return result_array
+
+
 def _new_passed_tests(model_name, model_stats_json, current_model_types):
     new_passed_tests = []
     all_test_results = model_stats_json['test_round_summary'][
@@ -236,6 +254,14 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
     return 'No new tests were passed'
 
 
+# Deletes session after the specified time
+@app.before_request
+def session_expiration_check():
+    session.permanent = True
+    session.modified = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
@@ -252,7 +278,6 @@ def get_home():
 def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    mod_link_list = [('.' + t[0], t[1]) for t in link_list]
 
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
@@ -291,7 +316,7 @@ def get_model_dashboard(model):
                            model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
-                           link_list=mod_link_list,
+                           link_list=link_list,
                            user_email=user.email if user else "",
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
@@ -315,7 +340,6 @@ def get_model_dashboard(model):
 def get_model_tests_page(model, model_type, test_hash):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    mod_link_list = [('../../../.' + t[0], t[1]) for t in link_list]
     model_stats = get_model_stats(model)
     current_test = \
         model_stats['test_round_summary']['all_test_results'][test_hash]
@@ -324,7 +348,7 @@ def get_model_tests_page(model, model_type, test_hash):
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
     return render_template('tests_template.html',
-                           link_list=mod_link_list,
+                           link_list=link_list,
                            model=model,
                            model_type=model_type,
                            all_model_types=current_model_types,
@@ -344,12 +368,64 @@ def get_query_page():
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
-    # user_email = 'joshua@emmaa.com'
-    old_results = qm.get_registered_queries(user_email) if user_email else []
+    # Queried results
+    if session.get('query_hashes'):
+        queried_hashes = session['query_hashes']
+        qr = qm.retrieve_results_from_hashes(queried_hashes)
+        immediate_table_headers = ['Query', 'Model'] + [
+            FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+            list(qr.values())[0]] if qr else []
+        queried_results = _format_query_results(qr) if qr else\
+            'No stashed results for subscribed queries. Please re-run query ' \
+            'to see latest result.'
+    else:
+        queried_results = 'Results for submitted queries'
+        immediate_table_headers = None
 
-    return render_template('query_template.html', model_data=model_meta_data,
-                           stmt_types=stmt_types, old_results=old_results,
-                           link_list=link_list, user_email=user_email)
+    # Subscribed results
+    # user_email = 'joshua@emmaa.com'
+    subscribed_headers = []
+    if user_email:
+        sub_res = qm.get_registered_queries(user_email)
+        if sub_res:
+            subscribed_results = _format_query_results(sub_res)
+            subscribed_headers = \
+                ['Query', 'Model'] + \
+                [FORMATTED_TYPE_NAMES[mt] for mt in list(sub_res.values())[0]
+                 if mt in ALL_MODEL_TYPES]
+        else:
+            subscribed_results = 'You have no subscribed queries'
+    else:
+        subscribed_results = 'Please log in to see your subscribed queries'
+    return render_template('query_template.html',
+                           immediate_table_headers=immediate_table_headers,
+                           immediate_query_result=queried_results,
+                           model_data=model_meta_data,
+                           stmt_types=stmt_types,
+                           subscribed_results=subscribed_results,
+                           subscribed_headers=subscribed_headers,
+                           link_list=link_list,
+                           user_email=user_email)
+
+
+@app.route('/query/<model>/<model_type>/<query_hash>')
+def get_query_tests_page(model, model_type, query_hash):
+    query_hash = int(query_hash)
+    results = qm.retrieve_results_from_hashes([query_hash])
+    detailed_results = results[query_hash][model_type]\
+        if results else ['query', f'{query_hash}']
+    card_title = ('', results[query_hash]['query'] if results else '', '')
+    return render_template('tests_template.html',
+                           link_list=link_list,
+                           model=model,
+                           model_type=model_type,
+                           all_model_types=ALL_MODEL_TYPES,
+                           test_hash=query_hash,
+                           test=card_title,
+                           is_query_page=True,
+                           test_status=detailed_results[0],
+                           path_list=detailed_results[1],
+                           formatted_names=FORMATTED_TYPE_NAMES)
 
 
 @app.route('/query/submit', methods=['POST'])
@@ -418,8 +494,13 @@ def process_query():
         except Exception as e:
             logger.exception(e)
             raise(e)
-        logger.info('Answer to query received, responding to client.')
-        res = {'result': result}
+        logger.info('Answer to query received: rendering page, returning '
+                    'redirect endpoint')
+        redir_url = '/query'
+
+        # Replace existing entry
+        session['query_hashes'] = result
+        res = {'redirectURL': redir_url}
 
     logger.info('Result: %s' % str(res))
     return Response(json.dumps(res), mimetype='application/json')

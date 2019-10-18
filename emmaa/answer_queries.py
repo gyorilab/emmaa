@@ -1,8 +1,11 @@
-import logging
 import pickle
+import logging
 from datetime import datetime
-from emmaa.util import get_s3_client, make_date_str
+
+from indra.assemblers.english import EnglishAssembler
+
 from emmaa.db import get_db
+from emmaa.util import get_s3_client, make_date_str
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +40,9 @@ class QueryManager(object):
             self, user_email, user_id, query, model_names, subscribe):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
+        # Retrieve query-model hashes
+        query_hashes = [
+            query.get_hash_with_model(model) for model in model_names]
         # Store query in the database for future reference.
         self.db.put_queries(user_email, user_id, query, model_names, subscribe)
         # Check if the query has already been answered for any of given models
@@ -45,26 +51,21 @@ class QueryManager(object):
         if not saved_results:
             saved_results = []
         checked_models = {res[0] for res in saved_results}
-        # If the query was answered for all models before, return the results.
+        # If the query was answered for all models before, return the hashes.
         if checked_models == set(model_names):
-            return format_results(saved_results)
+            return query_hashes
         # Run queries mechanism for models for which result was not found.
         new_results = []
         new_date = datetime.now()
         for model_name in model_names:
             if model_name not in checked_models:
+                results_to_store = []
                 mm = self.get_model_manager(model_name)
                 response_list = mm.answer_query(query)
                 for (mc_type, response) in response_list:
-                    new_results.append(
-                        (model_name, query, mc_type, response, new_date))
-                if subscribe:
-                    self.db.put_results(
-                        model_name,
-                        [(query, mc_type, response)
-                         for mc_type, response in response_list])
-        all_results = saved_results + new_results
-        return format_results(all_results)
+                    results_to_store.append((query, mc_type, response))
+                self.db.put_results(model_name, results_to_store)
+        return query_hashes
 
     def answer_registered_queries(
             self, model_name, find_delta=True, notify=False):
@@ -83,7 +84,8 @@ class QueryManager(object):
             # NOTE: For now the report is presented in the logs. In future we
             # can choose some other ways to keep track of result changes.
             if find_delta:
-                reports = self.make_reports_from_results(new_results, False, 'str')
+                reports = self.make_reports_from_results(new_results, False,
+                                                         'str')
                 for report in reports:
                     logger.info(report)
             self.db.put_results(model_name, results)
@@ -91,6 +93,11 @@ class QueryManager(object):
     def get_registered_queries(self, user_email):
         """Get formatted results to queries registered by user."""
         results = self.db.get_results(user_email)
+        return format_results(results)
+
+    def retrieve_results_from_hashes(self, query_hashes):
+        """Retrieve results from a db given a list of query-model hashes."""
+        results = self.db.get_results_from_hashes(query_hashes)
         return format_results(results)
 
     def make_reports_from_results(
@@ -161,7 +168,7 @@ class QueryManager(object):
 
     def get_user_query_delta(
             self, user_email, filename='query_delta', report_format='str'):
-        """Produce a report for all query results per user in a given format."""
+        """Produce a report for all query results per user in a given format"""
         results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
             filename = filename + '.txt'
@@ -238,22 +245,22 @@ class QueryManager(object):
                     msg = f'<p>This is the first result to query {query} in ' \
                           f'{model_name} with {mc_type} model checker. ' \
                           f'The result is:<br>'
-                    msg += _process_result_to_html(new_result_json)
+                    msg += _process_result_to_str(new_result_json)
                     msg += '</p>'
                 else:
                     msg = f'<p>A new result to query {query} in ' \
                           f'{model_name} was found with {mc_type} ' \
                           f'model checker.<br>'
                     msg += '<br>Previous result was:<br>'
-                    msg += _process_result_to_html(old_result_json)
+                    msg += _process_result_to_str(old_result_json)
                     msg += '<br>New result is:<br>'
-                    msg += _process_result_to_html(new_result_json)
+                    msg += _process_result_to_str(new_result_json)
                     msg += '</p>'
             else:
                 msg = f'<p>A result to query {query} in ' \
                       f'{model_name} from {mc_type} model checker did not ' \
                       f'change. The result is:<br>'
-                msg += _process_result_to_html(new_result_json)
+                msg += _process_result_to_str(new_result_json)
                 msg += '</p>'
             return msg
 
@@ -296,19 +303,42 @@ def is_query_result_diff(new_result_json, old_result_json=None):
 
 def format_results(results):
     """Format db output to a standard json structure."""
-    formatted_results = []
+    model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
+    formatted_results = {}
     for result in results:
-        formatted_result = {}
-        formatted_result['model'] = result[0]
+        model = result[0]
         query = result[1]
-        formatted_result['query'] = _make_query_simple_dict(query)
-        formatted_result['mc_type'] = result[2]
-        formatted_result['model_type_name'] = FORMATTED_TYPE_NAMES[result[2]]
+        query_hash = query.get_hash_with_model(model)
+        if query_hash not in formatted_results:
+            formatted_results[query_hash] = {
+                'query': _make_query_str(query),
+                'model': model,
+                'date': make_date_str(result[4])}
+        mc_type = result[2]
         response_json = result[3]
-        response = _process_result_to_html(response_json)
-        formatted_result['response'] = response
-        formatted_result['date'] = make_date_str(result[4])
-        formatted_results.append(formatted_result)
+        response = []
+        for v in response_json.values():
+            if isinstance(v, str):
+                response = v
+            elif isinstance(v, dict):
+                response.append(v)
+        if mc_type == '' and \
+                response == 'Query is not applicable for this model':
+            for mt in model_types:
+                formatted_results[query_hash][mt] = ['n_a', response]
+        elif isinstance(response, str) and \
+                response == 'Statement type not handled':
+            formatted_results[query_hash][mc_type] = ['n_a', response]
+        elif isinstance(response, str) and \
+                not response == 'Path found but exceeds search depth':
+            formatted_results[query_hash][mc_type] = ['Fail', response]
+        else:
+            formatted_results[query_hash][mc_type] = ['Pass', response]
+    # Loop through the results again to make sure all model types are there
+    for qh in formatted_results:
+        for mt in model_types:
+            if mt not in formatted_results[qh]:
+                formatted_results[qh][mt] = ['n_a', 'Model type not supported']
     return formatted_results
 
 
@@ -329,38 +359,16 @@ def load_model_manager_from_s3(model_name):
 
 
 def _process_result_to_str(result_json):
-    # Remove the links when making text report
     msg = '\n'
     for v in result_json.values():
-        for sentence, link in v:
-            msg += sentence
+        if isinstance(v, str):
+            msg += v
+        elif isinstance(v, dict):
+            msg += v['path']
+            msg += '\n'
     return msg
 
 
-def _process_result_to_html(result_json):
-    # Make clickable links when making htmk report
-    response_list = []
-    for v in result_json.values():
-        for ix, (sentence, link) in enumerate(v):
-            if ix > 0:
-                response_list.append('<br>')
-            if link:
-                response_list.append(
-                    f'<a href="{link}" target="_blank" '
-                    f'class="status-link">{sentence}</a>')
-            else:
-                response_list.append(f'<a>{sentence}</a>')
-        response = ''.join(response_list)
-    return response
-
-
-def _make_query_simple_dict(query):
-    """Turn Query object into a simple dictionary for easier representation on
-    the dashboard."""
-    query_dict = {}
-    stmt = query.path_stmt
-    query_dict['typeSelection'] = type(stmt).__name__
-    subj, obj = stmt.agent_list()
-    query_dict['subjectSelection'] = subj.name
-    query_dict['objectSelection'] = obj.name
-    return query_dict
+def _make_query_str(query):
+    ea = EnglishAssembler([query.path_stmt])
+    return ea.make_model()

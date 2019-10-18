@@ -1,4 +1,5 @@
 {% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import path_card %}
 
 {% block additional_scripts %}
   <script src="{{ url_for('static', filename='queryFunctions.js') }}"></script>
@@ -97,53 +98,11 @@
 
 <!-- Query results -->
 <div class="container">
-  <div class="card">
-    <div class="card-header">
-      <h4 class="my-0 font-weight-normal">Results</h4>
-    </div>
-    <div class="card-body" id="query-results">
-      <table class="table">
-        <thead>
-          <th>Model</th>
-          <th>Model Type</th>
-          <th>Result</th>
-        </thead>
-        <tbody class="table-body" id="queryResults"></tbody>
-      </table>
-    </div>
-  </div>
+{{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
 </div>
-
 <!-- List user queries -->
 <div class="container">
-  <div class="card">
-    <div class="card-header">
-      <h4 class="my-0 font-weight-normal">Subscribed Queries</h4>
-    </div>
-    <div class="card-body" id="user-queries">
-      <table class="table">
-        <thead>
-          <th>Model</th>
-          <th style="width: 29%;">Query</th>
-          <th>Model Type</th>
-          <th>Path Found or Result Code</th>
-          <th style="width: 19%;">Date</th>
-        </thead>
-        <tbody class="table-body" id="old-results">
-          {% for result in old_results %}
-          <tr>
-            <!-- model, query, response, date -->
-            <td><a class="model-link" href="./dashboard/{{ result['model'] }}">{{ result['model'] }}</a></td>
-            <td>{{ result['query']['typeSelection'] }}({{ result['query']['subjectSelection'] }}, {{ result['query']['objectSelection'] }})</td>
-            <td>{{ result['model_type_name'] }}</td>
-            <td>{{ result['response']|safe }}</td>
-            <td>{{ result['date'] }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+{{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
 </div>
 {% endblock %}
 

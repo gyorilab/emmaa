@@ -128,40 +128,6 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
-    def make_english_path(self, mc_type, result):
-        """Create an English description of a path."""
-        paths = []
-        if result.paths:
-            for path in result.paths:
-                sentences = []
-                if mc_type == 'signed_graph' or mc_type == 'unsigned_graph':
-                    for i in range(len(path[:-1])):
-                        sentence = path[i][0] + ' -> ' + path[i+1][0]
-                        sentences.append((sentence, ''))
-                else:
-                    if mc_type == 'pysb':
-                        stmts = stmts_from_pysb_path(
-                            path, self.mc_types['pysb']['model'],
-                            self.model.assembled_stmts)
-                    elif mc_type == 'pybel':
-                        stmts = stmts_from_pybel_path(
-                            path, self.mc_types['pybel']['model'],
-                            from_db=False, stmts=self.model.assembled_stmts)
-                    for stmt in stmts:
-                        if not stmt:
-                            continue
-                        if isinstance(stmt, list):
-                            stmt = stmt[0]
-                        ea = EnglishAssembler([stmt])
-                        sentence = ea.make_model()
-                        if self.make_links:
-                            link = get_statement_queries([stmt])[0] + '&format=html'
-                            sentences.append((sentence, link))
-                        else:
-                            sentences.append((sentence, ''))
-                paths.append(sentences)
-        return paths
-
     def make_path_json(self, mc_type, result):
         paths = []
         if result.paths:
@@ -252,11 +218,6 @@ class ModelManager(object):
                     sentences.append(('', sentence, stmt.evidence[0].text))
         return sentences
 
-    def make_english_result_code(self, result):
-        """Get an English explanation of a result code."""
-        result_code = result.result_code
-        return [[(RESULT_CODES[result_code], result_codes_link)]]
-
     def make_result_code(self, result):
         result_code = result.result_code
         return RESULT_CODES[result_code]
@@ -273,8 +234,8 @@ class ModelManager(object):
                 results.append((mc_type, self.process_response(mc_type, result)))
             return results
         else:
-            return [('', self.hash_response_list([[
-                (RESULT_CODES['QUERY_NOT_APPLICABLE'], result_codes_link)]]))]
+            return [('', self.hash_response_list(
+                RESULT_CODES['QUERY_NOT_APPLICABLE']))]
 
     def answer_queries(self, queries):
         """Answer all queries registered for this model.
@@ -300,8 +261,7 @@ class ModelManager(object):
             else:
                 responses.append(
                     (query, '', self.hash_response_list(
-                        [[(RESULT_CODES['QUERY_NOT_APPLICABLE'],
-                          result_codes_link)]])))
+                        RESULT_CODES['QUERY_NOT_APPLICABLE'])))
         # Only do the following steps if there are applicable queries
         if applicable_queries:
             for mc_type in self.mc_types:
@@ -336,23 +296,30 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response_list = self.make_english_path(mc_type, result)
+            response = self.make_path_json(mc_type, result)
         else:
-            response_list = self.make_english_result_code(result)
-        return self.hash_response_list(response_list)
+            response = self.make_result_code(result)
+        return self.hash_response_list(response)
 
-    def hash_response_list(self, response_list):
+    def hash_response_list(self, response):
         """Return a dictionary mapping a hash with a response in a response
         list.
         """
         response_dict = {}
-        for response in response_list:
-            sentences = []
-            for sentence, _ in response:
-                sentences.append(sentence)
-            response_str = ' '.join(sentences)
-            response_hash = str(fnv1a_32(response_str.encode('utf-8')))
+        if isinstance(response, str):
+            response_hash = str(fnv1a_32(response.encode('utf-8')))
             response_dict[response_hash] = response
+        elif isinstance(response, list):
+            for resp in response:
+                sentences = []
+                for edge in resp['edge_list']:
+                    for (_, sentence, _) in edge['stmts']:
+                        sentences.append(sentence)
+                response_str = ' '.join(sentences)
+                response_hash = str(fnv1a_32(response_str.encode('utf-8')))
+                response_dict[response_hash] = resp
+        else:
+            raise TypeError('Response should be a string or a list.')
         return response_dict
 
     def assembled_stmts_to_json(self):
