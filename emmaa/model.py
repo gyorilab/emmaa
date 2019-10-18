@@ -229,19 +229,10 @@ class EmmaaModel(object):
         stmts = ac.filter_no_hypothesis(stmts)
         if not self.assembly_config.get('skip_map_grounding'):
             stmts = ac.map_grounding(stmts)
-        if self.assembly_config.get('standardize_names'):
-            ac.standardize_names_groundings(stmts)
         if self.assembly_config.get('filter_ungrounded'):
             score_threshold = self.assembly_config.get('score_threshold')
             stmts = ac.filter_grounded_only(
                 stmts, score_threshold=score_threshold)
-        if self.assembly_config.get('merge_groundings'):
-            stmts = ac.merge_groundings(stmts)
-        if self.assembly_config.get('merge_deltas'):
-            stmts = ac.merge_deltas(stmts)
-        relevance_policy = self.assembly_config.get('filter_relevance')
-        if relevance_policy:
-            stmts = self.filter_relevance(stmts, relevance_policy)
         if not self.assembly_config.get('skip_filter_human'):
             stmts = ac.filter_human_only(stmts)
         if not self.assembly_config.get('skip_map_sequence'):
@@ -253,9 +244,19 @@ class EmmaaModel(object):
             belief_scorer = get_eidos_scorer()
             stmts = ac.run_preassembly(
                 stmts, return_toplevel=False, belief_scorer=belief_scorer,
-                hierarchies=hierarchies)
+                hierarchies=hierarchies, normalize_equivalences=True,
+                normalize_opposites=True, normalize_ns='WM')
         else:
             stmts = ac.run_preassembly(stmts, return_toplevel=False)
+        if self.assembly_config.get('standardize_names'):
+            ac.standardize_names_groundings(stmts)
+        if self.assembly_config.get('merge_groundings'):
+            stmts = ac.merge_groundings(stmts)
+        if self.assembly_config.get('merge_deltas'):
+            stmts = ac.merge_deltas(stmts)
+        relevance_policy = self.assembly_config.get('filter_relevance')
+        if relevance_policy:
+            stmts = self.filter_relevance(stmts, relevance_policy)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
