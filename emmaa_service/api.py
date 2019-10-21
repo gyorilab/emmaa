@@ -304,7 +304,7 @@ def get_model_dashboard(model):
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
     model_stats = get_model_stats(model)
-    all_new_tests = [(k, v) for k, v in model_stats['test_round_summary'][
+    all_tests = [(k, v) for k, v in model_stats['test_round_summary'][
         'all_test_results'].items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
@@ -338,7 +338,7 @@ def get_model_dashboard(model):
                                model_types=current_model_types,
                                model_name=model),
                            all_test_results=_format_table_array(
-                               tests_json=all_new_tests,
+                               tests_json=all_tests,
                                model_types=current_model_types,
                                model_name=model),
                            new_passed_tests=_new_passed_tests(
