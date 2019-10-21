@@ -47,14 +47,19 @@ qm = QueryManager()
 def _sort_pass_fail(row):
     def _translator(status):
         if status.lower() == 'pass':
-            return 1
+            return 0
         elif status.lower() == 'fail':
-            return 2
+            return 1
         elif status.lower() == 'n_a':
-            return 3
+            return 2
         else:
-            raise ValueError(f'status {status} not handled')
-    return tuple(_translator(row[n+1][1]) for n in range(len(row)-1))
+            raise ValueError(f'Status {status} not handled in sorting test '
+                             f'table')
+    # First sort on count of passing tests per row, then model type from
+    # left (lower number ranks higher).
+    return tuple([sum(row[n+1][1].lower() != 'pass'
+                      for n in range(len(row)-1)),
+                  *(_translator(row[n+1][1]) for n in range(len(row)-1))])
 
 
 def _get_model_meta_data():
