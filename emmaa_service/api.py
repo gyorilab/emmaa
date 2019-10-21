@@ -44,8 +44,22 @@ SC, jwt = config_auth(app)
 qm = QueryManager()
 
 
-def _sort_pass_fail(r):
-    return tuple(r[n+1][1] for n in range(len(r)-1))
+def _sort_pass_fail(row):
+    def _translator(status):
+        if status.lower() == 'pass':
+            return 0
+        elif status.lower() == 'fail':
+            return 1
+        elif status.lower() == 'n_a':
+            return 2
+        else:
+            raise ValueError(f'Status {status} not handled in sorting test '
+                             f'table')
+    # First sort on count of passing tests per row, then model type from
+    # left (lower number ranks higher).
+    return tuple([sum(row[n+1][1].lower() != 'pass'
+                      for n in range(len(row)-1)),
+                  *(_translator(row[n+1][1]) for n in range(len(row)-1))])
 
 
 def _get_model_meta_data():
@@ -206,7 +220,7 @@ def _format_table_array(tests_json, model_types, model_name):
             new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0],
                             pass_fail_msg))
         table_array.append(new_row)
-    return sorted(table_array, reverse=True, key=_sort_pass_fail)
+    return sorted(table_array, key=_sort_pass_fail)
 
 
 def _format_query_results(formatted_results):
@@ -295,10 +309,17 @@ def get_model_dashboard(model):
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
     model_stats = get_model_stats(model)
-    all_new_tests = [(k, v) for k, v in model_stats['test_round_summary'][
-        'all_test_results'].items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
+
+    # Filter out rows with all tests == 'n_a'
+    all_tests = []
+    for k, v in model_stats['test_round_summary']['all_test_results'].items():
+        if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
+            continue
+        else:
+            all_tests.append((k, v))
+
     all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
@@ -329,7 +350,7 @@ def get_model_dashboard(model):
                                model_types=current_model_types,
                                model_name=model),
                            all_test_results=_format_table_array(
-                               tests_json=all_new_tests,
+                               tests_json=all_tests,
                                model_types=current_model_types,
                                model_name=model),
                            new_passed_tests=_new_passed_tests(
