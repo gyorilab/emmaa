@@ -44,8 +44,17 @@ SC, jwt = config_auth(app)
 qm = QueryManager()
 
 
-def _sort_pass_fail(r):
-    return tuple(r[n+1][1] for n in range(len(r)-1))
+def _sort_pass_fail(row):
+    def _translator(status):
+        if status.lower() == 'pass':
+            return 1
+        elif status.lower() == 'fail':
+            return 2
+        elif status.lower() == 'n_a':
+            return 3
+        else:
+            raise ValueError(f'status {status} not handled')
+    return tuple(_translator(row[n+1][1]) for n in range(len(row)-1))
 
 
 def _get_model_meta_data():
@@ -206,7 +215,7 @@ def _format_table_array(tests_json, model_types, model_name):
             new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0],
                             pass_fail_msg))
         table_array.append(new_row)
-    return sorted(table_array, reverse=True, key=_sort_pass_fail)
+    return sorted(table_array, key=_sort_pass_fail)
 
 
 def _format_query_results(formatted_results):
