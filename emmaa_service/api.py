@@ -309,10 +309,17 @@ def get_model_dashboard(model):
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
     model_stats = get_model_stats(model)
-    all_tests = [(k, v) for k, v in model_stats['test_round_summary'][
-        'all_test_results'].items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
+
+    # Filter out rows with all tests == 'n_a'
+    all_tests = []
+    for k, v in model_stats['test_round_summary']['all_test_results'].items():
+        if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
+            continue
+        else:
+            all_tests.append((k, v))
+
     all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
