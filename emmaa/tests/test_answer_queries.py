@@ -77,7 +77,8 @@ def test_answer_immediate_query():
     assert result_values['model'] == 'test'
     assert result_values['query'] == simple_query
     assert isinstance(result_values['date'], str)
-    assert result_values['pysb'] == ['Pass', [test_response['3801854542']]]
+    assert result_values['pysb'] == ['Pass', [test_response['3801854542']]], \
+        result_values['pysb']
     assert result_values['pybel'] == ['n_a', 'Model type not supported']
     assert result_values['signed_graph'] == ['n_a', 'Model type not supported']
     assert result_values['unsigned_graph'] == ['n_a', 'Model type not supported']
@@ -97,7 +98,8 @@ def test_answer_get_registered_queries():
     assert results[qh]['model'] == 'test'
     assert results[qh]['query'] == simple_query
     assert isinstance(results[qh]['date'], str)
-    assert results[qh]['pysb'] == ['Pass', [test_response['3801854542']]]
+    assert results[qh]['pysb'] == ['Pass', [test_response['3801854542']]], \
+        (results[qh]['pysb'], test_response['3801854542'])
     assert results[qh]['pybel'] == ['n_a', 'Model type not supported']
     assert results[qh]['signed_graph'] == ['n_a', 'Model type not supported']
     assert results[qh]['unsigned_graph'] == ['n_a', 'Model type not supported']
