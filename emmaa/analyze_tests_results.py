@@ -182,6 +182,15 @@ class TestRound(object):
                 'test': self.get_english_statement(test)}
             for mc_type in self.mc_types_results:
                 result = self.mc_types_results[mc_type][ix]
+                try:
+                    path_or_code = (
+                        self.json_results[ix+1][mc_type]['path_json'])
+                except KeyError:
+                    try:
+                        path_or_code = (
+                            self.json_results[ix+1][mc_type]['result_code'])
+                    except KeyError:
+                        path_or_code = result.result_code
                 tests_by_hash[test_hash][mc_type] = [
                         get_pass_fail(result),
                         self.get_path_or_code_by_hash(test_hash, mc_type)]
