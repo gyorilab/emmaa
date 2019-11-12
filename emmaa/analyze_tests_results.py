@@ -21,6 +21,7 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'paths': 'get_passed_test_hashes'}
 elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 
+
 class TestRound(object):
     """Analyzes the results of one test round.
 
@@ -193,77 +194,8 @@ class TestRound(object):
                         path_or_code = result.result_code
                 tests_by_hash[test_hash][mc_type] = [
                         get_pass_fail(result),
-                        self.get_path_or_code_by_hash(test_hash, mc_type)]
+                        path_or_code]
         return tests_by_hash
-
-    def get_path_descriptions(self, mc_type='pysb'):
-        paths_by_test = {}
-        results = self.mc_types_results[mc_type]
-        for ix, result in enumerate(results):
-            if result.paths:
-                try:
-                    paths = self.json_results[ix+1][mc_type]['path_json']
-                except KeyError:
-                    paths = []
-                paths_by_test[str(self.tests[ix].get_hash(refresh=True))] = paths
-        return paths_by_test
-
-    def get_english_codes(self, mc_type):
-        english_codes = {}
-        results = self.mc_types_results[mc_type]
-        for ix, result in enumerate(results):
-            try:
-                code = self.json_results[ix+1][mc_type]['result_code']
-            except KeyError:
-                code = result.result_code
-            english_codes[str(self.tests[ix].get_hash(refresh=True))] = code
-        return english_codes
-
-    def get_pass_fail_by_hash(self, test_hash, mc_type='pysb'):
-        return self.english_test_results[test_hash][mc_type][0]
-
-    def get_path_or_code_by_hash(self, test_hash, mc_type='pysb'):
-        # If we have a path description return it, otherwise return code
-        try:
-            result = self.get_path_descriptions(mc_type)[test_hash]
-        except KeyError:
-            result = self.get_english_codes(mc_type)[test_hash]
-        return result
-
-    # Methods to find delta
-    def find_numeric_delta(self, other_round, one_round_numeric_func,
-                           mc_type='pysb'):
-        """Find a numeric delta between two rounds using a passed function.
-
-        Parameters
-        ----------
-        other_round : emmaa.analyze_tests_results.TestRound
-            A different instance of a TestRound
-        one_round_numeric_function : str
-            A name of a method to calculate delta. Accepted values:
-            - get_total_statements
-            - get_total_applied_tests
-            - get_number_passed_tests
-            - passed_over_total
-        mc_type : str
-            A name of a ModelChecker used to run tests.
-
-        Returns
-        -------
-        delta : int or float
-            Difference between return values of one_round_numeric_function
-            of two given test rounds.
-        """
-        logger.info(f'Calculating numeric delta using {one_round_numeric_func}'
-                    ' method')
-        if one_round_numeric_func == 'get_number_passed_tests' or \
-                one_round_numeric_func == 'passed_over_total':
-            kwargs = {'mc_type': mc_type}
-        else:
-            kwargs = {}
-        delta = (getattr(self, one_round_numeric_func)(**kwargs)
-                 - getattr(other_round, one_round_numeric_func)(**kwargs))
-        return delta
 
     def find_delta_hashes(self, other_round, content_type, **kwargs):
         """Return a dictionary of changed hashes of a given content type. This
