@@ -184,24 +184,38 @@ class TestRound(object):
             else:
                 return 'Fail'
 
+        def get_path_or_code(ix, res, mc_type):
+            path_or_code = None
+            # Here use result.paths because we care about actual path (i.e.
+            # we can't get a path exceeding max path length)
+            if res.paths:
+                try:
+                    path_or_code = (
+                        self.json_results[ix+1][mc_type]['path_json'])
+                # if json doesn't contain some of the fields
+                except KeyError:
+                    pass
+            # If path wasn't found or presented in json
+            if not path_or_code:
+                try:
+                    path_or_code = (
+                        self.json_results[ix+1][mc_type]['result_code'])
+                except KeyError:
+                    pass
+            # Couldn't get either path or code description from json
+            if not path_or_code:
+                path_or_code = res.result_code
+            return path_or_code
+
         for ix, test in enumerate(self.tests):
             test_hash = str(test.get_hash(refresh=True))
             tests_by_hash[test_hash] = {
                 'test': self.get_english_statement(test)}
             for mc_type in self.mc_types_results:
                 result = self.mc_types_results[mc_type][ix]
-                try:
-                    path_or_code = (
-                        self.json_results[ix+1][mc_type]['path_json'])
-                except KeyError:
-                    try:
-                        path_or_code = (
-                            self.json_results[ix+1][mc_type]['result_code'])
-                    except KeyError:
-                        path_or_code = result.result_code
                 tests_by_hash[test_hash][mc_type] = [
                         get_pass_fail(result),
-                        path_or_code]
+                        get_path_or_code(ix, result, mc_type)]
         return tests_by_hash
 
     def find_delta_hashes(self, other_round, content_type, **kwargs):
