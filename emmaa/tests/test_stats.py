@@ -36,10 +36,20 @@ def test_test_round():
     assert tr.passed_over_total() == 1.0
     tr2 = TestRound(new_results)
     assert tr2
-    assert tr2.find_numeric_delta(tr, 'get_total_statements') == 2
-    assert tr2.find_numeric_delta(tr, 'get_total_applied_tests') == 1
-    assert tr2.find_numeric_delta(tr, 'get_number_passed_tests') == 1
-    assert tr2.find_numeric_delta(tr, 'passed_over_total') == 0
+    assert tr2.get_total_statements() == 4
+    assert len(tr2.get_stmt_hashes()) == 4
+    assert tr2.get_statement_types() == [('Activation', 4)]
+    assert all(agent_tuple in tr2.get_agent_distribution() for agent_tuple in
+               [('BRAF', 2), ('MAP2K1', 2), ('MAPK1', 1), ('MTOR', 1),
+                ('AKT', 2)])
+    assert tr2.get_total_applied_tests() == 2
+    assert tr2.get_number_passed_tests() == 2
+    assert tr2.get_applied_test_hashes() == tr2.get_passed_test_hashes()
+    assert tr2.passed_over_total() == 1.0
+    assert len(tr2.find_delta_hashes(tr, 'statements')['added']) == 2
+    assert len(tr2.find_delta_hashes(tr, 'applied_tests')['added']) == 1
+    assert len(tr2.find_delta_hashes(tr, 'passed_tests')['added']) == 1
+    assert len(tr2.find_delta_hashes(tr, 'paths')['added']) == 1
 
 
 @attr('nonpublic')
@@ -52,6 +62,7 @@ def test_stats_generator():
     sg.make_stats()
     assert sg.json_stats
     model_summary = sg.json_stats['model_summary']
+    assert model_summary['model_name'] == 'test'
     assert model_summary['number_of_statements'] == 4
     assert model_summary['stmts_type_distr'] == [('Activation', 4)]
     assert all(agent_tuple in model_summary['agent_distr'] for
@@ -64,13 +75,29 @@ def test_stats_generator():
     assert len(test_round_summary['all_test_results']) == 2
     assert test_round_summary['pysb']['number_passed_tests'] == 2
     assert test_round_summary['pysb']['passed_ratio'] == 1.0
+    assert test_round_summary['pybel']['number_passed_tests'] == 2
+    assert test_round_summary['pybel']['passed_ratio'] == 1.0
+    assert test_round_summary['signed_graph']['number_passed_tests'] == 2
+    assert test_round_summary['signed_graph']['passed_ratio'] == 1.0
+    assert test_round_summary['unsigned_graph']['number_passed_tests'] == 2
+    assert test_round_summary['unsigned_graph']['passed_ratio'] == 1.0
     model_delta = sg.json_stats['model_delta']
+    assert len(model_delta['statements_hashes_delta']['added']) == 2
     tests_delta = sg.json_stats['tests_delta']
     assert len(tests_delta['applied_hashes_delta']['added']) == 1
     assert len(tests_delta['pysb']['passed_hashes_delta']['added']) == 1
+    assert len(tests_delta['pybel']['passed_hashes_delta']['added']) == 1
+    assert len(tests_delta['signed_graph']['passed_hashes_delta']['added']) == 1
+    assert len(tests_delta['unsigned_graph']['passed_hashes_delta']['added']) == 1
     changes = sg.json_stats['changes_over_time']
     assert changes['number_of_statements'] == [2, 4]
     assert changes['number_applied_tests'] == [1, 2]
     assert len(changes['dates']) == 2
     assert changes['pysb']['number_passed_tests'] == [1, 2]
     assert changes['pysb']['passed_ratio'] == [1, 1]
+    assert changes['pybel']['number_passed_tests'] == [1, 2]
+    assert changes['pybel']['passed_ratio'] == [1, 1]
+    assert changes['signed_graph']['number_passed_tests'] == [1, 2]
+    assert changes['signed_graph']['passed_ratio'] == [1, 1]
+    assert changes['unsigned_graph']['number_passed_tests'] == [1, 2]
+    assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
