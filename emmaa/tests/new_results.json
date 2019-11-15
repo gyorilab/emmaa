@@ -23,7 +23,7 @@
     },
     "obj_activity": "activity",
     "belief": 0,
-    "id": "25eb3fad-d810-4744-b794-05436d8fced0",
+    "id": "21c87f0f-0512-47dd-8f7d-f23eaf00f821",
     "matches_hash": "2874381165909177"
    },
    {
@@ -44,7 +44,7 @@
     },
     "obj_activity": "activity",
     "belief": 0,
-    "id": "a57478cc-7b3b-48a9-b7e5-a2afe5179aa8",
+    "id": "1b00e02c-0573-454d-8f23-446f24cce68c",
     "matches_hash": "-13855132444206450"
    },
    {
@@ -159,9 +159,12 @@
    }
   ],
   "mc_types": [
-   "pysb"
+   "pysb",
+   "pybel",
+   "signed_graph",
+   "unsigned_graph"
   ],
-  "make_links": true
+  "link_type": "indra_db"
  },
  {
   "test_type": "StatementCheckingTest",
@@ -247,26 +250,296 @@
     ],
     "result_code": "PATHS_FOUND"
    },
-   "english_path": [
-    [
-     [
-      "BRAF activates MAP2K1.",
-      "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html"
-     ],
-     [
-      "Active MAP2K1 activates MAPK1.",
-      "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html"
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html",
+         "Active MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
+    }
    ],
-   "english_code": [
-    [
-     [
-      "Path found which satisfies the test statement",
-      "https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html"
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "pybel": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "1097",
+         "name": "BRAF",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "6871",
+         "name": "MAPK1",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         {
+          "py/id": 3
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/object": "pybel.dsl.node_classes.Protein",
+          "function": "Protein",
+          "identifier": "6840",
+          "name": "MAP2K1",
+          "namespace": "HGNC",
+          "__dict__": {}
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/id": 4
+         },
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html",
+         "Active MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
-   ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "signed_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MAPK1",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAP2K1",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAPK1",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=MAP2K1@NAME&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=MAP2K1@NAME&object=MAPK1@NAME&type=Activation&format=html",
+         "MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "unsigned_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MAPK1",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAP2K1",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAPK1",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=MAP2K1@NAME&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=MAP2K1@NAME&object=MAPK1@NAME&type=Activation&format=html",
+         "MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
   }
  },
  {
@@ -276,9 +549,10 @@
    "subj": {
     "name": "BRAF",
     "db_refs": {
-     "UP": "P15056",
+     "TEXT": "BRAF",
      "HGNC": "1097",
-     "TEXT": "BRAF"
+     "UP": "P15056",
+     "NCIT": "C18363"
     }
    },
    "obj": {
@@ -289,7 +563,7 @@
    },
    "obj_activity": "activity",
    "belief": 1,
-   "id": "82b8985e-4f88-4365-ad14-4ef6985d2a13",
+   "id": "a6e7c164-da2b-4b11-af78-94a99ce7a8e0",
    "matches_hash": "34500484183886742"
   },
   "pysb": {
@@ -342,26 +616,296 @@
     ],
     "result_code": "PATHS_FOUND"
    },
-   "english_path": [
-    [
-     [
-      "BRAF activates AKT.",
-      "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=AKT@FPLX&type=Activation&format=html"
-     ],
-     [
-      "Active AKT activates MTOR.",
-      "https://db.indra.bio/statements/from_agents?subject=AKT@FPLX&object=3942@HGNC&type=Activation&format=html"
+   "path_json": [
+    {
+     "path": "BRAF \u2192 AKT \u2192 MTOR",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 AKT",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=AKT@FPLX&type=Activation&format=html",
+         "BRAF activates AKT.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "AKT \u2192 MTOR",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=AKT@FPLX&object=3942@HGNC&type=Activation&format=html",
+         "Active AKT activates MTOR.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
+    }
    ],
-   "english_code": [
-    [
-     [
-      "Path found which satisfies the test statement",
-      "https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html"
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "pybel": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "1097",
+         "name": "BRAF",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "3942",
+         "name": "MTOR",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         {
+          "py/id": 3
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/object": "pybel.dsl.node_classes.Protein",
+          "function": "Protein",
+          "identifier": "AKT",
+          "name": "AKT",
+          "namespace": "FPLX",
+          "__dict__": {}
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/id": 4
+         },
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 AKT \u2192 MTOR",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 AKT",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=AKT@FPLX&type=Activation&format=html",
+         "BRAF activates AKT.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "AKT \u2192 MTOR",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=AKT@FPLX&object=3942@HGNC&type=Activation&format=html",
+         "Active AKT activates MTOR.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
-   ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "signed_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MTOR",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "AKT",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MTOR",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 AKT \u2192 MTOR",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 AKT",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=AKT@NAME&type=Activation&format=html",
+         "BRAF activates AKT.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "AKT \u2192 MTOR",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=AKT@NAME&object=MTOR@NAME&type=Activation&format=html",
+         "AKT activates MTOR.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "unsigned_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MTOR",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "AKT",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MTOR",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 AKT \u2192 MTOR",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 AKT",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=AKT@NAME&type=Activation&format=html",
+         "BRAF activates AKT.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "AKT \u2192 MTOR",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=AKT@NAME&object=MTOR@NAME&type=Activation&format=html",
+         "AKT activates MTOR.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
   }
  }
 ]

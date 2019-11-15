@@ -114,9 +114,12 @@
    }
   ],
   "mc_types": [
-   "pysb"
+   "pysb",
+   "pybel",
+   "signed_graph",
+   "unsigned_graph"
   ],
-  "make_links": true
+  "link_type": "indra_db"
  },
  {
   "test_type": "StatementCheckingTest",
@@ -202,26 +205,301 @@
     ],
     "result_code": "PATHS_FOUND"
    },
-   "english_path": [
-    [
-     [
-      "BRAF activates MAP2K1.",
-      "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html"
-     ],
-     [
-      "Active MAP2K1 activates MAPK1.",
-      "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html"
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html",
+         "Active MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
+    }
    ],
-   "english_code": [
-    [
-     [
-      "Path found which satisfies the test statement",
-      "https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html"
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "pybel": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "1097",
+         "name": "BRAF",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        {
+         "py/object": "pybel.dsl.node_classes.Protein",
+         "function": "Protein",
+         "identifier": "6871",
+         "name": "MAPK1",
+         "namespace": "HGNC",
+         "__dict__": {}
+        },
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         {
+          "py/id": 3
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/object": "pybel.dsl.node_classes.Protein",
+          "function": "Protein",
+          "identifier": "6840",
+          "name": "MAP2K1",
+          "namespace": "HGNC",
+          "__dict__": {}
+         },
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         {
+          "py/object": "pybel.dsl.node_classes.Protein",
+          "function": "Protein",
+          "identifier": "6871",
+          "name": "MAPK1",
+          "namespace": "HGNC",
+          "__dict__": {}
+         },
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html",
+         "Active MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
      ]
-    ]
-   ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "signed_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MAPK1",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAP2K1",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAPK1",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=MAP2K1@NAME&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=MAP2K1@NAME&object=MAPK1@NAME&type=Activation&format=html",
+         "MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
+  },
+  "unsigned_graph": {
+   "result_json": {
+    "py/object": "indra.explanation.model_checker.model_checker.PathResult",
+    "max_path_length": 5,
+    "max_paths": 1,
+    "path_found": true,
+    "path_metrics": [
+     {
+      "py/object": "indra.explanation.model_checker.model_checker.PathMetric",
+      "length": 2,
+      "source_node": {
+       "py/tuple": [
+        "BRAF",
+        0
+       ]
+      },
+      "target_node": {
+       "py/tuple": [
+        "MAPK1",
+        0
+       ]
+      }
+     }
+    ],
+    "paths": [
+     {
+      "py/tuple": [
+       {
+        "py/tuple": [
+         "BRAF",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAP2K1",
+         0
+        ]
+       },
+       {
+        "py/tuple": [
+         "MAPK1",
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "result_code": "PATHS_FOUND"
+   },
+   "path_json": [
+    {
+     "path": "BRAF \u2192 MAP2K1 \u2192 MAPK1",
+     "edge_list": [
+      {
+       "edge": "BRAF \u2192 MAP2K1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=BRAF@NAME&object=MAP2K1@NAME&type=Activation&format=html",
+         "BRAF activates MAP2K1.",
+         ""
+        ]
+       ]
+      },
+      {
+       "edge": "MAP2K1 \u2192 MAPK1",
+       "stmts": [
+        [
+         "https://db.indra.bio/statements/from_agents?subject=MAP2K1@NAME&object=MAPK1@NAME&type=Activation&format=html",
+         "MAP2K1 activates MAPK1.",
+         ""
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "result_code": "Path found which satisfies the test statement"
   }
  }
 ]
