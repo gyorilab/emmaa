@@ -11,7 +11,7 @@ from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
-    stmts_from_pybel_path, stmts_from_indranet_path
+    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
@@ -155,15 +155,21 @@ class ModelManager(object):
                     if len(step) < 1:
                         continue
                     stmt_type = type(step[0]).__name__
-                    for j, ag in enumerate(step[0].agent_list()):
-                        if ag is not None:
-                            edge_nodes.append(ag.name)
-                        if j == (len(step[0].agent_list()) - 1):
-                            break
-                        if stmt_type in ARROW_DICT:
-                            edge_nodes.append(ARROW_DICT[stmt_type])
-                        else:
-                            edge_nodes.append(u"\u2192")
+                    if stmt_type == 'PybelEdge':
+                        source, target = step[0].source, step[0].target
+                        edge_nodes.append(source.name)
+                        edge_nodes.append(u"\u2192")
+                        edge_nodes.append(target.name)
+                    else:
+                        for j, ag in enumerate(step[0].agent_list()):
+                            if ag is not None:
+                                edge_nodes.append(ag.name)
+                            if j == (len(step[0].agent_list()) - 1):
+                                break
+                            if stmt_type in ARROW_DICT:
+                                edge_nodes.append(ARROW_DICT[stmt_type])
+                            else:
+                                edge_nodes.append(u"\u2192")
                     if i == 0:
                         for n in edge_nodes:
                             path_nodes.append(n)
@@ -206,7 +212,9 @@ class ModelManager(object):
         for stmt in stmts:
             ea = EnglishAssembler([stmt])
             sentence = ea.make_model()
-            if self.link_type == 'indra_db':
+            if isinstance(stmt, PybelEdge):
+                sentences.append(('', sentence, ''))
+            elif self.link_type == 'indra_db':
                 link = get_statement_queries([stmt])[0] + '&format=html'
                 sentences.append((link, sentence, ''))
             elif self.link_type == 'elsevier':
