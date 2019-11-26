@@ -11,7 +11,8 @@ from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
-    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge
+    stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
+    pybel_edge_to_english
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
@@ -210,20 +211,22 @@ class ModelManager(object):
                 new_stmts.append(stmt)
             stmts = new_stmts
         for stmt in stmts:
-            ea = EnglishAssembler([stmt])
-            sentence = ea.make_model()
             if isinstance(stmt, PybelEdge):
+                sentence = pybel_edge_to_english(stmt)
                 sentences.append(('', sentence, ''))
-            elif self.link_type == 'indra_db':
-                link = get_statement_queries([stmt])[0] + '&format=html'
-                sentences.append((link, sentence, ''))
-            elif self.link_type == 'elsevier':
-                pii = stmt.evidence[0].annotations.get('pii', None)
-                if pii:
-                    link = elsevier_url + pii
-                    sentences.append((link, sentence, stmt.evidence[0].text))
-                else:
-                    sentences.append(('', sentence, stmt.evidence[0].text))
+            else:
+                ea = EnglishAssembler([stmt])
+                sentence = ea.make_model()
+                if self.link_type == 'indra_db':
+                    link = get_statement_queries([stmt])[0] + '&format=html'
+                    sentences.append((link, sentence, ''))
+                elif self.link_type == 'elsevier':
+                    pii = stmt.evidence[0].annotations.get('pii', None)
+                    if pii:
+                        link = elsevier_url + pii
+                        sentences.append((link, sentence, stmt.evidence[0].text))
+                    else:
+                        sentences.append(('', sentence, stmt.evidence[0].text))
         return sentences
 
     def make_result_code(self, result):
