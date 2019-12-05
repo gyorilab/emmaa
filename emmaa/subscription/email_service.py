@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def send_email(sender, recipients, subject, body_text, body_html,
-               source_arn, return_arn=None, return_email=None,
+               source_arn, return_email=None, return_arn=None,
                region='us-east-1'):
     """Wrapper function for the send_email method of the boto3 ses client
 
@@ -67,7 +67,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
     charset = "UTF-8"
 
     # Create a new SES resource and specify a region.
-    client = boto3.client('ses', region_name=region)
+    ses = boto3.client('ses', region_name=region)
 
     if return_arn is None:
         return_arn = source_arn
@@ -78,7 +78,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
     # Try to send the email.
     try:
         # Provide the contents of the email.
-        response = client.send_email(
+        response = ses.send_email(
             Destination={
                 'ToAddresses': [rec for rec in recipients] if isinstance(
                     recipients, (list, tuple, set)) else [recipients],
