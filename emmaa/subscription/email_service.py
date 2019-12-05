@@ -8,6 +8,61 @@ logger = logging.getLogger(__name__)
 def send_email(sender, recipients, subject, body_text, body_html,
                source_arn, return_arn=None, return_email=None,
                region='us-east-1'):
+    """Wrapper function for the send_email method of the boto3 ses client
+
+    See more at:
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference +
+    /services/ses.html#SES.Client.send_email
+    https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
+    and
+    https://docs.aws.amazon.com/ses/latest/DeveloperGuide/ +
+    sending-authorization-delegate-sender-tasks-email.html
+
+
+    Parameters
+    ----------
+    sender : str
+        A valid email address to use in the Source field
+    recipients : iterable(str) or str
+        A valid email address or a list of valid email addresses. This will
+        fill out the Recipients field.
+    subject : str
+        The email subject
+    body_text : str
+        The text body of the email
+    body_html : str
+        The html body of the email. Must be a valid html body (starting
+        with <html>).
+    source_arn : str
+        The source ARN of the sender. Should be of the format
+        "arn:aws:ses:us-east-1:123456789012:identity/user@example.com". Used
+        only for sending authorization. It is the ARN of the identity that
+        is associated with the sending authorization policy that permits
+        the sender to send using the email address specified as the sender.
+    return_email : str
+        The email to which complaints and bounces are sent. Can be the same
+        as the sender.
+    return_arn : str
+        The return path ARN for the sender. This is the ARN associated
+        with the return email. Can be the same as the source_arn if return
+        email is the same as the sender.
+    region : str
+        AWS region. Default: us-east-1
+
+    Returns
+    -------
+    dict|False
+        If the email was successfully sent, the response object in the form
+        of a dict is returned, otherwise False is returned. The structure is:
+
+        >>> response = {\
+                'MessageId': 'EXAMPLE78603177f-7a5433e7-8edb-42ae-af10' +\
+                             '-f0181f34d6ee-000000',\
+                'ResponseMetadata': {\
+                    '...': '...',\
+                },\
+            }
+    """
     # The character encoding for the email.
     charset = "UTF-8"
 
