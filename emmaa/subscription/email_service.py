@@ -117,7 +117,7 @@ if __name__ == '__main__':
     logger.info('Running base case test of email')
     ses_options = {
         'sender': input('Sender (you): '),
-        'recipients': input('email recipients (space separated): '),
+        'recipients': input('email recipients (space separated): ').split(),
         'subject': 'Amazon SES Test (SDK for Python)',
         'body_text': 'Amazon SES Test (Python)\r\n'
                      'This email was sent with Amazon SES using the AWS SDK '
