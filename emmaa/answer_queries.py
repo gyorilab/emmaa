@@ -178,11 +178,14 @@ class QueryManager(object):
         """Produce a report for all query results per user in a given format"""
         results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
-            filename = filename + '.txt'
-            self.make_str_report_per_user(results, filename=filename)
+            filename = filename + '.txt' if filename else None
+            reports = self.make_str_report_per_user(results,
+                                                    filename=filename)
+            return reports if reports else None
         elif report_format == 'html':
-            filename = filename + '.html'
-            self.make_html_report_per_user(results, filename=filename)
+            filename = filename + '.html' if filename else None
+            msg = self.make_html_report_per_user(results, filename=filename)
+            return msg if msg else None
 
     def get_report_per_query(self, model_name, query):
         try:
