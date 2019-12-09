@@ -1,12 +1,16 @@
+import os
 import logging
 import boto3
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
+notifications_sender_default = 'emmaa_notifications@indra.bio'
+indra_bio_ARN_id = os.environ.get('EMMAA_SOURCE_ARN')
+
 
 def send_email(sender, recipients, subject, body_text, body_html,
-               source_arn, return_email=None, return_arn=None,
+               source_arn=None, return_email=None, return_arn=None,
                region='us-east-1'):
     """Wrapper function for the send_email method of the boto3 SES client
 
@@ -35,10 +39,12 @@ def send_email(sender, recipients, subject, body_text, body_html,
         with <html>).
     source_arn : str
         The source ARN of the sender. Should be of the format
-        "arn:aws:ses:us-east-1:123456789012:identity/user@example.com". Used
-        only for sending authorization. It is the ARN of the identity that
-        is associated with the sending authorization policy that permits
-        the sender to send using the email address specified as the sender.
+        "arn:aws:ses:us-east-1:123456789012:identity/user@example.com" or
+        "arn:aws:ses:us-east-1:123456789012:identity/example.com".
+        Used only for sending authorization. It is the ARN of the identity
+        that is associated with the sending authorization policy that
+        permits the sender to send using the email address specified as the
+        sender.
     return_email : str
         The email to which complaints and bounces are sent. Can be the same
         as the sender.
@@ -63,6 +69,16 @@ def send_email(sender, recipients, subject, body_text, body_html,
                 },\
             }
     """
+    # Check if there is any source ARN
+    if not source_arn:
+        source_arn = os.environ.get('EMMAA_SOURCE_ARN')
+        if source_arn is None:
+            logger.error('No SourceArn found, please set it using '
+                         'the environment variable EMMAA_SOURCE_ARN')
+            return False
+        logger.info('Found SourceArn in os environment variable'
+                    'EMMAA_SOURCE_ARN')
+
     # The character encoding for the email.
     charset = "UTF-8"
 
