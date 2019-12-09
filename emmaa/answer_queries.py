@@ -343,11 +343,12 @@ def format_results(results):
     return formatted_results
 
 
-def load_model_manager_from_s3(model_name):
-    model_manager = model_manager_cache.get(model_name)
-    if model_manager:
-        logger.info(f'Loaded model manager for {model_name} from cache.')
-        return model_manager
+def load_model_manager_from_s3(model_name, try_from_cache=True):
+    if try_from_cache:
+        model_manager = model_manager_cache.get(model_name)
+        if model_manager:
+            logger.info(f'Loaded model manager for {model_name} from cache.')
+            return model_manager
     client = get_s3_client()
     key = f'results/{model_name}/latest_model_manager.pkl'
     logger.info(f'Loading latest model manager for {model_name} model from '
@@ -385,6 +386,6 @@ def answer_queries_from_s3(model_name, db=None):
     db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
         If given over-rides the default primary database.
     """
-    mm = load_model_manager_from_s3(model_name)
+    mm = load_model_manager_from_s3(model_name, try_from_cache=False)
     qm = QueryManager(db=db, model_managers=[mm])
     qm.answer_registered_queries(model_name, find_delta=False)
