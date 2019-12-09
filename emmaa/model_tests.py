@@ -17,10 +17,10 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
-from emmaa.model import EmmaaModel
+from emmaa.model import EmmaaModel, load_config_from_s3
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name
 from emmaa.analyze_tests_results import elsevier_url
-from emmaa.answer_queries import QueryManager
+from emmaa.answer_queries import load_model_manager_from_s3
 
 
 logger = logging.getLogger(__name__)
@@ -573,3 +573,14 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     if upload_results:
         mm.upload_results()
     return mm
+
+
+def run_multiple_test_corpora(model_name, upload_results=True):
+    config = load_config_from_s3(model_name)
+    test_corpora = model.test_config.get(
+        'test_corpus', 'large_corpus_tests.pkl')
+    if isinstance(test_corpora, str):
+        run_model_tests_from_s3(model_name, test_corpora, upload_results)
+    elif isinstance(test_corpora, list):
+        for test_corpus in test_corpora:
+            run_model_tests_from_s3(model_name, test_corpus, upload_results)
