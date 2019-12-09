@@ -66,8 +66,9 @@ def send_email(sender, recipients, subject, body_text, body_html,
     # The character encoding for the email.
     charset = "UTF-8"
 
-    # Create a new SES resource and specify a region.
-    ses = boto3.client('ses', region_name=region)
+    # Create a new SES client with the email profile
+    ses = boto3.session.Session(
+        profile_name='emmaa-email').client('ses', region_name=region)
 
     if return_arn is None:
         return_arn = source_arn
