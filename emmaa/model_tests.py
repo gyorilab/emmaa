@@ -533,7 +533,12 @@ def save_model_manager_to_s3(model_name, model_manager):
                       Key=f'results/{model_name}/latest_model_manager.pkl')
 
 
-def run_model_tests_from_s3(model_name, upload_mm=True, upload_results=True):
+def update_model_manager_on_s3(model_name):
+    model = EmmaaModel.load_from_s3(model_name)
+    mm = ModelManager(model)
+    save_model_manager_to_s3(model_name, mm)
+
+
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
