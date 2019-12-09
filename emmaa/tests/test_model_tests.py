@@ -27,7 +27,7 @@ def test_load_tests_from_s3():
 @attr('nonpublic')
 def test_run_tests_from_s3():
     db = _get_test_db()
-    mm = run_model_tests_from_s3('test', upload_mm=False, upload_results=False)
+    mm = run_model_tests_from_s3('test', upload_results=False)
     assert isinstance(mm, ModelManager)
     assert isinstance(mm.model, EmmaaModel)
     assert isinstance(mm.mc_types['pysb']['model_checker'], PysbModelChecker)
