@@ -8,13 +8,13 @@ logger = logging.getLogger(__name__)
 def send_email(sender, recipients, subject, body_text, body_html,
                source_arn, return_email=None, return_arn=None,
                region='us-east-1'):
-    """Wrapper function for the send_email method of the boto3 ses client
+    """Wrapper function for the send_email method of the boto3 SES client
 
     See more at:
     https://boto3.amazonaws.com/v1/documentation/api/latest/reference +
     /services/ses.html#SES.Client.send_email
     https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
-    and
+    and python example at
     https://docs.aws.amazon.com/ses/latest/DeveloperGuide/ +
     sending-authorization-delegate-sender-tasks-email.html
 
