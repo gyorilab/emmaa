@@ -539,6 +539,8 @@ def update_model_manager_on_s3(model_name):
     save_model_manager_to_s3(model_name, mm)
 
 
+def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
+                            upload_results=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -562,16 +564,8 @@ def update_model_manager_on_s3(model_name):
         Instance of ModelManager containing the model data, list of applied
         tests and the test results.
     """
-    model = EmmaaModel.load_from_s3(model_name)
-    test_corpus = model.test_config.get('test_corpus', 'large_corpus_tests.pkl')
+    mm = load_model_manager_from_s3(model_name, try_from_cache=False)
     tests = load_tests_from_s3(test_corpus)
-    mm = ModelManager(model)
-    # Optionally upload model manager to S3
-    if upload_mm:
-        # NOTE we're saving the ModelManager object before identifying and
-        # running applicable tests - it contains assembled models and model
-        # checkers but does not contain test and test results (less memory)
-        save_model_manager_to_s3(model_name, mm)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
