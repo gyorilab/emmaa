@@ -140,6 +140,7 @@ if __name__ == '__main__':
     }
     resp = send_email(**ses_options)
     if resp:
+        print('Email(s) sent successfully')
         print(repr(resp))
     else:
         print('Email failed to send...')
