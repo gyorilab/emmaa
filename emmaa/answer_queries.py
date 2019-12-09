@@ -231,19 +231,20 @@ class QueryManager(object):
         change in the results."""
         if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
-                msg = f'\nThis is the first result to query {query} ' \
-                      f'in {model_name} with {mc_type} model checker.' \
-                      f'\nThe result is:'
+                msg = f'\nThis is the first result to query ' \
+                      f'{_make_query_str(query)} in {model_name} with' \
+                      f' {mc_type} model checker.\nThe result is:'
                 msg += _process_result_to_str(new_result_json)
             else:
-                msg = f'\nA new result to query {query} in {model_name} was ' \
-                      f'found with {mc_type} model checker. '
+                msg = f'\nA new result to query {_make_query_str(query)}' \
+                      f' in {model_name} was found with {mc_type}' \
+                      f' model checker. '
                 msg += '\nPrevious result was:'
                 msg += _process_result_to_str(old_result_json)
                 msg += '\nNew result is:'
                 msg += _process_result_to_str(new_result_json)
         else:
-            msg = f'\nA result to query {query} in ' \
+            msg = f'\nA result to query {_make_query_str(query)} in ' \
                   f'{model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:'
             msg += _process_result_to_str(new_result_json)
@@ -262,29 +263,29 @@ class QueryManager(object):
     def _make_html_one_query_inner(self, model_name, query, mc_type,
                                    new_result_json, old_result_json=None):
         # Create an html part for one query to be used in producing html report
-            if is_query_result_diff(new_result_json, old_result_json):
-                if not old_result_json:
-                    msg = f'<p>This is the first result to query {query} in ' \
-                          f'{model_name} with {mc_type} model checker. ' \
-                          f'The result is:<br>'
-                    msg += _process_result_to_str(new_result_json)
-                    msg += '</p>'
-                else:
-                    msg = f'<p>A new result to query {query} in ' \
-                          f'{model_name} was found with {mc_type} ' \
-                          f'model checker.<br>'
-                    msg += '<br>Previous result was:<br>'
-                    msg += _process_result_to_str(old_result_json)
-                    msg += '<br>New result is:<br>'
-                    msg += _process_result_to_str(new_result_json)
-                    msg += '</p>'
-            else:
-                msg = f'<p>A result to query {query} in ' \
-                      f'{model_name} from {mc_type} model checker did not ' \
-                      f'change. The result is:<br>'
+        if is_query_result_diff(new_result_json, old_result_json):
+            if not old_result_json:
+                msg = f'<p>This is the first result to query ' \
+                      f'"{_make_query_str(query)}" in {model_name} ' \
+                      f'with {mc_type} model checker. The result is:<br>'
                 msg += _process_result_to_str(new_result_json)
                 msg += '</p>'
-            return msg
+            else:
+                msg = f'<p>A new result to query ' \
+                      f'"{_make_query_str(query)}" in {model_name} ' \
+                      f'was found with {mc_type} model checker.<br>'
+                msg += '<br>Previous result was:<br>'
+                msg += _process_result_to_str(old_result_json)
+                msg += '<br>New result is:<br>'
+                msg += _process_result_to_str(new_result_json)
+                msg += '</p>'
+        else:
+            msg = f'<p>A result to query "{_make_query_str(query)}" ' \
+                  f'in {model_name} from {mc_type} model checker ' \
+                  f'did not change. The result is:<br>'
+            msg += _process_result_to_str(new_result_json)
+            msg += '</p>'
+        return msg
 
     def notify_user(
             self, user_email, model_name, query, mc_type, new_result_json,
