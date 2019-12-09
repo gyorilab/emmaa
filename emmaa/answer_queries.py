@@ -187,21 +187,30 @@ class QueryManager(object):
             msg = self.make_html_report_per_user(results, filename=filename)
             return msg if msg else None
 
-    def get_report_per_query(self, model_name, query):
+    def get_report_per_query(self, model_name, query, format='str'):
+        if format not in {'html', 'str'}:
+            logger.error(f'Invalid format ({format}). Must be "str" '
+                         f'or "html"')
+            return None
         try:
             new_results = self.db.get_results_from_query(
-                            query, [model_name], latest_order=1)
+                query, [model_name], latest_order=1)
         except IndexError:
             logger.info('No latest result was found.')
             return None
+        if format == 'html':
+            return self.make_reports_from_results(new_results, True, 'html')
         return self.make_reports_from_results(new_results, True, 'str')
 
     def make_str_report_per_user(self, results, filename='query_delta.txt'):
         """Produce a report for all query results per user in a text file."""
         reports = self.make_reports_from_results(results, True, 'str')
-        with open(filename, 'w') as f:
-            for report in reports:
-                f.write(report)
+        if filename:
+            with open(filename, 'w') as f:
+                for report in reports:
+                    f.write(report)
+        else:
+            return reports
 
     def make_html_report_per_user(self, results, filename='query_delta.html'):
         """Produce a report for all query results per user in an html file."""
@@ -210,8 +219,11 @@ class QueryManager(object):
         for report in reports:
             msg += report
         msg += '</body></html>'
-        with open(filename, 'w') as f:
-            f.write(msg)
+        if filename:
+            with open(filename, 'w') as f:
+                f.write(msg)
+        else:
+            return msg
 
     def make_str_report_one_query(self, model_name, query, mc_type,
                                   new_result_json, old_result_json=None):
