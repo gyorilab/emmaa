@@ -6,6 +6,7 @@ from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, find_latest_s3_file, \
     EMMAA_BUCKET_NAME
+from emmaa.subscription import send_email, notifications_sender_default
 
 
 logger = logging.getLogger(__name__)
@@ -295,8 +296,25 @@ class QueryManager(object):
             model_name, query, mc_type, new_result_json, old_result_json)
         html_msg = self.make_html_one_query_report(
             model_name, query, mc_type, new_result_json, old_result_json)
-        # TODO send an email to user
-        pass
+
+        self.__send_email_notification(
+            recipients=[user_email],
+            subject_line='Emmaa query update',
+            str_body=str_msg,
+            html_body=html_msg
+        )
+
+    @staticmethod
+    def __send_email_notification(recipients, subject_line, str_body,
+                                  html_body):
+        send_email(
+            sender=notifications_sender_default,
+            recipients=[r for r in recipients]
+            if isinstance(recipients, (list, tuple, set)) else [recipients],
+            subject=subject_line,
+            body_text=str_body,
+            body_html=html_body
+        )
 
     def get_model_manager(self, model_name):
         # Try get model manager from class attributes or load from s3.
