@@ -23,7 +23,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
     ----------
     sender : str
         A valid email address to use in the Source field
-    recipients : iterable(str) or str
+    recipients : iterable[str] or str
         A valid email address or a list of valid email addresses. This will
         fill out the Recipients field.
     subject : str
@@ -105,7 +105,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
             SourceArn=source_arn,
             ReturnPathArn=return_arn
         )
-    # Display an error if something goes wrong.
+    # Log error if something goes wrong.
     except ClientError as e:
         logger.error(e.response['Error']['Message'])
         return False
@@ -116,26 +116,30 @@ def send_email(sender, recipients, subject, body_text, body_html,
 
 if __name__ == '__main__':
     logger.info('Running base case test of email')
+    email_subj = input('Email subject line: ')
+    msg = input('Provide a personalized message for the email body: ')
     ses_options = {
         'sender': input('Sender (you): '),
         'recipients': input('email recipients (space separated): ').split(),
-        'subject': 'Amazon SES Test (SDK for Python)',
-        'body_text': 'Amazon SES Test (Python)\r\n'
+        'subject': email_subj,
+        'body_text': f'{email_subj}\r\n'
                      'This email was sent with Amazon SES using the AWS SDK '
-                     'for Python (Boto).',
+                     'for Python (Boto). Personal message: %s' % msg,
         'body_html': '''<html>
 <head></head>
 <body>
-  <h1>Amazon SES Test (SDK for Python)</h1>
+  <h1>%s</h1>
   <p>This email was sent with
     <a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the
     <a href='https://aws.amazon.com/sdk-for-python/'>
-      AWS SDK for Python (Boto)</a>.</p>
+      AWS SDK for Python (Boto)</a>. Personal message: %s</p>'
 </body>
 </html>
-            ''',
+            ''' % (email_subj, msg),
         'source_arn': input('Provide source (sender) arn: ')
     }
     resp = send_email(**ses_options)
     if resp:
-        logger.info(repr(resp))
+        print(repr(resp))
+    else:
+        print('Email failed to send...')
