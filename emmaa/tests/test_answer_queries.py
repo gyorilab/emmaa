@@ -164,12 +164,16 @@ def test_report_one_query():
     assert 'A new result to query' in str_msg, str_msg
     assert 'Query is not applicable for this model' in str_msg
     assert 'BRAF → MAP2K1 → MAPK1' in str_msg
+    assert simple_query in str_msg
     # Html report given two responses explicitly
     html_msg = qm.make_html_one_query_report(
         'test', query_object, 'pysb', test_response, query_not_appl)
     assert html_msg
+    assert '<p>' in html_msg
+    assert '</p>' in html_msg
     assert 'A new result to query' in html_msg
     assert 'Query is not applicable for this model' in html_msg
+    assert simple_query in html_msg
 
 
 @attr('nonpublic')
