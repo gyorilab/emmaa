@@ -67,12 +67,13 @@ def _get_model_meta_data():
     resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
                            Delimiter='/')
     model_data = []
+    date = '2019-12-10'
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
         config_json = get_model_config(model)
         if not config_json:
             continue
-        model_data.append((model, config_json))
+        model_data.append((model, config_json, date))
     return model_data
 
 
@@ -154,7 +155,7 @@ if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _ in model_meta_data:
+    for model, _, _ in model_meta_data:
         load_model_manager_from_s3(model)
 
 
@@ -295,7 +296,7 @@ def get_model_dashboard(model, date):
 
     last_update = model_last_updated(model=model)
     ndex_id = 'None available'
-    for mid, mmd in model_meta_data:
+    for mid, mmd, _ in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
