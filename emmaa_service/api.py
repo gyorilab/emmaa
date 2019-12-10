@@ -91,7 +91,7 @@ def get_model_config(model):
     return model_cache[model]
 
 
-def get_model_stats(model, extension='.json'):
+def get_model_stats(model, date, extension='.json'):
     """Gets the latest statistics for the given model
 
     Parameters
@@ -109,7 +109,7 @@ def get_model_stats(model, extension='.json'):
 
     # Need jsons for model meta data and test statistics. File name examples:
     # stats/skcm/stats_2019-08-20-17-34-40.json
-    prefix = f'stats/{model}/stats_'
+    prefix = f'stats/{model}/stats_{date}'
     latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                           prefix=prefix,
                                           extension=extension)
@@ -287,9 +287,9 @@ def get_home():
                            user_email=user.email if user else "")
 
 
-@app.route('/dashboard/<model>')
+@app.route('/dashboard/<model>/<date>')
 @jwt_optional
-def get_model_dashboard(model):
+def get_model_dashboard(model, date):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
 
@@ -308,7 +308,7 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    model_stats = get_model_stats(model)
+    model_stats = get_model_stats(model, date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
 
@@ -357,11 +357,11 @@ def get_model_dashboard(model):
                                model, model_stats, current_model_types))
 
 
-@app.route('/tests/<model>/<model_type>/<test_hash>')
-def get_model_tests_page(model, model_type, test_hash):
+@app.route('/tests/<model>/<model_type>/<test_hash>/<date>')
+def get_model_tests_page(model, model_type, test_hash, date):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    model_stats = get_model_stats(model)
+    model_stats = get_model_stats(model, date)
     current_test = \
         model_stats['test_round_summary']['all_test_results'][test_hash]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
