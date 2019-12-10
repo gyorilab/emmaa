@@ -209,7 +209,15 @@ function populateTestResultTable(tableBody, json) {
     columns: [
       dates,
       stmtsOverTime
-    ]
+    ],
+    onclick: function (x) { 
+      let new_date = x.x.toISOString().substring(0, 10)
+      console.log(new_date)
+      let loc = window.location.href
+      let current_date = loc.substring(loc.length - 10, loc.length)
+      redirect = loc.replace(current_date, new_date)
+      location.replace(redirect); 
+    },
   };
 
   let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '');
@@ -235,7 +243,15 @@ function populateTestResultTable(tableBody, json) {
   lineDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: passedRatioColumns
+    columns: passedRatioColumns,
+    onclick: function (x) { 
+      let new_date = x.x.toISOString().substring(0, 10)
+      console.log(new_date)
+      let loc = window.location.href
+      let current_date = loc.substring(loc.length - 10, loc.length)
+      redirect = loc.replace(current_date, new_date)
+      location.replace(redirect); 
+    },
   };
 
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
@@ -261,7 +277,15 @@ function populateTestResultTable(tableBody, json) {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
     columns: appliedPassedColumns,
-    type: 'area'
+    type: 'area',
+    onclick: function (x) { 
+      let new_date = x.x.toISOString().substring(0, 10)
+      console.log(new_date)
+      let loc = window.location.href
+      let current_date = loc.substring(loc.length - 10, loc.length)
+      redirect = loc.replace(current_date, new_date)
+      location.replace(redirect); 
+    },
   };
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
