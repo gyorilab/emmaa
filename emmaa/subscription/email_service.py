@@ -57,9 +57,9 @@ def send_email(sender, recipients, subject, body_text, body_html,
 
     Returns
     -------
-    dict|False
-        If the email was successfully sent, the response object in the form
-        of a dict is returned, otherwise False is returned. The structure is:
+    dict
+        The API response object in the form of a dict is returned. The
+        structure is:
 
         >>> response = {\
                 'MessageId': 'EXAMPLE78603177f-7a5433e7-8edb-42ae-af10' +\
@@ -124,10 +124,51 @@ def send_email(sender, recipients, subject, body_text, body_html,
     # Log error if something goes wrong.
     except ClientError as e:
         logger.error(e.response['Error']['Message'])
-        return False
     else:
         logger.info("Email sent!"),
-        return response
+    return response
+
+
+def _get_max_24h_send(ses_client):
+    res = ses_client.get_send_quota()
+    return int(res['Max24HourSend'])
+
+
+def _get_sent_last_24h(ses_client):
+    res = ses_client.get_send_quota()
+    return int(res['SentLast24Hours'])
+
+
+def _get_quota_sent_max_ratio(ses_client):
+    res = ses_client.get_send_quota()
+    return res['SentLast24Hours']/res['Max24HourSend']
+
+
+def close_to_quota_max(used_quota=0.95, region='us-east-1'):
+    """Check if the send quota is close to be exceeded
+
+    If the total quota for the 24h cycle is Q, the current used quota is q
+    and 'used_quota' is r, return True if q/Q > r, otherwise return False.
+
+    Parameters
+    ----------
+    used_quota : float
+        A float between 0 and 1.0. This number specifies the fraction of
+        send quota currently ued. Default: 0.95
+    region : str
+        A valid AWS region. The region to check the quota in.
+        Default: us-east-1.
+
+    Returns
+    -------
+    bool
+        True if the quota is close to be exceeded with respect to the
+        provided ratio 'used'.
+    """
+    ses = boto3.session.Session(
+        profile_name=email_profile).client('ses', region_name=region)
+    ratio_used = _get_quota_sent_max_ratio(ses)
+    return ratio_used > used_quota
 
 
 if __name__ == '__main__':
