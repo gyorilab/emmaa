@@ -177,7 +177,7 @@ if __name__ == '__main__':
     email_subj = input('Email subject line: ')
     msg = input('Provide a personalized message for the email body: ')
     ses_options = {
-        'sender': input('Sender (you): '),
+        'sender': notifications_sender_default,
         'recipients': input('email recipients (space separated): ').split(),
         'subject': email_subj,
         'body_text': f'{email_subj}\r\n'
@@ -192,8 +192,7 @@ if __name__ == '__main__':
     <a href='https://aws.amazon.com/sdk-for-python/'>
       AWS SDK for Python (Boto)</a>. Personal message: %s</p>'
 </body>
-</html>
-            ''' % (email_subj, msg),
+</html>''' % (email_subj, msg),
         'source_arn': input('Provide source (sender) arn: ')
     }
     resp = send_email(**ses_options)
