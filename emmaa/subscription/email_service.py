@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
+email_profile = 'indralabs-email'
 notifications_sender_default = 'emmaa_notifications@indra.bio'
 indra_bio_ARN_id = os.environ.get('EMMAA_SOURCE_ARN')
 
@@ -84,7 +85,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
 
     # Create a new SES client with the email profile
     ses = boto3.session.Session(
-        profile_name='emmaa-email').client('ses', region_name=region)
+        profile_name=email_profile).client('ses', region_name=region)
 
     if return_arn is None:
         return_arn = source_arn
