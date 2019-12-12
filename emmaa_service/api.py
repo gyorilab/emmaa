@@ -196,7 +196,7 @@ def _extract_stmt_link(anchor_string):
         return '', anchor_string
 
 
-def _new_applied_tests(model_stats_json, model_types, model_name):
+def _new_applied_tests(model_stats_json, model_types, model_name, date):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -208,17 +208,17 @@ def _new_applied_tests(model_stats_json, model_types, model_name):
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(new_app_tests, model_types, model_name)
+    return _format_table_array(new_app_tests, model_types, model_name, date)
 
 
-def _format_table_array(tests_json, model_types, model_name):
+def _format_table_array(tests_json, model_types, model_name, date):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
         new_row = [(*test['test'], stmt_db_link_msg)
                    if len(test['test']) == 2 else test['test']]
         for mt in model_types:
-            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0],
+            new_row.append((f'/tests/{model_name}/{mt}/{th}/{date}', test[mt][0],
                             pass_fail_msg))
         table_array.append(new_row)
     return sorted(table_array, key=_sort_pass_fail)
@@ -239,7 +239,7 @@ def _format_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, model_stats_json, current_model_types):
+def _new_passed_tests(model_name, model_stats_json, current_model_types, date):
     new_passed_tests = []
     all_test_results = model_stats_json['test_round_summary'][
         'all_test_results']
@@ -260,7 +260,7 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
                 path = path_loc
             new_row = [(*test['test'], stmt_db_link_msg)
                        if len(test['test']) == 2 else test['test'],
-                       (f'/tests/{model_name}/{mt}/{test_hash}', path,
+                       (f'/tests/{model_name}/{mt}/{test_hash}/{date}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
@@ -349,13 +349,15 @@ def get_model_dashboard(model, date):
                            new_applied_tests=_new_applied_tests(
                                model_stats_json=model_stats,
                                model_types=current_model_types,
-                               model_name=model),
+                               model_name=model,
+                               date=date),
                            all_test_results=_format_table_array(
                                tests_json=all_tests,
                                model_types=current_model_types,
-                               model_name=model),
+                               model_name=model,
+                               date=date),
                            new_passed_tests=_new_passed_tests(
-                               model, model_stats, current_model_types))
+                               model, model_stats, current_model_types, date))
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>/<date>')
