@@ -2,7 +2,7 @@ import os
 import re
 import boto3
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from botocore import UNSIGNED
 from botocore.client import Config
 from inflection import camelize
@@ -62,7 +62,7 @@ def list_s3_files(bucket, prefix, extension=None):
     return keys
 
 
-def sort_s3_files_by_date(bucket, prefix, extension=None):
+def sort_s3_files_by_date_str(bucket, prefix, extension=None):
     """
     Return the list of keys of the files on an S3 path sorted by date starting
     with the most recent one.
@@ -79,7 +79,7 @@ def sort_s3_files_by_date(bucket, prefix, extension=None):
 
 def find_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with latest date string on an S3 path"""
-    files = sort_s3_files_by_date(bucket, prefix, extension)
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
     try:
         latest = files[0]
         return latest
@@ -90,7 +90,7 @@ def find_latest_s3_file(bucket, prefix, extension=None):
 def find_second_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with second latest date string on an S3 path
     """
-    files = sort_s3_files_by_date(bucket, prefix, extension)
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
     try:
         latest = files[1]
         return latest
@@ -103,7 +103,7 @@ def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
     Return the keys of the specified number of files with latest date strings
     on an S3 path sorted by date starting with the earliest one.
     """
-    files = sort_s3_files_by_date(bucket, prefix, extension)
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
     keys = []
     for ix in range(number_of_files):
         keys.append(files[ix])
@@ -112,7 +112,7 @@ def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):
 
 
 def find_number_of_files_on_s3(bucket, prefix, extension=None):
-    files = sort_s3_files_by_date(bucket, prefix, extension)
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
     return len(files)
 
 
