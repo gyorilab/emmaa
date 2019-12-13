@@ -338,9 +338,13 @@ function redirectToPast(x) {
   static_date = new Date('2019-09-30')
   if (new_date >= static_date) {
     let new_date_str = new_date.toISOString().substring(0, 10)
-    let loc = window.location.href
-    let current_date = loc.substring(loc.length - 10, loc.length)
-    redirect = loc.replace(current_date, new_date_str)
-    location.replace(redirect);
+    redirectToDate(new_date_str)
   };
+}
+
+function redirectToDate(new_date_str) {
+  let loc = window.location.href
+  let current_date = loc.substring(loc.length - 10, loc.length)
+  redirect = loc.replace(current_date, new_date_str)
+  location.replace(redirect);
 }
