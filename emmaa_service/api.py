@@ -67,13 +67,13 @@ def _get_model_meta_data():
     resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
                            Delimiter='/')
     model_data = []
-    date = '2019-12-10'
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
         config_json = get_model_config(model)
         if not config_json:
             continue
-        model_data.append((model, config_json, date))
+        latest_date = latest_stats_date(model)
+        model_data.append((model, config_json, latest_date))
     return model_data
 
 
@@ -117,6 +117,16 @@ def get_model_stats(model, date, extension='.json'):
     model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
                                       Key=latest_file_key)
     return json.loads(model_data_object['Body'].read().decode('utf8'))
+
+
+def latest_stats_date(model):
+    prefix = f'stats/{model}/stats_'
+    latest_date = strip_out_date(
+        find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                            prefix=prefix,
+                            extension='.json'),
+        'date')
+    return latest_date
 
 
 def model_last_updated(model, extension='.pkl'):
@@ -312,7 +322,7 @@ def get_model_dashboard(model, date):
     model_stats = get_model_stats(model, date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
-
+    latest_date = latest_stats_date(model)
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in model_stats['test_round_summary']['all_test_results'].items():
@@ -357,7 +367,9 @@ def get_model_dashboard(model, date):
                                model_name=model,
                                date=date),
                            new_passed_tests=_new_passed_tests(
-                               model, model_stats, current_model_types, date))
+                               model, model_stats, current_model_types, date),
+                           date=date,
+                           latest_date=latest_date)
 
 
 @app.route('/tests/<model>/<model_type>/<test_hash>/<date>')
