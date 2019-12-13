@@ -6,6 +6,7 @@ from datetime import datetime
 from botocore import UNSIGNED
 from botocore.client import Config
 from inflection import camelize
+from indra.util.aws import get_s3_file_tree, get_date_from_str
 from indra.statements import get_all_descendants
 
 
@@ -27,10 +28,6 @@ def strip_out_date(keystring, date_format='datetime'):
     except AttributeError:
         logger.warning(f'Can\'t parse string {keystring} for date')
         return None
-
-
-def get_date_from_str(date_str):
-    return datetime.strptime(date_str, FORMAT)
 
 
 def make_date_str(date=None):
