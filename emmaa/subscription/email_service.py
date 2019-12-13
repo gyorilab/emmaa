@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 email_profile = 'indralabs-email'
+email_bucket = 'emmaa-notifications'
 notifications_sender_default = 'emmaa_notifications@indra.bio'
 indra_bio_ARN_id = os.environ.get('EMMAA_SOURCE_ARN')
 
