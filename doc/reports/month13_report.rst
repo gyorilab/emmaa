@@ -6,13 +6,9 @@ Related work for the EMMAA system
 
 We are not aware of any meta-modeling systems coupling machine-assembled models
 to automated analysis, in molecular biology or other fields. To the best of our
-knowledge, the EMMAA system is the first of its kind.
-
-Nevertheless, members of the cancer biology community have argued for the
-usefulness of such a system - if it existed - for instance, in a perspective
-piece by Carvunis & Ideker (2016). Despite the fact that EMMAA is unique as an
-integrated system, there does exist a body of pre-existing work related to
-individual component technologies of the system.
+knowledge, the EMMAA system is the first of its kind. Despite the fact that
+EMMAA is unique as an integrated system, there does exist a body of
+pre-existing work related to individual component technologies of the system.
 
 Mathematical and causal modeling has been widely applied in systems biology,
 where a multitude of model types (ordinary and partial differential equations,
