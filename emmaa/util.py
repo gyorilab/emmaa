@@ -162,6 +162,12 @@ def find_latest_emails(email_type, time_delta=None, w_dt=False):
     return [s for s in email_list if ignore not in s]
 
 
+def get_email_content(key):
+    s3 = get_s3_client(unsigned=False)
+    email_obj = s3.get_object(Bucket=email_bucket, Key=key)
+    return email_obj['Body'].read().decode()
+
+
 def does_exist(bucket, prefix, extension=None):
     """Check if the file with exact key or starting with prefix and/or with
     extension exist in a bucket.
