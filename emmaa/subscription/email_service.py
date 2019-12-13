@@ -16,6 +16,8 @@ def send_email(sender, recipients, subject, body_text, body_html,
                region='us-east-1'):
     """Wrapper function for the send_email method of the boto3 SES client
 
+    IMPORTANT: sending is limited to one email per second.
+
     See more at:
     https://boto3.amazonaws.com/v1/documentation/api/latest/reference +
     /services/ses.html#SES.Client.send_email
