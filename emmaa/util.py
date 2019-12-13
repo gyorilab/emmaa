@@ -78,7 +78,10 @@ def sort_s3_files_by_date_str(bucket, prefix, extension=None):
 
 
 def sort_s3_files_by_last_mod(bucket, prefix, time_delta=None,
-                              extension=None, unsigned=True):
+                              extension=None, unsigned=True, reverse=False,
+                              w_dt=False):
+    """Return a list of s3 objects sorted by their LastModified date on S3
+    """
     if time_delta is None:
         time_delta = timedelta()  # zero timedelta
     s3 = get_s3_client(unsigned)
@@ -86,10 +89,13 @@ def sort_s3_files_by_last_mod(bucket, prefix, time_delta=None,
     file_tree = get_s3_file_tree(s3, bucket, prefix,
                                  date_cutoff=n_hours_ago,
                                  with_dt=True)
-    key_list = sorted(list(file_tree.get_leaves()), key=lambda t: t[1])
+    key_list = sorted(list(file_tree.get_leaves()), key=lambda t: t[1],
+                      reverse=reverse)
     if extension:
-        return [t[0] for t in key_list if t[0].endswith(extension)]
-    return [t[0] for t in key_list]
+        return [t if w_dt else t[0] for t in key_list
+                if t[0].endswith(extension)]
+    else:
+        return key_list if w_dt else [t[0] for t in key_list]
 
 
 def find_latest_s3_file(bucket, prefix, extension=None):
@@ -131,7 +137,7 @@ def find_number_of_files_on_s3(bucket, prefix, extension=None):
     return len(files)
 
 
-def find_latest_emails(email_type, time_delta=None):
+def find_latest_emails(email_type, time_delta=None, w_dt=False):
     """Return a list of keys of the latest emails delivered to s3
 
     Parameters
@@ -148,8 +154,11 @@ def find_latest_emails(email_type, time_delta=None):
         A list of keys to the emails of the specified type.
     """
     email_list = sort_s3_files_by_last_mod(email_bucket, email_type,
-                                           time_delta, unsigned=False)
+                                           time_delta, unsigned=False,
+                                           w_dt=w_dt)
     ignore = 'AMAZON_SES_SETUP_NOTIFICATION'
+    if w_dt:
+        return [s for s in email_list if ignore not in s[0]]
     return [s for s in email_list if ignore not in s]
 
 
