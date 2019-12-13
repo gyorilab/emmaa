@@ -48,6 +48,50 @@ systematic evaluation of domain models with respect to relevant tests; nor are
 there any previous demonstrations of the use of text mining to automatically
 grow a body of observations for use in model evaluation.
 
+System performance statistics
+-----------------------------
+
+EMMAA currenty manages a total of 11 models. Eight of these models are
+fully machine-maintained and represent various diseases (7 models) and
+pathways (1 model). Two models are based on expert-curated natural language,
+then linked to literature evidence and tested automatically. Finally, one model
+represents a set of causal factors affecting food insecurity, i.e., is
+outside the domain of molecular biology.
+
+To quantify the performance of the system in terms of extending and testing/
+analyzing models, we plotted the distribution of (1) number of new statements
+added (2) number of new tests applied and (3) change in the test pass ratio
+for each of the machine-maintained biology models each day.
+
+Histogram of the number of new statements added to each model each day. As
+we can see, the change in the number of statements is often zero (i.e.,
+no new mechanisms were found relevant to the given model), but otherwise
+is between 1-15 new statements per day. In some cases, the assembly procedure
+removes previously existing mechanisms from the model, thereby making the
+number of statements added negative.
+
+.. image:: ../_static/images/model_stmt_added_per_day.png
+
+
+Histogram of the number of new applied tests each day. Typically, if new
+statements are added to a model, the number of applied tests can increase.
+As shown in the histogram, new mechanisms added to a model often result in
+dozens of new test being applicable to the model.
+
+.. image:: ../_static/images/model_tests_new_applied_per_day.png
+
+
+Histogram of the change in the fraction of tests that pass (across all
+four modeling formalisms, PySB, PyBEL, signed graph, unsigned graph)
+each day compared to the previous day. While small fractional changes are
+more common, in some cases, model extensions (or changes to model assembly)
+resulted in large jumps in test pass ratio of 5-25%.
+
+.. image:: ../_static/images/model_tests_new_passed_per_day.png
+
+
+
+
 References
 ~~~~~~~~~~
 
