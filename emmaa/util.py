@@ -8,7 +8,7 @@ from botocore.client import Config
 from inflection import camelize
 from indra.util.aws import get_s3_file_tree, get_date_from_str
 from indra.statements import get_all_descendants
-
+from emmaa.subscription import email_bucket
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
 RE_DATETIMEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
@@ -75,6 +75,23 @@ def sort_s3_files_by_date_str(bucket, prefix, extension=None):
     keys = list_s3_files(bucket, prefix, extension=extension)
     keys = sorted(keys, key=lambda k: process_key(k), reverse=True)
     return keys
+
+
+def sort_s3_files_by_last_mod(bucket, prefix, past_hours=24,
+                              extension=None, unsigned=True):
+    if past_hours < 0:
+        logger.warning('Negative timedelta resulting in comparing with '
+                       'future. Reset to zero timedelta.')
+        past_hours = 0
+    s3 = get_s3_client(unsigned)
+    n_hours_ago = datetime.utcnow() - timedelta(hours=past_hours)
+    file_tree = get_s3_file_tree(s3, bucket, prefix,
+                                 date_cutoff=n_hours_ago,
+                                 with_dt=True)
+    key_list = sorted(list(file_tree.get_leaves()), key=lambda t: t[1])
+    if extension:
+        return [t[0] for t in key_list if t[0].endswith(extension)]
+    return [t[0] for t in key_list]
 
 
 def find_latest_s3_file(bucket, prefix, extension=None):
