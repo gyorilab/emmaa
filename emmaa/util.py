@@ -77,14 +77,12 @@ def sort_s3_files_by_date_str(bucket, prefix, extension=None):
     return keys
 
 
-def sort_s3_files_by_last_mod(bucket, prefix, past_hours=24,
+def sort_s3_files_by_last_mod(bucket, prefix, time_delta=None,
                               extension=None, unsigned=True):
-    if past_hours < 0:
-        logger.warning('Negative timedelta resulting in comparing with '
-                       'future. Reset to zero timedelta.')
-        past_hours = 0
+    if time_delta is None:
+        time_delta = timedelta()  # zero timedelta
     s3 = get_s3_client(unsigned)
-    n_hours_ago = datetime.utcnow() - timedelta(hours=past_hours)
+    n_hours_ago = datetime.utcnow() - time_delta
     file_tree = get_s3_file_tree(s3, bucket, prefix,
                                  date_cutoff=n_hours_ago,
                                  with_dt=True)
@@ -133,7 +131,7 @@ def find_number_of_files_on_s3(bucket, prefix, extension=None):
     return len(files)
 
 
-def find_latest_emails(email_type, past_hours=24):
+def find_latest_emails(email_type, time_delta=None):
     """Return a list of keys of the latest emails delivered to s3
 
     Parameters
@@ -141,9 +139,8 @@ def find_latest_emails(email_type, past_hours=24):
     email_type : str
         The email type to look for, e.g. 'feedback' if listing bounce and
         complaint emails sent to the ReturnPath address.
-    past_hours : int
-        The time interval in number of hours to look backwards for listing
-        emails.
+    time_delta : datetime.timedelta
+        The timedelta to look backwards for listing emails.
 
     Returns
     -------
@@ -151,7 +148,7 @@ def find_latest_emails(email_type, past_hours=24):
         A list of keys to the emails of the specified type.
     """
     email_list = sort_s3_files_by_last_mod(email_bucket, email_type,
-                                           past_hours, unsigned=False)
+                                           time_delta, unsigned=False)
     ignore = 'AMAZON_SES_SETUP_NOTIFICATION'
     return [s for s in email_list if ignore not in s]
 
