@@ -11,11 +11,13 @@
 {% endblock %}
 
 {% block extend_header %}
+{% if not is_query_page %}
 <div class="input-group-append">
   {% if not latest_date == date %}
   <button class="btn btn-outline-secondary" onClick="redirectToDate('{{ latest_date }}')" type="button">Go to Latest</button>
   {% endif %}
 </div>
+{% endif %}
 <!-- Model type select dropdown -->
 <div class="d-inline-flex p-2 input-group" style="width: 300px; height: 54px;">
   <select class="custom-select" id="modelTypeSelectDD" aria-label="Example select with button addon">
