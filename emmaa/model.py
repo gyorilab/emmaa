@@ -20,7 +20,8 @@ from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
-from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client
+from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
+    strip_out_date
 
 
 logger = logging.getLogger(__name__)
@@ -490,3 +491,73 @@ def load_stmts_from_s3(model_name):
     obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
     stmts = pickle.loads(obj['Body'].read())
     return stmts
+
+
+def last_updated_date(model, file_type='model', date_format='datetime',
+                      extension='.pkl'):
+    """Find the most recent pickle file of model and return its creation date
+
+    Example file name:
+    models/aml/model_2018-12-13-18-11-54.pkl
+
+    Parameters
+    ----------
+    model : str
+        Model name to look for
+    file_type : str
+        Type of a file to find the latest file for. Accepted values: 'model',
+        'results', 'stats'.
+    date_format : str
+        Format of the returned date. Accepted values are 'datetime' (returns a
+        date in the format "YYYY-MM-DD-HH-mm-ss") and 'date' (returns a date
+        in the format "YYYY-MM-DD"). Default is 'datetime'.
+    extension : str
+        The extension the model file needs to have. Default is '.pkl'
+
+    Returns
+    -------
+    last_updated : str
+        A string of the selected format.
+    """
+    if file_type == 'model':
+        folder_name = 'models'
+    else:
+        folder_name = file_type
+    prefix = f'{folder_name}/{model}/{file_type}_'
+    try:
+        return strip_out_date(
+            find_latest_s3_file(
+                bucket=EMMAA_BUCKET_NAME,
+                prefix=prefix,
+                extension=extension),
+            date_format=date_format)
+    except TypeError:
+        logger.info('Could not find latest update date')
+        return ''
+
+
+def get_model_stats(model, date, extension='.json'):
+    """Gets the latest statistics for the given model
+
+    Parameters
+    ----------
+    model : str
+        Model name to look for
+    extension : str
+
+    Returns
+    -------
+    model_data : json
+        The json formatted data containing the statistics for the model
+    """
+    s3 = get_s3_client()
+
+    # Need jsons for model meta data and test statistics. File name examples:
+    # stats/skcm/stats_2019-08-20-17-34-40.json
+    prefix = f'stats/{model}/stats_{date}'
+    latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                          prefix=prefix,
+                                          extension=extension)
+    model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
+                                      Key=latest_file_key)
+    return json.loads(model_data_object['Body'].read().decode('utf8'))
