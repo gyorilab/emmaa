@@ -302,12 +302,18 @@ def get_model_tests_page(model, model_type, test_hash, date):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
     model_stats = get_model_stats(model, date)
-    current_test = \
-        model_stats['test_round_summary']['all_test_results'][test_hash]
+    if not model_stats:
+        abort(Response(f'Data for {model} for {date} was not found', 404))
+    try:
+        current_test = \
+            model_stats['test_round_summary']['all_test_results'][test_hash]
+    except KeyError:
+        abort(Response(f'Result for this test does not exist for {date}', 404))
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
+    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -318,7 +324,9 @@ def get_model_tests_page(model, model_type, test_hash, date):
                            test=test,
                            test_status=test_status,
                            path_list=path_list,
-                           formatted_names=FORMATTED_TYPE_NAMES)
+                           formatted_names=FORMATTED_TYPE_NAMES,
+                           date=date,
+                           latest_date=latest_date)
 
 
 @app.route('/query')

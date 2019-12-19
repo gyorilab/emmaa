@@ -565,6 +565,8 @@ def get_model_stats(model, date=None, extension='.json'):
     latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                           prefix=prefix,
                                           extension=extension)
+    if not latest_file_key:
+        return None
     model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
                                       Key=latest_file_key)
     return json.loads(model_data_object['Body'].read().decode('utf8'))
