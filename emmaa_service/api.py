@@ -128,16 +128,6 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
-def _extract_stmt_link(anchor_string):
-    # Matches an anchor with at least an href attribute
-    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
-    m = re.search(pattern=pattern, string=anchor_string)
-    if m:
-        return m.group(1), m.group(2)
-    else:
-        return '', anchor_string
-
-
 def _new_applied_tests(model_stats_json, model_types, model_name, date):
     # Extract new applied tests into:
     #   list of tests (one per row)
