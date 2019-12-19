@@ -383,6 +383,7 @@ def get_query_tests_page(model, model_type, query_hash):
     results = qm.retrieve_results_from_hashes([query_hash])
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
+    date = results[query_hash]['date']
     card_title = ('', results[query_hash]['query'] if results else '', '')
     return render_template('tests_template.html',
                            link_list=link_list,
@@ -394,7 +395,8 @@ def get_query_tests_page(model, model_type, query_hash):
                            is_query_page=True,
                            test_status=detailed_results[0],
                            path_list=detailed_results[1],
-                           formatted_names=FORMATTED_TYPE_NAMES)
+                           formatted_names=FORMATTED_TYPE_NAMES,
+                           date=date)
 
 
 @app.route('/query/submit', methods=['POST'])
