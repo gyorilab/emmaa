@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def strip_out_date(keystring, date_format='datetime'):
-    """Strips out datestring of format FORMAT from a keystring"""
+    """Strips out datestring of selected date_format from a keystring"""
     if date_format == 'datetime':
         re_format = RE_DATETIMEFORMAT
     elif date_format == 'date':
