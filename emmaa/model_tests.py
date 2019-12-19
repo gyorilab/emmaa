@@ -239,7 +239,8 @@ class ModelManager(object):
             results = []
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, [query.path_stmt])
-                max_path_length, max_paths = self._get_test_configs()
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', mc_type=mc_type)
                 result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
                 results.append((mc_type, self.process_response(mc_type, result)))
@@ -264,7 +265,6 @@ class ModelManager(object):
         responses = []
         applicable_queries = []
         applicable_stmts = []
-        max_path_length, max_paths = self._get_test_configs()
         for query in queries:
             if ScopeTestConnector.applicable(self, query):
                 applicable_queries.append(query)
@@ -277,24 +277,40 @@ class ModelManager(object):
         if applicable_queries:
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
-                results = mc.check_model()
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', mc_type=mc_type, default_paths=5)
+                results = mc.check_model(
+                    max_path_length=max_path_length, max_paths=max_paths)
                 for ix, (_, result) in enumerate(results):
                     responses.append(
                         (applicable_queries[ix], mc_type,
                          self.process_response(mc_type, result)))
         return sorted(responses, key=lambda x: x[0].matches_key())
 
-    def _get_test_configs(self):
+    def _get_test_configs(self, mode='test', mc_type=None, default_length=5,
+                          default_paths=1):
+        if mode == 'test':
+            config = self.model.test_config
+        elif mode == 'query':
+            config = self.model.query_config
         try:
             max_path_length = \
-                self.model.test_config['statement_checking']['max_path_length']
+                config['statement_checking'][mc_type]['max_path_length']
         except KeyError:
-            max_path_length = 5
+            try:
+                max_path_length = \
+                    config['statement_checking']['max_path_length']
+            except KeyError:
+                max_path_length = default_length
         try:
             max_paths = \
-                self.model.test_config['statement_checking']['max_paths']
+                config['statement_checking'][mc_type]['max_paths']
         except KeyError:
-            max_paths = 1
+            try:
+                max_paths = \
+                    config['statement_checking']['max_paths']
+            except KeyError:
+                max_paths = default_paths
         logger.info('Parameters for model checking: %d, %d' %
                     (max_path_length, max_paths))
         return (max_path_length, max_paths)
