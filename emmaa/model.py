@@ -536,13 +536,15 @@ def last_updated_date(model, file_type='model', date_format='datetime',
         return ''
 
 
-def get_model_stats(model, date, extension='.json'):
+def get_model_stats(model, date=None, extension='.json'):
     """Gets the latest statistics for the given model
 
     Parameters
     ----------
     model : str
         Model name to look for
+    date : str or None
+        Date for which the stats will be returned in "YYYY-MM-DD" format.
     extension : str
 
     Returns
@@ -550,6 +552,9 @@ def get_model_stats(model, date, extension='.json'):
     model_data : json
         The json formatted data containing the statistics for the model
     """
+    # If date is not specified, get the latest
+    if not date:
+        date = last_updated_date(model, 'stats', 'date', extension)
     s3 = get_s3_client()
 
     # Need jsons for model meta data and test statistics. File name examples:
