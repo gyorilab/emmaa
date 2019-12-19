@@ -25,7 +25,9 @@
 {% block extend_header %}
 <!-- Model select dropdown -->
 <div class="input-group-append">
-  <button class="btn btn-outline-secondary" onClick="redirectToDate('{{ latest_date }}')" type="button">Latest Stats</button>
+  {% if not latest_date == date %}
+  <button class="btn btn-outline-secondary" onClick="redirectToDate('{{ latest_date }}')" type="button">Go to Latest</button>
+{% endif %}
 </div>
 <div class="d-inline-flex p-2 input-group" style="width: 410px;">
   <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
