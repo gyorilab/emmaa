@@ -236,15 +236,18 @@ def get_model_dashboard(model, date):
     if not last_update:
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
+    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     model_info_contents = [
-        [('', 'Last Updated', ''), ('', last_update, '')],
+        [('', 'Model Last Updated', ''), ('', last_update, '')],
+        [('', 'Model Last Tested', ''), ('', latest_date, '')],
+        [('', 'Data Displayed', ''),
+         ('', date, 'Click on the point on time graph to see earlier results')],
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
     model_stats = get_model_stats(model, date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
-    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in model_stats['test_round_summary']['all_test_results'].items():
