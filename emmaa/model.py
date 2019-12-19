@@ -495,7 +495,7 @@ def load_stmts_from_s3(model_name):
     return stmts
 
 
-def last_updated_date(model, file_type='model', date_format='datetime',
+def last_updated_date(model, file_type='model', date_format='date',
                       extension='.pkl'):
     """Find the most recent pickle file of model and return its creation date
 
@@ -512,7 +512,7 @@ def last_updated_date(model, file_type='model', date_format='datetime',
     date_format : str
         Format of the returned date. Accepted values are 'datetime' (returns a
         date in the format "YYYY-MM-DD-HH-mm-ss") and 'date' (returns a date
-        in the format "YYYY-MM-DD"). Default is 'datetime'.
+        in the format "YYYY-MM-DD"). Default is 'date'.
     extension : str
         The extension the model file needs to have. Default is '.pkl'
 
