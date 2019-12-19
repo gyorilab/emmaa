@@ -32,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
-EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
@@ -64,7 +63,7 @@ def _sort_pass_fail(row):
 
 def _get_model_meta_data():
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
+    resp = s3.list_objects(Bucket='emmaa', Prefix='models/',
                            Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:

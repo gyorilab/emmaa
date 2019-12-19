@@ -25,6 +25,7 @@ from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
 
 
 logger = logging.getLogger(__name__)
+EMMAA_BUCKET_NAME = 'emmaa'
 
 
 class EmmaaModel(object):
@@ -335,12 +336,13 @@ class EmmaaModel(object):
         fname = f'models/{self.name}/model_{date_str}'
         client = get_s3_client(unsigned=False)
         # Dump as pickle
-        client.put_object(Body=pickle.dumps(self.stmts), Bucket='emmaa',
+        client.put_object(Body=pickle.dumps(self.stmts),
+                          Bucket=EMMAA_BUCKET_NAME,
                           Key=fname+'.pkl')
         # Dump as json
         client.put_object(Body=str.encode(json.dumps(self.to_json()),
                                           encoding='utf8'),
-                          Bucket='emmaa', Key=fname+'.json')
+                          Bucket=EMMAA_BUCKET_NAME, Key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name):
