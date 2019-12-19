@@ -72,7 +72,7 @@ def _get_model_meta_data():
         config_json = get_model_config(model)
         if not config_json:
             continue
-        latest_date = latest_stats_date(model)
+        latest_date = last_updated_date(model, 'stats', 'date', '.json')
         model_data.append((model, config_json, latest_date))
     return model_data
 
@@ -119,17 +119,8 @@ def get_model_stats(model, date, extension='.json'):
     return json.loads(model_data_object['Body'].read().decode('utf8'))
 
 
-def latest_stats_date(model):
-    prefix = f'stats/{model}/stats_'
-    latest_date = strip_out_date(
-        find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
-                            prefix=prefix,
-                            extension='.json'),
-        'date')
-    return latest_date
-
-
-def model_last_updated(model, extension='.pkl'):
+def last_updated_date(model, file_type='model', date_format='datetime',
+                      extension='.pkl'):
     """Find the most recent pickle file of model and return its creation date
 
     Example file name:
@@ -139,21 +130,33 @@ def model_last_updated(model, extension='.pkl'):
     ----------
     model : str
         Model name to look for
+    file_type : str
+        Type of a file to find the latest file for. Accepted values: 'model',
+        'results', 'stats'.
+    date_format : str
+        Format of the returned date. Accepted values are 'datetime' (returns a
+        date in the format "YYYY-MM-DD-HH-mm-ss") and 'date' (returns a date
+        in the format "YYYY-MM-DD"). Default is 'datetime'.
     extension : str
         The extension the model file needs to have. Default is '.pkl'
 
     Returns
     -------
     last_updated : str
-        A string of the format "YYYY-MM-DD-HH-mm-ss"
+        A string of the selected format.
     """
-    prefix = f'models/{model}/model_'
+    if file_type == 'model':
+        folder_name = 'models'
+    else:
+        folder_name = file_type
+    prefix = f'{folder_name}/{model}/{file_type}_'
     try:
-        return strip_out_date(find_latest_s3_file(
-            bucket=EMMAA_BUCKET_NAME,
-            prefix=prefix,
-            extension=extension
-        ))
+        return strip_out_date(
+            find_latest_s3_file(
+                bucket=EMMAA_BUCKET_NAME,
+                prefix=prefix,
+                extension=extension),
+            date_format=date_format)
     except TypeError:
         logger.info('Could not find latest update date')
         return ''
@@ -304,7 +307,7 @@ def get_model_dashboard(model, date):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
 
-    last_update = model_last_updated(model=model)
+    last_update = last_updated_date(model)
     ndex_id = 'None available'
     for mid, mmd, _ in model_meta_data:
         if mid == model:
@@ -322,7 +325,7 @@ def get_model_dashboard(model, date):
     model_stats = get_model_stats(model, date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
-    latest_date = latest_stats_date(model)
+    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in model_stats['test_round_summary']['all_test_results'].items():
