@@ -44,6 +44,8 @@ function redirectToPast(x) {
   if (new_date >= static_date) {
     let new_date_str = new_date.toISOString().substring(0, 10)
     redirectToDate(new_date_str)
+  } else {
+    alert("Sorry, you cannot see the data before 2019-09-30")
   };
 }
 
