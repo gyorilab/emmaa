@@ -10,14 +10,19 @@ from indra.statements import get_all_descendants
 
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
-RE_DATEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
+RE_DATETIMEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
+RE_DATEFORMAT = r'\d{4}\-\d{2}\-\d{2}'
 logger = logging.getLogger(__name__)
 
 
-def strip_out_date(keystring):
-    """Strips out datestring of format FORMAT from a keystring"""
+def strip_out_date(keystring, date_format='datetime'):
+    """Strips out datestring of selected date_format from a keystring"""
+    if date_format == 'datetime':
+        re_format = RE_DATETIMEFORMAT
+    elif date_format == 'date':
+        re_format = RE_DATEFORMAT
     try:
-        return re.search(RE_DATEFORMAT, keystring).group()
+        return re.search(re_format, keystring).group()
     except AttributeError:
         logger.warning(f'Can\'t parse string {keystring} for date')
         return None

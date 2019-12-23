@@ -15,7 +15,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
-from emmaa.model import load_config_from_s3
+from emmaa.model import load_config_from_s3, last_updated_date, get_model_stats
 from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 from emmaa.answer_queries import FORMATTED_TYPE_NAMES
@@ -32,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 TITLE = 'emmaa title'
-EMMAA_BUCKET_NAME = 'emmaa'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
@@ -64,7 +63,7 @@ def _sort_pass_fail(row):
 
 def _get_model_meta_data():
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
+    resp = s3.list_objects(Bucket='emmaa', Prefix='models/',
                            Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
@@ -72,7 +71,8 @@ def _get_model_meta_data():
         config_json = get_model_config(model)
         if not config_json:
             continue
-        model_data.append((model, config_json))
+        latest_date = last_updated_date(model, 'stats', 'date', '.json')
+        model_data.append((model, config_json, latest_date))
     return model_data
 
 
@@ -91,70 +91,13 @@ def get_model_config(model):
     return model_cache[model]
 
 
-def get_model_stats(model, extension='.json'):
-    """Gets the latest statistics for the given model
-
-    Parameters
-    ----------
-    model : str
-        Model name to look for
-    extension : str
-
-    Returns
-    -------
-    model_data : json
-        The json formatted data containing the statistics for the model
-    """
-    s3 = get_s3_client()
-
-    # Need jsons for model meta data and test statistics. File name examples:
-    # stats/skcm/stats_2019-08-20-17-34-40.json
-    prefix = f'stats/{model}/stats_'
-    latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
-                                          prefix=prefix,
-                                          extension=extension)
-    model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
-                                      Key=latest_file_key)
-    return json.loads(model_data_object['Body'].read().decode('utf8'))
-
-
-def model_last_updated(model, extension='.pkl'):
-    """Find the most recent pickle file of model and return its creation date
-
-    Example file name:
-    models/aml/model_2018-12-13-18-11-54.pkl
-
-    Parameters
-    ----------
-    model : str
-        Model name to look for
-    extension : str
-        The extension the model file needs to have. Default is '.pkl'
-
-    Returns
-    -------
-    last_updated : str
-        A string of the format "YYYY-MM-DD-HH-mm-ss"
-    """
-    prefix = f'models/{model}/model_'
-    try:
-        return strip_out_date(find_latest_s3_file(
-            bucket=EMMAA_BUCKET_NAME,
-            prefix=prefix,
-            extension=extension
-        ))
-    except TypeError:
-        logger.info('Could not find latest update date')
-        return ''
-
-
 GLOBAL_PRELOAD = False
 model_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _ in model_meta_data:
+    for model, _, _ in model_meta_data:
         load_model_manager_from_s3(model)
 
 
@@ -185,17 +128,7 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
-def _extract_stmt_link(anchor_string):
-    # Matches an anchor with at least an href attribute
-    pattern = '<a.*? href="(.*?)".*?>(.*?)</a>'
-    m = re.search(pattern=pattern, string=anchor_string)
-    if m:
-        return m.group(1), m.group(2)
-    else:
-        return '', anchor_string
-
-
-def _new_applied_tests(model_stats_json, model_types, model_name):
+def _new_applied_tests(model_stats_json, model_types, model_name, date):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -207,17 +140,17 @@ def _new_applied_tests(model_stats_json, model_types, model_name):
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(new_app_tests, model_types, model_name)
+    return _format_table_array(new_app_tests, model_types, model_name, date)
 
 
-def _format_table_array(tests_json, model_types, model_name):
+def _format_table_array(tests_json, model_types, model_name, date):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
         new_row = [(*test['test'], stmt_db_link_msg)
                    if len(test['test']) == 2 else test['test']]
         for mt in model_types:
-            new_row.append((f'/tests/{model_name}/{mt}/{th}', test[mt][0],
+            new_row.append((f'/tests/{model_name}/{mt}/{th}/{date}', test[mt][0],
                             pass_fail_msg))
         table_array.append(new_row)
     return sorted(table_array, key=_sort_pass_fail)
@@ -238,7 +171,7 @@ def _format_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, model_stats_json, current_model_types):
+def _new_passed_tests(model_name, model_stats_json, current_model_types, date):
     new_passed_tests = []
     all_test_results = model_stats_json['test_round_summary'][
         'all_test_results']
@@ -259,7 +192,7 @@ def _new_passed_tests(model_name, model_stats_json, current_model_types):
                 path = path_loc
             new_row = [(*test['test'], stmt_db_link_msg)
                        if len(test['test']) == 2 else test['test'],
-                       (f'/tests/{model_name}/{mt}/{test_hash}', path,
+                       (f'/tests/{model_name}/{mt}/{test_hash}/{date}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
@@ -287,15 +220,15 @@ def get_home():
                            user_email=user.email if user else "")
 
 
-@app.route('/dashboard/<model>')
+@app.route('/dashboard/<model>/<date>')
 @jwt_optional
-def get_model_dashboard(model):
+def get_model_dashboard(model, date):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
 
-    last_update = model_last_updated(model=model)
+    last_update = last_updated_date(model)
     ndex_id = 'None available'
-    for mid, mmd in model_meta_data:
+    for mid, mmd, _ in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
@@ -303,15 +236,18 @@ def get_model_dashboard(model):
     if not last_update:
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
+    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     model_info_contents = [
-        [('', 'Last Updated', ''), ('', last_update, '')],
+        [('', 'Model Last Updated', ''), ('', last_update, '')],
+        [('', 'Model Last Tested', ''), ('', latest_date, '')],
+        [('', 'Data Displayed', ''),
+         ('', date, 'Click on the point on time graph to see earlier results')],
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    model_stats = get_model_stats(model)
+    model_stats = get_model_stats(model, date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
-
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in model_stats['test_round_summary']['all_test_results'].items():
@@ -348,26 +284,36 @@ def get_model_dashboard(model):
                            new_applied_tests=_new_applied_tests(
                                model_stats_json=model_stats,
                                model_types=current_model_types,
-                               model_name=model),
+                               model_name=model,
+                               date=date),
                            all_test_results=_format_table_array(
                                tests_json=all_tests,
                                model_types=current_model_types,
-                               model_name=model),
+                               model_name=model,
+                               date=date),
                            new_passed_tests=_new_passed_tests(
-                               model, model_stats, current_model_types))
+                               model, model_stats, current_model_types, date),
+                           date=date,
+                           latest_date=latest_date)
 
 
-@app.route('/tests/<model>/<model_type>/<test_hash>')
-def get_model_tests_page(model, model_type, test_hash):
+@app.route('/tests/<model>/<model_type>/<test_hash>/<date>')
+def get_model_tests_page(model, model_type, test_hash, date):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    model_stats = get_model_stats(model)
-    current_test = \
-        model_stats['test_round_summary']['all_test_results'][test_hash]
+    model_stats = get_model_stats(model, date)
+    if not model_stats:
+        abort(Response(f'Data for {model} for {date} was not found', 404))
+    try:
+        current_test = \
+            model_stats['test_round_summary']['all_test_results'][test_hash]
+    except KeyError:
+        abort(Response(f'Result for this test does not exist for {date}', 404))
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
+    latest_date = last_updated_date(model, 'stats', 'date', '.json')
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -378,7 +324,9 @@ def get_model_tests_page(model, model_type, test_hash):
                            test=test,
                            test_status=test_status,
                            path_list=path_list,
-                           formatted_names=FORMATTED_TYPE_NAMES)
+                           formatted_names=FORMATTED_TYPE_NAMES,
+                           date=date,
+                           latest_date=latest_date)
 
 
 @app.route('/query')
@@ -435,6 +383,7 @@ def get_query_tests_page(model, model_type, query_hash):
     results = qm.retrieve_results_from_hashes([query_hash])
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
+    date = results[query_hash]['date']
     card_title = ('', results[query_hash]['query'] if results else '', '')
     return render_template('tests_template.html',
                            link_list=link_list,
@@ -446,7 +395,8 @@ def get_query_tests_page(model, model_type, query_hash):
                            is_query_page=True,
                            test_status=detailed_results[0],
                            path_list=detailed_results[1],
-                           formatted_names=FORMATTED_TYPE_NAMES)
+                           formatted_names=FORMATTED_TYPE_NAMES,
+                           date=date)
 
 
 @app.route('/query/submit', methods=['POST'])

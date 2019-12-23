@@ -37,6 +37,49 @@ function modelRedirect(ddSelect, current_model) {
   console.log(redirect);
   window.location.replace(redirect);
 }
+function redirectToPast(x) { 
+  let new_date = x.x
+  console.log(new_date)
+  static_date = new Date('2019-09-30')
+  if (new_date >= static_date) {
+    let new_date_str = new_date.toISOString().substring(0, 10)
+    redirectToDate(new_date_str)
+  } else {
+    alert("Sorry, you cannot see the data before 2019-09-30")
+  };
+}
+
+function redirectToDate(new_date_str) {
+  let loc = window.location.href
+  let current_date = loc.substring(loc.length - 10, loc.length)
+  let redirect = loc.replace(current_date, new_date_str)
+  location.replace(redirect);
+}
+
+function modelDateRedirect(ddSelect, current_model) {
+
+  // Get selected option
+  let newModel = '';
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      console.log(child.value)
+      selection_str = child.value.split(" ");
+      newModel = selection_str[0];
+      newDate = selection_str[1];
+      break;
+    }
+  }
+
+  console.log(newModel)
+  console.log(newDate)
+  let loc = window.location.href
+  let current_date = loc.substring(loc.length - 10, loc.length)
+
+  // redirect url:
+  let redirectModel = loc.replace(current_model, newModel)
+  let redirectDate = redirectModel.replace(current_date, newDate);
+  location.replace(redirectDate);
+}
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
@@ -209,7 +252,8 @@ function populateTestResultTable(tableBody, json) {
     columns: [
       dates,
       stmtsOverTime
-    ]
+    ],
+    onclick: redirectToPast
   };
 
   let stmtsCountChart = generateLineArea(stmtTime, stmtsCountDataParams, '');
@@ -235,7 +279,8 @@ function populateTestResultTable(tableBody, json) {
   lineDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
-    columns: passedRatioColumns
+    columns: passedRatioColumns,
+    onclick: redirectToPast
   };
 
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
@@ -261,7 +306,8 @@ function populateTestResultTable(tableBody, json) {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
     columns: appliedPassedColumns,
-    type: 'area'
+    type: 'area',
+    onclick: redirectToPast
   };
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');

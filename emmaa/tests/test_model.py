@@ -1,9 +1,11 @@
 import datetime
+import re
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
-from emmaa.model import EmmaaModel
+from emmaa.model import EmmaaModel, last_updated_date, get_model_stats
 from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
+from emmaa.util import RE_DATETIMEFORMAT, RE_DATEFORMAT
 
 
 def test_model_extend():
@@ -116,3 +118,32 @@ def test_filter_relevance():
     emmaa_model.extend_unique(emmaa_stmts)
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 0
+
+
+def test_last_updated():
+    # Test for different file types
+    key_str = last_updated_date('test', 'model', 'datetime', '.pkl')
+    assert key_str
+    assert re.search(RE_DATETIMEFORMAT, key_str).group()
+    key_str = last_updated_date('test', 'results', 'datetime', '.json')
+    assert key_str
+    assert re.search(RE_DATETIMEFORMAT, key_str).group()
+    key_str = last_updated_date('test', 'stats', 'datetime', '.json')
+    assert key_str
+    assert re.search(RE_DATETIMEFORMAT, key_str).group()
+    # Test for different date format
+    key_str = last_updated_date('test', 'model', 'date', '.pkl')
+    assert key_str
+    assert re.search(RE_DATEFORMAT, key_str).group()
+    # Test with wrong extension
+    key_str = last_updated_date('test', 'stats', 'datetime', '.pkl')
+    assert not key_str
+
+
+def test_get_model_statistics():
+    # Test with default date
+    model_json = get_model_stats('test')
+    assert isinstance(model_json, dict)
+    # Test with different date
+    model_json = get_model_stats('test', date='2019-08-19')
+    assert isinstance(model_json, dict)
