@@ -551,9 +551,8 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     ----------
     model_name : str
         Name of EmmaaModel to load from S3.
-    upload_mm : Optional[bool]
-        Whether to upload a model manager instance to S3 as a pickle file.
-        Default: True
+    test_corpus : str
+        Name of the file containing tests on S3.
     upload_results : Optional[bool]
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests. Default: True
@@ -573,14 +572,3 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     if upload_results:
         mm.upload_results()
     return mm
-
-
-def run_multiple_test_corpora(model_name, upload_results=True):
-    config = load_config_from_s3(model_name)
-    test_corpora = model.test_config.get(
-        'test_corpus', 'large_corpus_tests.pkl')
-    if isinstance(test_corpora, str):
-        run_model_tests_from_s3(model_name, test_corpora, upload_results)
-    elif isinstance(test_corpora, list):
-        for test_corpus in test_corpora:
-            run_model_tests_from_s3(model_name, test_corpus, upload_results)
