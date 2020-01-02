@@ -4,7 +4,7 @@ This file contains the function that will be run when Lambda is triggered. It
 must be placed on s3, which can either be done manually (not recommended) or
 by running:
 
-$ python update_lambda.py analyze_changes_on_s3.py emmaa-model-test
+$ python update_lambda.py model_tests.py emmaa-model-test
 
 in this directory.
 """

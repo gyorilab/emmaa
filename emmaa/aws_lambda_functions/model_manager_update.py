@@ -15,7 +15,7 @@ from datetime import datetime
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
-PURPOSE = 'update-emmaa-models'
+PURPOSE = 'update-emmaa-model-manager'
 BRANCH = 'origin/master'
 
 
@@ -33,7 +33,9 @@ def lambda_handler(event, context):
     Parameters
     ----------
     event : dict
-        A dictionary containing metadata regarding the triggering event.
+        A dictionary containing metadata regarding the triggering event. In
+        this case, we are expecting 'Records', each of which contains a record
+        of a file that was added (or changed) on s3.
     context : object
         This is an object containing potentially useful context provided by
         Lambda. See the documentation cited above for details.
