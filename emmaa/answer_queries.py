@@ -5,7 +5,7 @@ from datetime import datetime
 from indra.assemblers.english import EnglishAssembler
 
 from emmaa.db import get_db
-from emmaa.util import get_s3_client, make_date_str
+from emmaa.util import get_s3_client, make_date_str, EMMAA_BUCKET_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -353,7 +353,7 @@ def load_model_manager_from_s3(model_name, try_from_cache=True):
     key = f'results/{model_name}/latest_model_manager.pkl'
     logger.info(f'Loading latest model manager for {model_name} model from '
                 f'S3.')
-    obj = client.get_object(Bucket='emmaa', Key=key)
+    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
     body = obj['Body'].read()
     model_manager = pickle.loads(body)
     model_manager_cache[model_name] = model_manager

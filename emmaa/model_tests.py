@@ -18,7 +18,8 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel, load_config_from_s3
-from emmaa.util import make_date_str, get_s3_client, get_class_from_name
+from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
+    EMMAA_BUCKET_NAME
 from emmaa.analyze_tests_results import elsevier_url
 from emmaa.answer_queries import load_model_manager_from_s3
 
@@ -385,7 +386,7 @@ class ModelManager(object):
         result_key = (f'results/{self.model.name}/results_{test_corpus_str}_'
                       f'{date_str}.json')
         logger.info(f'Uploading test results to {result_key}')
-        client.put_object(Bucket='emmaa', Key=result_key,
+        client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=result_key,
                           Body=results_json_str.encode('utf8'))
 
 
@@ -522,7 +523,7 @@ def load_tests_from_s3(test_name):
     client = get_s3_client()
     test_key = f'tests/{test_name}'
     logger.info(f'Loading tests from {test_key}')
-    obj = client.get_object(Bucket='emmaa', Key=test_key)
+    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=test_key)
     tests = pickle.loads(obj['Body'].read())
     return tests
 
@@ -530,7 +531,7 @@ def load_tests_from_s3(test_name):
 def save_model_manager_to_s3(model_name, model_manager):
     client = get_s3_client(unsigned=False)
     logger.info(f'Saving a model manager for {model_name} model to S3.')
-    client.put_object(Body=pickle.dumps(model_manager), Bucket='emmaa',
+    client.put_object(Body=pickle.dumps(model_manager), Bucket=EMMAA_BUCKET_NAME,
                       Key=f'results/{model_name}/latest_model_manager.pkl')
 
 

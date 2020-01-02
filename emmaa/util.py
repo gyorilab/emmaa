@@ -12,6 +12,7 @@ from indra.statements import get_all_descendants
 FORMAT = '%Y-%m-%d-%H-%M-%S'
 RE_DATETIMEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
 RE_DATEFORMAT = r'\d{4}\-\d{2}\-\d{2}'
+EMMAA_BUCKET_NAME = 'emmaa'
 logger = logging.getLogger(__name__)
 
 

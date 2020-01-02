@@ -21,11 +21,10 @@ from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
-    strip_out_date
+    strip_out_date, EMMAA_BUCKET_NAME
 
 
 logger = logging.getLogger(__name__)
-EMMAA_BUCKET_NAME = 'emmaa'
 
 
 class EmmaaModel(object):
@@ -487,10 +486,11 @@ def load_stmts_from_s3(model_name):
     """
     client = get_s3_client()
     base_key = f'models/{model_name}'
-    latest_model_key = find_latest_s3_file('emmaa', f'{base_key}/model_',
+    latest_model_key = find_latest_s3_file(EMMAA_BUCKET_NAME,
+                                           f'{base_key}/model_',
                                            extension='.pkl')
     logger.info(f'Loading model state from {latest_model_key}')
-    obj = client.get_object(Bucket='emmaa', Key=latest_model_key)
+    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=latest_model_key)
     stmts = pickle.loads(obj['Body'].read())
     return stmts
 

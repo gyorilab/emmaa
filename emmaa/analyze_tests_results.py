@@ -5,7 +5,7 @@ import datetime
 from collections import defaultdict
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         find_latest_s3_files, find_number_of_files_on_s3,
-                        make_date_str, get_s3_client)
+                        make_date_str, get_s3_client, EMMAA_BUCKET_NAME)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -72,7 +72,7 @@ class TestRound(object):
     def load_from_s3_key(cls, key):
         client = get_s3_client()
         logger.info(f'Loading test results from {key}')
-        obj = client.get_object(Bucket='emmaa', Key=key)
+        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
         json_results = json.loads(obj['Body'].read().decode('utf8'))
         test_round = TestRound(json_results)
         return test_round
@@ -449,16 +449,17 @@ class StatsGenerator(object):
         stats_key = (f'stats/{self.model_name}/stats_{self.test_corpus}_'
                      f'{date_str}.json')
         logger.info(f'Uploading test round statistics to {stats_key}')
-        client.put_object(Bucket='emmaa', Key=stats_key,
+        client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=stats_key,
                           Body=json_stats_str.encode('utf8'))
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            'emmaa', f'results/{self.model_name}/results_{self.test_corpus}',
+            EMMAA_BUCKET_NAME,
+            f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
         if latest_key is None and self.test_corpus == 'large_corpus_tests':
             latest_key = find_latest_s3_file(
-                'emmaa', f'results/{self.model_name}/results_',
+                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
                 extension='.json')
         if latest_key is None:
             logger.info(f'Could not find a key to the latest test results '
@@ -469,11 +470,12 @@ class StatsGenerator(object):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            'emmaa', f'results/{self.model_name}/results_{self.test_corpus}',
+            EMMAA_BUCKET_NAME,
+            f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
         if previous_key is None and self.test_corpus == 'large_corpus_tests':
             previous_key = find_second_latest_s3_file(
-                'emmaa', f'results/{self.model_name}/results_',
+                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
                 extension='.json')
         if previous_key is None:
             logger.info(f'Could not find a key to the previous test results '
@@ -484,11 +486,12 @@ class StatsGenerator(object):
 
     def _get_previous_json_stats(self):
         key = find_latest_s3_file(
-            'emmaa', f'stats/{self.model_name}/stats_{self.test_corpus}',
+            EMMAA_BUCKET_NAME,
+            f'stats/{self.model_name}/stats_{self.test_corpus}',
             extension='.json')
         if key is None and self.test_corpus == 'large_corpus_tests':
             key = find_latest_s3_file(
-                'emmaa', f'stats/{self.model_name}/stats_',
+                EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
                 extension='.json')
         if key is None:
             logger.info(f'Could not find a key to the previous statistics '
@@ -496,7 +499,7 @@ class StatsGenerator(object):
             return
         client = get_s3_client()
         logger.info(f'Loading earlier statistics from {key}')
-        obj = client.get_object(Bucket='emmaa', Key=key)
+        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
