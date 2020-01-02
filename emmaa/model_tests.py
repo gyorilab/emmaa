@@ -376,13 +376,13 @@ class ModelManager(object):
             results_json.append(test_ix_results)
         return results_json
 
-    def upload_results(self):
+    def upload_results(self, test_corpus):
         """Upload results to s3 bucket."""
         results_json_dict = self.results_to_json()
         results_json_str = json.dumps(results_json_dict, indent=1)
         client = get_s3_client(unsigned=False)
         date_str = make_date_str()
-        result_key = f'results/{self.model.name}/results_{date_str}.json'
+        result_key = f'results/{self.model.name}/results_{test_corpus}_{date_str}.json'
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket='emmaa', Key=result_key,
                           Body=results_json_str.encode('utf8'))
@@ -570,5 +570,5 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results()
+        mm.upload_results(test_corpus)
     return mm
