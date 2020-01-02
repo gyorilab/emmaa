@@ -295,11 +295,11 @@ class StatsGenerator(object):
         statistics for previous test round.
     """
 
-    def __init__(self, model_name, test_corpus='large_corpus_tests.pkl',
+    def __init__(self, model_name, test_corpus_str='large_corpus_tests',
                  latest_round=None, previous_round=None,
                  previous_json_stats=None):
         self.model_name = model_name
-        self.test_corpus = test_corpus[:-4]
+        self.test_corpus = test_corpus_str
         if not latest_round:
             self.latest_round = self._get_latest_round()
         else:
@@ -502,7 +502,7 @@ class StatsGenerator(object):
 
 
 def generate_model_stats_on_s3(
-        model_name, test_corpus='large_corpus_tests.pkl', upload_stats=True):
+        model_name, test_corpus_str='large_corpus_tests', upload_stats=True):
     """Generate statistics for latest round of tests.
 
     Parameters
@@ -513,7 +513,7 @@ def generate_model_stats_on_s3(
         Whether to upload latest statistics about model and a test.
         Default: True
     """
-    sg = StatsGenerator(model_name, test_corpus)
+    sg = StatsGenerator(model_name, test_corpus_str)
     sg.make_stats()
     # Optionally upload stats to S3
     if upload_stats:
