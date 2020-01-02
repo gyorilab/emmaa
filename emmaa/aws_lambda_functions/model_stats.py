@@ -53,6 +53,8 @@ def lambda_handler(event, context):
             pass
         model_name = model_key.split('/')[1]
         test_corpus = model_key.split('/')[-1][8:-24]
+        if not test_corpus:
+            test_corpus = 'large_corpus_tests'
         core_command = 'bash scripts/git_and_run.sh'
         if BRANCH is not None:
             core_command += f' --branch {BRANCH}'
