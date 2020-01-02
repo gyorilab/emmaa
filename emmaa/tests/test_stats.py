@@ -1,7 +1,8 @@
 import os
 import json
 from nose.plugins.attrib import attr
-from emmaa.analyze_tests_results import TestRound, StatsGenerator
+from emmaa.analyze_tests_results import TestRound, StatsGenerator, \
+    generate_model_stats_on_s3
 
 
 TestRound.__test__ = False
@@ -101,3 +102,10 @@ def test_stats_generator():
     assert changes['signed_graph']['passed_ratio'] == [1, 1]
     assert changes['unsigned_graph']['number_passed_tests'] == [1, 2]
     assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
+
+
+@attr('nonpublic')
+def test_stats_on_s3():
+    sg = generate_model_stats_on_s3('test', 'simple_model_test.pkl', False)
+    assert isinstance(sg, StatsGenerator)
+    assert isinstance(sg.json_stats, dict)

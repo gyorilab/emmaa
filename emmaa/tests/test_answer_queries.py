@@ -2,7 +2,7 @@ from os.path import abspath, dirname, join
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
-    load_model_manager_from_s3, is_query_result_diff
+    load_model_manager_from_s3, is_query_result_diff, answer_queries_from_s3
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
@@ -166,3 +166,14 @@ def test_report_files():
     assert msg
     assert 'A new result to query' in msg
     assert 'BRAF → MAP2K1 → MAPK1' in msg
+
+
+@attr('nonpublic')
+def test_queries_on_s3():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
+                      subscribe=True)
+    answer_queries_from_s3('test', db=db)
+    results = qm.db.get_results('tester@test.com', latest_order=1)
+    assert len(results) == 1
