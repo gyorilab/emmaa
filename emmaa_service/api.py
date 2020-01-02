@@ -245,7 +245,7 @@ def get_model_dashboard(model, date):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    model_stats = get_model_stats(model, date)
+    model_stats = get_model_stats(model, date=date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            model_stats['test_round_summary']]
     # Filter out rows with all tests == 'n_a'
@@ -301,7 +301,7 @@ def get_model_dashboard(model, date):
 def get_model_tests_page(model, model_type, test_hash, date):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    model_stats = get_model_stats(model, date)
+    model_stats = get_model_stats(model, date=date)
     if not model_stats:
         abort(Response(f'Data for {model} for {date} was not found', 404))
     try:

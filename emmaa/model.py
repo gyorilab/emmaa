@@ -538,7 +538,8 @@ def last_updated_date(model, file_type='model', date_format='date',
         return ''
 
 
-def get_model_stats(model, date=None, extension='.json'):
+def get_model_stats(model, tests='large_corpus_tests',
+                    date=None, extension='.json'):
     """Gets the latest statistics for the given model
 
     Parameters
@@ -561,11 +562,15 @@ def get_model_stats(model, date=None, extension='.json'):
 
     # Need jsons for model meta data and test statistics. File name examples:
     # stats/skcm/stats_2019-08-20-17-34-40.json
-    prefix = f'stats/{model}/stats_{date}'
+    prefix = f'stats/{model}/stats_{tests}_{date}'
     latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                           prefix=prefix,
                                           extension=extension)
-    if not latest_file_key:
+    if not latest_file_key and tests == 'large_corpus_tests':
+        prefix = f'stats/{model}/stats_{date}'
+        latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                              prefix=prefix,
+                                              extension=extension)
         return None
     model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
                                       Key=latest_file_key)
