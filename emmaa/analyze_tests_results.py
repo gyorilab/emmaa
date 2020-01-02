@@ -295,9 +295,11 @@ class StatsGenerator(object):
         statistics for previous test round.
     """
 
-    def __init__(self, model_name, latest_round=None, previous_round=None,
+    def __init__(self, model_name, test_corpus='large_corpus_tests.pkl',
+                 latest_round=None, previous_round=None,
                  previous_json_stats=None):
         self.model_name = model_name
+        self.test_corpus = test_corpus[:-4]
         if not latest_round:
             self.latest_round = self._get_latest_round()
         else:
@@ -444,14 +446,20 @@ class StatsGenerator(object):
         json_stats_str = json.dumps(self.json_stats, indent=1)
         client = get_s3_client(unsigned=False)
         date_str = make_date_str()
-        stats_key = f'stats/{self.model_name}/stats_{date_str}.json'
+        stats_key = (f'stats/{self.model_name}/stats_{self.test_corpus}_'
+                     f'{date_str}.json')
         logger.info(f'Uploading test round statistics to {stats_key}')
         client.put_object(Bucket='emmaa', Key=stats_key,
                           Body=json_stats_str.encode('utf8'))
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            'emmaa', f'results/{self.model_name}/results_', extension='.json')
+            'emmaa', f'results/{self.model_name}/results_{self.test_corpus}',
+            extension='.json')
+        if latest_key is None and self.test_corpus == 'large_corpus_tests':
+            latest_key = find_latest_s3_file(
+                'emmaa', f'results/{self.model_name}/results_',
+                extension='.json')
         if latest_key is None:
             logger.info(f'Could not find a key to the latest test results '
                         f'for {self.model_name} model.')
@@ -461,7 +469,12 @@ class StatsGenerator(object):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            'emmaa', f'results/{self.model_name}/results_', extension='.json')
+            'emmaa', f'results/{self.model_name}/results_{self.test_corpus}',
+            extension='.json')
+        if previous_key is None and self.test_corpus == 'large_corpus_tests':
+            previous_key = find_second_latest_s3_file(
+                'emmaa', f'results/{self.model_name}/results_',
+                extension='.json')
         if previous_key is None:
             logger.info(f'Could not find a key to the previous test results '
                         f'for {self.model_name} model.')
@@ -471,7 +484,12 @@ class StatsGenerator(object):
 
     def _get_previous_json_stats(self):
         key = find_latest_s3_file(
-            'emmaa', f'stats/{self.model_name}/stats_', extension='.json')
+            'emmaa', f'stats/{self.model_name}/stats_{self.test_corpus}',
+            extension='.json')
+        if key is None and self.test_corpus == 'large_corpus_tests':
+            key = find_latest_s3_file(
+                'emmaa', f'stats/{self.model_name}/stats_',
+                extension='.json')
         if key is None:
             logger.info(f'Could not find a key to the previous statistics '
                         f'for {self.model_name} model.')
@@ -483,7 +501,8 @@ class StatsGenerator(object):
         return previous_json_stats
 
 
-def generate_model_stats_on_s3(model_name, upload_stats=True):
+def generate_model_stats_on_s3(
+        model_name, test_corpus='large_corpus_tests.pkl', upload_stats=True):
     """Generate statistics for latest round of tests.
 
     Parameters
@@ -494,7 +513,7 @@ def generate_model_stats_on_s3(model_name, upload_stats=True):
         Whether to upload latest statistics about model and a test.
         Default: True
     """
-    sg = StatsGenerator(model_name)
+    sg = StatsGenerator(model_name, test_corpus)
     sg.make_stats()
     # Optionally upload stats to S3
     if upload_stats:
