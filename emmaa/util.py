@@ -61,7 +61,7 @@ def sort_s3_files_by_date(bucket, prefix, extension=None):
     def process_key(key):
         fname_with_extension = os.path.basename(key)
         fname = os.path.splitext(fname_with_extension)[0]
-        date_str = fname.split('_')[1]
+        date_str = fname.split('_')[-1]
         return get_date_from_str(date_str)
     client = get_s3_client()
     resp = client.list_objects(Bucket=bucket, Prefix=prefix)
