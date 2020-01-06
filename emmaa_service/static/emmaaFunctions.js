@@ -39,10 +39,15 @@ function modelRedirect(ddSelect, current_model) {
 }
 function redirectToPast(x) { 
   let new_date = x.x
-  console.log(new_date)
   static_date = new Date('2019-09-30')
   if (new_date >= static_date) {
-    let new_date_str = new_date.toISOString().substring(0, 10)
+    var year = new_date.getFullYear();
+    var month = (1 + new_date.getMonth()).toString();
+    month = month.length > 1 ? month : '0' + month;
+    day = new_date.getDate().toString();
+    day = day.length > 1 ? day : '0' + day;
+    let new_date_str = year + '-' + month + '-' + day;
+    console.log(new_date_str)
     redirectToDate(new_date_str)
   } else {
     alert("Sorry, you cannot see the data before 2019-09-30")
