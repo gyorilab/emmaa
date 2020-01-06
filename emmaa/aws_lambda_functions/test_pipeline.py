@@ -54,7 +54,8 @@ def lambda_handler(event, context):
             pass
         model_name = model_key.split('/')[1]
         config_key = f'models/{model_name}/config.json'
-        config = s3.get_object(Bucket='emmaa', Key=config_key)
+        obj = s3.get_object(Bucket='emmaa', Key=config_key)
+        config = json.loads(obj['Body'].read().decode('utf8'))
         tests = config['test'].get('test_corpus', 'large_corpus_tests.pkl')
         if isinstance(tests, str):
             resp = lam.invoke(FunctionName='emmaa-model-test',

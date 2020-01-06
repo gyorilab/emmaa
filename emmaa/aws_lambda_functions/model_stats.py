@@ -52,7 +52,7 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-        test_corpus = model_key.split('/')[-1][8:-24]
+        test_corpus = model_key.split('/')[-1][8:-25]
         if not test_corpus:
             test_corpus = 'large_corpus_tests'
         core_command = 'bash scripts/git_and_run.sh'
