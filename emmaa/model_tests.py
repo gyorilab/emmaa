@@ -554,6 +554,7 @@ def save_model_manager_to_s3(model_name, model_manager):
 def update_model_manager_on_s3(model_name):
     model = EmmaaModel.load_from_s3(model_name)
     mm = ModelManager(model)
+    mm.upload_results('model')
     save_model_manager_to_s3(model_name, mm)
 
 
@@ -599,5 +600,5 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus[:-4])
+        mm.upload_results('tests', test_corpus[:-4])
     return mm
