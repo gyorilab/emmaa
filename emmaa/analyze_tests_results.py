@@ -696,8 +696,8 @@ class TestStatsGenerator(StatsGenerator):
         if key is None:
             key = find_latest_s3_file(
                 EMMAA_BUCKET_NAME,
-            f'stats/{self.model_name}/stats_{self.test_corpus}',
-            extension='.json')
+                f'stats/{self.model_name}/stats_{self.test_corpus}',
+                extension='.json')
         if key is None and self.test_corpus == 'large_corpus_tests':
             key = find_latest_s3_file(
                 EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
@@ -713,19 +713,29 @@ class TestStatsGenerator(StatsGenerator):
         return previous_json_stats
 
 
-def generate_model_stats_on_s3(
-        model_name, test_corpus_str='large_corpus_tests', upload_stats=True):
-    """Generate statistics for latest round of tests.
+def generate_stats_on_s3(
+        model_name, mode, test_corpus_str='large_corpus_tests',
+        upload_stats=True):
+    """Generate statistics for latest round of model update or tests.
 
     Parameters
     ----------
     model_name : str
-        Name of EmmaaModel.
+        A name of EmmaaModel.
+    mode : str
+        Type of stats to generate (model or tests)
+    test_corpus_str : str
+        A name of a test corpus.
     upload_stats : Optional[bool]
         Whether to upload latest statistics about model and a test.
         Default: True
     """
-    sg = StatsGenerator(model_name, test_corpus_str)
+    if mode == 'model':
+        sg = ModelStatsGenerator(model_name)
+    elif mode == 'tests':
+        sg = TestStatsGenerator(model_name, test_corpus_str)
+    else:
+        raise TypeError('Mode must be either model or tests')        
     sg.make_stats()
     # Optionally upload stats to S3
     if upload_stats:
