@@ -362,7 +362,6 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json(),
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
             'link_type': self.link_type})
         for ix, test in enumerate(self.applicable_tests):
@@ -377,17 +376,32 @@ class ModelManager(object):
             results_json.append(test_ix_results)
         return results_json
 
-    def upload_results(self, test_corpus_str):
+    def model_data_to_json(self):
+        """Save information about the model to S3."""
+        pickler = jsonpickle.pickler.Pickler()
+        model_json = []
+        model_json.append({
+            'model_name': self.model.name,
+            'statements': self.assembled_stmts_to_json(),
+            'link_type': self.link_type})
+        return model_json
+
+    def upload_results(self, mode, test_corpus_str='large_corpus_tests'):
         """Upload results to s3 bucket."""
-        results_json_dict = self.results_to_json()
-        results_json_str = json.dumps(results_json_dict, indent=1)
-        client = get_s3_client(unsigned=False)
         date_str = make_date_str()
-        result_key = (f'results/{self.model.name}/results_{test_corpus_str}_'
-                      f'{date_str}.json')
+        if mode == 'tests':
+            json_dict = self.results_to_json()
+            result_key = (f'results/{self.model.name}/results_'
+                          f'{test_corpus_str}_{date_str}.json')
+        elif mode == 'model':
+            json_dict = self.model_data_to_json()
+            result_key = (f'results/{self.model.name}/'
+                          f'model_data_{date_str}.json')
+        json_str = json.dumps(json_dict, indent=1)
+        client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=result_key,
-                          Body=results_json_str.encode('utf8'))
+                          Body=json_str.encode('utf8'))
 
 
 class TestManager(object):
