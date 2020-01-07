@@ -1,10 +1,10 @@
-"""The AWS Lambda emmaa-model-stats definition.
+"""The AWS Lambda emmaa-test-stats definition.
 
 This file contains the function that will be run when Lambda is triggered. It
 must be placed on s3, which can either be done manually (not recommended) or
 by running:
 
-$ python update_lambda.py model_stats.py emmaa-model-stats
+$ python update_lambda.py test_stats.py emmaa-test-stats
 
 in this directory.
 """
@@ -15,7 +15,7 @@ from datetime import datetime
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
-PURPOSE = 'update-emmaa-model-stats'
+PURPOSE = 'update-emmaa-test-stats'
 BRANCH = 'origin/master'
 
 
@@ -52,11 +52,15 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
+        test_corpus = model_key.split('/')[-1][8:-25]
+        if not test_corpus:
+            test_corpus = 'large_corpus_tests'
         core_command = 'bash scripts/git_and_run.sh'
         if BRANCH is not None:
             core_command += f' --branch {BRANCH}'
         core_command += (' python scripts/run_model_stats_from_s3.py'
-                         f' --model {model_name}  --stats_mode model')
+                         f' --model {model_name} --stats_mode tests'
+                         f'--tests {test_corpus}')
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
