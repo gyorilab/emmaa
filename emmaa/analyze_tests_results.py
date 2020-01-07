@@ -558,9 +558,9 @@ class TestStatsGenerator(StatsGenerator):
     def __init__(self, model_name, test_corpus_str='large_corpus_tests',
                  latest_round=None, previous_round=None,
                  previous_json_stats=None):
+        self.test_corpus = test_corpus_str
         super().__init__(model_name, latest_round, previous_round,
                          previous_json_stats)
-        self.test_corpus = test_corpus_str
 
     def make_stats(self):
         """Check if two latest test rounds were found and add statistics to
