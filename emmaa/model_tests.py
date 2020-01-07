@@ -397,6 +397,8 @@ class ModelManager(object):
             json_dict = self.model_data_to_json()
             result_key = (f'results/{self.model.name}/'
                           f'model_data_{date_str}.json')
+        else:
+            raise TypeError('Mode must be either model or tests')
         json_str = json.dumps(json_dict, indent=1)
         client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
