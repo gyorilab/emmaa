@@ -478,12 +478,13 @@ class ModelStatsGenerator(StatsGenerator):
         return previous_data
 
     def save_to_s3(self):
-        stats_key = (f'stats/{self.model_name}/model_stats_{date_str}.json')
+        stats_key = (
+            f'model_stats/{self.model_name}/model_stats_{date_str}.json')
         super().save_to_s3_key(stats_key)
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_data_',
+            EMMAA_BUCKET_NAME, f'assembled/{self.model_name}/model_data_',
             extension='.json')
         if latest_key is None:
             latest_key = find_latest_s3_file(
@@ -498,7 +499,7 @@ class ModelStatsGenerator(StatsGenerator):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_data_',
+            EMMAA_BUCKET_NAME, f'assembled/{self.model_name}/model_data_',
             extension='.json')
         if previous_key is None:
             previous_key = find_second_latest_s3_file(
@@ -513,7 +514,7 @@ class ModelStatsGenerator(StatsGenerator):
 
     def _get_previous_json_stats(self):
         key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'stats/{self.model_name}/model_stats_',
+            EMMAA_BUCKET_NAME, f'model_stats/{self.model_name}/model_stats_',
             extension='.json')
         if key is None:
             key = find_latest_s3_file(
@@ -658,7 +659,7 @@ class TestStatsGenerator(StatsGenerator):
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
             EMMAA_BUCKET_NAME,
-            f'results/{self.model_name}/results_{self.test_corpus}',
+            f'results/{self.model_name}/test_results_{self.test_corpus}',
             extension='.json')
         if latest_key is None and self.test_corpus == 'large_corpus_tests':
             latest_key = find_latest_s3_file(
@@ -674,7 +675,7 @@ class TestStatsGenerator(StatsGenerator):
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
             EMMAA_BUCKET_NAME,
-            f'results/{self.model_name}/results_{self.test_corpus}',
+            f'results/{self.model_name}/test_results_{self.test_corpus}',
             extension='.json')
         if previous_key is None and self.test_corpus == 'large_corpus_tests':
             previous_key = find_second_latest_s3_file(
@@ -692,12 +693,6 @@ class TestStatsGenerator(StatsGenerator):
             EMMAA_BUCKET_NAME,
             f'stats/{self.model_name}/test_stats_{self.test_corpus}',
             extension='.json')
-        # Next if can be removed if aws branch is not merged before this
-        if key is None:
-            key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME,
-                f'stats/{self.model_name}/stats_{self.test_corpus}',
-                extension='.json')
         if key is None and self.test_corpus == 'large_corpus_tests':
             key = find_latest_s3_file(
                 EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',

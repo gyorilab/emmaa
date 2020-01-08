@@ -391,11 +391,11 @@ class ModelManager(object):
         date_str = make_date_str()
         if mode == 'tests':
             json_dict = self.results_to_json()
-            result_key = (f'results/{self.model.name}/results_'
+            result_key = (f'results/{self.model.name}/test_results_'
                           f'{test_corpus_str}_{date_str}.json')
         elif mode == 'model':
             json_dict = self.model_data_to_json()
-            result_key = (f'results/{self.model.name}/'
+            result_key = (f'assembled/{self.model.name}/'
                           f'model_data_{date_str}.json')
         else:
             raise TypeError('Mode must be either model or tests')
