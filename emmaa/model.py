@@ -538,7 +538,7 @@ def last_updated_date(model, file_type='model', date_format='date',
         return ''
 
 
-def get_model_stats(model, tests='large_corpus_tests',
+def get_model_stats(model, mode, tests='large_corpus_tests',
                     date=None, extension='.json'):
     """Gets the latest statistics for the given model
 
@@ -546,6 +546,10 @@ def get_model_stats(model, tests='large_corpus_tests',
     ----------
     model : str
         Model name to look for
+    mode : str
+        Type of stats to generate (model or tests)
+    tests : str
+        A name of a test corpus. Default is large_corpus_tests.
     date : str or None
         Date for which the stats will be returned in "YYYY-MM-DD" format.
     extension : str
@@ -560,17 +564,33 @@ def get_model_stats(model, tests='large_corpus_tests',
         date = last_updated_date(model, 'stats', 'date', extension)
     s3 = get_s3_client()
 
-    # Need jsons for model meta data and test statistics. File name examples:
-    # stats/skcm/stats_2019-08-20-17-34-40.json
-    prefix = f'stats/{model}/stats_{tests}_{date}'
-    latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
-                                          prefix=prefix,
-                                          extension=extension)
-    if not latest_file_key and tests == 'large_corpus_tests':
+    # Try find new formatted stats (separate for model and tests)
+    if mode == 'model':
+        # File name example:
+        # model_stats/skcm/model_stats_2019-08-20-17-34-40.json
+        prefix = f'model_stats/{model}/model_stats_{tests}_{date}'
+        latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                              prefix=prefix,
+                                              extension=extension)
+    elif mode == 'test':
+        # File name example:
+        # stats/skcm/test_stats_large_corpus_tests_2019-08-20-17-34-40.json
+        prefix = f'stats/{model}/test_stats_{tests}_{date}'
+        latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
+                                              prefix=prefix,
+                                              extension=extension)
+    else:
+        raise TypeError('Mode must be either model or tests')
+    # This might be an older file with model and test stats combined.
+    # File name example: stats/skcm/stats_2019-08-20-17-34-40.json
+    if not latest_file_key and (
+        mode == 'model' or (
+            model == 'test' and tests == 'large_corpus_tests')):
         prefix = f'stats/{model}/stats_{date}'
         latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                               prefix=prefix,
                                               extension=extension)
+    # If we still didn't filnd the file it probably does not exist
     if not latest_file_key:
         return None
     model_data_object = s3.get_object(Bucket=EMMAA_BUCKET_NAME,
