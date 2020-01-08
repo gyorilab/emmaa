@@ -656,6 +656,7 @@ class TestStatsGenerator(StatsGenerator):
         date_str = make_date_str()
         stats_key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                      f'{date_str}.json')
+        super().save_to_s3_key(stats_key)
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
