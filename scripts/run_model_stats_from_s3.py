@@ -8,8 +8,8 @@ if __name__ == '__main__':
                         'tests and save to Amazon S3.')
     parser.add_argument('-m', '--model', help='Model name', required=True)
     parser.add_argument('-s', '--stats_mode', help='Mode of stats (model or'
-                        ' tests)' required=True)
-    parser.add_argument('-t', '--tests', default='large_corpus_tests'
+                        ' tests)', required=True)
+    parser.add_argument('-t', '--tests', default='large_corpus_tests',
                         help='Test file name.',)
     args = parser.parse_args()
 
