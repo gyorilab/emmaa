@@ -376,7 +376,6 @@ class StatsGenerator(object):
     def save_to_s3_key(self, stats_key):
         json_stats_str = json.dumps(self.json_stats, indent=1)
         client = get_s3_client(unsigned=False)
-        date_str = make_date_str()
         logger.info(f'Uploading statistics to {stats_key}')
         client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=stats_key,
                           Body=json_stats_str.encode('utf8'))
@@ -478,6 +477,7 @@ class ModelStatsGenerator(StatsGenerator):
         return previous_data
 
     def save_to_s3(self):
+        date_str = make_date_str()
         stats_key = (
             f'model_stats/{self.model_name}/model_stats_{date_str}.json')
         super().save_to_s3_key(stats_key)
@@ -653,6 +653,7 @@ class TestStatsGenerator(StatsGenerator):
         return previous_data
 
     def save_to_s3(self):
+        date_str = make_date_str()
         stats_key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                      f'{date_str}.json')
 

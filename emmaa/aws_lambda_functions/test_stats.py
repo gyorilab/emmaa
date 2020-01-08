@@ -60,7 +60,7 @@ def lambda_handler(event, context):
             core_command += f' --branch {BRANCH}'
         core_command += (' python scripts/run_model_stats_from_s3.py'
                          f' --model {model_name} --stats_mode tests'
-                         f'--tests {test_corpus}')
+                         f' --tests {test_corpus}')
         print(core_command)
         cont_overrides = {
             'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
