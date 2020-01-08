@@ -180,8 +180,8 @@ function toTitleCase(phrase) {
   return newPhrase;
 };
 
-// Populate test results json to modelTestResultBody
-function populateTestResultTable(tableBody, json) {
+// Populate model and test stats jsons to modelTestResultBody
+function populateTestResultTable(tableBody, model_json, test_json) {
 
   // IDs
   let stmtTypDistId = '#modelTestResultBody';
@@ -191,14 +191,16 @@ function populateTestResultTable(tableBody, json) {
   let stmtTime = '#stmtsOverTime';
 
   // Dates
-  dates = json.changes_over_time.dates;
-  dates.unshift('x');
+  model_dates = model_json.changes_over_time.dates;
+  model_dates.unshift('x');
+  test_dates = test_json.changes_over_time.dates;
+  test_dates.unshift('x');
 
   let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
   let current_model_types = [];
   let cols = [];
   let count = 0;
-  for (mt of all_model_types) {if (mt in json.test_round_summary) {
+  for (mt of all_model_types) {if (mt in test_json.test_round_summary) {
     current_model_types.push(mt)
     count++
     cols.push(count)}};
@@ -209,7 +211,7 @@ function populateTestResultTable(tableBody, json) {
   let stmt_type_array = [];
   let stmt_freq_array = ['count'];
 
-  for (let pair of json.model_summary.stmts_type_distr) {
+  for (let pair of model_json.model_summary.stmts_type_distr) {
     stmt_type_array.push(pair[0]);
     stmt_freq_array.push(pair[1])
   }
@@ -228,7 +230,7 @@ function populateTestResultTable(tableBody, json) {
   let top_agents_array = [];
   let agent_freq_array = ['count'];
 
-  for (let pair of json.model_summary.agent_distr.slice(0, 10)) {
+  for (let pair of model_json.model_summary.agent_distr.slice(0, 10)) {
     top_agents_array.push(pair[0]);
     agent_freq_array.push(pair[1])
   }
@@ -243,14 +245,14 @@ function populateTestResultTable(tableBody, json) {
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
   // Statements over Time line graph
-  let stmtsOverTime = json.changes_over_time.number_of_statements;
+  let stmtsOverTime = model_json.changes_over_time.number_of_statements;
   stmtsOverTime.unshift('Statements');
 
   let stmtsCountDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
     columns: [
-      dates,
+      model_dates,
       stmtsOverTime
     ],
     onclick: redirectToPast
@@ -261,16 +263,16 @@ function populateTestResultTable(tableBody, json) {
   // Tests Tab
 
   // Passed ratio line graph
-  let passedRatioColumns = [dates]
+  let passedRatioColumns = [test_dates]
 
   for (mt of current_model_types) {
-    let mt_changes = json.changes_over_time[mt]
+    let mt_changes = test_json.changes_over_time[mt]
     let passedRatio = mt_changes.passed_ratio
     passedRatio = passedRatio.map(function(element) {
       return (element*100).toFixed(2);
     })
     var i
-    let dif = dates.length - passedRatio.length
+    let dif = test_dates.length - passedRatio.length
     for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
     passedRatio.unshift(FORMATTED_MODEL_NAMES[mt]);
     passedRatioColumns.push(passedRatio)
@@ -286,15 +288,15 @@ function populateTestResultTable(tableBody, json) {
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
 
   // Applied/passed area graph
-  let appliedTests = json.changes_over_time.number_applied_tests;
+  let appliedTests = test_json.changes_over_time.number_applied_tests;
   appliedTests.unshift('Applied Tests');
-  let appliedPassedColumns = [dates];
+  let appliedPassedColumns = [test_dates];
 
   for (mt of current_model_types) {
-    let mt_changes = json.changes_over_time[mt];
+    let mt_changes = test_json.changes_over_time[mt];
     let passedTests = mt_changes.number_passed_tests;
     let i;
-    let dif = dates.length - passedTests.length;
+    let dif = test_dates.length - passedTests.length;
     for (i = 1; i < dif; i++) {passedTests.unshift(null)}
     passedTests.unshift(`${FORMATTED_MODEL_NAMES[mt]} Passed Tests`);
     appliedPassedColumns.push(passedTests)

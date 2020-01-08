@@ -128,14 +128,14 @@ def _make_query(query_dict, use_grouding_service=True):
     return query
 
 
-def _new_applied_tests(model_stats_json, model_types, model_name, date):
+def _new_applied_tests(test_stats_json, model_types, model_name, date):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
     #           each tuple is a (href, link_text) pair
-    all_test_results = model_stats_json['test_round_summary'][
+    all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
-    new_app_hashes = model_stats_json['tests_delta']['applied_hashes_delta'][
+    new_app_hashes = test_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
@@ -171,12 +171,12 @@ def _format_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, model_stats_json, current_model_types, date):
+def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
     new_passed_tests = []
-    all_test_results = model_stats_json['test_round_summary'][
+    all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
     for mt in current_model_types:
-        new_passed_hashes = model_stats_json['tests_delta'][mt][
+        new_passed_hashes = test_stats_json['tests_delta'][mt][
             'passed_hashes_delta']['added']
         if not new_passed_hashes:
             continue
@@ -245,12 +245,13 @@ def get_model_dashboard(model, date):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    model_stats = get_model_stats(model, date=date)
+    model_stats = get_model_stats(model, 'model', date=date)
+    test_stats = get_model_stats(model, 'test', date=date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
-                           model_stats['test_round_summary']]
+                           test_stats['test_round_summary']]
     # Filter out rows with all tests == 'n_a'
     all_tests = []
-    for k, v in model_stats['test_round_summary']['all_test_results'].items():
+    for k, v in test_stats['test_round_summary']['all_test_results'].items():
         if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
             continue
         else:
@@ -273,6 +274,7 @@ def get_model_dashboard(model, date):
                            model=model,
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
+                           test_stats_json=test_stats,
                            link_list=link_list,
                            user_email=user.email if user else "",
                            stmts_counts=top_stmts_counts,
@@ -282,7 +284,7 @@ def get_model_dashboard(model, date):
                                                   for mt in
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
-                               model_stats_json=model_stats,
+                               test_stats_json=test_stats,
                                model_types=current_model_types,
                                model_name=model,
                                date=date),
@@ -292,7 +294,7 @@ def get_model_dashboard(model, date):
                                model_name=model,
                                date=date),
                            new_passed_tests=_new_passed_tests(
-                               model, model_stats, current_model_types, date),
+                               model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date)
 
@@ -301,16 +303,16 @@ def get_model_dashboard(model, date):
 def get_model_tests_page(model, model_type, test_hash, date):
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    model_stats = get_model_stats(model, date=date)
-    if not model_stats:
+    test_stats = get_model_stats(model, 'test', date=date)
+    if not test_stats:
         abort(Response(f'Data for {model} for {date} was not found', 404))
     try:
         current_test = \
-            model_stats['test_round_summary']['all_test_results'][test_hash]
+            test_stats['test_round_summary']['all_test_results'][test_hash]
     except KeyError:
         abort(Response(f'Result for this test does not exist for {date}', 404))
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
-                           model_stats['test_round_summary']]
+                           test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
     latest_date = last_updated_date(model, 'stats', 'date', '.json')
@@ -320,7 +322,6 @@ def get_model_tests_page(model, model_type, test_hash, date):
                            model_type=model_type,
                            all_model_types=current_model_types,
                            test_hash=test_hash,
-                           model_stats_json=model_stats,
                            test=test,
                            test_status=test_status,
                            path_list=path_list,
