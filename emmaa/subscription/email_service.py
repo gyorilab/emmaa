@@ -128,6 +128,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
     # Log error if something goes wrong.
     except ClientError as e:
         logger.error(e.response['Error']['Message'])
+        response = e.response
     else:
         logger.info("Email sent!"),
     return response
