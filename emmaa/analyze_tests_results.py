@@ -3,9 +3,9 @@ import logging
 import jsonpickle
 import datetime
 from collections import defaultdict
+from emmaa.model_tests import elsevier_url, load_model_manager_from_s3
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
-                        find_latest_s3_files, find_number_of_files_on_s3,
-                        make_date_str, get_s3_client, EMMAA_BUCKET_NAME)
+                        strip_out_date, get_s3_client, EMMAA_BUCKET_NAME)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -19,7 +19,6 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
     'paths': 'get_passed_test_hashes'}
-elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 
 
 class Round(object):
@@ -28,17 +27,15 @@ class Round(object):
 
     Parameters
     ----------
-    json_results : list[dict]
-        A list of JSON formatted dictionaries to store information about the
-        test results. The first dictionary contains information about the
-        model. Each consecutive dictionary contains information about a single
-        test applied to the model and test results.
-
-    Attributes
-    ----------
     link_type : str
         A name of a source to link the statements to (e.g. 'indra_db' or
         'elsevier')
+    date_str : str
+        Time when ModelManager responsible for this round was created.
+
+    Attributes
+    ----------
+
     function_mapping : dict
         A dictionary of strings mapping a type of content to a tuple of
         functions necessary to find delta for this type of content. First
@@ -46,19 +43,14 @@ class Round(object):
         while the second returns an English description of a given content type
         for a single hash.
     """
-    def __init__(self, json_results):
-        self.json_results = json_results
-        self.link_type = self.json_results[0].get('link_type', 'indra_db')
+    def __init__(self, link_type, date_str):
+        self.link_type = link_type
+        self.date_str = date_str
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
     @classmethod
     def load_from_s3_key(cls, key):
-        client = get_s3_client()
-        logger.info(f'Loading json from {key}')
-        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
-        json_results = json.loads(obj['Body'].read().decode('utf8'))
-        round_obj = cls(json_results)
-        return round_obj
+        raise NotImplementedError("Method must be implemented in child class.")        
 
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
@@ -118,20 +110,20 @@ class ModelRound(Round):
 
     Parameters
     ----------
-    json_results : list[dict]
-        A list of JSON formatted dictionaries to store information about the
-        test results. In this case, the list contains only one dictionary
-        with information about the model (the list format is preserved to
-        ensure consistency with test results json).
-
-    Attributes
-    ----------
     statements : list[indra.statements.Statement]
         A list of INDRA Statements used to assemble a model.
     """
-    def __init__(self, json_results):
-        super().__init__(json_results)
-        self.statements = self._get_statements()
+    def __init__(self, statements, link_type, date_str):
+        super().__init__(link_type, date_str)
+        self.statements = statements
+
+    @classmethod
+    def load_from_s3_key(cls, key):
+        mm = load_model_manager_from_s3(key=key)
+        statements = mm.model.assembled_statements
+        link_type = mm.link_type
+        date_str = mm.date_str
+        return cls(statements, link_type, date_str)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -181,10 +173,6 @@ class ModelRound(Round):
                 self.get_english_statement(stmt))
         return stmts_by_hash
 
-    def _get_statements(self):
-        serialized_stmts = self.json_results[0]['statements']
-        return [Statement._from_json(stmt) for stmt in serialized_stmts]
-
 
 class TestRound(Round):
     """Analyzes the results of one test round.
@@ -209,14 +197,25 @@ class TestRound(Round):
         description, result in Pass/Fail/n_a form and either a path if it
         was found or a result code if it was not.
     """
-    def __init__(self, json_results):
-        super().__init__(json_results)
+    def __init__(self, json_results, link_type, date_str):
+        super().__init__(link_type, date_str)
+        self.json_results = json_results
         mc_types = self.json_results[0].get('mc_types', ['pysb'])
         self.mc_types_results = {}
         for mc_type in mc_types:
             self.mc_types_results[mc_type] = self._get_results(mc_type)
         self.tests = self._get_tests()
         self.english_test_results = self._get_applied_tests_results()
+
+    @classmethod
+    def load_from_s3_key(cls, key):
+        client = get_s3_client()
+        logger.info(f'Loading json from {key}')
+        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+        json_results = json.loads(obj['Body'].read().decode('utf8'))
+        link_type = json_results[0].get('link_type', 'indra_db')
+        date_str = json_results[0].get('date_str', strip_out_date(key))
+        return cls(json_results, link_type, date_str)
 
     def get_applied_test_hashes(self):
         """Return a list of hashes for all applied tests."""
@@ -370,7 +369,7 @@ class StatsGenerator(object):
         else:
             previous_dates = (
                 self.previous_json_stats['changes_over_time']['dates'])
-        previous_dates.append(make_date_str())
+        previous_dates.append(self.latest_round.date_str)
         return previous_dates
 
     def save_to_s3_key(self, stats_key):
@@ -477,21 +476,17 @@ class ModelStatsGenerator(StatsGenerator):
         return previous_data
 
     def save_to_s3(self):
-        date_str = make_date_str()
+        date_str = self.latest_round.date_str
         stats_key = (
             f'model_stats/{self.model_name}/model_stats_{date_str}.json')
         super().save_to_s3_key(stats_key)
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{self.model_name}/model_data_',
-            extension='.json')
+            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_manager_',
+            extension='.pkl')
         if latest_key is None:
-            latest_key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
-                extension='.json')
-        if latest_key is None:
-            logger.info(f'Could not find a key to the latest model data '
+            logger.info(f'Could not find a key to the latest model manager '
                         f'for {self.model_name} model.')
             return
         mr = ModelRound.load_from_s3_key(latest_key)
@@ -499,14 +494,15 @@ class ModelStatsGenerator(StatsGenerator):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{self.model_name}/model_data_',
-            extension='.json')
+            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_manager_',
+            extension='.pkl')
         if previous_key is None:
-            previous_key = find_second_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
-                extension='.json')
+            previous_key = find_latest_s3_file(
+                EMMAA_BUCKET_NAME,
+                f'results/{self.model_name}/latest_model_manager',
+                extension='.pkl')
         if previous_key is None:
-            logger.info(f'Could not find a key to the previous model data '
+            logger.info(f'Could not find a key to the previous model manager '
                         f'for {self.model_name} model.')
             return
         mr = ModelRound.load_from_s3_key(previous_key)
@@ -653,7 +649,7 @@ class TestStatsGenerator(StatsGenerator):
         return previous_data
 
     def save_to_s3(self):
-        date_str = make_date_str()
+        date_str = self.latest_round.date_str
         stats_key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                      f'{date_str}.json')
         super().save_to_s3_key(stats_key)
@@ -661,12 +657,8 @@ class TestStatsGenerator(StatsGenerator):
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
             EMMAA_BUCKET_NAME,
-            f'results/{self.model_name}/test_results_{self.test_corpus}',
+            f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
-        if latest_key is None and self.test_corpus == 'large_corpus_tests':
-            latest_key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
-                extension='.json')
         if latest_key is None:
             logger.info(f'Could not find a key to the latest test results '
                         f'for {self.model_name} model.')
@@ -680,7 +672,7 @@ class TestStatsGenerator(StatsGenerator):
             f'results/{self.model_name}/test_results_{self.test_corpus}',
             extension='.json')
         if previous_key is None and self.test_corpus == 'large_corpus_tests':
-            previous_key = find_second_latest_s3_file(
+            previous_key = find_latest_s3_file(
                 EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
                 extension='.json')
         if previous_key is None:

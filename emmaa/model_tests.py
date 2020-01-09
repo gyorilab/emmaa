@@ -68,6 +68,11 @@ class ModelManager(object):
         A list of EMMAA tests applicable for given EMMAA model.
     make_links : bool
         Whether to include links to INDRA db in test results.
+    link_type : str
+        A name of a source to link the statements to (e.g. 'indra_db' or
+        'elsevier')
+    date_str : str
+        Time when this object was created.
     """
     def __init__(self, model):
         self.model = model
@@ -94,6 +99,7 @@ class ModelManager(object):
         self.applicable_tests = []
         self.make_links = model.test_config.get('make_links', True)
         self.link_type = model.test_config.get('link_type', 'indra_db')
+        self.date_str = make_date_str()
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -375,29 +381,11 @@ class ModelManager(object):
             results_json.append(test_ix_results)
         return results_json
 
-    def model_data_to_json(self):
-        """Save information about the model to S3."""
-        pickler = jsonpickle.pickler.Pickler()
-        model_json = []
-        model_json.append({
-            'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json(),
-            'link_type': self.link_type})
-        return model_json
-
-    def upload_results(self, mode, test_corpus_str='large_corpus_tests'):
+    def upload_results(self, test_corpus_str='large_corpus_tests'):
         """Upload results to s3 bucket."""
-        date_str = make_date_str()
-        if mode == 'tests':
-            json_dict = self.results_to_json()
-            result_key = (f'results/{self.model.name}/test_results_'
-                          f'{test_corpus_str}_{date_str}.json')
-        elif mode == 'model':
-            json_dict = self.model_data_to_json()
-            result_key = (f'assembled/{self.model.name}/'
-                          f'model_data_{date_str}.json')
-        else:
-            raise TypeError('Mode must be either model or tests')
+        json_dict = self.results_to_json()
+        result_key = (f'results/{self.model.name}/results_'
+                      f'{test_corpus_str}_{self.date_str}.json')
         json_str = json.dumps(json_dict, indent=1)
         client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
@@ -546,8 +534,10 @@ def load_tests_from_s3(test_name):
 def save_model_manager_to_s3(model_name, model_manager):
     client = get_s3_client(unsigned=False)
     logger.info(f'Saving a model manager for {model_name} model to S3.')
-    client.put_object(Body=pickle.dumps(model_manager), Bucket=EMMAA_BUCKET_NAME,
-                      Key=f'results/{model_name}/latest_model_manager.pkl')
+    date_str = model_manager.date_str
+    client.put_object(
+        Body=pickle.dumps(model_manager), Bucket=EMMAA_BUCKET_NAME,
+        Key=f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
 def load_model_manager_from_s3(key=None, model_name=None):
@@ -578,7 +568,6 @@ def load_model_manager_from_s3(key=None, model_name=None):
 def update_model_manager_on_s3(model_name):
     model = EmmaaModel.load_from_s3(model_name)
     mm = ModelManager(model)
-    mm.upload_results('model')
     save_model_manager_to_s3(model_name, mm)
 
 

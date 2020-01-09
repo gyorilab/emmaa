@@ -593,7 +593,7 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
     if mode == 'model':
         # File name example:
         # model_stats/skcm/model_stats_2019-08-20-17-34-40.json
-        prefix = f'model_stats/{model}/model_stats_{tests}_{date}'
+        prefix = f'model_stats/{model}/model_stats_{date}'
         latest_file_key = find_latest_s3_file(bucket=EMMAA_BUCKET_NAME,
                                               prefix=prefix,
                                               extension=extension)
