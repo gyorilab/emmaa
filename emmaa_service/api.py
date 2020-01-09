@@ -16,7 +16,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
 from emmaa.model import load_config_from_s3, last_updated_date, get_model_stats
-from emmaa.answer_queries import QueryManager, load_model_manager_from_s3
+from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 from emmaa.answer_queries import FORMATTED_TYPE_NAMES
 
@@ -100,7 +100,7 @@ if GLOBAL_PRELOAD:
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
     for model, _, _ in model_meta_data:
-        load_model_manager_from_s3(model)
+        load_model_manager_from_cache(model)
 
 
 def get_queryable_stmt_types():
@@ -497,7 +497,7 @@ if __name__ == '__main__':
         model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
         for model, _ in model_meta_data:
-            load_model_manager_from_s3(model)
+            load_model_manager_from_cache(model)
 
     print(app.url_map)  # Get all avilable urls and link them
     app.run(host=args.host, port=args.port)

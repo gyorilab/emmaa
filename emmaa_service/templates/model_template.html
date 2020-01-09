@@ -12,7 +12,7 @@
 
     let testResultsTableBody = document.getElementById('modelTestResultBody');
 
-    populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }});
+    populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }}, {{ test_stats_json|safe }});
   });
 </script>
 <style>
