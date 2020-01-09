@@ -196,7 +196,9 @@ if __name__ == '__main__':
       AWS SDK for Python (Boto)</a>. Personal message: %s</p>
 </body>
 </html>''' % (email_subj, msg),
-        'source_arn': input('Provide source (sender) arn: ')
+        'source_arn': input('Provide source (sender) arn: '),
+        'return_email': input('Specify ReturnPath: '),
+        'return_arn': input('Specify ReturnPathArn: ')
     }
     resp = send_email(**ses_options)
     if resp:
