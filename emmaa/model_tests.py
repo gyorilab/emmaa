@@ -19,15 +19,14 @@ from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel, load_config_from_s3
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
-    EMMAA_BUCKET_NAME
-from emmaa.analyze_tests_results import elsevier_url
-from emmaa.answer_queries import load_model_manager_from_s3
+    EMMAA_BUCKET_NAME, find_latest_s3_file
 
 
 logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
+elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -551,6 +550,31 @@ def save_model_manager_to_s3(model_name, model_manager):
                       Key=f'results/{model_name}/latest_model_manager.pkl')
 
 
+def load_model_manager_from_s3(key=None, model_name=None):
+    client = get_s3_client()
+    # First try find the file from specified key
+    if key:
+        try:
+            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+            body = obj['Body'].read()
+            model_manager = pickle.loads(body)
+            return model_manager
+        except Exception:
+            logger.info(f'No file found with key {key}')
+    # Now try find latest for given model
+    if model_name:
+        key = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'results/{model_name}/model_manager_', '.pkl')
+        if key:
+            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+            body = obj['Body'].read()
+            model_manager = pickle.loads(body)
+            return model_manager
+    # Could not find either from key or from model name.
+    logger.info('Could not find the model manager.')
+    return None
+
+
 def update_model_manager_on_s3(model_name):
     model = EmmaaModel.load_from_s3(model_name)
     mm = ModelManager(model)
@@ -593,7 +617,7 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
         Instance of ModelManager containing the model data, list of applied
         tests and the test results.
     """
-    mm = load_model_manager_from_s3(model_name, try_from_cache=False)
+    mm = load_model_manager_from_s3(model_name=model_name)
     tests = load_tests_from_s3(test_corpus)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())

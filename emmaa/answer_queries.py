@@ -4,6 +4,7 @@ from datetime import datetime
 
 from indra.assemblers.english import EnglishAssembler
 
+from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, EMMAA_BUCKET_NAME
 
@@ -281,7 +282,7 @@ class QueryManager(object):
         for mm in self.model_managers:
             if mm.model.name == model_name:
                 return mm
-        return load_model_manager_from_s3(model_name)
+        return load_model_manager_from_cache(model_name)
 
     def _recreate_db(self):
         self.db.drop_tables(force=True)
@@ -343,19 +344,12 @@ def format_results(results):
     return formatted_results
 
 
-def load_model_manager_from_s3(model_name, try_from_cache=True):
-    if try_from_cache:
-        model_manager = model_manager_cache.get(model_name)
-        if model_manager:
-            logger.info(f'Loaded model manager for {model_name} from cache.')
-            return model_manager
-    client = get_s3_client()
-    key = f'results/{model_name}/latest_model_manager.pkl'
-    logger.info(f'Loading latest model manager for {model_name} model from '
-                f'S3.')
-    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
-    body = obj['Body'].read()
-    model_manager = pickle.loads(body)
+def load_model_manager_from_cache(model_name):
+    model_manager = model_manager_cache.get(model_name)
+    if model_manager:
+        logger.info(f'Loaded model manager for {model_name} from cache.')
+        return model_manager
+    model_manager = load_model_manager_from_s3(model_name=model_name)
     model_manager_cache[model_name] = model_manager
     return model_manager
 
@@ -386,6 +380,6 @@ def answer_queries_from_s3(model_name, db=None):
     db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
         If given over-rides the default primary database.
     """
-    mm = load_model_manager_from_s3(model_name, try_from_cache=False)
+    mm = load_model_manager_from_s3(model_name=model_name)
     qm = QueryManager(db=db, model_managers=[mm])
     qm.answer_registered_queries(model_name, find_delta=False)
