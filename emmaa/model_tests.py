@@ -613,5 +613,5 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results('tests', test_corpus[:-4])
+        mm.upload_results(test_corpus[:-4])
     return mm

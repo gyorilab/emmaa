@@ -120,7 +120,7 @@ class ModelRound(Round):
     @classmethod
     def load_from_s3_key(cls, key):
         mm = load_model_manager_from_s3(key=key)
-        statements = mm.model.assembled_statements
+        statements = mm.model.assembled_stmts
         link_type = mm.link_type
         date_str = mm.date_str
         return cls(statements, link_type, date_str)
