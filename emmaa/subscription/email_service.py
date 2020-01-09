@@ -48,7 +48,10 @@ def send_email(sender, recipients, subject, body_text, body_html,
         Used only for sending authorization. It is the ARN of the identity
         that is associated with the sending authorization policy that
         permits the sender to send using the email address specified as the
-        sender.
+        sender. Example: the owner of the domain "example.com" can send an
+        email from any address using @example.com, as long as the associated
+        source_arn is
+        "arn:aws:ses:us-east-1:123456789012:identity/example.com"
     return_email : str
         The email to which complaints and bounces are sent. Can be the same
         as the sender.
