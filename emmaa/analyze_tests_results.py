@@ -497,10 +497,7 @@ class ModelStatsGenerator(StatsGenerator):
             EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_manager_',
             extension='.pkl')
         if previous_key is None:
-            previous_key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME,
-                f'results/{self.model_name}/latest_model_manager',
-                extension='.pkl')
+            previous_key = f'results/{self.model_name}/latest_model_manager.pkl'
         if previous_key is None:
             logger.info(f'Could not find a key to the previous model manager '
                         f'for {self.model_name} model.')

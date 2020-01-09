@@ -551,15 +551,15 @@ def load_model_manager_from_s3(key=None, model_name=None):
             return model_manager
         except Exception:
             logger.info(f'No file found with key {key}')
-    # Now try find latest for given model
+    # Now try find the latest key for given model
     if model_name:
+        # Versioned
         key = find_latest_s3_file(
             EMMAA_BUCKET_NAME, f'results/{model_name}/model_manager_', '.pkl')
-        if key:
-            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
-            body = obj['Body'].read()
-            model_manager = pickle.loads(body)
-            return model_manager
+        if key is None:
+            # Non-versioned
+            key = f'results/{model_name}/latest.model.manager.pkl'
+        return load_model_manager_from_s3(key=key)
     # Could not find either from key or from model name.
     logger.info('Could not find the model manager.')
     return None
