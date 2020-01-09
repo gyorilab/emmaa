@@ -346,16 +346,6 @@ class StatsGenerator(object):
         else:
             self.previous_json_stats = previous_json_stats
 
-    def make_stats(self):
-        """Check if two latest test rounds were found and add statistics to
-        json_stats dictionary. If both latest round and previous round
-        were passed or found on s3, a dictionary will have four key-value
-        pairs: model_summary, test_round_summary, model_delta, and tests_delta.
-        """
-        if not self.latest_round:
-            logger.info(f'Latest round for {self.model_name} is not found.')
-            return
-
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
         raise NotImplementedError("Method must be implemented in child class.")
@@ -426,7 +416,9 @@ class ModelStatsGenerator(StatsGenerator):
         were passed or found on s3, a dictionary will have three key-value
         pairs: model_summary, model_delta, and changes_over_time.
         """
-        super().make_stats()
+        if not self.latest_round:
+            logger.info(f'Latest round for {self.model_name} is not found.')
+            return
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_model_delta()
@@ -562,7 +554,9 @@ class TestStatsGenerator(StatsGenerator):
         were passed or found on s3, a dictionary will have three key-value
         pairs: test_round_summary, tests_delta, and changes_over_time.
         """
-        super().make_stats()
+        if not self.latest_round:
+            logger.info(f'Latest round for {self.model_name} is not found.')
+            return
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_test_summary()
         self.make_tests_delta()
