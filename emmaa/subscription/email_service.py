@@ -193,7 +193,7 @@ if __name__ == '__main__':
   <p>This email was sent with
     <a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the
     <a href='https://aws.amazon.com/sdk-for-python/'>
-      AWS SDK for Python (Boto)</a>. Personal message: %s</p>'
+      AWS SDK for Python (Boto)</a>. Personal message: %s</p>
 </body>
 </html>''' % (email_subj, msg),
         'source_arn': input('Provide source (sender) arn: ')
