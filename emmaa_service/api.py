@@ -71,7 +71,9 @@ def _get_model_meta_data():
         config_json = get_model_config(model)
         if not config_json:
             continue
-        latest_date = last_updated_date(model, 'stats', 'date', '.json')
+        # latest_date = last_updated_date(model, 'stats', 'date', '.json')
+        latest_date = last_updated_date(
+            model, 'test_stats', 'date', 'large_corpus_tests', '.json')
         model_data.append((model, config_json, latest_date))
     return model_data
 
@@ -236,7 +238,9 @@ def get_model_dashboard(model, date):
     if not last_update:
         logger.warning(f'Could not get last update for {model}')
         last_update = 'Not available'
-    latest_date = last_updated_date(model, 'stats', 'date', '.json')
+    # latest_date = last_updated_date(model, 'stats', 'date', '.json')
+    latest_date = last_updated_date(
+        model, 'test_stats', 'date', 'large_corpus_tests', '.json')
     model_info_contents = [
         [('', 'Model Last Updated', ''), ('', last_update, '')],
         [('', 'Model Last Tested', ''), ('', latest_date, '')],
@@ -315,7 +319,9 @@ def get_model_tests_page(model, model_type, test_hash, date):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
-    latest_date = last_updated_date(model, 'stats', 'date', '.json')
+    # latest_date = last_updated_date(model, 'stats', 'date', '.json')
+    latest_date = last_updated_date(
+        model, 'test_stats', 'date', 'large_corpus_tests', '.json')
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,

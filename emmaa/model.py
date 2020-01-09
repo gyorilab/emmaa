@@ -496,7 +496,7 @@ def load_stmts_from_s3(model_name):
 
 
 def last_updated_date(model, file_type='model', date_format='date',
-                      extension='.pkl'):
+                      tests='large_corpus_tests', extension='.pkl'):
     """Find the most recent pickle file of model and return its creation date
 
     Example file name:
@@ -508,7 +508,7 @@ def last_updated_date(model, file_type='model', date_format='date',
         Model name to look for
     file_type : str
         Type of a file to find the latest file for. Accepted values: 'model',
-        'results', 'stats'.
+        'model_data', 'test_results', 'model_stats', 'test_stats'.
     date_format : str
         Format of the returned date. Accepted values are 'datetime' (returns a
         date in the format "YYYY-MM-DD-HH-mm-ss") and 'date' (returns a date
@@ -523,19 +523,39 @@ def last_updated_date(model, file_type='model', date_format='date',
     """
     if file_type == 'model':
         folder_name = 'models'
+        prefix_new = prefix_old = f'models/{model}/model_'
+    elif file_type == 'model_data':
+        prefix_new = f'assembled/{model}/model_data_'
+        prefix_old = f'results/{model}/results_'
+    elif file_type == 'test_results':
+        prefix_new = f'results/{model}/test_results_{tests}'
+        prefix_old = f'results/{model}/results_'
+    elif file_type == 'model_stats':
+        prefix_new = f'model_stats/{model}/model_stats_'
+        prefix_old = f'stats/{model}/stats_'
+    elif file_type == 'test_stats':
+        prefix_new = f'stats/{model}/test_stats_{tests}'
+        prefix_old = f'stats/{model}/stats_'
     else:
-        folder_name = file_type
-    prefix = f'{folder_name}/{model}/{file_type}_'
+        raise TypeError(f'Files of type {file_type} are not supported')
     try:
         return strip_out_date(
             find_latest_s3_file(
                 bucket=EMMAA_BUCKET_NAME,
-                prefix=prefix,
+                prefix=prefix_new,
                 extension=extension),
             date_format=date_format)
     except TypeError:
-        logger.info('Could not find latest update date')
-        return ''
+        try:
+            return strip_out_date(
+                find_latest_s3_file(
+                    bucket=EMMAA_BUCKET_NAME,
+                    prefix=prefix_old,
+                    extension=extension),
+                date_format=date_format)
+        except TypeError:
+            logger.info('Could not find latest update date')
+            return ''
 
 
 def get_model_stats(model, mode, tests='large_corpus_tests',
@@ -561,7 +581,12 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
     """
     # If date is not specified, get the latest
     if not date:
-        date = last_updated_date(model, 'stats', 'date', extension)
+        if mode == 'model':
+            date = last_updated_date(model, 'model_stats', 'date', extension)
+        elif mode == 'test':
+            date = last_updated_date(model, 'test_stats', 'date', extension)
+        else:
+            raise TypeError('Mode must be either model or tests')
     s3 = get_s3_client()
 
     # Try find new formatted stats (separate for model and tests)
