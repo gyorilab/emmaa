@@ -56,13 +56,12 @@ function redirectToDate(new_date_str) {
   location.replace(redirect);
 }
 
-function modelDateRedirect(ddSelect, current_model) {
+function modelDateRedirect(ddSelect, currentModel) {
 
   // Get selected option
   let newModel = '';
   for (child of ddSelect.children) {
     if (child.selected) {
-      console.log(child.value)
       selection_str = child.value.split(" ");
       newModel = selection_str[0];
       newDate = selection_str[1];
@@ -73,13 +72,37 @@ function modelDateRedirect(ddSelect, current_model) {
   console.log(newModel)
   console.log(newDate)
   let loc = window.location.href
-  let current_date = loc.substring(loc.length - 10, loc.length)
-
+  currentDate = new URL(loc).searchParams.get('date')
+  currentTest = new URL(loc).searchParams.get('test_corpus')
   // redirect url:
-  let redirectModel = loc.replace(current_model, newModel)
-  let redirectDate = redirectModel.replace(current_date, newDate);
-  location.replace(redirectDate);
+  let redirectModel = loc.replace(currentModel, newModel)
+  let redirectDate = redirectModel.replace(currentDate, newDate);
+  let redirectTest = redirectDate.replace(currentTest, 'large_corpus_tests');
+  location.replace(redirectTest);
 }
+
+
+function testRedirect(ddSelect) {
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      selection_str = child.value.split(" ");
+      newTest = selection_str[0];
+      newDate = selection_str[1];
+      break;
+    }
+  }
+
+  console.log(newTest)
+  console.log(newDate)
+  let loc = window.location.href
+  currentDate = new URL(loc).searchParams.get('date')
+  currentTest = new URL(loc).searchParams.get('test_corpus')
+  // redirect url:
+  let redirectDate = loc.replace(currentDate, newDate);
+  let redirectTest = redirectDate.replace(currentTest, newTest);
+  location.replace(redirectTest);
+}
+
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
