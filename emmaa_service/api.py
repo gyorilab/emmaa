@@ -4,7 +4,7 @@ import json
 import boto3
 import logging
 import argparse
-from datetime import timedelta
+from datetime import timedelta, datetime
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
@@ -61,6 +61,31 @@ def _sort_pass_fail(row):
                   *(_translator(row[n+1][1]) for n in range(len(row)-1))])
 
 
+def is_available(model, test_corpus, date):
+    model_stats = get_model_stats(model, 'model', date=date)
+    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
+    if model_stats and test_stats:
+        return True
+    return False
+
+
+def get_latest_available_date(model, test_corpus):
+    logger.info(f'Looking for latest available date for {model} and {test_corpus}')
+    model_date = last_updated_date(model, 'model_stats', extension='.json')
+    test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
+                                  extension='.json')
+    min_date = min(model_date, test_date)
+    if is_available(model, test_corpus, min_date):
+        return min_date
+    min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
+    for day_count in range(1, 30):
+        earlier_date = min_date_obj - timedelta(days=day_count)
+        if is_available(model, test_corpus, earlier_date):
+            return earlier_date
+    logger.info(f'Could not find latest available date for {model} model '
+                f'and {test_corpus}.')
+
+
 def _get_model_meta_data():
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket='emmaa', Prefix='models/',
@@ -71,9 +96,7 @@ def _get_model_meta_data():
         config_json = get_model_config(model)
         if not config_json:
             continue
-        # latest_date = last_updated_date(model, 'stats', 'date', '.json')
-        latest_date = last_updated_date(
-            model, 'test_stats', 'date', 'large_corpus_tests', '.json')
+        latest_date = get_latest_available_date(model, 'large_corpus_tests')
         model_data.append((model, config_json, latest_date))
     return model_data
 
@@ -227,23 +250,15 @@ def get_home():
 def get_model_dashboard(model, date):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-
-    last_update = last_updated_date(model)
     ndex_id = 'None available'
     for mid, mmd, _ in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
-    if not last_update:
-        logger.warning(f'Could not get last update for {model}')
-        last_update = 'Not available'
-    # latest_date = last_updated_date(model, 'stats', 'date', '.json')
-    latest_date = last_updated_date(
-        model, 'test_stats', 'date', 'large_corpus_tests', '.json')
+    latest_date = get_latest_available_date(model, 'large_corpus_tests')
     model_info_contents = [
-        [('', 'Model Last Updated', ''), ('', last_update, '')],
-        [('', 'Model Last Tested', ''), ('', latest_date, '')],
+        [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
          ('', date, 'Click on the point on time graph to see earlier results')],
         [('', 'Network on Ndex', ''),
@@ -319,9 +334,7 @@ def get_model_tests_page(model, model_type, test_hash, date):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
-    # latest_date = last_updated_date(model, 'stats', 'date', '.json')
-    latest_date = last_updated_date(
-        model, 'test_stats', 'date', 'large_corpus_tests', '.json')
+    latest_date = get_latest_available_date(model, 'large_corpus_tests')
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
