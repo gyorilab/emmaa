@@ -498,20 +498,23 @@ class ModelStatsGenerator(StatsGenerator):
         return mr
 
     def _get_previous_json_stats(self):
-        key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'model_stats/{self.model_name}/model_stats_',
-            extension='.json')
-        if key is None:
+        client = get_s3_client()
+        try:
+            key = (f'model_stats/{self.model_name}/model_stats_'
+                   f'{self.previous_round.date_str}.json')
+            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+        except Exception:
+            logger.info(f'Could not load earlier statistics from {key}')
             key = find_latest_s3_file(
                 EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
                 extension='.json')
-        if key is None:
-            logger.info(f'Could not find a key to the previous statistics '
-                        f'for {self.model_name} model.')
-            return
-        client = get_s3_client()
-        logger.info(f'Loading earlier statistics from {key}')
-        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+            if key is None:
+                logger.info(f'Could not find a key to the previous statistics '
+                            f'for {self.model_name} model.')
+                return
+            else:
+                logger.info(f'Loading earlier statistics from {key}')
+                obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
@@ -674,21 +677,26 @@ class TestStatsGenerator(StatsGenerator):
         return tr
 
     def _get_previous_json_stats(self):
-        key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME,
-            f'stats/{self.model_name}/test_stats_{self.test_corpus}',
-            extension='.json')
-        if key is None and self.test_corpus == 'large_corpus_tests':
-            key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
-                extension='.json')
-        if key is None:
-            logger.info(f'Could not find a key to the previous statistics '
-                        f'for {self.model_name} model.')
-            return
         client = get_s3_client()
-        logger.info(f'Loading earlier statistics from {key}')
-        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+        try:
+            key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
+                   f'{self.previous_round.date_str}.json')
+            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+        except Exception:
+            logger.info(f'Could not load earlier statistics from {key}')
+            if self.test_corpus == 'large_corpus_tests':
+                key = find_latest_s3_file(
+                    EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
+                    extension='.json')
+            else:
+                key = None
+            if key is None:
+                logger.info(f'Could not find a key to the previous statistics '
+                            f'for {self.model_name} model.')
+                return
+            else:
+                logger.info(f'Loading earlier statistics from {key}')
+                obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
