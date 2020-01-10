@@ -447,7 +447,7 @@ def load_config_from_s3(model_name):
     base_key = f'models/{model_name}'
     config_key = f'{base_key}/config.json'
     logger.info(f'Loading model config from {config_key}')
-    obj = client.get_object(Bucket='emmaa', Key=config_key)
+    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=config_key)
     config = json.loads(obj['Body'].read().decode('utf8'))
     return config
 
@@ -468,7 +468,7 @@ def save_config_to_s3(model_name, config):
     logger.info(f'Saving model config to {config_key}')
     client.put_object(Body=str.encode(json.dumps(config, indent=1),
                                       encoding='utf8'),
-                      Bucket='emmaa', Key=config_key)
+                      Bucket=EMMAA_BUCKET_NAME, Key=config_key)
 
 
 def load_stmts_from_s3(model_name):
@@ -508,7 +508,7 @@ def last_updated_date(model, file_type='model', date_format='date',
         Model name to look for
     file_type : str
         Type of a file to find the latest file for. Accepted values: 'model',
-        'model_data', 'test_results', 'model_stats', 'test_stats'.
+        'test_results', 'model_stats', 'test_stats'.
     date_format : str
         Format of the returned date. Accepted values are 'datetime' (returns a
         date in the format "YYYY-MM-DD-HH-mm-ss") and 'date' (returns a date
@@ -524,11 +524,8 @@ def last_updated_date(model, file_type='model', date_format='date',
     if file_type == 'model':
         folder_name = 'models'
         prefix_new = prefix_old = f'models/{model}/model_'
-    elif file_type == 'model_data':
-        prefix_new = f'assembled/{model}/model_data_'
-        prefix_old = f'results/{model}/results_'
     elif file_type == 'test_results':
-        prefix_new = f'results/{model}/test_results_{tests}'
+        prefix_new = f'results/{model}/results_{tests}'
         prefix_old = f'results/{model}/results_'
     elif file_type == 'model_stats':
         prefix_new = f'model_stats/{model}/model_stats_'

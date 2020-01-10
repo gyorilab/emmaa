@@ -14,7 +14,8 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
-from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client
+from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
+    does_exist, EMMAA_BUCKET_NAME
 from emmaa.model import load_config_from_s3, last_updated_date, get_model_stats
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
@@ -62,9 +63,14 @@ def _sort_pass_fail(row):
 
 
 def is_available(model, test_corpus, date):
-    model_stats = get_model_stats(model, 'model', date=date)
-    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
-    if model_stats and test_stats:
+    if (
+        does_exist(EMMAA_BUCKET_NAME,
+                   f'model_stats/{model}/model_stats_{date}', '.json') and
+        does_exist(EMMAA_BUCKET_NAME,
+                   f'stats/{model}/test_stats_{test_corpus}_{date}', '.json')
+    ) or (
+        does_exist(EMMAA_BUCKET_NAME, f'stats/{model}/stats_{date}', '.json')
+    ):
         return True
     return False
 
@@ -86,9 +92,20 @@ def get_latest_available_date(model, test_corpus):
                 f'and {test_corpus}.')
 
 
+def _get_test_corpora(model, config):
+    tests = config['test'].get('test_corpus', 'large_corpus_tests.pkl')
+    if isinstance(tests, str):
+        tests = [tests]
+    available_tests = [test[:-4] for test in tests]
+    tests_with_dates = {}
+    for test in available_tests:
+        tests_with_dates[test] = get_latest_available_date(model, test)
+    return tests_with_dates
+
+
 def _get_model_meta_data():
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket='emmaa', Prefix='models/',
+    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
                            Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:
