@@ -262,18 +262,21 @@ def get_home():
                            user_email=user.email if user else "")
 
 
-@app.route('/dashboard/<model>/<date>')
+@app.route('/dashboard/<model>/')
 @jwt_optional
-def get_model_dashboard(model, date):
+def get_model_dashboard(model):
+    date = request.args.get('date')
+    test_corpus = request.args.get('test_corpus')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     ndex_id = 'None available'
-    for mid, mmd, _ in model_meta_data:
+    for mid, mmd, av_date in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
+            latest_date = av_date
+            available_tests = _get_test_corpora(model, mmd)
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
-    latest_date = get_latest_available_date(model, 'large_corpus_tests')
     model_info_contents = [
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
@@ -282,7 +285,7 @@ def get_model_dashboard(model, date):
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
     model_stats = get_model_stats(model, 'model', date=date)
-    test_stats = get_model_stats(model, 'test', date=date)
+    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Filter out rows with all tests == 'n_a'
@@ -311,6 +314,8 @@ def get_model_dashboard(model, date):
                            model_data=model_meta_data,
                            model_stats_json=model_stats,
                            test_stats_json=test_stats,
+                           test_corpus=test_corpus,
+                           available_tests=available_tests,
                            link_list=link_list,
                            user_email=user.email if user else "",
                            stmts_counts=top_stmts_counts,
@@ -335,8 +340,11 @@ def get_model_dashboard(model, date):
                            latest_date=latest_date)
 
 
-@app.route('/tests/<model>/<model_type>/<test_hash>/<date>')
-def get_model_tests_page(model, model_type, test_hash, date):
+@app.route('/tests/<model>/')
+def get_model_tests_page(model):
+    model_type = request.args.get('model_type')
+    test_hash = request.args.get('test_hash')
+    date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
     test_stats = get_model_stats(model, 'test', date=date)
@@ -414,9 +422,10 @@ def get_query_page():
                            user_email=user_email)
 
 
-@app.route('/query/<model>/<model_type>/<query_hash>')
-def get_query_tests_page(model, model_type, query_hash):
-    query_hash = int(query_hash)
+@app.route('/query/<model>/')
+def get_query_tests_page(model):
+    model_type = request.args.get('model_type')
+    query_hash = int(request.args.get('query_hash'))
     results = qm.retrieve_results_from_hashes([query_hash])
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
