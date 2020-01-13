@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
 from flask_jwt_extended import jwt_optional
+from urllib import parse
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -75,18 +76,29 @@ def is_available(model, test_corpus, date):
     return False
 
 
-def get_latest_available_date(model, test_corpus):
+def get_latest_available_date(model, test_corpus, refresh=False):
     logger.info(f'Looking for latest available date for {model} and {test_corpus}')
+    if test_corpus == 'large_corpus_tests' and not refresh and \
+            model in model_dates:
+        return model_dates[model]
     model_date = last_updated_date(model, 'model_stats', extension='.json')
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
                                   extension='.json')
+    if model_date == test_date:
+        if test_corpus == 'large_corpus_tests':
+            model_dates[model] = model_date
+        return model_date
     min_date = min(model_date, test_date)
     if is_available(model, test_corpus, min_date):
+        if test_corpus == 'large_corpus_tests':
+            model_dates[model] = min_date
         return min_date
     min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
     for day_count in range(1, 30):
         earlier_date = min_date_obj - timedelta(days=day_count)
         if is_available(model, test_corpus, earlier_date):
+            if test_corpus == 'large_corpus_tests':
+                model_dates[model] = earlier_date
             return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
@@ -103,7 +115,7 @@ def _get_test_corpora(model, config):
     return tests_with_dates
 
 
-def _get_model_meta_data():
+def _get_model_meta_data(refresh=False):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
                            Delimiter='/')
@@ -113,7 +125,8 @@ def _get_model_meta_data():
         config_json = get_model_config(model)
         if not config_json:
             continue
-        latest_date = get_latest_available_date(model, 'large_corpus_tests')
+        latest_date = get_latest_available_date(
+            model, 'large_corpus_tests', refresh=refresh)
         model_data.append((model, config_json, latest_date))
     return model_data
 
@@ -135,6 +148,7 @@ def get_model_config(model):
 
 GLOBAL_PRELOAD = False
 model_cache = {}
+model_dates = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -256,7 +270,7 @@ def session_expiration_check():
 @jwt_optional
 def get_home():
     user, roles = resolve_auth(dict(request.args))
-    model_data = _get_model_meta_data()
+    model_data = _get_model_meta_data(refresh=True)
     return render_template('index_template.html', model_data=model_data,
                            link_list=link_list,
                            user_email=user.email if user else "")
@@ -273,10 +287,10 @@ def get_model_dashboard(model):
     for mid, mmd, av_date in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
-            latest_date = av_date
             available_tests = _get_test_corpora(model, mmd)
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
+    latest_date = get_latest_available_date(model, test_corpus)
     model_info_contents = [
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
