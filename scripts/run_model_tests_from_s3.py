@@ -7,9 +7,9 @@ if __name__ == '__main__':
             description='Script to run tests against models, both stored on '
                         'Amazon S3.')
     parser.add_argument('-m', '--model', help='Model name', required=True)
-    parser.add_argument('-t', '--tests', required=True,
+    parser.add_argument('-t', '--tests', default='large_corpus_tests',
                         help='Test file name (optional). Default is '
-                        'large_corpus_tests.pkl')
+                        'large_corpus_tests')
     args = parser.parse_args()
 
     run_model_tests_from_s3(

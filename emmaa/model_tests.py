@@ -381,11 +381,11 @@ class ModelManager(object):
             results_json.append(test_ix_results)
         return results_json
 
-    def upload_results(self, test_corpus_str='large_corpus_tests'):
+    def upload_results(self, test_corpus='large_corpus_tests'):
         """Upload results to s3 bucket."""
         json_dict = self.results_to_json()
         result_key = (f'results/{self.model.name}/results_'
-                      f'{test_corpus_str}_{self.date_str}.json')
+                      f'{test_corpus}_{self.date_str}.json')
         json_str = json.dumps(json_dict, indent=1)
         client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
@@ -524,7 +524,11 @@ def load_tests_from_s3(test_name):
         List of EmmaaTest objects loaded from S3.
     """
     client = get_s3_client()
-    test_key = f'tests/{test_name}'
+    prefix = f'tests/{test_name}'
+    try:
+        test_key = find_latest_s3_file(EMMAA_BUCKET_NAME, prefix)
+    except ValueError:
+        test_key = f'tests/{test_name}.pkl'
     logger.info(f'Loading tests from {test_key}')
     obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=test_key)
     tests = pickle.loads(obj['Body'].read())
@@ -577,13 +581,14 @@ def model_to_tests(model_name, upload=True):
     tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
              all(stmt.agent_list())]
     if upload:
+        date_str = make_date_str()
         client = get_s3_client(unsigned=False)
         client.put_object(Body=pickle.dumps(tests), Bucket=EMMAA_BUCKET_NAME,
-                          Key=f'tests/{model_name}_tests.pkl')
+                          Key=f'tests/{model_name}_tests_{date_str}.pkl')
     return tests
 
 
-def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
+def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
                             upload_results=True):
     """Run a given set of tests on a given model, both loaded from S3.
 
@@ -614,5 +619,5 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus[:-4])
+        mm.upload_results(test_corpus)
     return mm

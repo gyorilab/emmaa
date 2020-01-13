@@ -105,13 +105,13 @@ def get_latest_available_date(model, test_corpus, refresh=False):
 
 
 def _get_test_corpora(model, config):
-    tests = config['test'].get('test_corpus', 'large_corpus_tests.pkl')
+    tests = config['test'].get('test_corpus', 'large_corpus_tests')
     if isinstance(tests, str):
         tests = [tests]
-    available_tests = [test[:-4] for test in tests]
     tests_with_dates = {}
-    for test in available_tests:
-        tests_with_dates[test] = get_latest_available_date(model, test)
+    for test in tests:
+        tests_with_dates[test] = get_latest_available_date(
+            model, test, refresh=True)
     return tests_with_dates
 
 
@@ -127,6 +127,7 @@ def _get_model_meta_data(refresh=False):
             continue
         latest_date = get_latest_available_date(
             model, 'large_corpus_tests', refresh=refresh)
+        logger.info(f'Latest available date for {model} is {latest_date}')
         model_data.append((model, config_json, latest_date))
     return model_data
 
