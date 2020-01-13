@@ -506,6 +506,9 @@ class ModelStatsGenerator(StatsGenerator):
         return mr
 
     def _get_previous_json_stats(self):
+        if not self.previous_round:
+            logger.info('Not loading previous stats without previous round')
+            return
         client = get_s3_client()
         try:
             key = (f'model_stats/{self.model_name}/model_stats_'
@@ -685,6 +688,9 @@ class TestStatsGenerator(StatsGenerator):
         return tr
 
     def _get_previous_json_stats(self):
+        if not self.previous_round:
+            logger.info('Not loading previous stats without previous round')
+            return
         client = get_s3_client()
         try:
             key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
