@@ -206,8 +206,10 @@ def _format_table_array(tests_json, model_types, model_name, date):
         new_row = [(*test['test'], stmt_db_link_msg)
                    if len(test['test']) == 2 else test['test']]
         for mt in model_types:
-            new_row.append((f'/tests/{model_name}/{mt}/{th}/{date}', test[mt][0],
-                            pass_fail_msg))
+            url_param = parse.urlencode(
+                {'model_type': mt, 'test_hash': th, 'date': date})
+            new_row.append((f'/tests/{model_name}?{url_param}',
+                            test[mt][0], pass_fail_msg))
         table_array.append(new_row)
     return sorted(table_array, key=_sort_pass_fail)
 
@@ -221,7 +223,9 @@ def _format_query_results(formatted_results):
                    (f'/dashboard/{model}', model,
                     f'Click to see details about {model}')]
         for mt in model_types:
-            new_res.append((f'/query/{model}/{mt}/{qh}', res[mt][0],
+            url_param = parse.urlencode(
+                {'model_type': mt, 'query_hash': qh})
+            new_res.append((f'/query/{model}?{url_param}', res[mt][0],
                             'Click to see detailed results for this query'))
         result_array.append(new_res)
     return result_array
@@ -246,9 +250,11 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
                 path = path_loc[0]['path']
             else:
                 path = path_loc
+            url_param = parse.urlencode(
+                {'model_type': mt, 'test_hash': th, 'date': date})
             new_row = [(*test['test'], stmt_db_link_msg)
                        if len(test['test']) == 2 else test['test'],
-                       (f'/tests/{model_name}/{mt}/{test_hash}/{date}', path,
+                       (f'/tests/{model_name}?{url_param}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
         new_passed_tests += mt_rows
