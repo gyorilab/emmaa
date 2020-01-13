@@ -1,11 +1,11 @@
 import json
 import logging
 import jsonpickle
-import datetime
 from collections import defaultdict
 from emmaa.model_tests import elsevier_url, load_model_manager_from_s3
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
-                        strip_out_date, get_s3_client, EMMAA_BUCKET_NAME)
+                        strip_out_date, get_s3_client, EMMAA_BUCKET_NAME,
+                        FORMAT)
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -122,7 +122,15 @@ class ModelRound(Round):
         mm = load_model_manager_from_s3(key=key)
         statements = mm.model.assembled_stmts
         link_type = mm.link_type
-        date_str = mm.date_str
+        try:
+            date_str = mm.date_str
+        except AttributeError:
+            client = get_s3_client()
+            keys = client.list_objects(
+                Bucket=EMMAA_BUCKET_NAME,
+                Prefix='results/rasmodel/latest_model_manager.pkl')
+            date = ['Contents'][0]['LastModified']
+            date_str = date.strftime(FORMAT)
         return cls(statements, link_type, date_str)
 
     def get_total_statements(self):
