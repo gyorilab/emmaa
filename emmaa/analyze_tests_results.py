@@ -671,7 +671,7 @@ class TestStatsGenerator(StatsGenerator):
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
             EMMAA_BUCKET_NAME,
-            f'results/{self.model_name}/test_results_{self.test_corpus}',
+            f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
         if previous_key is None and self.test_corpus == 'large_corpus_tests':
             previous_key = find_latest_s3_file(
