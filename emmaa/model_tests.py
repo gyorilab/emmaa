@@ -574,7 +574,8 @@ def update_model_manager_on_s3(model_name):
 def model_to_tests(model_name, upload=True):
     em = EmmaaModel.load_from_s3(model_name)
     em.run_assembly()
-    tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts]
+    tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
+             all(stmt.agent_list())]
     if upload:
         client = get_s3_client(unsigned=False)
         client.put_object(Body=pickle.dumps(tests), Bucket=EMMAA_BUCKET_NAME,
