@@ -129,7 +129,7 @@ class ModelRound(Round):
             keys = client.list_objects(
                 Bucket=EMMAA_BUCKET_NAME,
                 Prefix='results/rasmodel/latest_model_manager.pkl')
-            date = ['Contents'][0]['LastModified']
+            date = keys['Contents'][0]['LastModified']
             date_str = date.strftime(FORMAT)
         return cls(statements, link_type, date_str)
 
