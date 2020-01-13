@@ -289,6 +289,11 @@ def get_model_dashboard(model):
     test_corpus = request.args.get('test_corpus')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
+    model_stats = get_model_stats(model, 'model', date=date)
+    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
+    if not model_stats or not test_stats:
+        abort(Response(f'Data for {model} and {test_corpus} for {date} '
+                       f'was not found', 404))
     ndex_id = 'None available'
     for mid, mmd, av_date in model_meta_data:
         if mid == model:
@@ -304,8 +309,6 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    model_stats = get_model_stats(model, 'model', date=date)
-    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Filter out rows with all tests == 'n_a'
