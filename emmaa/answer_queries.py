@@ -344,12 +344,13 @@ def format_results(results):
     return formatted_results
 
 
-def load_model_manager_from_cache(model_name):
+def load_model_manager_from_cache(model_name, bucket=EMMAA_BUCKET_NAME):
     model_manager = model_manager_cache.get(model_name)
     if model_manager:
         logger.info(f'Loaded model manager for {model_name} from cache.')
         return model_manager
-    model_manager = load_model_manager_from_s3(model_name=model_name)
+    model_manager = load_model_manager_from_s3(
+        model_name=model_name, bucket=bucket)
     model_manager_cache[model_name] = model_manager
     return model_manager
 
@@ -370,7 +371,7 @@ def _make_query_str(query):
     return ea.make_model()
 
 
-def answer_queries_from_s3(model_name, db=None):
+def answer_queries_from_s3(model_name, db=None, bucket=EMMAA_BUCKET_NAME):
     """Answer registered queries with model manager on s3.
 
     Parameters
@@ -380,6 +381,6 @@ def answer_queries_from_s3(model_name, db=None):
     db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
         If given over-rides the default primary database.
     """
-    mm = load_model_manager_from_s3(model_name=model_name)
+    mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
     qm = QueryManager(db=db, model_managers=[mm])
     qm.answer_registered_queries(model_name, find_delta=False)

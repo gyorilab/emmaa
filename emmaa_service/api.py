@@ -63,14 +63,14 @@ def _sort_pass_fail(row):
                   *(_translator(row[n+1][1]) for n in range(len(row)-1))])
 
 
-def is_available(model, test_corpus, date):
+def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     if (
-        does_exist(EMMAA_BUCKET_NAME,
-                   f'model_stats/{model}/model_stats_{date}', '.json') and
-        does_exist(EMMAA_BUCKET_NAME,
-                   f'stats/{model}/test_stats_{test_corpus}_{date}', '.json')
+        does_exist(
+            bucket, f'model_stats/{model}/model_stats_{date}', '.json') and
+        does_exist(
+            bucket, f'stats/{model}/test_stats_{test_corpus}_{date}', '.json')
     ) or (
-        does_exist(EMMAA_BUCKET_NAME, f'stats/{model}/stats_{date}', '.json')
+        does_exist(bucket, f'stats/{model}/stats_{date}', '.json')
     ):
         return True
     return False
@@ -115,9 +115,9 @@ def _get_test_corpora(model, config):
     return tests_with_dates
 
 
-def _get_model_meta_data(refresh=False):
+def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket=EMMAA_BUCKET_NAME, Prefix='models/',
+    resp = s3.list_objects(Bucket=bucket, Prefix='models/',
                            Delimiter='/')
     model_data = []
     for pref in resp['CommonPrefixes']:

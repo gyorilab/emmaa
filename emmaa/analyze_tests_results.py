@@ -118,7 +118,7 @@ class ModelRound(Round):
         self.statements = statements
 
     @classmethod
-    def load_from_s3_key(cls, key):
+    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
         mm = load_model_manager_from_s3(key=key)
         statements = mm.model.assembled_stmts
         link_type = mm.link_type
@@ -127,7 +127,7 @@ class ModelRound(Round):
         except AttributeError:
             client = get_s3_client()
             keys = client.list_objects(
-                Bucket=EMMAA_BUCKET_NAME,
+                Bucket=bucket,
                 Prefix='results/rasmodel/latest_model_manager.pkl')
             date = keys['Contents'][0]['LastModified']
             date_str = date.strftime(FORMAT)
@@ -216,10 +216,10 @@ class TestRound(Round):
         self.english_test_results = self._get_applied_tests_results()
 
     @classmethod
-    def load_from_s3_key(cls, key):
+    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
         client = get_s3_client()
         logger.info(f'Loading json from {key}')
-        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+        obj = client.get_object(Bucket=bucket, Key=key)
         json_results = json.loads(obj['Body'].read().decode('utf8'))
         link_type = json_results[0].get('link_type', 'indra_db')
         date_str = json_results[0].get('date_str', strip_out_date(key))
@@ -338,8 +338,9 @@ class StatsGenerator(object):
     """
 
     def __init__(self, model_name, latest_round=None, previous_round=None,
-                 previous_json_stats=None):
+                 previous_json_stats=None, bucket=EMMAA_BUCKET_NAME):
         self.model_name = model_name
+        self.bucket = bucket
         if not latest_round:
             self.latest_round = self._get_latest_round()
         else:
@@ -374,7 +375,7 @@ class StatsGenerator(object):
         json_stats_str = json.dumps(self.json_stats, indent=1)
         client = get_s3_client(unsigned=False)
         logger.info(f'Uploading statistics to {stats_key}')
-        client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=stats_key,
+        client.put_object(Bucket=self.bucket, Key=stats_key,
                           Body=json_stats_str.encode('utf8'))
 
     def save_to_s3(self):
@@ -483,7 +484,7 @@ class ModelStatsGenerator(StatsGenerator):
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_manager_',
+            self.bucket, f'results/{self.model_name}/model_manager_',
             extension='.pkl')
         if latest_key is None:
             logger.info(f'Could not find a key to the latest model manager '
@@ -494,7 +495,7 @@ class ModelStatsGenerator(StatsGenerator):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'results/{self.model_name}/model_manager_',
+            self.bucket, f'results/{self.model_name}/model_manager_',
             extension='.pkl')
         if previous_key is None:
             previous_key = f'results/{self.model_name}/latest_model_manager.pkl'
@@ -513,11 +514,11 @@ class ModelStatsGenerator(StatsGenerator):
         try:
             key = (f'model_stats/{self.model_name}/model_stats_'
                    f'{self.previous_round.date_str}.json')
-            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+            obj = client.get_object(Bucket=self.bucket, Key=key)
         except Exception:
             logger.info(f'Could not load earlier statistics from {key}')
             key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
+                self.bucket, f'stats/{self.model_name}/stats_',
                 extension='.json')
             if key is None:
                 logger.info(f'Could not find a key to the previous statistics '
@@ -525,7 +526,7 @@ class ModelStatsGenerator(StatsGenerator):
                 return
             else:
                 logger.info(f'Loading earlier statistics from {key}')
-                obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+                obj = client.get_object(Bucket=self.bucket, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
@@ -661,7 +662,7 @@ class TestStatsGenerator(StatsGenerator):
 
     def _get_latest_round(self):
         latest_key = find_latest_s3_file(
-            EMMAA_BUCKET_NAME,
+            self.bucket,
             f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
         if latest_key is None:
@@ -673,12 +674,12 @@ class TestStatsGenerator(StatsGenerator):
 
     def _get_previous_round(self):
         previous_key = find_second_latest_s3_file(
-            EMMAA_BUCKET_NAME,
+            self.bucket,
             f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
         if previous_key is None and self.test_corpus == 'large_corpus_tests':
             previous_key = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'results/{self.model_name}/results_',
+                self.bucket, f'results/{self.model_name}/results_',
                 extension='.json')
         if previous_key is None:
             logger.info(f'Could not find a key to the previous test results '
@@ -695,12 +696,12 @@ class TestStatsGenerator(StatsGenerator):
         try:
             key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                    f'{self.previous_round.date_str}.json')
-            obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+            obj = client.get_object(Bucket=self.bucket, Key=key)
         except Exception:
             logger.info(f'Could not load earlier statistics from {key}')
             if self.test_corpus == 'large_corpus_tests':
                 key = find_latest_s3_file(
-                    EMMAA_BUCKET_NAME, f'stats/{self.model_name}/stats_',
+                    self.bucket, f'stats/{self.model_name}/stats_',
                     extension='.json')
             else:
                 key = None
@@ -710,7 +711,7 @@ class TestStatsGenerator(StatsGenerator):
                 return
             else:
                 logger.info(f'Loading earlier statistics from {key}')
-                obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=key)
+                obj = client.get_object(Bucket=self.bucket, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
