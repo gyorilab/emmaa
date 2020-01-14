@@ -1,5 +1,4 @@
 import datetime
-import re
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.model import EmmaaModel
@@ -7,15 +6,30 @@ from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
 
 
-indra_stmts = [
-    Activation(Agent('BRAF', db_refs={'HGNC': '20974'}), Agent('MAP2K1'),
-               evidence=[Evidence(text='BRAF activates MAP2K1.',
-                                  source_api='assertion')]),
-    Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
-               Agent('MAPK1'),
-               evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
-                                  source_api='assertion')])
-    ]
+def create_model(relevance=None):
+    indra_stmts = [
+        Activation(Agent('BRAF', db_refs={'HGNC': '20974'}), Agent('MAP2K1'),
+                   evidence=[Evidence(text='BRAF activates MAP2K1.',
+                                      source_api='assertion')]),
+        Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
+                   Agent('MAPK1'),
+                   evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
+                                      source_api='assertion')])
+        ]
+    st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
+    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
+                   for stmt in indra_stmts]
+    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
+                   'search_terms': [{'db_refs': {'HGNC': '20974'},
+                                     'name': 'MAPK1',
+                                     'search_term': 'MAPK1',
+                                     'type': 'gene'}]}
+    if relevance:
+        config_dict['assembly'] = {'filter_relevance': relevance}
+    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model.add_statements(emmaa_stmts)
+    return emmaa_model
+
 
 def test_model_extend():
     ev1 = Evidence(pmid='1234', text='abcd', source_api='x')
@@ -37,16 +51,7 @@ def test_model_extend():
 
 def test_model_json():
     """Test the json structure and content of EmmaaModel.to_json() output"""
-    st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
-    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
-                    for stmt in indra_stmts]
-    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
-                   'search_terms': [{'db_refs': {'HGNC': '20974'},
-                                     'name': 'MAPK1',
-                                     'search_term': 'MAPK1',
-                                     'type': 'gene'}]}
-    emmaa_model = EmmaaModel('test', config_dict)
-    emmaa_model.add_statements(emmaa_stmts)
+    emmaa_model = create_model()
 
     emmaa_model_json = emmaa_model.to_json()
 
@@ -77,61 +82,18 @@ def test_model_json():
 
 
 def test_filter_relevance():
-    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
-                   'search_terms': [{'db_refs': {'HGNC': '20974'},
-                                     'name': 'MAPK1',
-                                     'search_term': 'MAPK1',
-                                     'type': 'gene'}]}
-    st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
-    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
-                   for stmt in indra_stmts]
-
     # Try no filter first
-    emmaa_model = EmmaaModel('test', config_dict)
-    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model = create_model()
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 2, emmaa_model.assembled_stmts
 
     # Next do a prior_one filter
-    config_dict['assembly'] = {'filter_relevance': 'prior_one'}
-    emmaa_model = EmmaaModel('test', config_dict)
-    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model = create_model(relevance='prior_one')
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 1, emmaa_model.assembled_stmts
     assert emmaa_model.assembled_stmts[0].obj.name == 'MAPK1'
 
     # Next do a prior_all filter
-    config_dict['assembly'] = {'filter_relevance': 'prior_all'}
-    emmaa_model = EmmaaModel('test', config_dict)
-    emmaa_model.extend_unique(emmaa_stmts)
+    emmaa_model = create_model(relevance='prior_all')
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 0
-
-
-def test_last_updated():
-    # Test for different file types
-    key_str = last_updated_date('test', 'model', 'datetime', '.pkl')
-    assert key_str
-    assert re.search(RE_DATETIMEFORMAT, key_str).group()
-    key_str = last_updated_date('test', 'results', 'datetime', '.json')
-    assert key_str
-    assert re.search(RE_DATETIMEFORMAT, key_str).group()
-    key_str = last_updated_date('test', 'stats', 'datetime', '.json')
-    assert key_str
-    assert re.search(RE_DATETIMEFORMAT, key_str).group()
-    # Test for different date format
-    key_str = last_updated_date('test', 'model', 'date', '.pkl')
-    assert key_str
-    assert re.search(RE_DATEFORMAT, key_str).group()
-    # Test with wrong extension
-    key_str = last_updated_date('test', 'stats', 'datetime', '.pkl')
-    assert not key_str
-
-
-def test_get_model_statistics():
-    # Test with default date
-    model_json = get_model_stats('test')
-    assert isinstance(model_json, dict)
-    # Test with different date
-    model_json = get_model_stats('test', date='2019-08-19')
-    assert isinstance(model_json, dict)
