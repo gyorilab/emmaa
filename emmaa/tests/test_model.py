@@ -2,11 +2,20 @@ import datetime
 import re
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
-from emmaa.model import EmmaaModel, last_updated_date, get_model_stats
+from emmaa.model import EmmaaModel
 from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
-from emmaa.util import RE_DATETIMEFORMAT, RE_DATEFORMAT
 
+
+indra_stmts = [
+    Activation(Agent('BRAF', db_refs={'HGNC': '20974'}), Agent('MAP2K1'),
+               evidence=[Evidence(text='BRAF activates MAP2K1.',
+                                  source_api='assertion')]),
+    Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
+               Agent('MAPK1'),
+               evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
+                                  source_api='assertion')])
+    ]
 
 def test_model_extend():
     ev1 = Evidence(pmid='1234', text='abcd', source_api='x')
@@ -28,15 +37,6 @@ def test_model_extend():
 
 def test_model_json():
     """Test the json structure and content of EmmaaModel.to_json() output"""
-    indra_stmts = \
-        [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
-                    Agent('MAP2K1'),
-                    evidence=[Evidence(text='BRAF activates MAP2K1.')]),
-         Activation(Agent('MAP2K1',
-                          activity=ActivityCondition('activity', True)),
-                    Agent('MAPK1'),
-                    evidence=[Evidence(text='Active MAP2K1 activates MAPK1.')])
-         ]
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
                     for stmt in indra_stmts]
@@ -82,18 +82,6 @@ def test_filter_relevance():
                                      'name': 'MAPK1',
                                      'search_term': 'MAPK1',
                                      'type': 'gene'}]}
-    indra_stmts = \
-        [Activation(Agent('BRAF', db_refs={'HGNC': '20974'}),
-                    Agent('MAP2K1'),
-                    evidence=[Evidence(text='BRAF activates MAP2K1.',
-                                       source_api='assertion')]),
-         Activation(Agent('MAP2K1',
-                          activity=ActivityCondition('activity', True)),
-                    Agent('MAPK1'),
-                    evidence=[Evidence(text='Active MAP2K1 activates '
-                                            'MAPK1.',
-                                       source_api='assertion')])
-         ]
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
                    for stmt in indra_stmts]
