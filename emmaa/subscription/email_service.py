@@ -1,10 +1,7 @@
 import os
 import logging
 import boto3
-from urllib import parse
-from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
-from .email_util import generate_signature
 
 logger = logging.getLogger(__name__)
 
@@ -12,15 +9,6 @@ email_profile = 'indralabs-email'
 email_bucket = 'emmaa-notifications'
 notifications_sender_default = 'emmaa_notifications@indra.bio'
 indra_bio_ARN_id = os.environ.get('EMMAA_SOURCE_ARN')
-
-
-def generate_unsubscribe_qs(email):
-    tomorrow = datetime.utcnow() + timedelta(hours=24)
-    expiration = str(tomorrow.timestamp()).split('.')[0]
-    signature = generate_signature(email=email, expire_str=expiration)
-    return parse.urlencode({'email': email,
-                            'expiration': expiration,
-                            'signature': signature})
 
 
 def send_email(sender, recipients, subject, body_text, body_html,

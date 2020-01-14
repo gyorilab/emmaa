@@ -1,9 +1,11 @@
 import os
 import hmac
 import time
+import boto3
 import hashlib
 import logging
-import boto3
+from urllib import parse
+from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,15 @@ def __sign_str_concat(email, expiration_str):
     signature generation
     """
     return ' '.join([email, expiration_str])
+
+
+def generate_unsubscribe_qs(email):
+    tomorrow = datetime.utcnow() + timedelta(hours=24)
+    expiration = str(tomorrow.timestamp()).split('.')[0]
+    signature = generate_signature(email=email, expire_str=expiration)
+    return parse.urlencode({'email': email,
+                            'expiration': expiration,
+                            'signature': signature})
 
 
 def generate_signature(email, expire_str, digestmod=hashlib.sha256):
