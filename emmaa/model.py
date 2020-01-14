@@ -579,9 +579,11 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
     # If date is not specified, get the latest
     if not date:
         if mode == 'model':
-            date = last_updated_date(model, 'model_stats', 'date', extension)
+            date = last_updated_date(model, 'model_stats', 'date',
+                                     extension=extension, bucket=bucket)
         elif mode == 'test':
-            date = last_updated_date(model, 'test_stats', 'date', extension)
+            date = last_updated_date(model, 'test_stats', 'date', tests=tests,
+                                     extension=extension, bucket=bucket)
         else:
             raise TypeError('Mode must be either model or tests')
     s3 = get_s3_client()

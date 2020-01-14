@@ -4,7 +4,6 @@ from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.analyze_tests_results import ModelRound, TestRound, \
     ModelStatsGenerator, TestStatsGenerator
-from emmaa.tests.test_model import indra_stmts as previous_stmts
 
 
 TestRound.__test__ = False
@@ -25,6 +24,16 @@ with open(previous_test_stats_file, 'r') as f:
 with open(previous_model_stats_file, 'r') as f:
     previous_model_stats = json.load(f)
 
+
+previous_stmts = [
+        Activation(Agent('BRAF', db_refs={'HGNC': '20974'}), Agent('MAP2K1'),
+                   evidence=[Evidence(text='BRAF activates MAP2K1.',
+                                      source_api='assertion')]),
+        Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
+                   Agent('MAPK1'),
+                   evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
+                                      source_api='assertion')])
+        ]
 
 new_stmts = previous_stmts + [
     Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),

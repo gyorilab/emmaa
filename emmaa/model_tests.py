@@ -566,7 +566,7 @@ def load_model_manager_from_s3(key=None, model_name=None,
         if key is None:
             # Non-versioned
             key = f'results/{model_name}/latest.model.manager.pkl'
-        return load_model_manager_from_s3(key=key)
+        return load_model_manager_from_s3(key=key, bucket=bucket)
     # Could not find either from key or from model name.
     logger.info('Could not find the model manager.')
     return None
