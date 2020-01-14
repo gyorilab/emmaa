@@ -65,6 +65,8 @@ class Round(object):
             else:
                 link = ''
             evid_text = stmt.evidence[0].text
+        elif self.link_type == 'test':
+            link = evid_text = ''
         return (link, sentence, evid_text)
 
     def find_delta_hashes(self, other_round, content_type, **kwargs):

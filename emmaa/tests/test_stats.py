@@ -1,65 +1,92 @@
 import os
 import json
-from nose.plugins.attrib import attr
-from emmaa.analyze_tests_results import TestRound, StatsGenerator, \
-    generate_model_stats_on_s3
-
+from indra.statements import Activation, ActivityCondition, Phosphorylation, \
+    Agent, Evidence
+from emmaa.analyze_tests_results import ModelRound, TestRound, \
+    ModelStatsGenerator, TestStatsGenerator
 
 TestRound.__test__ = False
+TestStatsGenerator.__test__ = False
 
 
 path_here = os.path.abspath(os.path.dirname(__file__))
 previous_results_file = os.path.join(path_here, 'previous_results.json')
 new_results_file = os.path.join(path_here, 'new_results.json')
-previous_stats_file = os.path.join(path_here, 'previous_stats.json')
+previous_test_stats_file = os.path.join(path_here, 'previous_stats.json')
+previous_model_stats_file = os.path.join(path_here, 'previous_model_stats.json')
 with open(previous_results_file, 'r') as f:
     previous_results = json.load(f)
 with open(new_results_file, 'r') as f:
     new_results = json.load(f)
-with open(previous_stats_file, 'r') as f:
-    previous_stats = json.load(f)
+with open(previous_test_stats_file, 'r') as f:
+    previous_test_stats = json.load(f)
+with open(previous_model_stats_file, 'r') as f:
+    previous_model_stats = json.load(f)
+
+previous_stmts = [
+    Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+               Agent('MAP2K1', db_refs={'HGNC': '6840'}),
+               evidence=[Evidence(text='BRAF activates MAP2K1.')]),
+    Activation(Agent('MAP2K1', db_refs={'HGNC': '6840'},
+                     activity=ActivityCondition('activity', True)),
+               Agent('MAPK1'),
+               evidence=[Evidence(text='Active MAP2K1 activates MAPK1.')])]
+
+new_stmts = previous_stmts + [
+    Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+               Agent('AKT', db_refs={'FPLX': 'AKT'}),
+               evidence=[Evidence(text='BRAF activates AKT')]),
+    Activation(Agent('AKT', db_refs={'FPLX': 'AKT'},
+                     activity=ActivityCondition('activity', True)),
+               Agent('MTOR', db_refs={"HGNC": "3942"}),
+               evidence=[Evidence(text='AKT activate MTOR')])]
 
 
-@attr('nonpublic')
-def test_test_round():
-    tr = TestRound(previous_results)
-    assert tr
-    assert tr.get_total_statements() == 2
-    assert len(tr.get_stmt_hashes()) == 2
-    assert tr.get_statement_types() == [('Activation', 2)]
-    assert all(agent_tuple in tr.get_agent_distribution() for agent_tuple in
+def test_model_round():
+    mr = ModelRound(previous_stmts, 'test', '2020-01-01-00-00-00')
+    assert mr
+    assert mr.get_total_statements() == 2
+    assert len(mr.get_stmt_hashes()) == 2
+    assert mr.get_statement_types() == [('Activation', 2)]
+    assert all(agent_tuple in mr.get_agent_distribution() for agent_tuple in
                [('BRAF', 1), ('MAP2K1', 2), ('MAPK1', 1)])
-    assert all((stmt_hash, 1) in tr.get_statements_by_evidence() for stmt_hash
-               in tr.get_stmt_hashes())
+    assert all((stmt_hash, 1) in mr.get_statements_by_evidence() for stmt_hash
+               in mr.get_stmt_hashes())
+    mr2 = ModelRound(new_stmts, 'test', '2020-01-02-00-00-00')
+    assert mr2
+    assert mr2.get_total_statements() == 4
+    assert len(mr2.get_stmt_hashes()) == 4
+    assert mr2.get_statement_types() == [('Activation', 4)]
+    assert all(agent_tuple in mr2.get_agent_distribution() for agent_tuple in
+               [('BRAF', 2), ('MAP2K1', 2), ('MAPK1', 1), ('MTOR', 1),
+                ('AKT', 2)])
+    assert len(mr2.find_delta_hashes(mr, 'statements')['added']) == 2
+
+
+def test_test_round():
+    tr = TestRound(previous_results, 'test', '2020-01-01-00-00-00')
+    assert tr
     assert tr.get_total_applied_tests() == 1
     assert tr.get_number_passed_tests() == 1
     assert tr.get_applied_test_hashes() == tr.get_passed_test_hashes()
     assert tr.passed_over_total() == 1.0
-    tr2 = TestRound(new_results)
+    tr2 = TestRound(new_results, 'test', '2020-01-02-00-00-00')
     assert tr2
-    assert tr2.get_total_statements() == 4
-    assert len(tr2.get_stmt_hashes()) == 4
-    assert tr2.get_statement_types() == [('Activation', 4)]
-    assert all(agent_tuple in tr2.get_agent_distribution() for agent_tuple in
-               [('BRAF', 2), ('MAP2K1', 2), ('MAPK1', 1), ('MTOR', 1),
-                ('AKT', 2)])
     assert tr2.get_total_applied_tests() == 2
     assert tr2.get_number_passed_tests() == 2
     assert tr2.get_applied_test_hashes() == tr2.get_passed_test_hashes()
     assert tr2.passed_over_total() == 1.0
-    assert len(tr2.find_delta_hashes(tr, 'statements')['added']) == 2
     assert len(tr2.find_delta_hashes(tr, 'applied_tests')['added']) == 1
     assert len(tr2.find_delta_hashes(tr, 'passed_tests')['added']) == 1
     assert len(tr2.find_delta_hashes(tr, 'paths')['added']) == 1
 
 
-@attr('nonpublic')
-def test_stats_generator():
-    latest_round = TestRound(new_results)
-    previous_round = TestRound(previous_results)
-    sg = StatsGenerator('test', latest_round=latest_round,
-                        previous_round=previous_round,
-                        previous_json_stats=previous_stats)
+def test_model_stats_generator():
+    latest_round = ModelRound(new_stmts, 'test', '2020-01-02-00-00-00')
+    previous_round = ModelRound(previous_stmts, 'test', '2020-01-01-00-00-00')
+    sg = ModelStatsGenerator('test', latest_round=latest_round,
+                             previous_round=previous_round,
+                             previous_json_stats=previous_model_stats)
     sg.make_stats()
     assert sg.json_stats
     model_summary = sg.json_stats['model_summary']
@@ -71,6 +98,21 @@ def test_stats_generator():
                                ('MTOR', 1), ('MAPK1', 1)])
     assert len(model_summary['stmts_by_evidence']) == 4
     assert len(model_summary['all_stmts']) == 4
+    model_delta = sg.json_stats['model_delta']
+    assert len(model_delta['statements_hashes_delta']['added']) == 2
+    changes = sg.json_stats['changes_over_time']
+    assert changes['number_of_statements'] == [2, 4]
+    assert len(changes['dates']) == 2
+
+
+def test_test_stats_generator():
+    latest_round = TestRound(new_results, 'test', '2020-01-02-00-00-00')
+    previous_round = TestRound(previous_results, 'test', '2020-01-01-00-00-00')
+    sg = TestStatsGenerator('test', latest_round=latest_round,
+                            previous_round=previous_round,
+                            previous_json_stats=previous_test_stats)
+    sg.make_stats()
+    assert sg.json_stats
     test_round_summary = sg.json_stats['test_round_summary']
     assert test_round_summary['number_applied_tests'] == 2
     assert len(test_round_summary['all_test_results']) == 2
@@ -82,8 +124,6 @@ def test_stats_generator():
     assert test_round_summary['signed_graph']['passed_ratio'] == 1.0
     assert test_round_summary['unsigned_graph']['number_passed_tests'] == 2
     assert test_round_summary['unsigned_graph']['passed_ratio'] == 1.0
-    model_delta = sg.json_stats['model_delta']
-    assert len(model_delta['statements_hashes_delta']['added']) == 2
     tests_delta = sg.json_stats['tests_delta']
     assert len(tests_delta['applied_hashes_delta']['added']) == 1
     assert len(tests_delta['pysb']['passed_hashes_delta']['added']) == 1
@@ -91,7 +131,6 @@ def test_stats_generator():
     assert len(tests_delta['signed_graph']['passed_hashes_delta']['added']) == 1
     assert len(tests_delta['unsigned_graph']['passed_hashes_delta']['added']) == 1
     changes = sg.json_stats['changes_over_time']
-    assert changes['number_of_statements'] == [2, 4]
     assert changes['number_applied_tests'] == [1, 2]
     assert len(changes['dates']) == 2
     assert changes['pysb']['number_passed_tests'] == [1, 2]
@@ -102,10 +141,3 @@ def test_stats_generator():
     assert changes['signed_graph']['passed_ratio'] == [1, 1]
     assert changes['unsigned_graph']['number_passed_tests'] == [1, 2]
     assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
-
-
-@attr('nonpublic')
-def test_stats_on_s3():
-    sg = generate_model_stats_on_s3('test', 'simple_model_test.pkl', False)
-    assert isinstance(sg, StatsGenerator)
-    assert isinstance(sg.json_stats, dict)

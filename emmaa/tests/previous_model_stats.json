@@ -1,0 +1,62 @@
+{
+ "model_summary": {
+  "model_name": "test",
+  "number_of_statements": 2,
+  "stmts_type_distr": [
+   [
+    "Activation",
+    2
+   ]
+  ],
+  "agent_distr": [
+   [
+    "MAP2K1",
+    2
+   ],
+   [
+    "BRAF",
+    1
+   ],
+   [
+    "MAPK1",
+    1
+   ]
+  ],
+  "stmts_by_evidence": [
+   [
+    "-23078353002754841",
+    1
+   ],
+   [
+    "-34603994586320440",
+    1
+   ]
+  ],
+  "all_stmts": {
+   "-23078353002754841": [
+    "https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html",
+    "BRAF activates MAP2K1.",
+    ""
+   ],
+   "-34603994586320440": [
+    "https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html",
+    "Active MAP2K1 activates MAPK1.",
+    ""
+   ]
+  }
+ },
+ "model_delta": {
+  "statements_hashes_delta": {
+   "added": [],
+   "removed": []
+  }
+ },
+ "changes_over_time": {
+  "number_of_statements": [
+   2
+  ],
+  "dates": [
+   "2019-11-14-18-26-26"
+  ]
+  }
+ }
