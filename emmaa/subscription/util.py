@@ -1,0 +1,85 @@
+import os
+import hmac
+import time
+import hashlib
+import logging
+import boto3
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger(__name__)
+
+EMAIL_SIGNATURE_KEY = os.environ.get('EMAIL_SIGN')
+
+
+def __sign_str_concat(email, expiration_str):
+    """This is the method to concatenate strings that are to be used in HMAC
+    signature generation
+    """
+    return ' '.join([email, expiration_str])
+
+
+def generate_signature(email, expire_str, digestmod=hashlib.sha256):
+    """hmac.new(key, msg=None, digestmod=None)
+    Return a new hmac object.
+    key is a bytes or bytearray object giving the secret key.
+    If msg is present, the method call update(msg) is made.
+    digestmod is the digest name, digest constructor or module for the HMAC
+    object to use. It supports any name suitable to hashlib.new() and
+    defaults to the hashlib.md5 constructor."""
+    if not EMAIL_SIGNATURE_KEY:
+        logger.error('No secret key set for email signature.'
+                     'Cannot generate signature')
+        return
+
+    digester = hmac.new(key=EMAIL_SIGNATURE_KEY.encode(encoding='utf-8'),
+                        msg=__sign_str_concat(
+                            email, expire_str).encode(encoding='utf-8'),
+                        digestmod=digestmod)
+    return digester.hexdigest()
+
+
+def verify_email_signature(signature, email, expiration, 
+                           digestmod=hashlib.sha256):
+    """Verify HMAC signature"""
+    if not EMAIL_SIGNATURE_KEY:
+        logger.error('No secret key set for email signature.'
+                     'Cannot verify signature')
+        return False
+    actual_digest = hmac.new(
+        key=EMAIL_SIGNATURE_KEY.encode(encoding='utf-8'),
+        msg=__sign_str_concat(email, expiration).encode(encoding='utf-8'),
+        digestmod=digestmod).hexdigest()
+
+    if len(signature) != len(actual_digest):
+        time.sleep(0.25)
+        return False
+    try:
+        return hmac.compare_digest(actual_digest, signature)
+    except Exception:
+        return False
+
+
+def verify_email_subscriptions(email):
+    """Verifies which email subsciptions exist for the provided email"""
+    return []
+
+
+def register_email_unsubscribe(email, queries):
+    """Executes an email unsubscribe request"""
+    if isinstance(queries, str):
+        if queries.lower() == 'all':
+            return _unsubscribe_all_queries(email)
+        else:
+            logger.warning(f'Unrecognized unsubscribe request string '
+                           f'{queries}')
+    elif isinstance(queries, list):
+        return _unsubscribe_queries(email, queries)
+    return False
+
+
+def _unsubscribe_all_queries(email):
+    return False
+
+
+def _unsubscribe_queries(email, queries):
+    return False
