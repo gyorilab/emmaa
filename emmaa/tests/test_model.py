@@ -19,11 +19,16 @@ def create_model(relevance=None):
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
                    for stmt in indra_stmts]
-    config_dict = {'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
-                   'search_terms': [{'db_refs': {'HGNC': '20974'},
-                                     'name': 'MAPK1',
-                                     'search_term': 'MAPK1',
-                                     'type': 'gene'}]}
+    config_dict = {
+        'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
+        'search_terms': [{'db_refs': {'HGNC': '20974'}, 'name': 'MAPK1',
+                          'search_term': 'MAPK1', 'type': 'gene'}],
+        'human_readable_name': 'Test Model',
+        'test': {
+            'statement_checking': {'max_path_length': 5, 'max_paths': 1},
+            'test_corpus': 'simple_tests',
+            'mc_types': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
+            'make_links': True}}
     if relevance:
         config_dict['assembly'] = {'filter_relevance': relevance}
     emmaa_model = EmmaaModel('test', config_dict)
