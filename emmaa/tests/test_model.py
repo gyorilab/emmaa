@@ -8,7 +8,7 @@ from emmaa.statements import EmmaaStatement
 
 def create_model(relevance=None):
     indra_stmts = [
-        Activation(Agent('BRAF', db_refs={'HGNC': '20974'}), Agent('MAP2K1'),
+        Activation(Agent('BRAF', db_refs={'HGNC': '1097'}), Agent('MAP2K1'),
                    evidence=[Evidence(text='BRAF activates MAP2K1.',
                                       source_api='assertion')]),
         Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
