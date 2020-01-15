@@ -3,7 +3,7 @@ import json
 import os
 import pickle
 import re
-
+import time
 from moto import mock_s3
 
 from indra.statements import Activation, Agent
@@ -12,6 +12,8 @@ from emmaa.statements import EmmaaStatement
 from emmaa.tests.test_model import create_model
 from emmaa.tests.test_stats import previous_results, new_results, \
     previous_test_stats, previous_model_stats
+from emmaa.tests.test_db import _get_test_db
+from emmaa.tests.test_answer_queries import query_object
 from emmaa.util import make_date_str, RE_DATETIMEFORMAT, RE_DATEFORMAT
 
 
@@ -45,7 +47,10 @@ def setup_bucket(
         config_dict = {
             'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
             'search_terms': [{'db_refs': {'HGNC': '20974'}, 'name': 'MAPK1',
-                              'search_term': 'MAPK1', 'type': 'gene'}]}
+                              'search_term': 'MAPK1', 'type': 'gene'}],
+            'test': {'test_corpus': 'simple_tests'},
+            'human_readable_name': 'Test Model'
+            }
         save_config_to_s3('test', config_dict, bucket=TEST_BUCKET_NAME)
         emmaa_model = create_model()
         emmaa_model.save_to_s3(bucket=TEST_BUCKET_NAME)
@@ -78,11 +83,12 @@ def setup_bucket(
             Key=f'stats/test/test_stats_simple_tests_{date_str}.json')
     return client
 
+
 @mock_s3
 def test_save_load_config():
     # Local imports are recommended when using moto
     from emmaa.model import save_config_to_s3, load_config_from_s3
-    setup_bucket()
+    client = setup_bucket()
     config = {'test': 'This is test config'}
     save_config_to_s3('test', config, bucket=TEST_BUCKET_NAME)
     read_config = load_config_from_s3('test', bucket=TEST_BUCKET_NAME)
@@ -93,7 +99,7 @@ def test_save_load_config():
 def test_load_model():
     # Local imports are recommended when using moto
     from emmaa.model import EmmaaModel
-    setup_bucket(add_model=True)
+    client = setup_bucket(add_model=True)
     em = EmmaaModel.load_from_s3('test', bucket='test_bucket')
     assert isinstance(em, EmmaaModel)
     assert len(em.stmts) == 2, len(em.stmts)
@@ -104,8 +110,8 @@ def test_load_model():
 def test_last_updated():
     # Local imports are recommended when using moto
     from emmaa.model import last_updated_date
-    setup_bucket(add_model=True, add_results=True, add_model_stats=True,
-                 add_test_stats=True)
+    client = setup_bucket(add_model=True, add_results=True,
+                          add_model_stats=True, add_test_stats=True)
     # Test for different file types
     key_str = last_updated_date(
         'test', 'model', 'datetime', extension='.pkl',
@@ -170,7 +176,7 @@ def test_get_model_statistics():
 def test_load_tests_from_s3():
     # Local imports are recommended when using moto
     from emmaa.model_tests import load_tests_from_s3, StatementCheckingTest
-    setup_bucket(add_tests=True)
+    client = setup_bucket(add_tests=True)
     tests = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
     assert isinstance(tests, list)
     assert len(tests) == 1
@@ -183,7 +189,7 @@ def test_run_model_tests_from_s3():
     # Local imports are recommended when using moto
     from emmaa.model_tests import run_model_tests_from_s3, ModelManager
     from emmaa.model import last_updated_date
-    setup_bucket(add_tests=True, add_mm=True)
+    client = setup_bucket(add_tests=True, add_mm=True)
     # There should not be any results
     assert not last_updated_date('test', 'test_results', tests='simple_tests',
                                  extension='.json', bucket=TEST_BUCKET_NAME)
@@ -193,3 +199,165 @@ def test_run_model_tests_from_s3():
     # Results are saved now
     assert last_updated_date('test', 'test_results', tests='simple_tests',
                              extension='.json', bucket=TEST_BUCKET_NAME)
+
+
+@mock_s3
+def test_save_load_update_model_manager():
+    # Local imports are recommended when using moto
+    from emmaa.model_tests import ModelManager, save_model_manager_to_s3, \
+        load_model_manager_from_s3, update_model_manager_on_s3
+    from emmaa.util import find_number_of_files_on_s3, sort_s3_files_by_date
+    client = setup_bucket(add_model=True)
+    # Should be None if no model manager
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'results/test/model_manager_', '.pkl') == 0
+    loaded_mm = load_model_manager_from_s3(model_name='test',
+                                           bucket=TEST_BUCKET_NAME)
+    assert loaded_mm is None
+    # Save a model manager and load it back
+    model = create_model()
+    mm = ModelManager(model)
+    save_model_manager_to_s3('test', mm, bucket=TEST_BUCKET_NAME)
+    loaded_mm = load_model_manager_from_s3(model_name='test',
+                                           bucket=TEST_BUCKET_NAME)
+    assert loaded_mm
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'results/test/model_manager_', '.pkl') == 1
+    # Update should create a new file if there's at least one second difference
+    time.sleep(1)
+    update_model_manager_on_s3('test', TEST_BUCKET_NAME)
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'results/test/model_manager_', '.pkl') == 2
+
+@mock_s3
+def test_model_to_tests():
+    # Local imports are recommended when using moto
+    from emmaa.model_tests import model_to_tests, load_tests_from_s3, \
+        StatementCheckingTest
+    client = setup_bucket(add_model=True)
+    tests = model_to_tests('test', bucket=TEST_BUCKET_NAME)
+    assert len(tests) == 2
+    assert isinstance(tests[0], StatementCheckingTest)
+    loaded_tests = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
+    assert loaded_tests
+
+
+@mock_s3
+def test_generate_stats_on_s3():
+    # Local imports are recommended when using moto
+    from emmaa.analyze_tests_results import generate_stats_on_s3
+    from emmaa.util import find_number_of_files_on_s3, make_date_str
+    from emmaa.model_tests import update_model_manager_on_s3
+    # Try with only one set of results first (as for new model/test)
+    client = setup_bucket(add_results=True, add_mm=True, add_model=True)
+    msg = generate_stats_on_s3('test', 'model', upload_stats=True,
+                               bucket=TEST_BUCKET_NAME)
+    assert msg.latest_round
+    assert not msg.previous_round
+    assert not msg.previous_json_stats
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'model_stats/test/model_stats_') == 1
+    tsg = generate_stats_on_s3('test', 'tests', 'simple_tests',
+                               upload_stats=True, bucket=TEST_BUCKET_NAME)
+    assert tsg.latest_round
+    assert not tsg.previous_round
+    assert not tsg.previous_json_stats
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'stats/test/test_stats_') == 1
+    # Now add new results and new mm
+    time.sleep(1)
+    update_model_manager_on_s3('test', TEST_BUCKET_NAME)
+    client.put_object(
+        Body=json.dumps(previous_results, indent=1),
+        Bucket=TEST_BUCKET_NAME,
+        Key=f'results/test/results_simple_tests_{make_date_str()}.json')
+    msg = generate_stats_on_s3('test', 'model', upload_stats=True,
+                               bucket=TEST_BUCKET_NAME)
+    assert msg.latest_round
+    assert msg.previous_round
+    assert msg.previous_json_stats
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'model_stats/test/model_stats_') == 2
+    tsg = generate_stats_on_s3('test', 'tests', 'simple_tests',
+                               upload_stats=True, bucket=TEST_BUCKET_NAME)
+    assert tsg.latest_round
+    assert tsg.previous_round
+    assert tsg.previous_json_stats
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'stats/test/test_stats_') == 2
+
+
+@mock_s3
+def test_answer_queries_from_s3():
+    # Local imports are recommended when using moto
+    from emmaa.answer_queries import answer_queries_from_s3
+    db = _get_test_db()
+    client = setup_bucket(add_mm=True)
+    db.put_queries('tester@test.com', 1, query_object, ['test'],
+                   subscribe=True)
+    answer_queries_from_s3('test', db=db, bucket=TEST_BUCKET_NAME)
+    results = db.get_results('tester@test.com', latest_order=1)
+    assert len(results) == 1
+
+
+@mock_s3
+def test_util_find_on_s3_functions():
+    # Local imports are recommended when using moto
+    from emmaa.util import sort_s3_files_by_date, find_latest_s3_file, \
+        find_second_latest_s3_file, find_number_of_files_on_s3
+    # Bucket has mm (pkl) and results (json) files, both in results folder
+    client = setup_bucket(add_mm=True, add_results=True)
+    # Get both
+    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/')
+    assert len(files) == 2
+    # Specific extension
+    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/', '.json')
+    assert len(files) == 1
+    # Longer prefix
+    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/results_')
+    assert len(files) == 1
+    assert find_latest_s3_file(TEST_BUCKET_NAME, 'results/test/results_')
+    assert not find_second_latest_s3_file(
+        TEST_BUCKET_NAME, 'results/test/results_')
+    assert find_second_latest_s3_file(TEST_BUCKET_NAME, 'results/test/')
+    assert find_number_of_files_on_s3(TEST_BUCKET_NAME, 'results/test/') == 2
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'results/test/results_') == 1
+    assert find_number_of_files_on_s3(
+        TEST_BUCKET_NAME, 'results/test/', '.json') == 1
+
+
+@mock_s3
+def test_api_load_from_s3():
+    from emmaa_service.api import is_available, get_latest_available_date, \
+        _get_test_corpora, _get_model_meta_data, get_model_config
+    from emmaa.model import last_updated_date
+    client = setup_bucket(add_model=True, add_model_stats=True,
+                          add_test_stats=True)
+    today = make_date_str()[:10]
+    other_day = '2020-01-01'
+    assert is_available('test', 'simple_tests', today, TEST_BUCKET_NAME)
+    assert not is_available(
+        'test', 'large_corpus_tests', today, TEST_BUCKET_NAME)
+    assert not is_available(
+        'test', 'simple_tests', other_day, TEST_BUCKET_NAME)
+    assert get_latest_available_date(
+        'test', 'simple_tests', refresh=True, bucket=TEST_BUCKET_NAME) == today
+    config = get_model_config('test', TEST_BUCKET_NAME)
+    assert config
+    test_corpora = _get_test_corpora('test', config, TEST_BUCKET_NAME)
+    assert test_corpora == {'simple_tests': today}
+    # metadata always looks for 'large_corpus_tests'
+    date_str = last_updated_date(
+        'test', 'test_stats', 'datetime', 'simple_tests', '.json',
+        TEST_BUCKET_NAME)
+    client.put_object(
+        Body=json.dumps(previous_test_stats, indent=1),
+        Bucket=TEST_BUCKET_NAME,
+        Key=f'stats/test/test_stats_large_corpus_tests_{date_str}.json')
+    metadata = _get_model_meta_data(bucket=TEST_BUCKET_NAME)
+    assert len(metadata) == 1
+    assert len(metadata[0]) == 3
+    assert metadata[0][0] == 'test'
+    assert metadata[0][1] == config
+    assert metadata[0][2] == today
