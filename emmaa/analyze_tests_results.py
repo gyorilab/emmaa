@@ -121,7 +121,9 @@ class ModelRound(Round):
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
-        mm = load_model_manager_from_s3(key=key)
+        mm = load_model_manager_from_s3(key=key, bucket=bucket)
+        if not mm:
+            return
         statements = mm.model.assembled_stmts
         link_type = mm.link_type
         try:
@@ -417,9 +419,9 @@ class ModelStatsGenerator(StatsGenerator):
     """
 
     def __init__(self, model_name, latest_round=None, previous_round=None,
-                 previous_json_stats=None):
+                 previous_json_stats=None, bucket=EMMAA_BUCKET_NAME):
         super().__init__(model_name, latest_round, previous_round,
-                         previous_json_stats)
+                         previous_json_stats, bucket)
 
     def make_stats(self):
         """Check if two latest model rounds were found and add statistics to
@@ -492,7 +494,7 @@ class ModelStatsGenerator(StatsGenerator):
             logger.info(f'Could not find a key to the latest model manager '
                         f'for {self.model_name} model.')
             return
-        mr = ModelRound.load_from_s3_key(latest_key)
+        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket)
         return mr
 
     def _get_previous_round(self):
@@ -501,11 +503,7 @@ class ModelStatsGenerator(StatsGenerator):
             extension='.pkl')
         if previous_key is None:
             previous_key = f'results/{self.model_name}/latest_model_manager.pkl'
-        if previous_key is None:
-            logger.info(f'Could not find a key to the previous model manager '
-                        f'for {self.model_name} model.')
-            return
-        mr = ModelRound.load_from_s3_key(previous_key)
+        mr = ModelRound.load_from_s3_key(previous_key, bucket=self.bucket)
         return mr
 
     def _get_previous_json_stats(self):
@@ -560,10 +558,10 @@ class TestStatsGenerator(StatsGenerator):
 
     def __init__(self, model_name, test_corpus_str='large_corpus_tests',
                  latest_round=None, previous_round=None,
-                 previous_json_stats=None):
+                 previous_json_stats=None, bucket=EMMAA_BUCKET_NAME):
         self.test_corpus = test_corpus_str
         super().__init__(model_name, latest_round, previous_round,
-                         previous_json_stats)
+                         previous_json_stats, bucket)
 
     def make_stats(self):
         """Check if two latest test rounds were found and add statistics to
@@ -671,7 +669,7 @@ class TestStatsGenerator(StatsGenerator):
             logger.info(f'Could not find a key to the latest test results '
                         f'for {self.model_name} model.')
             return
-        tr = TestRound.load_from_s3_key(latest_key)
+        tr = TestRound.load_from_s3_key(latest_key, bucket=self.bucket)
         return tr
 
     def _get_previous_round(self):
@@ -687,7 +685,7 @@ class TestStatsGenerator(StatsGenerator):
             logger.info(f'Could not find a key to the previous test results '
                         f'for {self.model_name} model.')
             return
-        tr = TestRound.load_from_s3_key(previous_key)
+        tr = TestRound.load_from_s3_key(previous_key, bucket=self.bucket)
         return tr
 
     def _get_previous_json_stats(self):
@@ -720,7 +718,7 @@ class TestStatsGenerator(StatsGenerator):
 
 def generate_stats_on_s3(
         model_name, mode, test_corpus_str='large_corpus_tests',
-        upload_stats=True):
+        upload_stats=True, bucket=EMMAA_BUCKET_NAME):
     """Generate statistics for latest round of model update or tests.
 
     Parameters
@@ -736,11 +734,11 @@ def generate_stats_on_s3(
         Default: True
     """
     if mode == 'model':
-        sg = ModelStatsGenerator(model_name)
+        sg = ModelStatsGenerator(model_name, bucket=bucket)
     elif mode == 'tests':
-        sg = TestStatsGenerator(model_name, test_corpus_str)
+        sg = TestStatsGenerator(model_name, test_corpus_str, bucket=bucket)
     else:
-        raise TypeError('Mode must be either model or tests')        
+        raise TypeError('Mode must be either model or tests')
     sg.make_stats()
     # Optionally upload stats to S3
     if upload_stats:

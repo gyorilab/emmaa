@@ -579,7 +579,7 @@ def update_model_manager_on_s3(model_name, bucket=EMMAA_BUCKET_NAME):
 
 
 def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
-    em = EmmaaModel.load_from_s3(model_name)
+    em = EmmaaModel.load_from_s3(model_name, bucket=bucket)
     em.run_assembly()
     tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
              all(stmt.agent_list())]
