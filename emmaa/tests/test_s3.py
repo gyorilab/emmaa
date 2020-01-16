@@ -297,7 +297,8 @@ def test_answer_queries_from_s3():
                    subscribe=True)
     answer_queries_from_s3('test', db=db, bucket=TEST_BUCKET_NAME)
     results = db.get_results('tester@test.com', latest_order=1)
-    assert len(results) == 1
+    # Each model type has its own result
+    assert len(results) == 4, len(results)
 
 
 @mock_s3

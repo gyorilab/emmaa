@@ -31,7 +31,7 @@ script:
       export NOSEATTR="!nonpublic,$NOSEATTR";
     fi
   - nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
-  - nosetests -v -a $NOSEATTR --ingnore-files='*.test_s3.py'--with-coverage
+  - nosetests -v -a $NOSEATTR --ignore-files='*.test_s3.py'--with-coverage
     --cover-inclusive --cover-package=emmaa -w emmaa/tests 
 after_success:
   - coveralls
