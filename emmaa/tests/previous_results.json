@@ -7,7 +7,7 @@
    "signed_graph",
    "unsigned_graph"
   ],
-  "link_type": "indra_db"
+  "link_type": "test"
  },
  {
   "test_type": "StatementCheckingTest",
