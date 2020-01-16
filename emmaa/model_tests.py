@@ -232,6 +232,8 @@ class ModelManager(object):
                         sentences.append((link, sentence, stmt.evidence[0].text))
                     else:
                         sentences.append(('', sentence, stmt.evidence[0].text))
+                elif self.link_type == 'test':
+                    sentences.append(('', sentence, ''))
         return sentences
 
     def make_result_code(self, result):

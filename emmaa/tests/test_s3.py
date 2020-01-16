@@ -60,6 +60,7 @@ def setup_bucket(
             emmaa_model = create_model()
         mm = ModelManager(emmaa_model)
         mm.date_str = date_str
+        mm.link_type = 'test'
         save_model_manager_to_s3('test', mm, bucket=TEST_BUCKET_NAME)
     if add_tests:
         tests = [StatementCheckingTest(
