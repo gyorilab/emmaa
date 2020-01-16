@@ -19,15 +19,14 @@ from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from emmaa.model import EmmaaModel, load_config_from_s3
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
-    EMMAA_BUCKET_NAME
-from emmaa.analyze_tests_results import elsevier_url
-from emmaa.answer_queries import load_model_manager_from_s3
+    EMMAA_BUCKET_NAME, find_latest_s3_file
 
 
 logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
+elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -69,6 +68,11 @@ class ModelManager(object):
         A list of EMMAA tests applicable for given EMMAA model.
     make_links : bool
         Whether to include links to INDRA db in test results.
+    link_type : str
+        A name of a source to link the statements to (e.g. 'indra_db' or
+        'elsevier')
+    date_str : str
+        Time when this object was created.
     """
     def __init__(self, model):
         self.model = model
@@ -95,6 +99,7 @@ class ModelManager(object):
         self.applicable_tests = []
         self.make_links = model.test_config.get('make_links', True)
         self.link_type = model.test_config.get('link_type', 'indra_db')
+        self.date_str = make_date_str()
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -362,7 +367,6 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'statements': self.assembled_stmts_to_json(),
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
             'link_type': self.link_type})
         for ix, test in enumerate(self.applicable_tests):
@@ -377,17 +381,17 @@ class ModelManager(object):
             results_json.append(test_ix_results)
         return results_json
 
-    def upload_results(self, test_corpus_str):
+    def upload_results(self, test_corpus='large_corpus_tests',
+                       bucket=EMMAA_BUCKET_NAME):
         """Upload results to s3 bucket."""
-        results_json_dict = self.results_to_json()
-        results_json_str = json.dumps(results_json_dict, indent=1)
+        json_dict = self.results_to_json()
+        result_key = (f'results/{self.model.name}/results_'
+                      f'{test_corpus}_{self.date_str}.json')
+        json_str = json.dumps(json_dict, indent=1)
         client = get_s3_client(unsigned=False)
-        date_str = make_date_str()
-        result_key = (f'results/{self.model.name}/results_{test_corpus_str}_'
-                      f'{date_str}.json')
         logger.info(f'Uploading test results to {result_key}')
-        client.put_object(Bucket=EMMAA_BUCKET_NAME, Key=result_key,
-                          Body=results_json_str.encode('utf8'))
+        client.put_object(Bucket=bucket, Key=result_key,
+                          Body=json_str.encode('utf8'))
 
 
 class TestManager(object):
@@ -506,7 +510,7 @@ class StatementCheckingTest(EmmaaTest):
         return "%s(stmt=%s)" % (self.__class__.__name__, repr(self.stmt))
 
 
-def load_tests_from_s3(test_name):
+def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     """Load Emmaa Tests with the given name from S3.
 
     Parameters
@@ -521,39 +525,74 @@ def load_tests_from_s3(test_name):
         List of EmmaaTest objects loaded from S3.
     """
     client = get_s3_client()
-    test_key = f'tests/{test_name}'
+    prefix = f'tests/{test_name}'
+    try:
+        test_key = find_latest_s3_file(bucket, prefix)
+    except ValueError:
+        test_key = f'tests/{test_name}.pkl'
     logger.info(f'Loading tests from {test_key}')
-    obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=test_key)
+    obj = client.get_object(Bucket=bucket, Key=test_key)
     tests = pickle.loads(obj['Body'].read())
     return tests
 
 
-def save_model_manager_to_s3(model_name, model_manager):
+def save_model_manager_to_s3(model_name, model_manager,
+                             bucket=EMMAA_BUCKET_NAME):
     client = get_s3_client(unsigned=False)
     logger.info(f'Saving a model manager for {model_name} model to S3.')
-    client.put_object(Body=pickle.dumps(model_manager), Bucket=EMMAA_BUCKET_NAME,
-                      Key=f'results/{model_name}/latest_model_manager.pkl')
+    date_str = model_manager.date_str
+    client.put_object(
+        Body=pickle.dumps(model_manager), Bucket=bucket,
+        Key=f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
-def update_model_manager_on_s3(model_name):
-    model = EmmaaModel.load_from_s3(model_name)
+def load_model_manager_from_s3(key=None, model_name=None,
+                               bucket=EMMAA_BUCKET_NAME):
+    client = get_s3_client()
+    # First try find the file from specified key
+    if key:
+        try:
+            obj = client.get_object(Bucket=bucket, Key=key)
+            body = obj['Body'].read()
+            model_manager = pickle.loads(body)
+            return model_manager
+        except Exception:
+            logger.info(f'No file found with key {key}')
+    # Now try find the latest key for given model
+    if model_name:
+        # Versioned
+        key = find_latest_s3_file(
+            bucket, f'results/{model_name}/model_manager_', '.pkl')
+        if key is None:
+            # Non-versioned
+            key = f'results/{model_name}/latest.model.manager.pkl'
+        return load_model_manager_from_s3(key=key, bucket=bucket)
+    # Could not find either from key or from model name.
+    logger.info('Could not find the model manager.')
+    return None
+
+
+def update_model_manager_on_s3(model_name, bucket=EMMAA_BUCKET_NAME):
+    model = EmmaaModel.load_from_s3(model_name, bucket=bucket)
     mm = ModelManager(model)
-    save_model_manager_to_s3(model_name, mm)
+    save_model_manager_to_s3(model_name, mm, bucket=bucket)
 
 
-def model_to_tests(model_name, upload=True):
-    em = EmmaaModel.load_from_s3(model_name)
+def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
+    em = EmmaaModel.load_from_s3(model_name, bucket=bucket)
     em.run_assembly()
-    tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts]
+    tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
+             all(stmt.agent_list())]
     if upload:
+        date_str = make_date_str()
         client = get_s3_client(unsigned=False)
-        client.put_object(Body=pickle.dumps(tests), Bucket=EMMAA_BUCKET_NAME,
-                          Key=f'tests/{model_name}_tests.pkl')
+        client.put_object(Body=pickle.dumps(tests), Bucket=bucket,
+                          Key=f'tests/{model_name}_tests_{date_str}.pkl')
     return tests
 
 
-def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
-                            upload_results=True):
+def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
+                            upload_results=True, bucket=EMMAA_BUCKET_NAME):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -576,12 +615,12 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests.pkl',
         Instance of ModelManager containing the model data, list of applied
         tests and the test results.
     """
-    mm = load_model_manager_from_s3(model_name, try_from_cache=False)
-    tests = load_tests_from_s3(test_corpus)
+    mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
+    tests = load_tests_from_s3(test_corpus, bucket=bucket)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus[:-4])
+        mm.upload_results(test_corpus, bucket=bucket)
     return mm

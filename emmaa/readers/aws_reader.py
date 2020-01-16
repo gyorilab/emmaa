@@ -2,7 +2,7 @@ import datetime
 from indra.sources import reach
 from indra.literature.s3_client import get_reader_json_str, get_full_text
 from indra.tools.reading.submit_reading_pipeline import \
-    submit_reading, wait_for_complete
+    submit_reading, BatchMonitor
 from emmaa.statements import EmmaaStatement
 
 
@@ -53,8 +53,8 @@ def read_pmids(pmids, date):
     with open(pmid_fname, 'wt') as fh:
         fh.write('\n'.join(pmids))
     job_list = submit_reading('emmaa', pmid_fname, ['reach'])
-    wait_for_complete('run_reach_queue', job_list, idle_log_timeout=600,
-                      kill_on_log_timeout=True)
+    monitor = BatchMonitor('run_reach_queue', job_list)
+    monitor.watch_and_wait(idle_log_timeout=600,  kill_on_log_timeout=True)
     pmid_stmts = {}
     for pmid in pmids:
         reach_json_str = get_reader_json_str('reach', pmid)

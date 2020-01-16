@@ -15,7 +15,7 @@ from datetime import datetime
 JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
-PURPOSE = 'update-emmaa-stats'
+PURPOSE = 'update-emmaa-model-stats'
 BRANCH = 'origin/master'
 
 
@@ -23,17 +23,17 @@ def lambda_handler(event, context):
     """Create a batch job to generate model statistics.
 
     This function is designed to be placed on lambda, taking the event and
-    context arguments that are passed, and extracting the names of the
-    uploaded (which includes changed) model or test definitions on s3.
-    Lambda is configured to be triggered by any such changes, and will
-    automatically run this script.
+    context arguments that are passed. Event parameter is used here to pass
+    name of the model.
+
+    This Lambda function is configured to be invoked by emmaa-after-update
+    Lambda function.
 
     Parameters
     ----------
     event : dict
         A dictionary containing metadata regarding the triggering event. In
-        this case, we are expecting 'Records', each of which contains a record
-        of a file that was added (or changed) on s3.
+        this case the dictionary contains 'model' key.
     context : object
         This is an object containing potentially useful context provided by
         Lambda. See the documentation cited above for details.
@@ -45,32 +45,23 @@ def lambda_handler(event, context):
         other data to be returned to Lambda.
     """
     batch = boto3.client('batch')
-    records = event['Records']
-    for rec in records:
-        try:
-            model_key = rec['s3']['object']['key']
-        except KeyError:
-            pass
-        model_name = model_key.split('/')[1]
-        test_corpus = model_key.split('/')[-1][8:-25]
-        if not test_corpus:
-            test_corpus = 'large_corpus_tests'
-        core_command = 'bash scripts/git_and_run.sh'
-        if BRANCH is not None:
-            core_command += f' --branch {BRANCH}'
-        core_command += (' python scripts/run_model_stats_from_s3.py'
-                         f' --model {model_name} --tests {test_corpus}')
-        print(core_command)
-        cont_overrides = {
-            'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
-                        '--project', PROJECT, '--purpose', PURPOSE,
-                        core_command]
-            }
-        now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-        ret = batch.submit_job(
-            jobName=f'{model_name}_{test_corpus}_stats_{now_str}',
-            jobQueue=QUEUE, jobDefinition=JOB_DEF,
-            containerOverrides=cont_overrides)
-        job_id = ret['jobId']
+    model_name = event['model']
+    core_command = 'bash scripts/git_and_run.sh'
+    if BRANCH is not None:
+        core_command += f' --branch {BRANCH}'
+    core_command += (' python scripts/run_model_stats_from_s3.py'
+                        f' --model {model_name}  --stats_mode model')
+    print(core_command)
+    cont_overrides = {
+        'command': ['python', '-m', 'indra.util.aws', 'run_in_batch',
+                    '--project', PROJECT, '--purpose', PURPOSE,
+                    core_command]
+        }
+    now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    ret = batch.submit_job(
+        jobName=f'{model_name}_model_stats_{now_str}',
+        jobQueue=QUEUE, jobDefinition=JOB_DEF,
+        containerOverrides=cont_overrides)
+    job_id = ret['jobId']
 
     return {'statusCode': 200, 'result': 'SUCCESS', 'job_id': job_id}
