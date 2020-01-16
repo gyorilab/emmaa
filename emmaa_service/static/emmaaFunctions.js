@@ -56,7 +56,7 @@ function redirectToPast(x) {
 
 function redirectToDate(new_date_str) {
   let loc = window.location.href
-  let current_date = loc.substring(loc.length - 10, loc.length)
+  let current_date = new URL(loc).searchParams.get('date')
   let redirect = loc.replace(current_date, new_date_str)
   location.replace(redirect);
 }

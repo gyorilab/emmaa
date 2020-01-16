@@ -255,7 +255,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
             else:
                 path = path_loc
             url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date})
+                {'model_type': mt, 'test_hash': test_hash, 'date': date})
             new_row = [(*test['test'], stmt_db_link_msg)
                        if len(test['test']) == 2 else test['test'],
                        (f'/tests/{model_name}?{url_param}', path,

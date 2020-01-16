@@ -106,7 +106,7 @@
             <option selected disabled hidden>Select test...</option>
             {% for test, test_date in available_tests.items() %}
               {% if test == test_corpus %}
-                <option selected value="'large_corpus_tests' {{ date }}">{{ test.replace('_', ' ').capitalize() }}</option>
+                <option selected value="{{ test }} {{ date }}">{{ test.replace('_', ' ').capitalize() }}</option>
               {% else %}
                 <option value="{{ test }} {{ test_date }}">{{ test.replace('_', ' ').capitalize() }}</option>
               {% endif %}
