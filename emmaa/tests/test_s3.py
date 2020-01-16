@@ -5,6 +5,7 @@ import pickle
 import re
 import time
 from moto import mock_s3
+from nose.plugins.attrib import attr
 
 from indra.statements import Activation, Agent
 from emmaa.priors import SearchTerm
@@ -243,6 +244,7 @@ def test_model_to_tests():
     assert loaded_tests
 
 
+@attr('nonpublic')
 @mock_s3
 def test_generate_stats_on_s3():
     # Local imports are recommended when using moto
