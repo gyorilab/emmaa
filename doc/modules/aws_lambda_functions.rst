@@ -17,6 +17,10 @@ AWS model update and testing pipeline (:py:mod:`emmaa.aws_lambda_functions`)
     :members:
     :show-inheritance:
 
+.. automodule:: emmaa.aws_lambda_functions.after_update
+    :members:
+    :show-inheritance:
+
 .. automodule:: emmaa.aws_lambda_functions.test_pipeline
     :members:
     :show-inheritance:
@@ -25,11 +29,23 @@ AWS model update and testing pipeline (:py:mod:`emmaa.aws_lambda_functions`)
     :members:
     :show-inheritance:
 
+.. automodule:: emmaa.aws_lambda_functions.test_stats
+    :members:
+    :show-inheritance:
+
 .. automodule:: emmaa.aws_lambda_functions.model_stats
     :members:
     :show-inheritance:
 
 .. automodule:: emmaa.aws_lambda_functions.model_queries
+    :members:
+    :show-inheritance:
+
+.. automodule:: emmaa.aws_lambda_functions.test_update_pipeline
+    :members:
+    :show-inheritance:
+
+.. automodule:: emmaa.aws_lambda_functions.test_update
     :members:
     :show-inheritance:
 
