@@ -30,7 +30,8 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
       export NOSEATTR="!nonpublic,$NOSEATTR";
     fi
-  - nosetests -v -a $NOSEATTR --with-coverage --cover-inclusive
-    --cover-package=emmaa -w emmaa/tests
+  - nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
+  - nosetests -v -a $NOSEATTR --ingnore-files='*.test_s3.py'--with-coverage
+    --cover-inclusive --cover-package=emmaa -w emmaa/tests 
 after_success:
   - coveralls
