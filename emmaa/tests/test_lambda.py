@@ -1,9 +1,9 @@
 import boto3
 import pickle
 import unittest
-from indra.tools.reading.submit_reading_pipeline import wait_for_complete
+from indra.tools.reading.submit_reading_pipeline import BatchMonitor
 
-from emmaa.aws_lambda_functions.analyze_changes_on_s3 import lambda_handler, QUEUE
+from emmaa.aws_lambda_functions.model_tests import lambda_handler, QUEUE
 from emmaa.util import make_date_str, get_s3_client
 
 RUN_STATI = ['SUBMITTED', 'PENDING', 'RUNNABLE', 'RUNNING']
@@ -34,8 +34,8 @@ def test_handler():
     job_id = res['job_id']
 
     results = {}
-    wait_for_complete(QUEUE, job_list=[{'jobId': job_id}],
-                      result_record=results)
+    monitor = BatchMonitor(QUEUE, [{'jobId': job_id}])
+    monitor.watch_and_wait(result_record=results)
     print(results)
     assert job_id in [job_def['jobId'] for job_def in results['succeeded']], \
         results['failed']

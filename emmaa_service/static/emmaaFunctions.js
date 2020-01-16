@@ -39,10 +39,15 @@ function modelRedirect(ddSelect, current_model) {
 }
 function redirectToPast(x) { 
   let new_date = x.x
-  console.log(new_date)
   static_date = new Date('2019-09-30')
   if (new_date >= static_date) {
-    let new_date_str = new_date.toISOString().substring(0, 10)
+    var year = new_date.getFullYear();
+    var month = (1 + new_date.getMonth()).toString();
+    month = month.length > 1 ? month : '0' + month;
+    day = new_date.getDate().toString();
+    day = day.length > 1 ? day : '0' + day;
+    let new_date_str = year + '-' + month + '-' + day;
+    console.log(new_date_str)
     redirectToDate(new_date_str)
   } else {
     alert("Sorry, you cannot see the data before 2019-09-30")
@@ -51,18 +56,17 @@ function redirectToPast(x) {
 
 function redirectToDate(new_date_str) {
   let loc = window.location.href
-  let current_date = loc.substring(loc.length - 10, loc.length)
+  let current_date = new URL(loc).searchParams.get('date')
   let redirect = loc.replace(current_date, new_date_str)
   location.replace(redirect);
 }
 
-function modelDateRedirect(ddSelect, current_model) {
+function modelDateRedirect(ddSelect, currentModel) {
 
   // Get selected option
   let newModel = '';
   for (child of ddSelect.children) {
     if (child.selected) {
-      console.log(child.value)
       selection_str = child.value.split(" ");
       newModel = selection_str[0];
       newDate = selection_str[1];
@@ -73,13 +77,37 @@ function modelDateRedirect(ddSelect, current_model) {
   console.log(newModel)
   console.log(newDate)
   let loc = window.location.href
-  let current_date = loc.substring(loc.length - 10, loc.length)
-
+  currentDate = new URL(loc).searchParams.get('date')
+  currentTest = new URL(loc).searchParams.get('test_corpus')
   // redirect url:
-  let redirectModel = loc.replace(current_model, newModel)
-  let redirectDate = redirectModel.replace(current_date, newDate);
-  location.replace(redirectDate);
+  let redirectModel = loc.replace(currentModel, newModel)
+  let redirectDate = redirectModel.replace(currentDate, newDate);
+  let redirectTest = redirectDate.replace(currentTest, 'large_corpus_tests');
+  location.replace(redirectTest);
 }
+
+
+function testRedirect(ddSelect) {
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      selection_str = child.value.split(" ");
+      newTest = selection_str[0];
+      newDate = selection_str[1];
+      break;
+    }
+  }
+
+  console.log(newTest)
+  console.log(newDate)
+  let loc = window.location.href
+  currentDate = new URL(loc).searchParams.get('date')
+  currentTest = new URL(loc).searchParams.get('test_corpus')
+  // redirect url:
+  let redirectDate = loc.replace(currentDate, newDate);
+  let redirectTest = redirectDate.replace(currentTest, newTest);
+  location.replace(redirectTest);
+}
+
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
@@ -180,8 +208,8 @@ function toTitleCase(phrase) {
   return newPhrase;
 };
 
-// Populate test results json to modelTestResultBody
-function populateTestResultTable(tableBody, json) {
+// Populate model and test stats jsons to modelTestResultBody
+function populateTestResultTable(tableBody, model_json, test_json) {
 
   // IDs
   let stmtTypDistId = '#modelTestResultBody';
@@ -191,14 +219,16 @@ function populateTestResultTable(tableBody, json) {
   let stmtTime = '#stmtsOverTime';
 
   // Dates
-  dates = json.changes_over_time.dates;
-  dates.unshift('x');
+  model_dates = model_json.changes_over_time.dates;
+  model_dates.unshift('x');
+  test_dates = test_json.changes_over_time.dates;
+  test_dates.unshift('x');
 
   let all_model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
   let current_model_types = [];
   let cols = [];
   let count = 0;
-  for (mt of all_model_types) {if (mt in json.test_round_summary) {
+  for (mt of all_model_types) {if (mt in test_json.test_round_summary) {
     current_model_types.push(mt)
     count++
     cols.push(count)}};
@@ -209,7 +239,7 @@ function populateTestResultTable(tableBody, json) {
   let stmt_type_array = [];
   let stmt_freq_array = ['count'];
 
-  for (let pair of json.model_summary.stmts_type_distr) {
+  for (let pair of model_json.model_summary.stmts_type_distr) {
     stmt_type_array.push(pair[0]);
     stmt_freq_array.push(pair[1])
   }
@@ -228,7 +258,7 @@ function populateTestResultTable(tableBody, json) {
   let top_agents_array = [];
   let agent_freq_array = ['count'];
 
-  for (let pair of json.model_summary.agent_distr.slice(0, 10)) {
+  for (let pair of model_json.model_summary.agent_distr.slice(0, 10)) {
     top_agents_array.push(pair[0]);
     agent_freq_array.push(pair[1])
   }
@@ -243,14 +273,14 @@ function populateTestResultTable(tableBody, json) {
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
   // Statements over Time line graph
-  let stmtsOverTime = json.changes_over_time.number_of_statements;
+  let stmtsOverTime = model_json.changes_over_time.number_of_statements;
   stmtsOverTime.unshift('Statements');
 
   let stmtsCountDataParams = {
     x: 'x',
     xFormat: '%Y-%m-%d-%H-%M-%S',
     columns: [
-      dates,
+      model_dates,
       stmtsOverTime
     ],
     onclick: redirectToPast
@@ -261,16 +291,16 @@ function populateTestResultTable(tableBody, json) {
   // Tests Tab
 
   // Passed ratio line graph
-  let passedRatioColumns = [dates]
+  let passedRatioColumns = [test_dates]
 
   for (mt of current_model_types) {
-    let mt_changes = json.changes_over_time[mt]
+    let mt_changes = test_json.changes_over_time[mt]
     let passedRatio = mt_changes.passed_ratio
     passedRatio = passedRatio.map(function(element) {
       return (element*100).toFixed(2);
     })
     var i
-    let dif = dates.length - passedRatio.length
+    let dif = test_dates.length - passedRatio.length
     for (i = 1; i < dif; i++) {passedRatio.unshift(null)}
     passedRatio.unshift(FORMATTED_MODEL_NAMES[mt]);
     passedRatioColumns.push(passedRatio)
@@ -286,15 +316,15 @@ function populateTestResultTable(tableBody, json) {
   let lineChart = generateLineArea(pasRatId, lineDataParams, '');
 
   // Applied/passed area graph
-  let appliedTests = json.changes_over_time.number_applied_tests;
+  let appliedTests = test_json.changes_over_time.number_applied_tests;
   appliedTests.unshift('Applied Tests');
-  let appliedPassedColumns = [dates];
+  let appliedPassedColumns = [test_dates];
 
   for (mt of current_model_types) {
-    let mt_changes = json.changes_over_time[mt];
+    let mt_changes = test_json.changes_over_time[mt];
     let passedTests = mt_changes.number_passed_tests;
     let i;
-    let dif = dates.length - passedTests.length;
+    let dif = test_dates.length - passedTests.length;
     for (i = 1; i < dif; i++) {passedTests.unshift(null)}
     passedTests.unshift(`${FORMATTED_MODEL_NAMES[mt]} Passed Tests`);
     appliedPassedColumns.push(passedTests)

@@ -1,125 +1,13 @@
 [
  {
   "model_name": "test",
-  "statements": [
-   {
-    "type": "Activation",
-    "subj": {
-     "name": "BRAF",
-     "db_refs": {
-      "UP": "P15056",
-      "HGNC": "1097",
-      "TEXT": "BRAF"
-     }
-    },
-    "obj": {
-     "name": "MAP2K1",
-     "db_refs": {
-      "UP": "Q02750",
-      "HGNC": "6840",
-      "TEXT": "MAP2K1"
-     }
-    },
-    "obj_activity": "activity",
-    "belief": 0.65,
-    "evidence": [
-     {
-      "source_api": "trips",
-      "text": "BRAF activates MAP2K1.",
-      "annotations": {
-       "agents": {
-        "raw_text": [
-         "BRAF",
-         "MAP2K1"
-        ],
-        "raw_grounding": [
-         {
-          "UP": "P15056",
-          "HGNC": "1097",
-          "TEXT": "BRAF"
-         },
-         {
-          "UP": "Q02750",
-          "HGNC": "6840",
-          "TEXT": "MAP2K1"
-         }
-        ]
-       },
-       "prior_uuids": [
-        "b2e03358-df3c-4d79-8ca6-26fb4c691adc"
-       ]
-      },
-      "source_hash": -6387054781600675327
-     }
-    ],
-    "id": "b2e03358-df3c-4d79-8ca6-26fb4c691adc",
-    "matches_hash": "-23078353002754841"
-   },
-   {
-    "type": "Activation",
-    "subj": {
-     "name": "MAP2K1",
-     "activity": {
-      "activity_type": "activity",
-      "is_active": true
-     },
-     "db_refs": {
-      "UP": "Q02750",
-      "HGNC": "6840",
-      "TEXT": "MAP2K1"
-     }
-    },
-    "obj": {
-     "name": "MAPK1",
-     "db_refs": {
-      "UP": "P28482",
-      "HGNC": "6871",
-      "TEXT": "MAPK1"
-     }
-    },
-    "obj_activity": "activity",
-    "belief": 0.65,
-    "evidence": [
-     {
-      "source_api": "trips",
-      "text": "Active MAP2K1 activates MAPK1.",
-      "annotations": {
-       "agents": {
-        "raw_text": [
-         "MAP2K1",
-         "MAPK1"
-        ],
-        "raw_grounding": [
-         {
-          "UP": "Q02750",
-          "HGNC": "6840",
-          "TEXT": "MAP2K1"
-         },
-         {
-          "UP": "P28482",
-          "HGNC": "6871",
-          "TEXT": "MAPK1"
-         }
-        ]
-       },
-       "prior_uuids": [
-        "2de2f5db-1b5b-455c-8000-61763562928b"
-       ]
-      },
-      "source_hash": 2597751197793371266
-     }
-    ],
-    "id": "2de2f5db-1b5b-455c-8000-61763562928b",
-    "matches_hash": "-34603994586320440"
-   }
-  ],
   "mc_types": [
    "pysb",
    "pybel",
    "signed_graph",
    "unsigned_graph"
   ],
-  "link_type": "indra_db"
+  "link_type": "test"
  },
  {
   "test_type": "StatementCheckingTest",

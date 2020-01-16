@@ -4,8 +4,9 @@ from datetime import datetime
 
 from indra.assemblers.english import EnglishAssembler
 
+from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
-from emmaa.util import get_s3_client, make_date_str
+from emmaa.util import get_s3_client, make_date_str, EMMAA_BUCKET_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class QueryManager(object):
         """
         model_manager = self.get_model_manager(model_name)
         queries = self.db.get_queries(model_name)
+        logger.info(f'Found {len(queries)} for {model_name} model.')
         # Only do the following steps if there are queries for this model
         if queries:
             results = model_manager.answer_queries(queries)
@@ -280,7 +282,7 @@ class QueryManager(object):
         for mm in self.model_managers:
             if mm.model.name == model_name:
                 return mm
-        return load_model_manager_from_s3(model_name)
+        return load_model_manager_from_cache(model_name)
 
     def _recreate_db(self):
         self.db.drop_tables(force=True)
@@ -342,18 +344,13 @@ def format_results(results):
     return formatted_results
 
 
-def load_model_manager_from_s3(model_name):
+def load_model_manager_from_cache(model_name, bucket=EMMAA_BUCKET_NAME):
     model_manager = model_manager_cache.get(model_name)
     if model_manager:
         logger.info(f'Loaded model manager for {model_name} from cache.')
         return model_manager
-    client = get_s3_client()
-    key = f'results/{model_name}/latest_model_manager.pkl'
-    logger.info(f'Loading latest model manager for {model_name} model from '
-                f'S3.')
-    obj = client.get_object(Bucket='emmaa', Key=key)
-    body = obj['Body'].read()
-    model_manager = pickle.loads(body)
+    model_manager = load_model_manager_from_s3(
+        model_name=model_name, bucket=bucket)
     model_manager_cache[model_name] = model_manager
     return model_manager
 
@@ -372,3 +369,18 @@ def _process_result_to_str(result_json):
 def _make_query_str(query):
     ea = EnglishAssembler([query.path_stmt])
     return ea.make_model()
+
+
+def answer_queries_from_s3(model_name, db=None, bucket=EMMAA_BUCKET_NAME):
+    """Answer registered queries with model manager on s3.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of EmmaaModel to answer queries for.
+    db : Optional[emmaa.db.manager.EmmaaDatabaseManager]
+        If given over-rides the default primary database.
+    """
+    mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
+    qm = QueryManager(db=db, model_managers=[mm])
+    qm.answer_registered_queries(model_name, find_delta=False)

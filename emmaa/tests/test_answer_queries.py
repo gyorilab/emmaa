@@ -2,7 +2,7 @@ from os.path import abspath, dirname, join
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
-    load_model_manager_from_s3, is_query_result_diff
+    is_query_result_diff
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
@@ -34,11 +34,6 @@ fail_response = {'521653329': 'No path found that satisfies the test statement'}
 # Create a new ModelManager for tests instead of depending on S3 version
 test_model = EmmaaModel.load_from_s3('test')
 test_mm = ModelManager(test_model)
-
-
-def test_load_model_manager_from_s3():
-    mm = load_model_manager_from_s3('test')
-    assert isinstance(mm, ModelManager)
 
 
 def test_format_results():
