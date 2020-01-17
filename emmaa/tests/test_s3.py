@@ -361,7 +361,8 @@ def test_api_load_from_s3():
         Key=f'stats/test/test_stats_large_corpus_tests_{date_str}.json')
     metadata = _get_model_meta_data(bucket=TEST_BUCKET_NAME)
     assert len(metadata) == 1
-    assert len(metadata[0]) == 3
+    assert len(metadata[0]) == 4
     assert metadata[0][0] == 'test'
     assert metadata[0][1] == config
-    assert metadata[0][2] == today
+    assert metadata[0][2] == 'large_corpus_tests'
+    assert metadata[0][3] == today
