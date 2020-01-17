@@ -52,13 +52,22 @@
 <div class="container nav-container">
   <nav>
     <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      {% if tab == 'model' %}
       <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      {% else %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link active" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="true">Tests</a>
+      {% endif %}  
     </div>
   </nav>
 </div>
 <div class="tab-content" id="nav-tabContent">
+  {% if tab == 'model' %}
   <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+  {% else %}
+  <div class="tab-pane" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+  {% endif %} 
     <!-- Model stuff goes here -->
 
     <!-- This table displays model data -->
@@ -93,7 +102,11 @@
     </div>
 
   </div>
+  {% if tab == 'model' %}
   <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% else %}
+  <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% endif %}
     <!-- Test stuff goes here -->
 
     <div class="container" id="modelTestResult">

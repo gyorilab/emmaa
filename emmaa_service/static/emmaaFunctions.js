@@ -79,11 +79,14 @@ function modelDateRedirect(ddSelect, currentModel) {
   let loc = window.location.href
   currentDate = new URL(loc).searchParams.get('date')
   currentTest = new URL(loc).searchParams.get('test_corpus')
+  currentTab = new URL(loc).searchParams.get('tab')
   // redirect url:
   let redirectModel = loc.replace(currentModel, newModel)
   let redirectDate = redirectModel.replace(currentDate, newDate);
   let redirectTest = redirectDate.replace(currentTest, 'large_corpus_tests');
-  location.replace(redirectTest);
+  let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=model')
+
+  location.replace(redirectTab);
 }
 
 
@@ -102,10 +105,12 @@ function testRedirect(ddSelect) {
   let loc = window.location.href
   currentDate = new URL(loc).searchParams.get('date')
   currentTest = new URL(loc).searchParams.get('test_corpus')
+  currentTab = new URL(loc).searchParams.get('tab')
   // redirect url:
   let redirectDate = loc.replace(currentDate, newDate);
   let redirectTest = redirectDate.replace(currentTest, newTest);
-  location.replace(redirectTest);
+  let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=tests')
+  location.replace(redirectTab);
 }
 
 

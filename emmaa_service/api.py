@@ -291,6 +291,7 @@ def get_home():
 def get_model_dashboard(model):
     date = request.args.get('date')
     test_corpus = request.args.get('test_corpus')
+    tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     model_stats = get_model_stats(model, 'model', date=date)
@@ -364,7 +365,8 @@ def get_model_dashboard(model):
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date),
                            date=date,
-                           latest_date=latest_date)
+                           latest_date=latest_date,
+                           tab=tab)
 
 
 @app.route('/tests/<model>/')

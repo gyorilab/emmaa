@@ -19,7 +19,7 @@
           <p class="card-text">{{ model_meta['description'] }}</p>
           <div class="d-flex justify-content-between align-items-center">
             <div class="btn-group">
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, date=date, test_corpus='large_corpus_tests') }}">Details</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, date=date, test_corpus='large_corpus_tests', tab='model') }}">Details</a>
               <a class="btn btn-sm btn-outline-secondary"
                  href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank">View on NDEX</a>
             </div>
