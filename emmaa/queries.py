@@ -1,3 +1,4 @@
+import logging
 import requests
 from inflection import underscore
 from collections import OrderedDict as _o
@@ -8,6 +9,9 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
+
+
+logger = logging.getLogger(__name__)
 
 
 class Query(object):

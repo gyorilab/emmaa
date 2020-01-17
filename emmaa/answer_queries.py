@@ -76,7 +76,7 @@ class QueryManager(object):
         """
         model_manager = self.get_model_manager(model_name)
         queries = self.db.get_queries(model_name)
-        logger.info(f'Found {len(queries)} for {model_name} model.')
+        logger.info(f'Found {len(queries)} queries for {model_name} model.')
         # Only do the following steps if there are queries for this model
         if queries:
             results = model_manager.answer_queries(queries)
