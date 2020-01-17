@@ -494,6 +494,14 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
+def _default_test(model):
+    if model == 'food_insecurity':
+        test = 'world_modelers_tests'
+    else:
+        test = 'large_corpus_tests'
+    return test
+
+
 def last_updated_date(model, file_type='model', date_format='date',
                       tests='large_corpus_tests', extension='.pkl',
                       bucket=EMMAA_BUCKET_NAME):
@@ -609,7 +617,7 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
     # File name example: stats/skcm/stats_2019-08-20-17-34-40.json
     if not latest_file_key and (
         mode == 'model' or (
-            mode == 'test' and tests == 'large_corpus_tests')):
+            mode == 'test' and tests == _default_test(model))):
         prefix = f'stats/{model}/stats_{date}'
         latest_file_key = find_latest_s3_file(bucket=bucket,
                                               prefix=prefix,

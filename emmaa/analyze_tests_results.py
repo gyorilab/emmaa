@@ -2,6 +2,7 @@ import json
 import logging
 import jsonpickle
 from collections import defaultdict
+from emmaa.model import _default_test
 from emmaa.model_tests import elsevier_url, load_model_manager_from_s3
 from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
                         strip_out_date, get_s3_client, EMMAA_BUCKET_NAME,
@@ -677,7 +678,8 @@ class TestStatsGenerator(StatsGenerator):
             self.bucket,
             f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
-        if previous_key is None and self.test_corpus == 'large_corpus_tests':
+        def_test = _default_test(self.model_name)
+        if previous_key is None and self.test_corpus == def_test:
             previous_key = find_latest_s3_file(
                 self.bucket, f'results/{self.model_name}/results_',
                 extension='.json')
@@ -699,7 +701,8 @@ class TestStatsGenerator(StatsGenerator):
             obj = client.get_object(Bucket=self.bucket, Key=key)
         except Exception:
             logger.info(f'Could not load earlier statistics from {key}')
-            if self.test_corpus == 'large_corpus_tests':
+            def_test = _default_test(self.model_name)
+            if self.test_corpus == def_test:
                 key = find_latest_s3_file(
                     self.bucket, f'stats/{self.model_name}/stats_',
                     extension='.json')

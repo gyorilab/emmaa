@@ -17,7 +17,8 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
     does_exist, EMMAA_BUCKET_NAME
-from emmaa.model import load_config_from_s3, last_updated_date, get_model_stats
+from emmaa.model import load_config_from_s3, last_updated_date, \
+    get_model_stats, _default_test
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
 from emmaa.answer_queries import FORMATTED_TYPE_NAMES
@@ -79,7 +80,7 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
 def get_latest_available_date(
         model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Looking for latest available date for {model} and {test_corpus}')
-    if test_corpus == 'large_corpus_tests' and not refresh and \
+    if test_corpus == _default_test(model) and not refresh and \
             model in model_dates:
         return model_dates[model]
     model_date = last_updated_date(model, 'model_stats', extension='.json',
@@ -87,20 +88,20 @@ def get_latest_available_date(
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
                                   extension='.json', bucket=bucket)
     if model_date == test_date:
-        if test_corpus == 'large_corpus_tests':
+        if test_corpus == _default_test(model):
             model_dates[model] = model_date
         return model_date
     min_date = min(model_date, test_date)
     print(min_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
-        if test_corpus == 'large_corpus_tests':
+        if test_corpus == _default_test(model):
             model_dates[model] = min_date
         return min_date
     min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
     for day_count in range(1, 30):
         earlier_date = min_date_obj - timedelta(days=day_count)
         if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            if test_corpus == 'large_corpus_tests':
+            if test_corpus == _default_test(model):
                 model_dates[model] = earlier_date
             return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
@@ -128,10 +129,11 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
+        test_corpus = _default_test(model)
         latest_date = get_latest_available_date(
-            model, 'large_corpus_tests', refresh=refresh, bucket=bucket)
+            model, test_corpus, refresh=refresh, bucket=bucket)
         logger.info(f'Latest available date for {model} is {latest_date}')
-        model_data.append((model, config_json, latest_date))
+        model_data.append((model, config_json, test_corpus, latest_date))
     return model_data
 
 
@@ -157,7 +159,7 @@ if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _, _ in model_meta_data:
+    for model, _, _, _ in model_meta_data:
         load_model_manager_from_cache(model)
 
 
@@ -300,7 +302,7 @@ def get_model_dashboard(model):
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
     ndex_id = 'None available'
-    for mid, mmd, av_date in model_meta_data:
+    for mid, mmd, tc, av_date in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
             available_tests = _get_test_corpora(model, mmd)
@@ -388,7 +390,8 @@ def get_model_tests_page(model):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
-    latest_date = get_latest_available_date(model, 'large_corpus_tests')
+    test_corpus = _default_test(model)
+    latest_date = get_latest_available_date(model, test_corpus)
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -492,7 +495,7 @@ def process_query():
     # Extract info.
     expected_query_keys = {f'{pos}Selection'
                            for pos in ['subject', 'object', 'type']}
-    expected_models = {mid for mid, _ in _get_model_meta_data()}
+    expected_models = {mid for mid, _, _, _ in _get_model_meta_data()}
     try:
         # If user tries to register query without logging in, refuse query
         # with 401 (unauthorized)
@@ -564,7 +567,7 @@ if __name__ == '__main__':
         # Load all the model configs
         model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
-        for model, _ in model_meta_data:
+        for model, _, _, _ in model_meta_data:
             load_model_manager_from_cache(model)
 
     print(app.url_map)  # Get all avilable urls and link them

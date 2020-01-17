@@ -32,11 +32,11 @@
 <div class="d-inline-flex p-2 input-group" style="width: 410px;">
   <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
     <option selected disabled hidden>Select model...</option>
-    {% for model_id, model_meta, date in model_data %}
+    {% for model_id, model_meta, test_corpus, date in model_data %}
       {% if model_id == model %}
-        <option selected value="{{ model_id }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+        <option selected value="{{ model_id }} {{ test_corpus }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
       {% else %}
-        <option value="{{ model_id }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+        <option value="{{ model_id }} {{ test_corpus }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
       {% endif %}
     {% endfor %}
   </select>

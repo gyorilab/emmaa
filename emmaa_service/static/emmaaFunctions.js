@@ -69,21 +69,24 @@ function modelDateRedirect(ddSelect, currentModel) {
     if (child.selected) {
       selection_str = child.value.split(" ");
       newModel = selection_str[0];
-      newDate = selection_str[1];
+      newTest = selection_str[1]
+      newDate = selection_str[2];
       break;
     }
   }
 
   console.log(newModel)
   console.log(newDate)
+  console.log(newTest)
   let loc = window.location.href
   currentDate = new URL(loc).searchParams.get('date')
   currentTest = new URL(loc).searchParams.get('test_corpus')
   currentTab = new URL(loc).searchParams.get('tab')
   // redirect url:
+
   let redirectModel = loc.replace(currentModel, newModel)
   let redirectDate = redirectModel.replace(currentDate, newDate);
-  let redirectTest = redirectDate.replace(currentTest, 'large_corpus_tests');
+  let redirectTest = redirectDate.replace(currentTest, newTest);
   let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=model')
 
   location.replace(redirectTab);
