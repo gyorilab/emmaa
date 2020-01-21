@@ -548,7 +548,7 @@ def save_model_manager_to_s3(model_name, model_manager,
         Key=f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
-def load_model_manager_from_s3(key=None, model_name=None,
+def load_model_manager_from_s3(model_name=None, key=None,
                                bucket=EMMAA_BUCKET_NAME):
     client = get_s3_client()
     # First try find the file from specified key
@@ -567,7 +567,7 @@ def load_model_manager_from_s3(key=None, model_name=None,
             bucket, f'results/{model_name}/model_manager_', '.pkl')
         if key is None:
             # Non-versioned
-            key = f'results/{model_name}/latest.model.manager.pkl'
+            key = f'results/{model_name}/latest_model_manager.pkl'
         return load_model_manager_from_s3(key=key, bucket=bucket)
     # Could not find either from key or from model name.
     logger.info('Could not find the model manager.')
