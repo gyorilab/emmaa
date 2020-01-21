@@ -9,6 +9,7 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
+from bioagents.tra.tra import TRA, MolecularQuantity, TemporalPattern
 
 
 logger = logging.getLogger(__name__)
@@ -163,6 +164,71 @@ class SimpleInterventionProperty(Query):
 
 class ComparativeInterventionProperty(Query):
     pass
+
+
+class DynamicPorperty(Query):
+    """This type of query requires dynamic simulation of the model to check
+    whether the queried temporal pattern is satisfied.
+
+    Parameters
+    ----------
+    entity : indra.statements.Agent
+        An entity to simulate the model for.
+    pattern_type : str
+        Type of temporal pattern. Accepted values: 'always_value', 'no_change',
+        'eventual_value', 'sometime_value', 'sustained', 'transient'.
+    quant_value : str or float
+        Value of molecular quantity of entity of interest. Can be 'high' or
+        'low' or a specific number.
+    quant_type : str
+        Type of molecular quantity of entity of interest. Default: qualitative.
+    """
+    def __init__(self, entity, pattern_type, quant_value,
+                 quant_type='qualitative'):
+        self.entity = entity
+        self.pattern_type = pattern_type
+        self.quant_value = quant_value
+        self.quant_type = quant_type
+
+    def get_temporal_pattern(self):
+        """Return TemporalPattern object created with query properties."""
+        mq = MolecularQuantity(self.quant_type, self.quant_value)
+        tp = TemporalPattern(self.pattern_type, [self.entity], None, value=mq)
+        return tp
+
+    def matches_key(self):
+        ent_matches_key = self.entity.matches_key()
+        key = (ent_matches_key, self.pattern_type, self.quant_type,
+               str(self.quant_value))
+        return str(key)
+
+    def to_json(self):
+        query_type = underscore(type(self).__name__)
+        json_dict = _o(type=query_type)
+        json_dict['entity'] = self.entity.to_json()
+        json_dict['pattern_type'] = self.pattern_type
+        json_dict['quantity']['type'] = self.quant_type
+        json_dict['quantity']['value'] = self.quant_value
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        ent_json = json_dict.get('entity')
+        entity = Agent._from_json(ent_json)
+        pattern_type = json_dict.get('pattern_type')
+        quant_json = json_dict.get('quantity')
+        quant_type = quant_json.get('type')
+        quant_value = quant_json.get('value')
+        query = cls(entity, pattern_type, quant_value, quant_type)
+        return query
+
+    def __str__(self):
+        descr = (f'DynamicPropertyQuery(entity={self.entity}, '
+                 f'pattern={self.pattern_type}, '
+                 f'molecular quantity={self.quant_type, self.quant_value})')
+
+    def __repr__(self):
+        return str(self)
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
