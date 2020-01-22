@@ -9,7 +9,8 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
-from bioagents.tra.tra import TRA, MolecularQuantity, TemporalPattern
+from indra.sources import trips
+from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 
 
 logger = logging.getLogger(__name__)
@@ -166,7 +167,7 @@ class ComparativeInterventionProperty(Query):
     pass
 
 
-class DynamicPorperty(Query):
+class DynamicProperty(Query):
     """This type of query requires dynamic simulation of the model to check
     whether the queried temporal pattern is satisfied.
 
@@ -207,6 +208,7 @@ class DynamicPorperty(Query):
         json_dict = _o(type=query_type)
         json_dict['entity'] = self.entity.to_json()
         json_dict['pattern_type'] = self.pattern_type
+        json_dict['quantity'] = {}
         json_dict['quantity']['type'] = self.quant_type
         json_dict['quantity']['value'] = self.quant_value
         return json_dict
@@ -225,7 +227,8 @@ class DynamicPorperty(Query):
     def __str__(self):
         descr = (f'DynamicPropertyQuery(entity={self.entity}, '
                  f'pattern={self.pattern_type}, '
-                 f'molecular quantity={self.quant_type, self.quant_value})')
+                 f'molecular quantity={(self.quant_type, self.quant_value)})')
+        return descr
 
     def __repr__(self):
         return str(self)
@@ -293,6 +296,14 @@ def get_agent_from_grounding_service(ag_name, url):
     agent = Agent(name=rj[0]['term']['entry_name'],
                   db_refs={rj[0]['term']['db']: rj[0]['term']['id']})
     return agent
+
+
+def get_agent_from_trips(ag_text):
+    tp = trips.process_text(ag_text)
+    agent_list = tp.get_agents()
+    if agent_list:
+        return agent_list[0]
+    return None
 
 
 class GroundingError(Exception):
