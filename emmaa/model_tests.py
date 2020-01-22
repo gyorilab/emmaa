@@ -17,7 +17,9 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
+from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, load_config_from_s3
+from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file
 
@@ -241,6 +243,12 @@ class ModelManager(object):
         return RESULT_CODES[result_code]
 
     def answer_query(self, query):
+        if isinstance(query, DynamicProperty):
+            return self.answer_dynamic_query(query)
+        if isinstance(query, PathProperty):
+            return self.answer_path_query(query)
+
+    def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
         if ScopeTestConnector.applicable(self, query):
             results = []
@@ -255,6 +263,19 @@ class ModelManager(object):
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+
+    def answer_dynamic_query(self, query):
+        """Answer user query by simulating a PySB model."""
+        tra = TRA(use_kappa=False)
+        tp = query.get_temporal_pattern()
+        try:
+            sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
+                self.mc_types['pysb']['model'], tp)
+            resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
+                         'kpat': kpat, 'fig_path': fig_path}
+        except (MissingMonomerError, MissingMonomerSiteError):
+            resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
+        return [('pysb', self.hash_response_list(resp_json))]
 
     def answer_queries(self, queries):
         """Answer all queries registered for this model.
@@ -273,13 +294,17 @@ class ModelManager(object):
         applicable_queries = []
         applicable_stmts = []
         for query in queries:
-            if ScopeTestConnector.applicable(self, query):
-                applicable_queries.append(query)
-                applicable_stmts.append(query.path_stmt)
-            else:
-                responses.append(
-                    (query, '', self.hash_response_list(
-                        RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+            if isinstance(query, DynamicProperty):
+                mc_type, response = self.answer_dynamic_query(query)
+                responses.append((query, mc_type, response))
+            elif isinstance(query, PathProperty):
+                if ScopeTestConnector.applicable(self, query):
+                    applicable_queries.append(query)
+                    applicable_stmts.append(query.path_stmt)
+                else:
+                    responses.append(
+                        (query, '', self.hash_response_list(
+                            RESULT_CODES['QUERY_NOT_APPLICABLE'])))
         # Only do the following steps if there are applicable queries
         if applicable_queries:
             for mc_type in self.mc_types:
@@ -352,6 +377,13 @@ class ModelManager(object):
                 response_str = ' '.join(sentences)
                 response_hash = str(fnv1a_32(response_str.encode('utf-8')))
                 response_dict[response_hash] = resp
+        elif isinstance(response, dict):
+            results = [str(response.get('sat_rate')),
+                       str(response.get('num_sim')),
+                       response.get('kpat')]
+            response_str = ' '.join(results)
+            response_hash = str(fnv1a_32(response_str.encode('utf-8')))
+            response_dict[response_hash] = response
         else:
             raise TypeError('Response should be a string or a list.')
         return response_dict
