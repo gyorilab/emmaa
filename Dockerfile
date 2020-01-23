@@ -22,6 +22,7 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
 
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git && \
+    pip install git+https://github.com/sorgerlab/bioagents.git && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
     cd emmaa && \
     git checkout $BUILD_BRANCH && \
