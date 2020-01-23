@@ -27,6 +27,7 @@ function postQuery(queryContainer) {
 
 function collectQuery(queryContainer) {
   console.log('function collectQuery(queryContainer)');
+  console.log(queryContainer.id)
   let dropdownSelections = queryContainer.getElementsByClassName('custom-select');
 
   let result = [];
@@ -34,10 +35,17 @@ function collectQuery(queryContainer) {
   let models = [];
 
   // Get checked models
-  for (op of document.getElementById('model-select').children) {
-    console.log(op.value);
-    models.push(op.value)
-  }
+  if (queryContainer.id == 'query-container') {
+    for (op of document.getElementById('model-select').children) {
+      console.log(op.value);
+      models.push(op.value);
+    }
+  } else {
+    for (op of document.getElementById('dynamic-select').children) {
+      console.log(op.value);
+      models.push(op.value);
+    };
+  };
   if (models.length === 0) {
     // Handle no boxes ticked
     alert('Must select at least one model!');
@@ -52,11 +60,14 @@ function collectQuery(queryContainer) {
     query[selId] = selection.options[selection.selectedIndex].value;
   }
 
-  // Collect subject/object from forms
-  query['subjectSelection'] = document.getElementById('subjectInput').value;
-  query['objectSelection'] = document.getElementById('objectInput').value;
+  // Collect subject/object/agent from forms
+  if (queryContainer.id == 'query-container') {
+    query['subjectSelection'] = document.getElementById('subjectInput').value;
+    query['objectSelection'] = document.getElementById('objectInput').value;
+  } else {
+    query['agentSelection'] = document.getElementById('agentInput').value;
+  };
   result.push(query);
-
   return result;
 }
 
