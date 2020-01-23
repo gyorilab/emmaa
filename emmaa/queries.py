@@ -10,6 +10,8 @@ from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
 from indra.sources import trips
+from indra.assemblers.english.assembler import _assemble_agent_str, \
+    EnglishAssembler
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 
 
@@ -37,6 +39,9 @@ class Query(object):
     def get_hash_with_model(self, model_name):
         key = (self.matches_key(), model_name)
         return make_hash(mk_str(key), 14)
+
+    def get_type(self):
+        return underscore(type(self).__name__)
 
 
 class StructuralProperty(Query):
@@ -76,7 +81,7 @@ class PathProperty(Query):
         self.entities = self.get_entities()
 
     def to_json(self):
-        query_type = underscore(type(self).__name__)
+        query_type = self.get_type()
         json_dict = _o(type=query_type)
         json_dict['path'] = self.path_stmt.to_json()
         json_dict['entity_constraints'] = {}
@@ -158,6 +163,10 @@ class PathProperty(Query):
     def __repr__(self):
         return str(self)
 
+    def to_english(self):
+        ea = EnglishAssembler([self.path_stmt])
+        return ea.make_model()
+
 
 class SimpleInterventionProperty(Query):
     pass
@@ -204,7 +213,7 @@ class DynamicProperty(Query):
         return str(key)
 
     def to_json(self):
-        query_type = underscore(type(self).__name__)
+        query_type = self.get_type()
         json_dict = _o(type=query_type)
         json_dict['entity'] = self.entity.to_json()
         json_dict['pattern_type'] = self.pattern_type
@@ -232,6 +241,16 @@ class DynamicProperty(Query):
 
     def __repr__(self):
         return str(self)
+
+    def to_english(self):
+        agent = _assemble_agent_str(self.entity)
+        if self.pattern_type in ('always_value', 'no_change'):
+            pattern = 'always'
+        elif self.pattern_type in ('eventual_value', 'sometime_value'):
+            pattern = self.pattern_type[:-6]
+        else:
+            pattern = self.pattern_type
+        return f'{agent} is {pattern} {self.quant_value}'
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
