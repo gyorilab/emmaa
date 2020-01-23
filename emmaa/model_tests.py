@@ -6,6 +6,7 @@ import logging
 import datetime
 import itertools
 import jsonpickle
+import os
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker, \
@@ -264,15 +265,21 @@ class ModelManager(object):
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
 
-    def answer_dynamic_query(self, query):
+    def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
         tra = TRA(use_kappa=False)
         tp = query.get_temporal_pattern()
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 self.mc_types['pysb']['model'], tp)
+            fig_name = os.path.basename(fig_path)
+            s3_key = f'query_images/{self.model.name}/{fig_name}'
+            s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+            client = get_s3_client(unsigned=False)
+            logger.info(f'Uploading image to {s3_path}')
+            client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
-                         'kpat': kpat, 'fig_path': fig_path}
+                         'kpat': kpat, 'fig_path': s3_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json))]
@@ -295,7 +302,7 @@ class ModelManager(object):
         applicable_stmts = []
         for query in queries:
             if isinstance(query, DynamicProperty):
-                mc_type, response = self.answer_dynamic_query(query)
+                mc_type, response = self.answer_dynamic_query(query)[0]
                 responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
@@ -379,8 +386,7 @@ class ModelManager(object):
                 response_dict[response_hash] = resp
         elif isinstance(response, dict):
             results = [str(response.get('sat_rate')),
-                       str(response.get('num_sim')),
-                       response.get('kpat')]
+                       str(response.get('num_sim'))]
             response_str = ' '.join(results)
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response
