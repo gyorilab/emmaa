@@ -212,6 +212,7 @@ class EmmaaDatabaseManager(object):
                     logger.info(f"Adding query on {model_id} to the db.")
                     new_queries.append(Query(model_id=model_id,
                                              json=query.to_json(),
+                                             qtype=query.get_type(),
                                              hash=qh))
                 else:
                     logger.info(f"Query for {model_id} already in db.")
@@ -307,7 +308,7 @@ class EmmaaDatabaseManager(object):
         logger.info(f"Found {len(results)} results.")
         return results
 
-    def get_results(self, user_email, latest_order=1):
+    def get_results(self, user_email, latest_order=1, query_type=None):
         """Get the results for which the user has registered.
 
         Parameters
@@ -331,6 +332,8 @@ class EmmaaDatabaseManager(object):
                          UserQuery.user_id == User.id,
                          UserQuery.subscription,
                          User.email == user_email))
+            if query_type:
+                q = q.filter(Query.qtype == query_type)
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
