@@ -382,7 +382,8 @@ class QueryManager(object):
     def make_html_one_query_report(self, model_name, query, mc_type,
                                    new_result_json, old_result_json=None,
                                    include_no_diff=True):
-        """Return an html page containing information about a query
+        """Return an html page containing information about a query and any
+        change in the results.
 
         Parameters
         ----------
