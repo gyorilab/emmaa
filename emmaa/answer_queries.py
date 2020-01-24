@@ -1,4 +1,3 @@
-import pickle
 import logging
 from datetime import datetime
 
@@ -6,7 +5,8 @@ from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, find_latest_s3_file, \
     EMMAA_BUCKET_NAME
-from emmaa.subscription import send_email, notifications_sender_default
+from emmaa.subscription import send_email, notifications_sender_default, \
+    generate_unsubscribe_qs
 
 
 logger = logging.getLogger(__name__)
@@ -174,18 +174,14 @@ class QueryManager(object):
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
-    def get_user_query_delta(
-            self, user_email, filename='query_delta', report_format='str'):
+    def get_user_query_delta(self, user_email, report_format='html'):
         """Produce a report for all query results per user in a given format"""
         results = self.db.get_results(user_email, latest_order=1)
         if report_format == 'str':
-            filename = filename + '.txt' if filename else None
-            reports = self.make_str_report_per_user(results,
-                                                    filename=filename)
+            reports = self.make_str_report_per_user(results)
             return reports if reports else None
         elif report_format == 'html':
-            filename = filename + '.html' if filename else None
-            msg = self.make_html_report_per_user(results, filename=filename)
+            msg = self.make_html_report_per_user(results, email=user_email)
             return msg if msg else None
 
     def get_report_per_query(self, model_name, query, format='str'):
@@ -213,18 +209,21 @@ class QueryManager(object):
         else:
             return reports
 
-    def make_html_report_per_user(self, results, filename='query_delta.html'):
+    def make_html_report_per_user(self, results, email):
         """Produce a report for all query results per user in an html file."""
-        msg = '<html><body>'
         reports = self.make_reports_from_results(results, True, 'html')
-        for report in reports:
-            msg += report
-        msg += '</body></html>'
-        if filename:
-            with open(filename, 'w') as f:
-                f.write(msg)
-        else:
-            return msg
+        msg = ''
+        if reports:
+            msg += '<html><body>'
+            for report in reports:
+                msg += report
+            # Generate unsubscribe link
+            link = f'/query/unsubscribe?{generate_unsubscribe_qs(email)}'
+            msg += f'<footer>If you wish to unsubscribe from future ' \
+                   f'notifications, click on this link:<br><a href=' \
+                   f'"{link}">{link}</a></footer>'
+            msg += '</body></html>'
+        return msg
 
     def make_str_report_one_query(self, model_name, query, mc_type,
                                   new_result_json, old_result_json=None):
@@ -258,7 +257,6 @@ class QueryManager(object):
         msg = '<html><body>'
         msg += self._make_html_one_query_inner(
             model_name, query, mc_type, new_result_json, old_result_json)
-        msg += f'{url_for("email_unsubscribe")}?<put_query_string_here>'
         msg += '</body></html>'
         return msg
 
