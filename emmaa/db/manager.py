@@ -348,6 +348,74 @@ class EmmaaDatabaseManager(object):
             users = [q for q, in q.all()]
         return users
 
+    def get_subscribed_queries(self, email):
+        logger.info(f"Got request to list user queries for {email}")
+        # Get the query json for which email is subscribed
+        with self.get_session() as sess:
+            q = sess.query(Query.json, Query.model_id, Query.hash).filter(
+                Query.hash == UserQuery.query_hash,
+                UserQuery.user_id == User.id,
+                User.email == email,
+                UserQuery.subscription
+            )
+            # Returns list of (query json, query hash) tuples
+        return q.all()
+
+    def update_email_subscription(self, email, queries, subscribe):
+        """Update email subscriptions for user queries
+
+        NOTE:
+        For now this method simply unsubscribes to the given queries but
+        should in the future differentiated into recieving email
+        notifications or not and subscribing to queries or not.
+
+        Parameters
+        ----------
+        email : str
+            The email assocaited with the query
+        queries : list(int)|'all'
+            A list of query hashes or the string "all"
+        subscribe : bool
+            The subscription status for all matching query hashes
+
+        Returns
+        -------
+        bool
+            Return True if the update was successful, False otherwise
+        """
+        logger.info(f'Got request to update email subscription for {email} '
+                    f'on {len(queries)} queries.')
+        try:
+            updated = 0
+            with self.get_session() as sess:
+                for qhash in queries:
+                    # Update subscription status for each provided hash
+                    user_query = sess.query(UserQuery).filter(
+                        User.email == email,
+                        UserQuery.user_id == User.id,
+                        UserQuery.query_hash == qhash
+                    )
+                    uq = user_query.all()[0] if len(user_query.all()) > 0 \
+                        else None
+
+                    # If entry exists and subscription status is different
+                    # from new status
+                    if uq and uq.subscription != subscribe:
+                        uq = update_subscription(uq, subscribe)
+                        updated += 1
+                    else:
+                        continue
+            logger.info(f'Changed subscription status for {updated} '
+                        f'queries to {subscribe}. The other '
+                        f'{updated-len(queries)} queries already had their '
+                        f'subscription status set to {subscribe}.')
+            return True
+        except Exception as e:
+            logger.warning(f'Could not change subscription status for query '
+                           f'hashes {queries}.')
+            logger.exception(e)
+            return False
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter: (model_id, query(object), result_json, date)
