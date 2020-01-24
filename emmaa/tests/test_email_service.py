@@ -1,11 +1,15 @@
 import os
 from time import sleep
+from urllib import parse
 from datetime import datetime, timedelta, timezone
 from nose.plugins.attrib import attr
 from emmaa.util import find_latest_emails, get_email_content
 from emmaa.subscription import send_email, notifications_sender_default,\
     close_to_quota_max
+from emmaa.subscription.email_util import verify_email_signature, \
+    generate_signature, generate_unsubscribe_qs
 
+test_email = 'test@testing.com'
 actual_test_receiver = os.environ.get('EMAIL_TEST_RECEIVER')
 indra_bio_arn = os.environ.get('INDRA_EMAIL_SOURCE_ARN')
 text_body = "This is an email automatically generated from a nosetest"
@@ -142,3 +146,58 @@ def test_reject():
     # mailbox-simulator.html#mailbox-simulator-reject
     pass
     # Todo check feedback directory on bucket for reject message??
+
+
+def test_unsubscribe_qs_generation():
+    days = 1
+    expiry = datetime.utcnow() + timedelta(days=days)
+    qs = generate_unsubscribe_qs(test_email, days=days)
+    qsd = parse.parse_qs(qs)
+    assert isinstance(qsd.get('signature'), list)
+    assert len(qsd.get('signature')[0]) == 64  # OK for sha256
+    assert isinstance(qsd.get('email'), list)
+    assert qsd.get('email')[0] == test_email
+    assert isinstance(qsd.get('expiration'), list)
+    assert expiry - datetime.fromtimestamp(int(qsd.get('expiration')[0])) < \
+        timedelta(seconds=1)
+    assert verify_email_signature(signature=qsd.get('signature')[0],
+                                  email=qsd.get('email')[0],
+                                  expiration=qsd.get('expiration')[0])
+
+
+def test_incorrect_signature():
+    # jibberish
+    jibberish = 'notasignature'
+    jqs = generate_unsubscribe_qs(test_email)
+    jqsd = parse.parse_qs(jqs)
+    assert jqsd['signature']
+    assert jqsd['email']
+    assert jqsd['expiration']
+    assert not verify_email_signature(signature=jibberish,
+                                      email=jqsd['email'][0],
+                                      expiration=jqsd['expiration'][0])
+    # off by one
+    qs = generate_unsubscribe_qs(test_email)
+    qsd = parse.parse_qs(qs)
+    assert qsd['signature']
+    assert qsd['email']
+    assert qsd['expiration']
+    assert not verify_email_signature(signature=qsd['signature'][0][:-1],
+                                      email=jqsd['email'][0],
+                                      expiration=jqsd['expiration'][0])
+    # expired
+    days = 0
+    expiry = datetime.utcnow() + timedelta(days=days)
+    qs = generate_unsubscribe_qs(test_email, days=days)
+    qsd = parse.parse_qs(qs)
+    assert qsd['signature']
+    assert qsd['email']
+    assert qsd['expiration']
+    # Should pass because signature is correct
+    assert verify_email_signature(signature=qsd['signature'][0][:-1],
+                                  email=jqsd['email'][0],
+                                  expiration=jqsd['expiration'][0])
+    assert expiry - datetime.fromtimestamp(int(qsd.get('expiration')[0])) < \
+        timedelta(seconds=1)
+    assert datetime.fromtimestamp(int(qsd.get('expiration')[0])) < \
+        datetime.utcnow()
