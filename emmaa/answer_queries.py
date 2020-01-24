@@ -233,11 +233,11 @@ class QueryManager(object):
         if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
                 msg = f'\nThis is the first result to query ' \
-                      f'{_make_query_str(query)} in {model_name} with' \
+                      f'{query.to_english()} in {model_name} with' \
                       f' {mc_type} model checker.\nThe result is:'
                 msg += _process_result_to_str(new_result_json)
             else:
-                msg = f'\nA new result to query {_make_query_str(query)}' \
+                msg = f'\nA new result to query {query.to_english()}' \
                       f' in {model_name} was found with {mc_type}' \
                       f' model checker. '
                 msg += '\nPrevious result was:'
@@ -245,7 +245,7 @@ class QueryManager(object):
                 msg += '\nNew result is:'
                 msg += _process_result_to_str(new_result_json)
         else:
-            msg = f'\nA result to query {_make_query_str(query)} in ' \
+            msg = f'\nA result to query {query.to_english()} in ' \
                   f'{model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:'
             msg += _process_result_to_str(new_result_json)
@@ -268,13 +268,13 @@ class QueryManager(object):
         if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
                 msg = f'<p>This is the first result to query ' \
-                      f'"{_make_query_str(query)}" in {model_name} ' \
+                      f'"{query.to_english()}" in {model_name} ' \
                       f'with {mc_type} model checker. The result is:<br>'
                 msg += _process_result_to_str(new_result_json)
                 msg += '</p>'
             else:
                 msg = f'<p>A new result to query ' \
-                      f'"{_make_query_str(query)}" in {model_name} ' \
+                      f'"{query.to_english()}" in {model_name} ' \
                       f'was found with {mc_type} model checker.<br>'
                 msg += '<br>Previous result was:<br>'
                 msg += _process_result_to_str(old_result_json)
@@ -282,7 +282,7 @@ class QueryManager(object):
                 msg += _process_result_to_str(new_result_json)
                 msg += '</p>'
         else:
-            msg = f'<p>A result to query "{_make_query_str(query)}" ' \
+            msg = f'<p>A result to query "{query.to_english()}" ' \
                   f'in {model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:<br>'
             msg += _process_result_to_str(new_result_json)
