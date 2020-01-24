@@ -91,12 +91,13 @@ class QueryManager(object):
                     logger.info(report)
             self.db.put_results(model_name, results)
 
-    def get_registered_queries(self, user_email, query_type):
+    def get_registered_queries(self, user_email, query_type='path_property'):
         """Get formatted results to queries registered by user."""
         results = self.db.get_results(user_email, query_type=query_type)
         return format_results(results, query_type)
 
-    def retrieve_results_from_hashes(self, query_hashes, query_type):
+    def retrieve_results_from_hashes(self, query_hashes,
+                                     query_type='path_property'):
         """Retrieve results from a db given a list of query-model hashes."""
         results = self.db.get_results_from_hashes(query_hashes)
         return format_results(results, query_type)
@@ -302,7 +303,7 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     return not set(new_result_hashes) == set(old_result_hashes)
 
 
-def format_results(results, query_type):
+def format_results(results, query_type='path_property'):
     """Format db output to a standard json structure."""
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
