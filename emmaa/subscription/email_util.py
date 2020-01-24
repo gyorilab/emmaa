@@ -27,8 +27,8 @@ def __sign_str_concat(email, expiration_str):
 
 
 def generate_unsubscribe_qs(email):
-    tomorrow = datetime.utcnow() + timedelta(hours=24)
-    expiration = str(tomorrow.timestamp()).split('.')[0]
+    future = datetime.utcnow() + timedelta(days=7)
+    expiration = str(future.timestamp()).split('.')[0]
     signature = generate_signature(email=email, expire_str=expiration)
     return parse.urlencode({'email': email,
                             'expiration': expiration,
