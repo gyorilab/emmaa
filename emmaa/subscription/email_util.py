@@ -80,7 +80,7 @@ def get_email_subscriptions(email):
     if not user_queries:
         return []
     # Todo get the query type from the json
-    return [(PathProperty._from_json(qj).to_english() + f' for model {mid}',
+    return [(Query._from_json(qj).to_english() + f' for model {mid}',
             'Path Query', qh) for qj, mid, qh in user_queries]
 
 
