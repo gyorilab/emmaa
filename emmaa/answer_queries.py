@@ -258,6 +258,7 @@ class QueryManager(object):
         msg = '<html><body>'
         msg += self._make_html_one_query_inner(
             model_name, query, mc_type, new_result_json, old_result_json)
+        msg += f'{url_for("email_unsubscribe")}?<put_query_string_here>'
         msg += '</body></html>'
         return msg
 
