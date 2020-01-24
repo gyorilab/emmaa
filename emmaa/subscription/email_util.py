@@ -8,6 +8,12 @@ from urllib import parse
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 
+from emmaa.db import get_db
+from emmaa.queries import Query
+from emmaa.answer_queries import _make_query_str
+
+db = get_db('primary')
+
 logger = logging.getLogger(__name__)
 
 EMAIL_SIGNATURE_KEY = os.environ.get('EMAIL_SIGN')
@@ -70,27 +76,18 @@ def verify_email_signature(signature, email, expiration,
         return False
 
 
-def verify_email_subscriptions(email):
+def get_email_subscriptions(email):
     """Verifies which email subsciptions exist for the provided email"""
-    return []
+    user_queries = db.get_subscribed_queries(email)
+    if not user_queries:
+        return []
+    # Todo get the query type from the json
+    return [(_make_query_str(Query._from_json(qj)) + f' for model {mid}',
+             'Path Query', qh)
+            for qj, mid, qh in user_queries]
 
 
 def register_email_unsubscribe(email, queries):
     """Executes an email unsubscribe request"""
-    if isinstance(queries, str):
-        if queries.lower() == 'all':
-            return _unsubscribe_all_queries(email)
-        else:
-            logger.warning(f'Unrecognized unsubscribe request string '
-                           f'{queries}')
-    elif isinstance(queries, list):
-        return _unsubscribe_queries(email, queries)
-    return False
-
-
-def _unsubscribe_all_queries(email):
-    return False
-
-
-def _unsubscribe_queries(email, queries):
-    return False
+    success = db.update_email_subscription(email, queries, False)
+    return success
