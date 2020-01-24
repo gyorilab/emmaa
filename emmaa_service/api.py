@@ -1,10 +1,9 @@
 import os
-import re
 import json
 import boto3
 import logging
 import argparse
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
@@ -19,10 +18,12 @@ from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
     does_exist, EMMAA_BUCKET_NAME, list_s3_files
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
-from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
+from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
+    FORMATTED_TYPE_NAMES
+from emmaa.subscription.email_util import verify_email_signature,\
+    register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, get_agent_from_trips
-from emmaa.answer_queries import FORMATTED_TYPE_NAMES
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -209,7 +210,7 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date):
     new_app_hashes = test_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
     if len(new_app_hashes) == 0:
-        return 'No new tests were applied' 
+        return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
     return _format_table_array(new_app_tests, model_types, model_name, date)
 
