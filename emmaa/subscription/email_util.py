@@ -70,7 +70,6 @@ def verify_email_signature(signature, email, expiration,
         digestmod=digestmod).hexdigest()
 
     if len(signature) != len(actual_digest):
-        time.sleep(0.25)
         return False
     try:
         return hmac.compare_digest(actual_digest, signature)
