@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 from emmaa.db import get_db
 from emmaa.queries import Query
-from emmaa.answer_queries import _make_query_str
 
 db = get_db('primary')
 
