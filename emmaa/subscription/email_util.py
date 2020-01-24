@@ -1,12 +1,9 @@
 import os
 import hmac
-import time
-import boto3
 import hashlib
 import logging
 from urllib import parse
 from datetime import datetime, timedelta
-from botocore.exceptions import ClientError
 
 from emmaa.db import get_db
 from emmaa.queries import Query
