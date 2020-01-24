@@ -14,10 +14,8 @@ addons:
 install:
   - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
-  - git clone https://github.com/sorgerlab/bioagents.git
-  - cd bioagents
-  - pip install .
-  - cd ..
+  - pip install ez_setup
+  - pip install git+https://github.com/sorgerlab/bioagents.git
   - git clone https://github.com/indralab/ui_util.git
   - cd ui_util/indralab_auth_tools
   - pip install .
