@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unsubscribe from queries</title>
+
+  <!-- jquery 3.3.1 -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <!-- bootstrap 4.1.3 CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <!-- bootstrap 4.1.3 -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+  <script>
+    function toggleGreyOut(allChecked) {
+      for (let inp of document.getElementsByClassName('sub-choice')) {
+        inp.disabled = !allChecked
+      }
+    }
+
+    function gatherHashes(allChecked) {
+      console.log(`allChecked=${allChecked}`);
+      let hashList = [];
+      for (let inp of document.getElementsByClassName('sub-choice')) {
+        if (allChecked || (!allChecked && inp.checked)) {
+          hashList.push(inp.id)
+        }
+      }
+      return hashList;
+    }
+
+    function submitSubscriptionUpdate(allChecked) {
+      // Greyout all checkboxes
+      toggleGreyOut(false);
+      $('#all-hashes').disabled = true;
+
+      // Check if 'all-hashes' is checked and  Gather query hashes
+      let queryHashes = gatherHashes(allChecked);
+
+      // Could also get email from: `new URL(window.location.href).searchParams.get('email')`
+      let email = '{{ email }}';
+
+      let queryParams = {'email': email, 'queries': queryHashes};
+
+      // ajax POST to unsubscribe post
+      return $.ajax({
+        url: '{{ url_for("email_unsubscribe_post") }}',
+        type: 'POST',
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(queryParams),
+        complete: function (res, statusText) {
+          console.log(`response text: ${statusText}`);
+          console.log(res.responseJSON);
+          switch (res.status) {
+            case 200:
+              console.log('200 response');
+              $('#unsub-status').textContent = 'Unsubscribe successful';
+              break;
+            case 400:
+              console.log('400 response');
+              $('#unsub-status').textContent = 'Unsubscribe failed';
+              break;
+            case 500:
+              console.log('500 response');
+              $('#unsub-status').textContent = 'Unsubscribe failed: Internal Server Error (500)';
+              break;
+            default:
+              console.log(`Unhandled response ${res.status}`);
+              console.log(res);
+              $('#unsub-status').textContent = `Unsubscribe failed: ${res.status}`;
+          }
+
+        }
+      })
+    }
+  </script>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <h3>Pick queries to unsubscribe from</h3>
+    </div>
+    <div class="card-body">
+      <div class="container">
+        {# If 'possible_queries' is empty, show that no queries exist to unsubscribe from #}
+        {% if possible_queries|length > 0 %}
+          {# Loop possible queries, insert into table: english query | check box #}
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>query</th>
+                <th>type</th>
+                <th>unsubscribe</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for english_query, query_type, qhash in possible_queries %}
+              <tr>
+                <td>{{ english_query }}</td>
+                <td>{{ query_type }}</td>
+                <td><input id="{{ qhash }}" type="checkbox" class="sub-choice"></td>
+              </tr>
+              {% endfor %}
+              <tr style="border-top: 2px solid darkgray">
+                <td colspan="2" style="text-align: center"><i>Unsubscribe from all</i></td>
+                <td><input id="all-hashes" type="checkbox" onclick="toggleGreyOut(!(this.checked))"></td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" class="btn btn-primary" onclick="submitSubscriptionUpdate($('#all-hashes').checked)">Unsubscribe</button>
+          <p><i id="unsub-status"></i></p>
+        {% else %}
+          <p><i>You currently don't have any subscribed queries</i></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
