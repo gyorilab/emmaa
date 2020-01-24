@@ -6,6 +6,7 @@ from emmaa.answer_queries import QueryManager, format_results, \
 from emmaa.queries import Query
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
+from emmaa.tests.test_model import create_model
 from emmaa.model import EmmaaModel
 
 
@@ -13,7 +14,7 @@ test_query = {'type': 'path_property', 'path': {'type': 'Activation',
               'subj': {'type': 'Agent', 'name': 'BRAF',
                        'db_refs': {'HGNC': '1097'}},
               'obj': {'type': 'Agent', 'name': 'MAPK1',
-                      'db_refs': {'HGNC': '6871'}}}}
+                      'db_refs': {'HGNC': '6871'}}, 'obj_activity': 'activity'}}
 simple_query = 'BRAF activates MAPK1.'
 query_object = Query._from_json(test_query)
 
@@ -31,8 +32,9 @@ test_response = {
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
 fail_response = {'521653329': 'No path found that satisfies the test statement'}
-# Create a new ModelManager for tests instead of depending on S3 version
-test_model = EmmaaModel.load_from_s3('test')
+# Create a new EmmaaModel and ModelManager for tests instead of depending
+# on S3 version
+test_model = create_model()
 test_mm = ModelManager(test_model)
 
 
@@ -62,9 +64,10 @@ def test_format_results():
 def test_answer_immediate_query():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    query_hashes = qm.answer_immediate_query('tester@test.com', 1, query_object,
-                                             ['test'], subscribe=False)
-    assert query_hashes == [-4326204908289564]
+    query_hashes = qm.answer_immediate_query(
+        'tester@test.com', 1, query_object, ['test'], subscribe=False)[
+            'path_property']
+    assert query_hashes == [35683418474694258], query_hashes
     results = qm.retrieve_results_from_hashes(query_hashes)
     assert len(results) == 1
     assert query_hashes[0] in results
@@ -74,9 +77,9 @@ def test_answer_immediate_query():
     assert isinstance(result_values['date'], str)
     assert result_values['pysb'] == ['Pass', [test_response['3801854542']]], \
         result_values['pysb']
-    assert result_values['pybel'] == ['n_a', 'Model type not supported']
-    assert result_values['signed_graph'] == ['n_a', 'Model type not supported']
-    assert result_values['unsigned_graph'] == ['n_a', 'Model type not supported']
+    assert result_values['pybel'] == ['Pass', [test_response['3801854542']]]
+    assert result_values['signed_graph'][0] == 'Pass'
+    assert result_values['unsigned_graph'][0] == 'Pass'
 
 
 @attr('nonpublic')
@@ -95,9 +98,9 @@ def test_answer_get_registered_queries():
     assert isinstance(results[qh]['date'], str)
     assert results[qh]['pysb'] == ['Pass', [test_response['3801854542']]], \
         (results[qh]['pysb'], test_response['3801854542'])
-    assert results[qh]['pybel'] == ['n_a', 'Model type not supported']
-    assert results[qh]['signed_graph'] == ['n_a', 'Model type not supported']
-    assert results[qh]['unsigned_graph'] == ['n_a', 'Model type not supported']
+    assert results[qh]['pybel'] == ['Pass', [test_response['3801854542']]]
+    assert results[qh]['signed_graph'][0] == 'Pass'
+    assert results[qh]['unsigned_graph'][0] == 'Pass'
 
 
 def test_is_diff():
