@@ -21,7 +21,9 @@ EMAIL_SIGNATURE_KEY = os.environ.get('EMAIL_SIGN')
 
 def __sign_str_concat(email, expiration_str):
     """This is the method to concatenate strings that are to be used in HMAC
-    signature generation
+    signature generation.
+
+    Email should NOT be url encoded.
     """
     return ' '.join([email, expiration_str])
 
@@ -59,7 +61,7 @@ def verify_email_signature(signature, email, expiration,
                            digestmod=hashlib.sha256):
     """Verify HMAC signature"""
     if not EMAIL_SIGNATURE_KEY:
-        logger.error('No secret key set for email signature.'
+        logger.error('No secret key set for email signature. '
                      'Cannot verify signature')
         return False
     actual_digest = hmac.new(
