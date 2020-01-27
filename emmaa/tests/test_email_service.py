@@ -4,10 +4,10 @@ from urllib import parse
 from datetime import datetime, timedelta, timezone
 from nose.plugins.attrib import attr
 from emmaa.util import find_latest_emails, get_email_content
-from emmaa.subscription import send_email, notifications_sender_default,\
-    close_to_quota_max
+from emmaa.subscription.email_service import send_email, \
+    notifications_sender_default, close_to_quota_max
 from emmaa.subscription.email_util import verify_email_signature, \
-    generate_signature, generate_unsubscribe_qs
+    generate_unsubscribe_qs
 
 test_email = 'test@testing.com'
 actual_test_receiver = os.environ.get('EMAIL_TEST_RECEIVER')
