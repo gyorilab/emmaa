@@ -244,13 +244,16 @@ class DynamicProperty(Query):
 
     def to_english(self):
         agent = _assemble_agent_str(self.entity)
+        agent = agent[0].upper() + agent[1:]
         if self.pattern_type in ('always_value', 'no_change'):
             pattern = 'always'
-        elif self.pattern_type in ('eventual_value', 'sometime_value'):
-            pattern = self.pattern_type[:-6]
+        elif self.pattern_type == 'eventual_value':
+            pattern = 'eventually'
+        elif self.pattern_type == 'sometime_value':
+            pattern = 'sometimes'
         else:
             pattern = self.pattern_type
-        return f'{agent} is {pattern} {self.quant_value}'
+        return f'{agent} is {pattern} {self.quant_value}.'
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
