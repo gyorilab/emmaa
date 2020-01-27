@@ -12,6 +12,12 @@ function postQuery(queryContainer) {
     return;
   }
 
+  if (queryContainer.id == 'query-container') {
+    var tab = 'static';
+  } else {
+    var tab = 'dynamic';
+  };
+
   // Check if user wants to register query
   let reg = document.getElementById('register-query').checked;
 
@@ -19,7 +25,7 @@ function postQuery(queryContainer) {
     models: querySel[0],
     query: querySel[1],
     register: reg
-  }, null);
+  }, tab, null);
 
   console.log("ajax response from submission: ");
   console.log(ajax_response);
@@ -71,16 +77,20 @@ function collectQuery(queryContainer) {
   return result;
 }
 
-function submitQuery(queryDict, test) {
+function submitQuery(queryDict, tab, test) {
   console.log('function submitQuery(queryDict)');
   console.log('Submitting data to query DB');
   console.log(queryDict);
-
+  console.log(tab)
   if (test) queryDict['test'] = true;
 
   // submit POST to emmaa user db
   queryNotify('Waiting for server response');
-  $('#query-status-gif').show();
+  if (tab == 'static') {
+    $('#query-status-gif').show();
+  } else {
+    $('#dyn-query-status-gif').show();
+  }
   return $.ajax({
     url: EMMAA_API,
     type: 'POST',
@@ -92,6 +102,7 @@ function submitQuery(queryDict, test) {
       console.log(xhr.responseJSON);
       console.log(statusText);
       $('#query-status-gif').hide();
+      $('#dyn-query-status-gif').show();
       switch (xhr.status) {
         case 200:
           console.log('200 response');
