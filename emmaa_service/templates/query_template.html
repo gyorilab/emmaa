@@ -22,15 +22,24 @@
 <div class="container nav-container">
   <nav>
     <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      {% if tab == 'static' %}
       <a class="nav-item nav-link active" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="true">Static</a>
       <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Dynamic</a>
+      {% else %}
+      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Static</a>
+      <a class="nav-item nav-link active" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="true">Dynamic</a>
+      {% endif %}     
     </div>
   </nav>
 </div>
 <div class="tab-content" id="nav-tabContent">
+  {% if tab == 'static' %}
   <div class="tab-pane fade show active" id="nav-static" role="tabpanel" aria-labelledby="nav-static-tab">
+  {% else %}
+  <div class="tab-pane" id="nav-static" role="tabpanel" aria-labelledby="nav-static-tab">
+  {% endif %}
+    <!-- Static Queries -->
     <div class="container" id="query-container">
-
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Model Queries</h4>
@@ -48,7 +57,6 @@
               </select>
             </div>
           </div>
-
           <!-- stmt type select -->
           <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
           <div class="form-container" style="display: inline-block; vertical-align: top;">
@@ -104,21 +112,27 @@
               <span><i id="query-status"></i></span>
             </div>
           </div>
-
         </div>
       </div>
     </div>
 
     <!-- Query results -->
     <div class="container">
-    {{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
+      {{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
     </div>
     <!-- List user queries -->
     <div class="container">
-    {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
+      {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
     </div>
+
   </div>
+  {% if tab == 'static' %}
   <div class="tab-pane fade" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
+  {% else %}
+  <div class="tab-pane fade show active" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
+  {% endif %}
+
+    <!-- Dynamic queries -->
     <div class="container" id="dynamic-container">
 
       <div class="card">
@@ -187,7 +201,7 @@
 
           <div class="container">
             <div class="container">
-              <div id="query-status-gif" style="display: none;">
+              <div id="dyn-query-status-gif" style="display: none;">
                 <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
               </div>
               <span><i id="query-status"></i></span>
