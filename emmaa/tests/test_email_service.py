@@ -194,10 +194,11 @@ def test_incorrect_signature():
     assert qsd['email']
     assert qsd['expiration']
     # Should pass because signature is correct
-    assert verify_email_signature(signature=qsd['signature'][0][:-1],
-                                  email=jqsd['email'][0],
-                                  expiration=jqsd['expiration'][0])
-    assert expiry - datetime.fromtimestamp(int(qsd.get('expiration')[0])) < \
+    assert verify_email_signature(signature=qsd['signature'][0],
+                                  email=qsd['email'][0],
+                                  expiration=qsd['expiration'][0])
+    
+    assert datetime.fromtimestamp(int(qsd.get('expiration')[0])) - expiry < \
         timedelta(seconds=1)
     assert datetime.fromtimestamp(int(qsd.get('expiration')[0])) < \
         datetime.utcnow()
