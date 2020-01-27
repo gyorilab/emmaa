@@ -5,8 +5,9 @@ from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, find_latest_s3_file, \
     EMMAA_BUCKET_NAME
-from emmaa.subscription import send_email, notifications_sender_default, \
-    generate_unsubscribe_qs
+from emmaa.subscription.email_util import generate_unsubscribe_qs
+from emmaa.subscription.email_service import send_email, \
+    notifications_sender_default
 
 
 logger = logging.getLogger(__name__)

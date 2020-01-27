@@ -8,7 +8,7 @@ from botocore.client import Config
 from inflection import camelize
 from indra.util.aws import get_s3_file_tree, get_date_from_str
 from indra.statements import get_all_descendants
-from emmaa.subscription import email_bucket
+from emmaa.subscription.email_service import email_bucket
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
 RE_DATETIMEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
