@@ -40,7 +40,7 @@ ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
 link_list = [('/home', 'EMMAA Dashboard'),
-             ('/query', 'Queries')]
+             ('/query?tab=static', 'Queries')]
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
@@ -189,12 +189,14 @@ def _make_query(query_dict, use_grouding_service=True):
             query_dict['objectSelection'], use_grouding_service)
         stmt = stmt_class(subj, obj)
         query = PathProperty(path_stmt=stmt)
+        tab = 'static'
     elif 'agentSelection' in query_dict.keys():
         agent = get_agent_from_trips(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
-    return query
+        tab = 'dynamic'
+    return query, tab
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date):
@@ -433,6 +435,7 @@ def get_model_tests_page(model):
 def get_query_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    tab = request.args.get('tab', 'model')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
@@ -491,7 +494,8 @@ def get_query_page():
                            subscribed_dynamic_headers=subscribed_dyn_headers,
                            subscribed_dynamic_results=subscribed_dyn_results,
                            link_list=link_list,
-                           user_email=user_email)
+                           user_email=user_email,
+                           tab=tab)
 
 
 @app.route('/query/<model>/')
@@ -538,6 +542,7 @@ def process_query():
     expected_dynamic_query_keys = {f'{pos}Selection'
                                    for pos in ['pattern', 'value', 'agent']}
     expected_models = {mid for mid, _, _, _ in _get_model_meta_data()}
+    tab = 'static'
     try:
         # If user tries to register query without logging in, refuse query
         # with 401 (unauthorized)
@@ -565,7 +570,7 @@ def process_query():
         logger.error("Invalid query!")
         abort(Response(f'Invalid request: {str(e)}', 400))
     try:
-        query = _make_query(query_json)
+        query, tab = _make_query(query_json)
     except GroundingError as e:
         logger.exception(e)
         logger.error("Invalid grounding!")
@@ -587,7 +592,7 @@ def process_query():
             raise(e)
         logger.info('Answer to query received: rendering page, returning '
                     'redirect endpoint')
-        redir_url = '/query'
+        redir_url = f'/query?tab={tab}'
 
         # Replace existing entry
         session['query_hashes'] = result
