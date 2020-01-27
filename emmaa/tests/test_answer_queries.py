@@ -3,7 +3,7 @@ from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
     is_query_result_diff
-from emmaa.queries import Query
+from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_model import create_model
@@ -17,7 +17,8 @@ test_query = {'type': 'path_property', 'path': {'type': 'Activation',
                       'db_refs': {'HGNC': '6871'}}, 'obj_activity': 'activity'}}
 simple_query = 'BRAF activates MAPK1.'
 query_object = Query._from_json(test_query)
-
+dyn_ag = get_agent_from_trips('active MAP2K1')
+dyn_query = DynamicProperty(dyn_ag, 'eventual_value', 'high')
 test_response = {
     '3801854542': {
         'path': 'BRAF → MAP2K1 → MAPK1',
@@ -83,13 +84,37 @@ def test_answer_immediate_query():
 
 
 @attr('nonpublic')
+def test_immediate_dynamic():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    query_hashes = qm.answer_immediate_query(
+        'tester@test.com', 1, dyn_query, ['test'], subscribe=False)[
+            'dynamic_property']
+    assert query_hashes == [-27775603206605897], query_hashes
+    results = qm.retrieve_results_from_hashes(query_hashes, 'dynamic_property')
+    assert len(results) == 1, results
+    assert query_hashes[0] in results
+    result_values = results[query_hashes[0]]
+    assert result_values['model'] == 'test'
+    assert result_values['query'] == 'Active MAP2K1 is eventually high.'
+    assert isinstance(result_values['date'], str)
+    assert result_values['result'] == [
+        'Pass', 'Satisfaction rate is 100% after 2 simulations.']
+    assert isinstance(result_values['image'], str)
+
+
+@attr('nonpublic')
 def test_answer_get_registered_queries():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
+    # Put both path and dynamic queries in db, answer together
     qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
                       subscribe=True)
+    qm.db.put_queries('tester@test.com', 1, dyn_query, ['test'],
+                      subscribe=True)
     qm.answer_registered_queries('test')
-    results = qm.get_registered_queries('tester@test.com')
+    # Retrieve results for path query
+    results = qm.get_registered_queries('tester@test.com', 'path_property')
     qh = query_object.get_hash_with_model('test')
     assert qh in results
     assert len(results) == 1
@@ -101,6 +126,16 @@ def test_answer_get_registered_queries():
     assert results[qh]['pybel'] == ['Pass', [test_response['3801854542']]]
     assert results[qh]['signed_graph'][0] == 'Pass'
     assert results[qh]['unsigned_graph'][0] == 'Pass'
+    # Retrieve results for dynamic query
+    results = qm.get_registered_queries('tester@test.com', 'dynamic_property')
+    qh = dyn_query.get_hash_with_model('test')
+    assert qh in results
+    assert results[qh]['model'] == 'test'
+    assert results[qh]['query'] == 'Active MAP2K1 is eventually high.'
+    assert isinstance(results[qh]['date'], str)
+    assert results[qh]['result'] == [
+        'Pass', 'Satisfaction rate is 100% after 2 simulations.']
+    assert isinstance(results[qh]['image'], str)
 
 
 def test_is_diff():

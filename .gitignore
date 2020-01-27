@@ -111,3 +111,4 @@ venv.bak/
 emmaa/tests/test_query_delta.txt
 emmaa/tests/test_query_delta.html
 emmaa/tests/new_test_query_delta.txt
+emmaa/tests/trips_output.xml
