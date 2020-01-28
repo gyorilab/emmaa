@@ -267,7 +267,7 @@ class ModelManager(object):
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
-        tra = TRA(use_kappa=True)
+        tra = TRA(use_kappa=False)
         tp = query.get_temporal_pattern()
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(

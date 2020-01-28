@@ -12,6 +12,9 @@ addons:
     packages:
       - libssl1.0.0
 install:
+  - wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
+  - tar xzf bionetgen.tar.gz
+  - export BNGPATH=`pwd`/BioNetGen-2.4.0
   - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
   - pip install git+https://github.com/sorgerlab/bioagents.git
