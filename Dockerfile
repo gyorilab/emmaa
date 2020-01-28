@@ -22,7 +22,7 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
 
 # Clone and install EMMAA
 RUN wget https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz -O bionetgen.tar.gz -nv && \
-    tar xzf bionetgen.tar.gz
+    tar xzf bionetgen.tar.gz && \
     pip install git+https://github.com/indralab/indra_db.git && \
     pip install git+https://github.com/dianakolusheva/bioagents.git@tra && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
