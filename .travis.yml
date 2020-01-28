@@ -17,7 +17,7 @@ install:
   - export BNGPATH=`pwd`/BioNetGen-2.4.0
   - pip install git+https://github.com/sorgerlab/indra.git
   - pip install git+https://github.com/indralab/indra_db.git
-  - pip install git+https://github.com/dianakolusheva/bioagents.git@tra
+  - pip install git+https://github.com/sorgerlab/bioagents.git
   - git clone https://github.com/indralab/ui_util.git
   - cd ui_util/indralab_auth_tools
   - pip install .
