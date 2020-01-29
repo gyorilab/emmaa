@@ -40,6 +40,7 @@ class QueryManager(object):
             use_kappa=False, bucket=EMMAA_BUCKET_NAME):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
+        query_type = query.get_type()
         # Retrieve query-model hashes
         query_hashes = [
             query.get_hash_with_model(model) for model in model_names]
@@ -53,7 +54,7 @@ class QueryManager(object):
         checked_models = {res[0] for res in saved_results}
         # If the query was answered for all models before, return the hashes.
         if checked_models == set(model_names):
-            return query_hashes
+            return {query_type: query_hashes}
         # Run queries mechanism for models for which result was not found.
         new_results = []
         new_date = datetime.now()
@@ -66,7 +67,6 @@ class QueryManager(object):
                 for (mc_type, response) in response_list:
                     results_to_store.append((query, mc_type, response))
                 self.db.put_results(model_name, results_to_store)
-        query_type = query.get_type()
         return {query_type: query_hashes}
 
     def answer_registered_queries(
