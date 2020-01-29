@@ -586,7 +586,7 @@ def process_query():
         logger.info('Query submitted')
         try:
             result = qm.answer_immediate_query(
-                user_email, user_id, query, models, subscribe)
+                user_email, user_id, query, models, subscribe, use_kappa=False)
         except Exception as e:
             logger.exception(e)
             raise(e)

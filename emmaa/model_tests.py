@@ -243,9 +243,9 @@ class ModelManager(object):
         result_code = result.result_code
         return RESULT_CODES[result_code]
 
-    def answer_query(self, query):
+    def answer_query(self, query, **kwargs):
         if isinstance(query, DynamicProperty):
-            return self.answer_dynamic_query(query)
+            return self.answer_dynamic_query(query, **kwargs)
         if isinstance(query, PathProperty):
             return self.answer_path_query(query)
 
@@ -265,9 +265,10 @@ class ModelManager(object):
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
 
-    def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
+    def answer_dynamic_query(self, query, use_kappa=False,
+                             bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
-        tra = TRA(use_kappa=False)
+        tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern()
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
@@ -284,7 +285,7 @@ class ModelManager(object):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json))]
 
-    def answer_queries(self, queries):
+    def answer_queries(self, queries, **kwargs):
         """Answer all queries registered for this model.
 
         Parameters
@@ -302,7 +303,8 @@ class ModelManager(object):
         applicable_stmts = []
         for query in queries:
             if isinstance(query, DynamicProperty):
-                mc_type, response = self.answer_dynamic_query(query)[0]
+                mc_type, response = self.answer_dynamic_query(
+                    query, **kwargs)[0]
                 responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
