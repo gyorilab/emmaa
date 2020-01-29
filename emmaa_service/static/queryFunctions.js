@@ -1,14 +1,19 @@
 // EMMAA rest API
 let EMMAA_API = './query/submit';
-let QUERY_STATUS_ID = 'query-status';
+// let QUERY_STATUS_ID = 'query-status';
 
 function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)');
 
   // Collect model query
   let querySel = collectQuery(queryContainer);
+  if (queryContainer.id == 'query-container') {
+    var statusId = 'query-status';
+  } else {
+    var statusId = 'dyn-query-status';
+  }
   if (querySel.length < 2) {
-    queryNotify('Did not send query');
+    queryNotify('Did not send query', statusId);
     return;
   }
 
@@ -84,13 +89,15 @@ function submitQuery(queryDict, tab, test) {
   console.log(tab)
   if (test) queryDict['test'] = true;
 
-  // submit POST to emmaa user db
-  queryNotify('Waiting for server response');
+  // submit POST to emmaa user db 
   if (tab == 'static') {
     $('#query-status-gif').show();
+    var statusId = 'query-status';
   } else {
     $('#dyn-query-status-gif').show();
+    var statusId = 'dyn-query-status';
   }
+  queryNotify('Waiting for server response', statusId);
   return $.ajax({
     url: EMMAA_API,
     type: 'POST',
@@ -102,11 +109,11 @@ function submitQuery(queryDict, tab, test) {
       console.log(xhr.responseJSON);
       console.log(statusText);
       $('#query-status-gif').hide();
-      $('#dyn-query-status-gif').show();
+      $('#dyn-query-status-gif').hide();
       switch (xhr.status) {
         case 200:
           console.log('200 response');
-          queryNotify('Query resolved');
+          queryNotify('Query resolved', statusId);
           if (xhr.responseJSON.redirectURL) {
             window.location.replace(xhr.responseJSON.redirectURL);
           }
@@ -114,12 +121,12 @@ function submitQuery(queryDict, tab, test) {
           break;
         case 400:
           console.log('400 response');
-          queryNotify('Query failed: Bad Request (400)');
+          queryNotify('Query failed: Bad Request (400)', statusId);
           break;
         case 401:
-          console.log('401 response');
+          console.log('401 response', statusId);
           let msg = 'Must be signed in to subscribe to queries';
-          queryNotify(msg);
+          queryNotify(msg, statusId);
           if (queryDict.register) report_login_result(msg);
           login(
             (type, data) => {
@@ -132,15 +139,15 @@ function submitQuery(queryDict, tab, test) {
           break;
         case 404:
           console.log('404 response');
-          queryNotify('Query failed: Not Found (404)');
+          queryNotify('Query failed: Not Found (404)', statusId);
           break;
         case 500:
           console.log('500 response');
-          queryNotify('Query failed: Internal Server Error (500)');
+          queryNotify('Query failed: Internal Server Error (500)', statusId);
           break;
         default:
           console.log(`Unhandled server response: ${xhr.status}`);
-          queryNotify(`Query failed: ${xhr.status}`)
+          queryNotify(`Query failed: ${xhr.status}`, statusId)
       }
     }
   });
@@ -158,6 +165,6 @@ function populateQueryResults(json) {
   }
 }
 
-function queryNotify(msg) {
-  document.getElementById(QUERY_STATUS_ID).textContent = msg;
+function queryNotify(msg, statusId) {
+  document.getElementById(statusId).textContent = msg;
 }
