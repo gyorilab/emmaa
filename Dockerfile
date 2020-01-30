@@ -21,9 +21,7 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
     python setup.py install
 
 # Clone and install EMMAA
-RUN wget https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz -O bionetgen.tar.gz -nv && \
-    tar xzf bionetgen.tar.gz && \
-    pip install git+https://github.com/indralab/indra_db.git && \
+RUN pip install git+https://github.com/indralab/indra_db.git && \
     pip install git+https://github.com/sorgerlab/bioagents.git && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
     cd emmaa && \
@@ -32,6 +30,6 @@ RUN wget https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.
     git branch && \
     pip install -e .
 
-ENV BNGPATH /sw/BioNetGen-2.4.0
+ENV BNGPATH /sw/BioNetGen-2.3.1
 ENV EMMAAPATH /sw/emmaa
 WORKDIR $EMMAAPATH
