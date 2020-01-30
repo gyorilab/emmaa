@@ -9,19 +9,15 @@ function postQuery(queryContainer) {
   let querySel = collectQuery(queryContainer);
   if (queryContainer.id == 'query-container') {
     var statusId = 'query-status';
+    var tab = 'static';
   } else {
     var statusId = 'dyn-query-status';
+    var tab = 'dynamic';
   }
   if (querySel.length < 2) {
     queryNotify('Did not send query', statusId);
     return;
   }
-
-  if (queryContainer.id == 'query-container') {
-    var tab = 'static';
-  } else {
-    var tab = 'dynamic';
-  };
 
   // Check if user wants to register query
   let reg = document.getElementById('register-query').checked;
