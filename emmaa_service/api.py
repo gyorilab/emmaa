@@ -655,7 +655,9 @@ def email_unsubscribe():
 
         return render_template('email_unsub/email_unsubscribe.html',
                                email=req_args['email'],
-                               possible_queries=queries)
+                               possible_queries=queries,
+                               expiration=expiration,
+                               signature=signature)
     else:
         return render_template('email_unsub/bad_email_unsub_link.html',
                                code=400)

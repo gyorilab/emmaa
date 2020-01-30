@@ -41,8 +41,15 @@
 
       // Could also get email from: `new URL(window.location.href).searchParams.get('email')`
       let email = '{{ email }}';
+      let expiration = '{{ expiration }}';
+      let signature = '{{ signature }}';
 
-      let queryParams = {'email': email, 'queries': queryHashes};
+      let queryParams = {
+        'queries': queryHashes,
+        'email': email,
+        'expiration': expiration,
+        'signature': signature
+      };
 
       // ajax POST to unsubscribe post
       return $.ajax({
