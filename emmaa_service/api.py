@@ -670,12 +670,14 @@ def email_unsubscribe_post():
     queries = query.get('queries')
     expiration = query.get('expiration')
     signature = query.get('signature')
+    logger.info(f'Got unsubscribe request for {email} for quereis {queries}')
     if verify_email_signature(signature=signature, email=email,
                               expiration=expiration):
         success = register_email_unsubscribe(email, queries)
-        return jsonify({'success': success})
+        return jsonify({'result': success})
     else:
-        return jsonify({'success': False})
+        logger.info('Could not verify signature, aborting unsubscribe')
+        return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
 if __name__ == '__main__':
