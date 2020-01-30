@@ -361,6 +361,24 @@ class EmmaaDatabaseManager(object):
             # Returns list of (query json, query hash) tuples
         return q.all()
 
+    def get_subscribed_users(self):
+        """Get all users who have subscriptions
+
+        Returns
+        -------
+        list[str]
+            A list of email addresses corresponding to all users who have
+            any subscribed query
+        """
+        logger.info('Got request to gather all users with subscription')
+        # Get db session
+        with self.get_session() as sess:
+            q = sess.query(User.email).filter(
+                User.id == UserQuery.user_id,
+                UserQuery.subscription
+            ).distinct()
+        return [e for e, in q.all()]
+
     def update_email_subscription(self, email, queries, subscribe):
         """Update email subscriptions for user queries
 
