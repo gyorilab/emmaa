@@ -273,8 +273,9 @@ class ModelManager(object):
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 self.mc_types['pysb']['model'], tp)
-            fig_name = os.path.basename(fig_path)
-            s3_key = f'query_images/{self.model.name}/{fig_name}'
+            fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+            date_str = make_date_str()
+            s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
             s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
             client = get_s3_client(unsigned=False)
             logger.info(f'Uploading image to {s3_path}')
