@@ -38,6 +38,18 @@ and which statements were added to the model during the most recent update.
 Tests Tab
 ---------
 
+At the top of the tests tab, a drop down menu displays which test corpus was
+used for the currently displayed test results. Clicking on the drop down menu
+will display all available test corpora for the current model. Clicking
+"Load Test Results" will load the test results for the selected test corpus.
+
+.. figure:: ../_static/images/test_corpus_selection_cropped.png
+  :align: center
+  :figwidth: 100 %
+
+  *The results from different test corpora can be loaded. Here "Large Corpus
+  Tests", "Rasmachine Tests" and "Skcm test" are available.*
+
 The tests tab contains two related plots: one showing the evolution over time
 of the percentage of applicable tests that passed, and another showing the
 absolute number of tests that were applied to the model and the number of tests
