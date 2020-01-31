@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 email_profile = 'indralabs-email'
 email_bucket = 'emmaa-notifications'
 notifications_sender_default = 'emmaa_notifications@indra.bio'
-indra_bio_ARN_id = os.environ.get('EMMAA_SOURCE_ARN')
+indra_bio_ARN_id = os.environ.get('INDRA_BIO_ARN')
 
 
 def send_email(sender, recipients, subject, body_text, body_html,
-               source_arn=None, return_email=None, return_arn=None,
+               source_arn=indra_bio_ARN_id, return_email=None, return_arn=None,
                region='us-east-1'):
     """Wrapper function for the send_email method of the boto3 SES client
 
@@ -78,13 +78,15 @@ def send_email(sender, recipients, subject, body_text, body_html,
     """
     # Check if there is any source ARN
     if not source_arn:
-        source_arn = os.environ.get('EMMAA_SOURCE_ARN')
+        source_arn = os.environ.get('INDRA_BIO_ARN')
         if source_arn is None:
             logger.error('No SourceArn found, please set it using '
-                         'the environment variable EMMAA_SOURCE_ARN')
-            return False
+                         'the environment variable INDRA_BIO_ARN or '
+                         'provided source_arn in arguments.')
+            raise ValueError('source_arn must be provided or specified in '
+                             'environment.')
         logger.info('Found SourceArn in os environment variable'
-                    'EMMAA_SOURCE_ARN')
+                    'INDRA_BIO_ARN')
 
     # The character encoding for the email.
     charset = "UTF-8"

@@ -12,7 +12,7 @@ db = get_db('primary')
 
 logger = logging.getLogger(__name__)
 
-EMAIL_SIGNATURE_KEY = os.environ.get('EMAIL_SIGN')
+EMAIL_SIGNATURE_KEY = os.environ.get('EMAIL_SIGN_SECRET')
 
 
 def __sign_str_concat(email, expiration_str):
