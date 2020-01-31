@@ -159,12 +159,12 @@
                 <div class="row" style="align-items: center">
                   <!-- agent -->
                   <div class="col" style="padding-right: 2px">
-                    <input class="form-control" id="agentInput" type="text" name="agentText" placeholder="Enter agent description">
+                    <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description">
                   </div>
                   <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                     <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                       changed in the rest API and query handling -->
-                    <select class="custom-select" id="patternSelection">
+                    <select class="custom-select" style="width: 300px;" id="patternSelection">
                       <option value="" selected="selected" disabled="disabled" hidden="hidden">select pattern type</option>
                       {% for pattern_type in ['always_value', 'no_change', 'eventual_value', 'sometime_value', 'sustained', 'transient'] %}
                       <option value="{{ pattern_type }}">{{ pattern_type }}</option>
