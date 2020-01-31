@@ -139,3 +139,13 @@ together with their latest results.
 
   *The table for subscribed queries, here for the query Activation(FLT3, KRAS)
   of the AML cancer model.*
+
+
+Email Notifications
+-------------------
+
+During the daily updates, all subscribed queries are checked against the
+updated models. If there is a change to a query result, an email notification
+with a summary of the changed results is sent out.
+
+FIGURE email notification
