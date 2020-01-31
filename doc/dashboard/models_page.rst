@@ -73,7 +73,7 @@ New tests that passed for any of the model types are shown under
 the path are can be seen by clicking on a path which links out to the detailed
 test results page for the test.
 
-.. figure:: ../_static/images/new_applied_tests.png
+.. figure:: ../_static/images/new_passed_tests.png
   :align: center
   :figwidth: 100 %
   
