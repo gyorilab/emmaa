@@ -71,13 +71,29 @@ def generate_unsubscribe_link(email, days=7, domain='emmaa.indra.bio'):
 
 
 def generate_signature(email, expire_str, digestmod=hashlib.sha256):
-    """hmac.new(key, msg=None, digestmod=None)
-    Return a new hmac object.
+    """Return an HMAC signature based on email and expire_str
+
+    From documentation of HMAC in python:
     key is a bytes or bytearray object giving the secret key.
     If msg is present, the method call update(msg) is made.
     digestmod is the digest name, digest constructor or module for the HMAC
-    object to use. It supports any name suitable to hashlib.new() and
-    defaults to the hashlib.md5 constructor."""
+    object to use. It supports any name suitable to hashlib.new().
+
+    Parameters
+    ----------
+    email : str
+        A valid email address. Should not be URL encoded.
+    expire_str : str
+        A timestamp string in seconds
+    digestmod : str|digest constructor|module
+        digest name, digest constructor or module for the HMAC object to
+        use. Default: hashlib.sha256
+
+    Returns
+    -------
+    str
+        A hexadecimal string representing the signature
+    """
     if not EMAIL_SIGNATURE_KEY:
         logger.error('No secret key set for email signature.'
                      'Cannot generate signature')
