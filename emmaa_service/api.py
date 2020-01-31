@@ -33,7 +33,7 @@ app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 TITLE = 'emmaa title'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
@@ -80,7 +80,6 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
 
 def get_latest_available_date(
         model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
-    logger.info(f'Looking for latest available date for {model} and {test_corpus}')
     if test_corpus == _default_test(model) and not refresh and \
             model in model_dates:
         return model_dates[model]
