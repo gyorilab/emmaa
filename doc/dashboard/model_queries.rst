@@ -141,8 +141,8 @@ together with their latest results.
   of the AML cancer model.*
 
 
-Email Notifications
--------------------
+Email Notifications of Subscribed Queries
+-----------------------------------------
 
 During the daily updates, all subscribed queries are checked against the
 updated models. If there is a change to a query result, an email notification
