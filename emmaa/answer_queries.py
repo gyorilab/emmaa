@@ -200,7 +200,7 @@ class QueryManager(object):
             return self.make_reports_from_results(new_results, True, 'html')
         return self.make_reports_from_results(new_results, True, 'str')
 
-    def make_str_report_per_user(self, results, filename='query_delta.txt'):
+    def make_str_report_per_user(self, results, filename=None):
         """Produce a report for all query results per user in a text file."""
         reports = self.make_reports_from_results(results, True, 'str')
         if filename:
@@ -219,7 +219,8 @@ class QueryManager(object):
             for report in reports:
                 msg += report
             # Generate unsubscribe link
-            link = f'/query/unsubscribe?{generate_unsubscribe_qs(email)}'
+            link = f'emmaa.indra.bio/query/unsubscribe' \
+                   f'?{generate_unsubscribe_qs(email)}'
             msg += f'<footer>If you wish to unsubscribe from future ' \
                    f'notifications, click on this link:<br><a href=' \
                    f'"{link}">{link}</a></footer>'
