@@ -4,9 +4,10 @@ EMMAA Detailed Test Results
 ===========================
 
 The detailed test results page shows a test result at in high detail for a
-specific model and model type. The left column describes the path found that
-satisfies the test. The right column contains a detailed description of each
-edge in the path with a list of english representation of the statements
+specific model and model type. The left column describes the paths found that
+satisfies the test. Note that the same test/query can be explained with
+multiple different paths. The right column contains a detailed description of
+each edge in the path with a list of english representation of the statements
 supporting the edge. If a test did not pass, a message explaining why it did
 not pass is shown.
 
@@ -14,10 +15,10 @@ not pass is shown.
   :align: center
   :figwidth: 100 %
 
-  *The detailed test results for "Phosphatase-active PTEN inhibits MTOR". The
-  left column displays the path that satisfies the test for the model and
+  *The detailed test results for "FLT3 activates KRAS". The
+  left column displays the two paths that satisfy the test for the model and
   model type. The right column gives detailed information for each of the
-  edges, including its support, in the path.*
+  edges, including its support, for each path.*
 
 
 Results for Different Model Types
