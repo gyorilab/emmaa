@@ -377,7 +377,7 @@ class EmmaaDatabaseManager(object):
                 User.id == UserQuery.user_id,
                 UserQuery.subscription
             ).distinct()
-        return [e for e, in q.all()]
+        return [e for e, in q.all()] if q.all() else []
 
     def update_email_subscription(self, email, queries, subscribe):
         """Update email subscriptions for user queries
