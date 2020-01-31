@@ -193,7 +193,7 @@ class DynamicProperty(Query):
     quant_type : str
         Type of molecular quantity of entity of interest. Default: qualitative.
     """
-    def __init__(self, entity, pattern_type, quant_value,
+    def __init__(self, entity, pattern_type, quant_value=None,
                  quant_type='qualitative'):
         self.entity = entity
         self.pattern_type = pattern_type
@@ -202,7 +202,9 @@ class DynamicProperty(Query):
 
     def get_temporal_pattern(self):
         """Return TemporalPattern object created with query properties."""
-        mq = MolecularQuantity(self.quant_type, self.quant_value)
+        mq = None
+        if self.quant_value:
+            mq = MolecularQuantity(self.quant_type, self.quant_value)
         tp = TemporalPattern(self.pattern_type, [self.entity], None, value=mq)
         return tp
 
@@ -245,15 +247,19 @@ class DynamicProperty(Query):
     def to_english(self):
         agent = _assemble_agent_str(self.entity)
         agent = agent[0].upper() + agent[1:]
-        if self.pattern_type in ('always_value', 'no_change'):
+        if self.pattern_type == 'always_value':
             pattern = 'always'
         elif self.pattern_type == 'eventual_value':
             pattern = 'eventually'
         elif self.pattern_type == 'sometime_value':
             pattern = 'sometimes'
+        elif self.pattern_type == 'no_change':
+            pattern = 'not changing'
         else:
             pattern = self.pattern_type
-        return f'{agent} is {pattern} {self.quant_value}.'
+        if self.quant_value:
+            return f'{agent} is {pattern} {self.quant_value}.'
+        return f'{agent} {pattern}.'
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):

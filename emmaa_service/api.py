@@ -192,6 +192,8 @@ def _make_query(query_dict, use_grouding_service=True):
     elif 'agentSelection' in query_dict.keys():
         agent = get_agent_from_trips(query_dict['agentSelection'])
         value = query_dict['valueSelection']
+        if not value:
+            value = None
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'

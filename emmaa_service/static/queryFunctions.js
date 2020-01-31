@@ -164,3 +164,15 @@ function populateQueryResults(json) {
 function queryNotify(msg, statusId) {
   document.getElementById(statusId).textContent = msg;
 }
+
+function checkPattern() {
+  let valuePatterns = ['always_value', 'sometime_value', 'eventual_value'];
+  if (valuePatterns.includes(document.getElementById('patternSelection').value)) {
+    document.getElementById('valueSelection').disabled=false;
+  } else {
+    document.getElementById('valueSelection').disabled=true;
+    document.getElementById('valueSelection').value="";
+  }
+  console.log(document.getElementById('valueSelection').disabled)
+  console.log(document.getElementById('valueSelection').value)
+}
