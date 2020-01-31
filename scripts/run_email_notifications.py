@@ -1,5 +1,4 @@
 import os
-from emmaa.db import get_db
 from emmaa.answer_queries import QueryManager
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default
@@ -8,9 +7,8 @@ indra_bio_ARN = os.environ.get('INDRA_BIO_ARN')
 
 
 if __name__ == '__main__':
-    db = get_db('primary')
-    qm = QueryManager(db=db)
-    subscribed_users = db.get_subscribed_users()
+    qm = QueryManager()
+    subscribed_users = qm.db.get_subscribed_users()
 
     subject_line = 'You have an update to your queries on EMMAA'
 
