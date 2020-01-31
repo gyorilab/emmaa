@@ -2,8 +2,6 @@ import pickle
 import logging
 from datetime import datetime
 
-from indra.assemblers.english import EnglishAssembler
-
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, EMMAA_BUCKET_NAME
@@ -38,9 +36,11 @@ class QueryManager(object):
         self.model_managers = model_managers if model_managers else []
 
     def answer_immediate_query(
-            self, user_email, user_id, query, model_names, subscribe):
+            self, user_email, user_id, query, model_names, subscribe,
+            use_kappa=False, bucket=EMMAA_BUCKET_NAME):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
+        query_type = query.get_type()
         # Retrieve query-model hashes
         query_hashes = [
             query.get_hash_with_model(model) for model in model_names]
@@ -54,7 +54,7 @@ class QueryManager(object):
         checked_models = {res[0] for res in saved_results}
         # If the query was answered for all models before, return the hashes.
         if checked_models == set(model_names):
-            return query_hashes
+            return {query_type: query_hashes}
         # Run queries mechanism for models for which result was not found.
         new_results = []
         new_date = datetime.now()
@@ -62,14 +62,16 @@ class QueryManager(object):
             if model_name not in checked_models:
                 results_to_store = []
                 mm = self.get_model_manager(model_name)
-                response_list = mm.answer_query(query)
+                response_list = mm.answer_query(
+                    query, use_kappa=use_kappa, bucket=bucket)
                 for (mc_type, response) in response_list:
                     results_to_store.append((query, mc_type, response))
                 self.db.put_results(model_name, results_to_store)
-        return query_hashes
+        return {query_type: query_hashes}
 
     def answer_registered_queries(
-            self, model_name, find_delta=True, notify=False):
+            self, model_name, find_delta=True, notify=False, use_kappa=False,
+            bucket=EMMAA_BUCKET_NAME):
         """Retrieve queries registered on database for a given model,
         answer them, calculate delta between results, notify users in case of
         any changes, and put results to a database.
@@ -79,7 +81,8 @@ class QueryManager(object):
         logger.info(f'Found {len(queries)} queries for {model_name} model.')
         # Only do the following steps if there are queries for this model
         if queries:
-            results = model_manager.answer_queries(queries)
+            results = model_manager.answer_queries(
+                queries, use_kappa=use_kappa, bucket=bucket)
             new_results = [(model_name, result[0], result[1], result[2], '')
                            for result in results]
             # Optionally find delta between results
@@ -92,15 +95,16 @@ class QueryManager(object):
                     logger.info(report)
             self.db.put_results(model_name, results)
 
-    def get_registered_queries(self, user_email):
+    def get_registered_queries(self, user_email, query_type='path_property'):
         """Get formatted results to queries registered by user."""
-        results = self.db.get_results(user_email)
-        return format_results(results)
+        results = self.db.get_results(user_email, query_type=query_type)
+        return format_results(results, query_type)
 
-    def retrieve_results_from_hashes(self, query_hashes):
+    def retrieve_results_from_hashes(self, query_hashes,
+                                     query_type='path_property'):
         """Retrieve results from a db given a list of query-model hashes."""
         results = self.db.get_results_from_hashes(query_hashes)
-        return format_results(results)
+        return format_results(results, query_type)
 
     def make_reports_from_results(
             self, new_results, stored=True, report_format='str'):
@@ -303,7 +307,7 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     return not set(new_result_hashes) == set(old_result_hashes)
 
 
-def format_results(results):
+def format_results(results, query_type='path_property'):
     """Format db output to a standard json structure."""
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
@@ -313,7 +317,7 @@ def format_results(results):
         query_hash = query.get_hash_with_model(model)
         if query_hash not in formatted_results:
             formatted_results[query_hash] = {
-                'query': _make_query_str(query),
+                'query': query.to_english(),
                 'model': model,
                 'date': make_date_str(result[4])}
         mc_type = result[2]
@@ -324,23 +328,38 @@ def format_results(results):
                 response = v
             elif isinstance(v, dict):
                 response.append(v)
-        if mc_type == '' and \
-                response == 'Query is not applicable for this model':
+        if query_type == 'path_property':
+            if mc_type == '' and \
+                    response == 'Query is not applicable for this model':
+                for mt in model_types:
+                    formatted_results[query_hash][mt] = ['n_a', response]
+            elif isinstance(response, str) and \
+                    response == 'Statement type not handled':
+                formatted_results[query_hash][mc_type] = ['n_a', response]
+            elif isinstance(response, str) and \
+                    not response == 'Path found but exceeds search depth':
+                formatted_results[query_hash][mc_type] = ['Fail', response]
+            else:
+                formatted_results[query_hash][mc_type] = ['Pass', response]
+        elif query_type == 'dynamic_property':
+            if response == 'Query is not applicable for this model':
+                formatted_results[query_hash]['result'] = ['n_a', response]
+            else:
+                res = int(response[0]['sat_rate'] * 100)
+                expl = (f'Satisfaction rate is {res}% after '
+                        f'{response[0]["num_sim"]} simulations.')
+                if res > 50:
+                    formatted_results[query_hash]['result'] = ['Pass', expl]
+                else:
+                    formatted_results[query_hash]['result'] = ['Fail', expl]
+                formatted_results[query_hash]['image'] = response[0]['fig_path']
+    if query_type == 'path_property':
+        # Loop through the results again to make sure all model types are there
+        for qh in formatted_results:
             for mt in model_types:
-                formatted_results[query_hash][mt] = ['n_a', response]
-        elif isinstance(response, str) and \
-                response == 'Statement type not handled':
-            formatted_results[query_hash][mc_type] = ['n_a', response]
-        elif isinstance(response, str) and \
-                not response == 'Path found but exceeds search depth':
-            formatted_results[query_hash][mc_type] = ['Fail', response]
-        else:
-            formatted_results[query_hash][mc_type] = ['Pass', response]
-    # Loop through the results again to make sure all model types are there
-    for qh in formatted_results:
-        for mt in model_types:
-            if mt not in formatted_results[qh]:
-                formatted_results[qh][mt] = ['n_a', 'Model type not supported']
+                if mt not in formatted_results[qh]:
+                    formatted_results[qh][mt] = [
+                        'n_a', 'Model type not supported']
     return formatted_results
 
 
@@ -361,14 +380,14 @@ def _process_result_to_str(result_json):
         if isinstance(v, str):
             msg += v
         elif isinstance(v, dict):
-            msg += v['path']
-            msg += '\n'
+            if 'path' in v.keys():
+                msg += v['path']
+                msg += '\n'
+            else:
+                msg += f'Satisfaction rate: {v["sat_rate"]}, '
+                msg += f'Number of simulations: {v["num_sim"]}, '
+                msg += f'Suggested pattern: {v["kpat"]}.'
     return msg
-
-
-def _make_query_str(query):
-    ea = EnglishAssembler([query.path_stmt])
-    return ea.make_model()
 
 
 def answer_queries_from_s3(model_name, db=None, bucket=EMMAA_BUCKET_NAME):

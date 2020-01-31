@@ -1,0 +1,10 @@
+{"type": "dynamic_property",
+ "entity": {
+    "type": "Agent",
+    "name": "EGFR",
+    "db_refs": {"HGNC": "3236"}
+    },
+  "pattern_type": "always_value",
+  "quantity": {"type" : "qualitative",
+               "value": "low"}
+  }

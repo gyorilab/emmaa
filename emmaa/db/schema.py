@@ -81,6 +81,7 @@ class Query(Base, EmmaaTable):
     hash = Column(BigInteger, primary_key=True)
     model_id = Column(String(20), nullable=False)
     json = Column(JSONB, nullable=False)
+    qtype = Column(String(20), default='path_property')
     __table_args__ = (
         UniqueConstraint('model_id', 'json', name='query-uniqueness'),
         )

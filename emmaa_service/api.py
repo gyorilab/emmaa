@@ -20,7 +20,8 @@ from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
-from emmaa.queries import PathProperty, get_agent_from_text, GroundingError
+from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
+    DynamicProperty, get_agent_from_trips
 from emmaa.answer_queries import FORMATTED_TYPE_NAMES
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
@@ -32,14 +33,14 @@ app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 TITLE = 'emmaa title'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
 link_list = [('/home', 'EMMAA Dashboard'),
-             ('/query', 'Queries')]
+             ('/query?tab=static', 'Queries')]
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
@@ -79,7 +80,6 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
 
 def get_latest_available_date(
         model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
-    logger.info(f'Looking for latest available date for {model} and {test_corpus}')
     if test_corpus == _default_test(model) and not refresh and \
             model in model_dates:
         return model_dates[model]
@@ -179,15 +179,25 @@ def get_queryable_stmt_types():
 
 
 def _make_query(query_dict, use_grouding_service=True):
-    stmt_type = query_dict['typeSelection']
-    stmt_class = get_statement_by_name(stmt_type)
-    subj = get_agent_from_text(
-        query_dict['subjectSelection'], use_grouding_service)
-    obj = get_agent_from_text(
-        query_dict['objectSelection'], use_grouding_service)
-    stmt = stmt_class(subj, obj)
-    query = PathProperty(path_stmt=stmt)
-    return query
+    if 'typeSelection' in query_dict.keys():
+        stmt_type = query_dict['typeSelection']
+        stmt_class = get_statement_by_name(stmt_type)
+        subj = get_agent_from_text(
+            query_dict['subjectSelection'], use_grouding_service)
+        obj = get_agent_from_text(
+            query_dict['objectSelection'], use_grouding_service)
+        stmt = stmt_class(subj, obj)
+        query = PathProperty(path_stmt=stmt)
+        tab = 'static'
+    elif 'agentSelection' in query_dict.keys():
+        agent = get_agent_from_trips(query_dict['agentSelection'])
+        value = query_dict['valueSelection']
+        if not value:
+            value = None
+        pattern = query_dict['patternSelection']
+        query = DynamicProperty(agent, pattern, value)
+        tab = 'dynamic'
+    return query, tab
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date):
@@ -233,6 +243,21 @@ def _format_query_results(formatted_results):
                 {'model_type': mt, 'query_hash': qh})
             new_res.append((f'/query/{model}?{url_param}', res[mt][0],
                             'Click to see detailed results for this query'))
+        result_array.append(new_res)
+    return result_array
+
+
+def _format_dynamic_query_results(formatted_results):
+    result_array = []
+    for qh, res in formatted_results.items():
+        model = res['model']
+        new_res = [('', res['query'], ''),
+                   ('', model, ''),
+                   ('', res['result'][0], res['result'][1])]
+        if res.get('image'):
+            new_res.append((res['image'], '', ''))
+        else:
+            new_res.append(('', 'n_a', ''))
         result_array.append(new_res)
     return result_array
 
@@ -411,54 +436,74 @@ def get_model_tests_page(model):
 def get_query_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
+    tab = request.args.get('tab', 'model')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
 
     # Queried results
+    queried_results = 'Results for submitted queries'
+    immediate_table_headers = None
+    dynamic_results = 'Results for submitted queries'
+    dynamic_immediate_headers = None
     if session.get('query_hashes'):
-        queried_hashes = session['query_hashes']
-        qr = qm.retrieve_results_from_hashes(queried_hashes)
-        immediate_table_headers = ['Query', 'Model'] + [
-            FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-            list(qr.values())[0]] if qr else []
-        queried_results = _format_query_results(qr) if qr else\
-            'No stashed results for subscribed queries. Please re-run query ' \
-            'to see latest result.'
-    else:
-        queried_results = 'Results for submitted queries'
-        immediate_table_headers = None
+        for query_type, query_hashes in session['query_hashes'].items():
+            qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
+            if query_type == 'path_property':
+                immediate_table_headers = ['Query', 'Model'] + [
+                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+                    list(qr.values())[0]] if qr else []
+                queried_results = _format_query_results(qr) if qr else\
+                    'No stashed results for subscribed queries. Please ' \
+                    're-run query to see latest result.'
+            elif query_type == 'dynamic_property':
+                dynamic_immediate_headers = [
+                    'Query', 'Model', 'Result', 'Image']
+                dynamic_results = _format_dynamic_query_results(qr)
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    subscribed_headers = []
+    subscribed_path_headers = []
+    subscribed_dyn_headers = []
     if user_email:
-        sub_res = qm.get_registered_queries(user_email)
-        if sub_res:
-            subscribed_results = _format_query_results(sub_res)
-            subscribed_headers = \
+        sub_path_res = qm.get_registered_queries(user_email, 'path_property')
+        if sub_path_res:
+            subscribed_path_results = _format_query_results(sub_path_res)
+            subscribed_path_headers = \
                 ['Query', 'Model'] + \
-                [FORMATTED_TYPE_NAMES[mt] for mt in list(sub_res.values())[0]
-                 if mt in ALL_MODEL_TYPES]
+                [FORMATTED_TYPE_NAMES[mt] for mt in list(
+                    sub_path_res.values())[0] if mt in ALL_MODEL_TYPES]
         else:
-            subscribed_results = 'You have no subscribed queries'
+            subscribed_path_results = 'You have no subscribed queries'
+        sub_dyn_res = qm.get_registered_queries(user_email, 'dynamic_property')
+        if sub_dyn_res:
+            subscribed_dyn_results = _format_dynamic_query_results(sub_dyn_res)
+            subscribed_dyn_headers = ['Query', 'Model', 'Result', 'Image']
+        else:
+            subscribed_dyn_results = 'You have no subscribed queries'
     else:
-        subscribed_results = 'Please log in to see your subscribed queries'
+        subscribed_path_results = 'Please log in to see your subscribed queries'
+        subscribed_dyn_results = 'Please log in to see your subscribed queries'
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            immediate_query_result=queried_results,
+                           immediate_dynamic_results=dynamic_results,
+                           dynamic_immediate_headers=dynamic_immediate_headers,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
-                           subscribed_results=subscribed_results,
-                           subscribed_headers=subscribed_headers,
+                           subscribed_results=subscribed_path_results,
+                           subscribed_headers=subscribed_path_headers,
+                           subscribed_dynamic_headers=subscribed_dyn_headers,
+                           subscribed_dynamic_results=subscribed_dyn_results,
                            link_list=link_list,
-                           user_email=user_email)
+                           user_email=user_email,
+                           tab=tab)
 
 
 @app.route('/query/<model>/')
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
-    results = qm.retrieve_results_from_hashes([query_hash])
+    results = qm.retrieve_results_from_hashes([query_hash], 'path_property')
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
     date = results[query_hash]['date']
@@ -493,9 +538,12 @@ def process_query():
     user_id = user.id if user else None
 
     # Extract info.
-    expected_query_keys = {f'{pos}Selection'
-                           for pos in ['subject', 'object', 'type']}
+    expected_static_query_keys = {f'{pos}Selection'
+                                  for pos in ['subject', 'object', 'type']}
+    expected_dynamic_query_keys = {f'{pos}Selection'
+                                   for pos in ['pattern', 'value', 'agent']}
     expected_models = {mid for mid, _, _, _ in _get_model_meta_data()}
+    tab = 'static'
     try:
         # If user tries to register query without logging in, refuse query
         # with 401 (unauthorized)
@@ -512,9 +560,9 @@ def process_query():
         else:
             subscribe = False
         query_json = request.json['query']
-        assert set(query_json.keys()) == expected_query_keys, \
-            (f'Did not get expected query keys: got {set(query_json.keys())} '
-             f'not {expected_query_keys}')
+        assert ((set(query_json.keys()) == expected_static_query_keys or
+                 set(query_json.keys()) == expected_dynamic_query_keys),
+                f'Did not get expected query keys: got {set(query_json.keys())} ')
         models = set(request.json.get('models'))
         assert models < expected_models, \
             f'Got unexpected models: {models - expected_models}'
@@ -523,7 +571,7 @@ def process_query():
         logger.error("Invalid query!")
         abort(Response(f'Invalid request: {str(e)}', 400))
     try:
-        query = _make_query(query_json)
+        query, tab = _make_query(query_json)
     except GroundingError as e:
         logger.exception(e)
         logger.error("Invalid grounding!")
@@ -539,13 +587,13 @@ def process_query():
         logger.info('Query submitted')
         try:
             result = qm.answer_immediate_query(
-                user_email, user_id, query, models, subscribe)
+                user_email, user_id, query, models, subscribe, use_kappa=False)
         except Exception as e:
             logger.exception(e)
             raise(e)
         logger.info('Answer to query received: rendering page, returning '
                     'redirect endpoint')
-        redir_url = '/query'
+        redir_url = f'/query?tab={tab}'
 
         # Replace existing entry
         session['query_hashes'] = result

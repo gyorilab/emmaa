@@ -82,7 +82,7 @@ def find_latest_s3_file(bucket, prefix, extension=None):
         latest = files[0]
         return latest
     except IndexError:
-        logger.info('File is not found.')
+        logger.debug('File is not found.')
 
 
 def find_second_latest_s3_file(bucket, prefix, extension=None):
@@ -93,7 +93,7 @@ def find_second_latest_s3_file(bucket, prefix, extension=None):
         latest = files[1]
         return latest
     except IndexError:
-        logger.info("File is not found.")
+        logger.debug("File is not found.")
 
 
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):

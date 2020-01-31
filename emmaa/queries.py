@@ -9,6 +9,10 @@ from indra.databases.hgnc_client import get_hgnc_id
 from indra.databases.chebi_client import get_chebi_id_from_name
 from indra.databases.mesh_client import get_mesh_id_name
 from indra.preassembler.grounding_mapper import gm
+from indra.sources import trips
+from indra.assemblers.english.assembler import _assemble_agent_str, \
+    EnglishAssembler
+from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +39,9 @@ class Query(object):
     def get_hash_with_model(self, model_name):
         key = (self.matches_key(), model_name)
         return make_hash(mk_str(key), 14)
+
+    def get_type(self):
+        return underscore(type(self).__name__)
 
 
 class StructuralProperty(Query):
@@ -74,7 +81,7 @@ class PathProperty(Query):
         self.entities = self.get_entities()
 
     def to_json(self):
-        query_type = underscore(type(self).__name__)
+        query_type = self.get_type()
         json_dict = _o(type=query_type)
         json_dict['path'] = self.path_stmt.to_json()
         json_dict['entity_constraints'] = {}
@@ -156,6 +163,10 @@ class PathProperty(Query):
     def __repr__(self):
         return str(self)
 
+    def to_english(self):
+        ea = EnglishAssembler([self.path_stmt])
+        return ea.make_model()
+
 
 class SimpleInterventionProperty(Query):
     pass
@@ -163,6 +174,92 @@ class SimpleInterventionProperty(Query):
 
 class ComparativeInterventionProperty(Query):
     pass
+
+
+class DynamicProperty(Query):
+    """This type of query requires dynamic simulation of the model to check
+    whether the queried temporal pattern is satisfied.
+
+    Parameters
+    ----------
+    entity : indra.statements.Agent
+        An entity to simulate the model for.
+    pattern_type : str
+        Type of temporal pattern. Accepted values: 'always_value', 'no_change',
+        'eventual_value', 'sometime_value', 'sustained', 'transient'.
+    quant_value : str or float
+        Value of molecular quantity of entity of interest. Can be 'high' or
+        'low' or a specific number.
+    quant_type : str
+        Type of molecular quantity of entity of interest. Default: qualitative.
+    """
+    def __init__(self, entity, pattern_type, quant_value=None,
+                 quant_type='qualitative'):
+        self.entity = entity
+        self.pattern_type = pattern_type
+        self.quant_value = quant_value
+        self.quant_type = quant_type
+
+    def get_temporal_pattern(self):
+        """Return TemporalPattern object created with query properties."""
+        mq = None
+        if self.quant_value:
+            mq = MolecularQuantity(self.quant_type, self.quant_value)
+        tp = TemporalPattern(self.pattern_type, [self.entity], None, value=mq)
+        return tp
+
+    def matches_key(self):
+        ent_matches_key = self.entity.matches_key()
+        key = (ent_matches_key, self.pattern_type, self.quant_type,
+               str(self.quant_value))
+        return str(key)
+
+    def to_json(self):
+        query_type = self.get_type()
+        json_dict = _o(type=query_type)
+        json_dict['entity'] = self.entity.to_json()
+        json_dict['pattern_type'] = self.pattern_type
+        json_dict['quantity'] = {}
+        json_dict['quantity']['type'] = self.quant_type
+        json_dict['quantity']['value'] = self.quant_value
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        ent_json = json_dict.get('entity')
+        entity = Agent._from_json(ent_json)
+        pattern_type = json_dict.get('pattern_type')
+        quant_json = json_dict.get('quantity')
+        quant_type = quant_json.get('type')
+        quant_value = quant_json.get('value')
+        query = cls(entity, pattern_type, quant_value, quant_type)
+        return query
+
+    def __str__(self):
+        descr = (f'DynamicPropertyQuery(entity={self.entity}, '
+                 f'pattern={self.pattern_type}, '
+                 f'molecular quantity={(self.quant_type, self.quant_value)})')
+        return descr
+
+    def __repr__(self):
+        return str(self)
+
+    def to_english(self):
+        agent = _assemble_agent_str(self.entity)
+        agent = agent[0].upper() + agent[1:]
+        if self.pattern_type == 'always_value':
+            pattern = 'always'
+        elif self.pattern_type == 'eventual_value':
+            pattern = 'eventually'
+        elif self.pattern_type == 'sometime_value':
+            pattern = 'sometimes'
+        elif self.pattern_type == 'no_change':
+            pattern = 'not changing'
+        else:
+            pattern = self.pattern_type
+        if self.quant_value:
+            return f'{agent} is {pattern} {self.quant_value}.'
+        return f'{agent} is {pattern}.'
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
@@ -227,6 +324,14 @@ def get_agent_from_grounding_service(ag_name, url):
     agent = Agent(name=rj[0]['term']['entry_name'],
                   db_refs={rj[0]['term']['db']: rj[0]['term']['id']})
     return agent
+
+
+def get_agent_from_trips(ag_text):
+    tp = trips.process_text(ag_text)
+    agent_list = tp.get_agents()
+    if agent_list:
+        return agent_list[0]
+    return None
 
 
 class GroundingError(Exception):

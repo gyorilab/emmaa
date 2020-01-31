@@ -8,11 +8,13 @@ from emmaa.statements import EmmaaStatement
 
 def create_model(relevance=None):
     indra_stmts = [
-        Activation(Agent('BRAF', db_refs={'HGNC': '1097'}), Agent('MAP2K1'),
+        Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                   Agent('MAP2K1', db_refs={'HGNC': '6840'}),
                    evidence=[Evidence(text='BRAF activates MAP2K1.',
                                       source_api='assertion')]),
-        Activation(Agent('MAP2K1', activity=ActivityCondition('activity', True)),
-                   Agent('MAPK1'),
+        Activation(Agent('MAP2K1', db_refs={'HGNC': '6840'},
+                         activity=ActivityCondition('activity', True)),
+                   Agent('MAPK1', db_refs={'HGNC': '6871'}),
                    evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
                                       source_api='assertion')])
         ]

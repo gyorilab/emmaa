@@ -6,6 +6,7 @@ import logging
 import datetime
 import itertools
 import jsonpickle
+import os
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker, \
@@ -17,7 +18,9 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
+from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, load_config_from_s3
+from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file
 
@@ -240,7 +243,13 @@ class ModelManager(object):
         result_code = result.result_code
         return RESULT_CODES[result_code]
 
-    def answer_query(self, query):
+    def answer_query(self, query, **kwargs):
+        if isinstance(query, DynamicProperty):
+            return self.answer_dynamic_query(query, **kwargs)
+        if isinstance(query, PathProperty):
+            return self.answer_path_query(query)
+
+    def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
         if ScopeTestConnector.applicable(self, query):
             results = []
@@ -256,7 +265,28 @@ class ModelManager(object):
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
 
-    def answer_queries(self, queries):
+    def answer_dynamic_query(self, query, use_kappa=False,
+                             bucket=EMMAA_BUCKET_NAME):
+        """Answer user query by simulating a PySB model."""
+        tra = TRA(use_kappa=use_kappa)
+        tp = query.get_temporal_pattern()
+        try:
+            sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
+                self.mc_types['pysb']['model'], tp)
+            fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+            date_str = make_date_str()
+            s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
+            s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+            client = get_s3_client(unsigned=False)
+            logger.info(f'Uploading image to {s3_path}')
+            client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+            resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
+                         'kpat': kpat, 'fig_path': s3_path}
+        except (MissingMonomerError, MissingMonomerSiteError):
+            resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
+        return [('pysb', self.hash_response_list(resp_json))]
+
+    def answer_queries(self, queries, **kwargs):
         """Answer all queries registered for this model.
 
         Parameters
@@ -273,13 +303,18 @@ class ModelManager(object):
         applicable_queries = []
         applicable_stmts = []
         for query in queries:
-            if ScopeTestConnector.applicable(self, query):
-                applicable_queries.append(query)
-                applicable_stmts.append(query.path_stmt)
-            else:
-                responses.append(
-                    (query, '', self.hash_response_list(
-                        RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+            if isinstance(query, DynamicProperty):
+                mc_type, response = self.answer_dynamic_query(
+                    query, **kwargs)[0]
+                responses.append((query, mc_type, response))
+            elif isinstance(query, PathProperty):
+                if ScopeTestConnector.applicable(self, query):
+                    applicable_queries.append(query)
+                    applicable_stmts.append(query.path_stmt)
+                else:
+                    responses.append(
+                        (query, '', self.hash_response_list(
+                            RESULT_CODES['QUERY_NOT_APPLICABLE'])))
         # Only do the following steps if there are applicable queries
         if applicable_queries:
             for mc_type in self.mc_types:
@@ -352,6 +387,12 @@ class ModelManager(object):
                 response_str = ' '.join(sentences)
                 response_hash = str(fnv1a_32(response_str.encode('utf-8')))
                 response_dict[response_hash] = resp
+        elif isinstance(response, dict):
+            results = [str(response.get('sat_rate')),
+                       str(response.get('num_sim'))]
+            response_str = ' '.join(results)
+            response_hash = str(fnv1a_32(response_str.encode('utf-8')))
+            response_dict[response_hash] = response
         else:
             raise TypeError('Response should be a string or a list.')
         return response_dict
@@ -548,7 +589,7 @@ def save_model_manager_to_s3(model_name, model_manager,
         Key=f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
-def load_model_manager_from_s3(key=None, model_name=None,
+def load_model_manager_from_s3(model_name=None, key=None,
                                bucket=EMMAA_BUCKET_NAME):
     client = get_s3_client()
     # First try find the file from specified key
@@ -567,7 +608,7 @@ def load_model_manager_from_s3(key=None, model_name=None,
             bucket, f'results/{model_name}/model_manager_', '.pkl')
         if key is None:
             # Non-versioned
-            key = f'results/{model_name}/latest.model.manager.pkl'
+            key = f'results/{model_name}/latest_model_manager.pkl'
         return load_model_manager_from_s3(key=key, bucket=bucket)
     # Could not find either from key or from model name.
     logger.info('Could not find the model manager.')
