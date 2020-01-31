@@ -99,13 +99,15 @@ def send_email(sender, recipients, subject, body_text, body_html,
     if return_email is None:
         return_email = sender
 
+    to_addresses = [rec for rec in recipients] if isinstance(
+        recipients, (list, tuple, set)) else [recipients]
+
     # Try to send the email.
     try:
         # Provide the contents of the email.
         response = ses.send_email(
             Destination={
-                'ToAddresses': [rec for rec in recipients] if isinstance(
-                    recipients, (list, tuple, set)) else [recipients],
+                'ToAddresses': to_addresses,
             },
             Message={
                 'Body': {
@@ -130,10 +132,11 @@ def send_email(sender, recipients, subject, body_text, body_html,
         )
     # Log error if something goes wrong.
     except ClientError as e:
+        logger.error(f'Failed to send email to {", ".join(to_addresses)}')
         logger.error(e.response['Error']['Message'])
         response = e.response
     else:
-        logger.info("Email sent!"),
+        logger.info(f'Email sent to {", ".join(to_addresses)} successfully'),
     return response
 
 
@@ -155,14 +158,14 @@ def _get_quota_sent_max_ratio(ses_client):
 def close_to_quota_max(used_quota=0.95, region='us-east-1'):
     """Check if the send quota is close to be exceeded
 
-    If the total quota for the 24h cycle is Q, the current used quota is q
+    If the total quota for the 24h cycle is Q, the currently used quota is q
     and 'used_quota' is r, return True if q/Q > r, otherwise return False.
 
     Parameters
     ----------
     used_quota : float
         A float between 0 and 1.0. This number specifies the fraction of
-        send quota currently ued. Default: 0.95
+        send quota currently used. Default: 0.95
     region : str
         A valid AWS region. The region to check the quota in.
         Default: us-east-1.
