@@ -259,7 +259,7 @@ class DynamicProperty(Query):
             pattern = self.pattern_type
         if self.quant_value:
             return f'{agent} is {pattern} {self.quant_value}.'
-        return f'{agent} {pattern}.'
+        return f'{agent} is {pattern}.'
 
 
 def get_agent_from_text(ag_name, use_grouding_service=True):
