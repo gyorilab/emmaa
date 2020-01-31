@@ -25,6 +25,9 @@ def __sign_str_concat(email, expiration_str):
 
 
 def generate_unsubscribe_qs(email, days=7):
+    if days < 1:
+        logger.warning('Expiration date is less than one day into the '
+                       'future. Link will likely already be expired.')
     future = datetime.utcnow() + timedelta(days=days)
     expiration = str(future.timestamp()).split('.')[0]
     signature = generate_signature(email=email, expire_str=expiration)
