@@ -175,15 +175,31 @@ class QueryManager(object):
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
-    def get_user_query_delta(self, user_email, report_format='html'):
-        """Produce a report for all query results per user in a given format"""
+    def get_user_query_delta(self, user_email):
+        """Produce a report for all query results per user in a given format
+
+        Parameters
+        ----------
+        user_email : str
+            The email of the user for which to get the report for
+
+        Returns
+        -------
+        tuple(str, html_str)
+            A tuple with (str report, html report)
+        """
+        # Get results of user's query
         results = self.db.get_results(user_email, latest_order=1)
-        if report_format == 'str':
-            reports = self.make_str_report_per_user(results)
-            return reports if reports else None
-        elif report_format == 'html':
-            msg = self.make_html_report_per_user(results, email=user_email)
-            return msg if msg else None
+
+        # Make text report
+        str_report = self.make_str_report_per_user(results)
+        str_report = '\n'.join(str_report[:10]) if str_report else None
+
+        # Make html report
+        html_report = self.make_html_report_per_user(results, user_email)
+        html_report = html_report if html_report else None
+
+        return str_report, html_report
 
     def get_report_per_query(self, model_name, query, format='str'):
         if format not in {'html', 'str'}:
