@@ -183,7 +183,7 @@ class QueryManager(object):
         user_email : str
             The email of the user for which to get the report for
         domain : str
-            Provide the domain name for the unsubscibe link in the html
+            The domain name for the unsubscibe link in the html
             report. Default: "emmaa.indra.bio".
 
         Returns
@@ -200,7 +200,8 @@ class QueryManager(object):
 
         # Make html report
         html_report = self.make_html_report_per_user(results, user_email,
-                                                     domain=domain)
+                                                     domain=domain,
+                                                     limit=10)
         html_report = html_report if html_report else None
 
         return str_report, html_report
@@ -231,8 +232,30 @@ class QueryManager(object):
             return reports
 
     def make_html_report_per_user(self, results, email,
-                                  domain='emmaa.indra.bio'):
-        """Produce a report for all query results per user in an html file."""
+                                  domain='emmaa.indra.bio', limit=None):
+        """Produce a report for all query results per user in an html file.
+
+        Parameters
+        ----------
+        results : list[tuple]
+            Results as a list of tuples where each tuple has the format
+            (model_name, query, mc_type, result_json, date).
+        email : str
+            The email of the user to get the results for.
+        domain : str
+            The domain name for the unsubscibe link in the report. Default:
+            "emmaa.indra.bio".
+        limit : int
+            The limit for how many results to show. With this set,
+            on the first 'limit' results are processed into html, i.e. use
+            results[:limit]. Default: all.
+
+        Returns
+        -------
+        str
+            A string containing an html document
+        """
+        results = results[:limit] if limit else results
         reports = self.make_reports_from_results(results, True, 'html')
         msg = ''
         if reports:
