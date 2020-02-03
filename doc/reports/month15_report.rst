@@ -125,9 +125,29 @@ structural) uncertainty of each model using sampling, and use statistical
 model checking techniques with given false positive and false negative
 guarantees to produce a pass/fail result.
 
-This feature is described in :ref:`dashboard_dyn_query`. 
+This feature is described in :ref:`dashboard_dyn_query`.
 
-User notifications of newly-discovered query results
-----------------------------------------------------
+Towards push science: User notifications of newly-discovered query results
+--------------------------------------------------------------------------
 
-Lorem ipsum
+The system of user notifications is an important component of the EMMAA
+concept. As a first approach, we implemented a registration system for users
+so that when a registered user logs in, they can register specific queries
+that they are interested in monitoring over time.
+
+Currently, the Query
+page allows users to browse the results of their registered queries given
+the current state of each model for which the query is registered.
+Independently, EMMAA's `answer_queries` module can detect if the result of
+a registered query changes due to a model update. Putting these two
+capabilities together, we developed a user notification system in EMMAA.
+If a specific model update changes the result of a registered user query,
+the user receives an email notifying them about the change. Importantly,
+the change to model behavior is attributable to the most recent model update
+(in which a new discovery from literature was assembled into the model).
+This creates a system in which new research results, as soon as they are
+published, are integrated into models that are then evaluated with respect
+to specific analyses, and their effect on model behavior is assessed and
+exposed to users whose research it affects. The email notification system
+is currently being tested internally, and will be exposed on the public
+interface in the next reporting period.
