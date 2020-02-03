@@ -81,7 +81,7 @@ constructed around atomic propositions to represent the query. Each
 atomic proposition has the form [observable,level] and evaluates to True
 if the observable is at the given level at the current time point. Atomic
 propositions are then embedded in formulae using standard BLTL operators
-including X,F,G and U, combined with standard logical operators (~, ^, V).
+including X, F, G and U, combined with standard logical operators (~, ^, v).
 For instance,
 "is phosphorylated ERK transient?" would be turned into the BLTL property
 [pERK,low]^F([pERK,high])^F(G([pERK,low])), which can informally be
@@ -98,7 +98,7 @@ structural) uncertainty of each model using sampling, and use statistical
 model checking techniques with given false positive and false negative
 guarantees to produce a pass/fail result.
 
-This feature is described in _dashboard_dyn_queries. 
+This feature is described in :ref:`dashboard_dyn_query`. 
 
 User notifications of newly-discovered query results
 ----------------------------------------------------

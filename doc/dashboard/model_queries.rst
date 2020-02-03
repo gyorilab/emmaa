@@ -52,34 +52,37 @@ model not having passed the test will be shown.
   *The above query resolved, showing the result per model and model type.
   Detailed results can be viewed by clicking on a green/red mark.*
 
-Dynamical Queries
------------------
+
 .. _dashboard_dyn_query:
 
-This tab allows to submit and view the results for dynamic queries. To answer
-these queries simulations are run on PySB model.
+Dynamical Queries
+-----------------
+
+This tab allows to submit and view the results for queries about dynamical
+model properties. To answer these queries simulations are run on a
+PySB-assembled EMMAA model.
 
 Submitting a Query
 ~~~~~~~~~~~~~~~~~~
 
-Dynamic query requires the user to specify the model, the entity to run
-simulations for, temporal pattern and, for some patterns, whether the entity
-amount should be high or low. Entity can be described with natural language,
-e.g. "phosphorylated MAP2K1".
+Dynamical query requires the user to specify the model, the entity to run
+simulations for, a temporal pattern and, for some patterns, whether the entity
+amount should be high or low. An observable entity can be described using
+natural language, e.g. "phosphorylated MAP2K1".
 
 .. figure:: ../_static/images/dynamic_query.png
   :align: center
   :figwidth: 100 %
 
   *The query ready to be submitted that asks whether phosphorylated MAP2K1 is
-  eventually high in MARM model.*
+  eventually high in the MARM model.*
 
 Viewing the results
 ~~~~~~~~~~~~~~~~~~~
 
-Results of the dynamic queries include a green/red mark showing whether the
+Results of the dynamical queries include a green/red mark showing whether the
 required condition was satisfied in more than a half of simulations and a plot
-of the entity amount change during the simulation.
+of the observable's time cours during the simulation.
 
 .. figure:: ../_static/images/dynamic_result.png
   :align: center
