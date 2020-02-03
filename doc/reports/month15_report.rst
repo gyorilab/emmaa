@@ -44,7 +44,61 @@ Lorem ipsum
 Dynamical model simulation and testing
 --------------------------------------
 
-Lorem ipsum
+Initially, the EMMAA project focused on a single mode of model analysis:
+finding mechanistic paths between a source (e.g., a perturbed protein) and
+a readout. This mode of analysis is static in that it relies on
+the causal connectivity structure of the model to characterize its behavior.
+
+We have generalized EMMAA model analysis to dynamical properties in which
+model simulation is performed. First, EMMAA Statements are assembled into a
+PySB model - a rule-based representation from which a reaction network, and
+subsequently, a set of coupled ordinary differential equations (ODEs) can be
+generated. Given suitable parameters and initial conditions, this set of ODEs
+can be solved numerically to reconstruct the temporal profile of observables
+of interest.
+
+Our goal was to design a simple specification language that allows a user to
+choose an observable, and determine whether it follows a given dynamical
+profile of interest. An example could be: "In the RAS model, is
+phosphorylated ERK transient?". Here "phosphorylated ERK"
+is the observable, and "transient" is the dynamical profile. The user can
+choose from the following dynamical profiles:
+
+- always value (low/high): the observable is always at a given level
+- sometime value (low/high): at some point in time, the observable reaches the
+  given level
+- eventual value (low/high): the observable eventually reaches a given level
+  and then stays there
+- no change: the observable's level never changes
+- transient: the observable's level first goes up and then goes back down
+- sustained: the observable's level goes up and then stays at a high level
+
+Internally, EMMAA uses a bounded linear-time temporal logic (BLTL) model
+checking framework to evaluate these properties. BLTL is defined over discrete
+time and so we choose a suitable sampling rate at which the observable's time
+course profile is reconstructed. A temporal logic formula is then
+constructed around atomic propositions to represent the query. Each
+atomic proposition has the form [observable,level] and evaluates to True
+if the observable is at the given level at the current time point. Atomic
+propositions are then embedded in formulae using standard BLTL operators
+including X,F,G and U, combined with standard logical operators (~, ^, V).
+For instance,
+"is phosphorylated ERK transient?" would be turned into the BLTL property
+[pERK,low]^F([pERK,high])^F(G([pERK,low])), which can informally be
+interpreted as: "pERK is initially low, after which at some point it reaches
+a high level, after which is goes to a low level and remains there."
+
+Given a model simulation, a generic BLTL model checker takes the simulation
+output (for the observable) and determines whether it satisfies the given
+formula. The result (pass/fail) is then displayed on the dashboard along
+with a plot of the actual simulation.
+
+In the future, we plan to account for the parameteric (and potentially the
+structural) uncertainty of each model using sampling, and use statistical
+model checking techniques with given false positive and false negative
+guarantees to produce a pass/fail result.
+
+This feature is described in _dashboard_dyn_queries. 
 
 User notifications of newly-discovered query results
 ----------------------------------------------------

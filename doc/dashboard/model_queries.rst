@@ -52,8 +52,9 @@ model not having passed the test will be shown.
   *The above query resolved, showing the result per model and model type.
   Detailed results can be viewed by clicking on a green/red mark.*
 
-Dynamic Queries
----------------
+Dynamical Queries
+-----------------
+.. _dashboard_dyn_query:
 
 This tab allows to submit and view the results for dynamic queries. To answer
 these queries simulations are run on PySB model.
