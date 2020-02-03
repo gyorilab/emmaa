@@ -6,7 +6,6 @@ from urllib import parse
 from datetime import datetime, timedelta
 
 from emmaa.db import get_db
-from emmaa.queries import Query
 
 db = get_db('primary')
 
@@ -127,13 +126,23 @@ def verify_email_signature(signature, email, expiration,
 
 
 def get_email_subscriptions(email):
-    """Verifies which email subsciptions exist for the provided email"""
+    """Verifies which email subsciptions exist for the provided email
+
+    Parameters
+    ----------
+    email : str
+        The email to the check subscriptions for
+
+    Returns
+    -------
+    list(tuple(str, str, query_hash))
+    """
     user_queries = db.get_subscribed_queries(email)
     if not user_queries:
         return []
-    # Todo get the query type from the json
-    return [(Query._from_json(qj).to_english() + f' for model {mid}',
-            'Path Query', qh) for qj, mid, qh in user_queries]
+    return [(qo.to_english() + f' for model {mid}',
+             f'{qo.get_type()}'.replace('_', ' '), qh)
+            for qo, mid, qh in user_queries]
 
 
 def register_email_unsubscribe(email, queries):
