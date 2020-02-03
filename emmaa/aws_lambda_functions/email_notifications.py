@@ -13,7 +13,7 @@ import boto3
 from datetime import datetime
 
 JOB_DEF = 'emmaa-email-notifications'
-QUEUE = 'emmaa-email-notifications'
+QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 PURPOSE = 'emmaa-email-notifications'
 BRANCH = 'origin/master'
