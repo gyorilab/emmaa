@@ -240,8 +240,7 @@ class QueryManager(object):
             for report in reports:
                 msg += report
             # Generate unsubscribe link
-            link = f'emmaa.indra.bio/query/unsubscribe' \
-                   f'?{generate_unsubscribe_link(email=email, domain=domain)}'
+            link = generate_unsubscribe_link(email=email, domain=domain)
             msg += f'<footer>If you wish to unsubscribe from future ' \
                    f'notifications, click on this link:<br><a href=' \
                    f'"{link}">{link}</a></footer>'
