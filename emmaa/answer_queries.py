@@ -5,7 +5,7 @@ from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import get_s3_client, make_date_str, find_latest_s3_file, \
     EMMAA_BUCKET_NAME
-from emmaa.subscription.email_util import generate_unsubscribe_qs
+from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default
 
@@ -175,13 +175,16 @@ class QueryManager(object):
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
-    def get_user_query_delta(self, user_email):
+    def get_user_query_delta(self, user_email, domain='emmaa.indra.bio'):
         """Produce a report for all query results per user in a given format
 
         Parameters
         ----------
         user_email : str
             The email of the user for which to get the report for
+        domain : str
+            Provide the domain name for the unsubscibe link in the html
+            report. Default: "emmaa.indra.bio".
 
         Returns
         -------
@@ -196,7 +199,8 @@ class QueryManager(object):
         str_report = '\n'.join(str_report[:10]) if str_report else None
 
         # Make html report
-        html_report = self.make_html_report_per_user(results, user_email)
+        html_report = self.make_html_report_per_user(results, user_email,
+                                                     domain=domain)
         html_report = html_report if html_report else None
 
         return str_report, html_report
@@ -226,7 +230,8 @@ class QueryManager(object):
         else:
             return reports
 
-    def make_html_report_per_user(self, results, email):
+    def make_html_report_per_user(self, results, email,
+                                  domain='emmaa.indra.bio'):
         """Produce a report for all query results per user in an html file."""
         reports = self.make_reports_from_results(results, True, 'html')
         msg = ''
@@ -236,7 +241,7 @@ class QueryManager(object):
                 msg += report
             # Generate unsubscribe link
             link = f'emmaa.indra.bio/query/unsubscribe' \
-                   f'?{generate_unsubscribe_qs(email)}'
+                   f'?{generate_unsubscribe_link(email=email, domain=domain)}'
             msg += f'<footer>If you wish to unsubscribe from future ' \
                    f'notifications, click on this link:<br><a href=' \
                    f'"{link}">{link}</a></footer>'
