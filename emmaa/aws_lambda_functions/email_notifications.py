@@ -12,7 +12,7 @@ in this directory.
 import boto3
 from datetime import datetime
 
-JOB_DEF = 'emmaa_jobdef'
+JOB_DEF = 'emmaa-email-notifications'
 QUEUE = 'emmaa-email-notifications'
 PROJECT = 'aske'
 PURPOSE = 'emmaa-email-notifications'
@@ -42,8 +42,8 @@ def lambda_handler(event, context):
     Returns
     -------
     ret : dict
-        A dict containing 'statusCode', with a valid HTTP status code, 'result',
-        and 'job_id' to be returned to Lambda.
+        A dict containing 'statusCode', with a valid HTTP status code,
+        'result', and 'job_id' to be returned to Lambda.
     """
     batch = boto3.client('batch')
     core_command = 'bash scripts/git_and_run.sh'
