@@ -35,6 +35,8 @@ and which statements were added to the model during the most recent update.
 
   *The top of the model tab*
 
+.. _dashboard_models_tests_tab:
+
 Tests Tab
 ---------
 
@@ -101,6 +103,8 @@ status, linking to detailed test results page.
 
   *Part of the list showing all applied tests with a status indicator for
   passed/failed*
+
+.. _dashboard_models_load_previous:
 
 Load Previous State of Model
 ----------------------------

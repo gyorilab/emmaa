@@ -8,22 +8,23 @@ During this reporting period we have made two significant updates to our
 approach to static analysis of models against observations. First, we have
 implemented a prototype capability to generalize EMMMAA knowledge assemblies
 for use as either models or as tests. Second, we have implemented the
-capability to test a single model against multiple corpora which involved
+capability to test a single model against multiple corpora, which involved
 changes to both the back-end test execution as well as the user interface for
 displaying test results.
 
 In EMMAA, daily machine reading is used to update a set of causal relations
 relevant to a specific domain, such as a disease, signaling pathway, or
-phenomenon (e.g., food insecurity) model. Up until this point, these (possibly
+phenomenon (e.g., food insecurity). Up until this point, these (possibly
 noisy) knowledge assemblies have been used to build causal models that are
-checked against a manually-curated observations. We have now also implemented
-the converse procedure, whereby the knowledge assemblies are treated as sets of
-*observations*, used to check manually curated models.
+checked against a set of manually-curated observations. We have now also
+implemented the converse procedure, whereby the knowledge assemblies are
+treated as sets of *observations*, used to check manually curated models.
 
 A prerequisite for this approach is the ability to run a single model against
 alternative test suites, which required significant refactoring of our back-end
 procedures for triggering testing and results generation, and new user
-interfaces to display multiple test results.
+interfaces to display multiple test results.  This feature is described in the
+documentation for the :ref:`dashboard_models_tests_tab`.
 
 As a proof of concept, we converted the EMMAA Statements used to generate the
 Ras Machine 2.0 (`rasmachine`) and Melanoma (`skcm`) models into sets of EMMAA
@@ -55,7 +56,7 @@ for model extension based on ongoing mining of the literature.
 
 In addition, we also found a number of cases where the failure of the Ras Model
 to pass a test highlighted errors in the underlying machine reading underlying
-the test. For example, the Melanoma Model included the test "PTEN ubuitinates
+the test. For example, the Melanoma Model included the test "PTEN ubiquitinates
 PTEN", which was derived from jointly incorrect extractions from three distinct
 sentences. As the Ras Model is extended to cover more of the true biology of
 the Ras pathway, we anticipate that failed tests will be increasingly likely to
@@ -97,6 +98,11 @@ which tests were newly passed at this point:
 Inspection of these newly passed tests along with the changes in model
 statements can help the user understand changes in the causal structure
 of the model over time.
+
+This feature is described in the documentation section
+:ref:`dashboard_models_load_previous`.
+
+
 
 Dynamical model simulation and testing
 --------------------------------------
