@@ -20,16 +20,16 @@ checked against a manually-curated observations. We have now also implemented
 the converse procedure, whereby the knowledge assemblies are treated as sets of
 *observations*, used to check manually curated models.
 
-A prerequisite for this approach is the ability to run a single model
-against alternative test suites, which required significant refactoring of
-our back-end procedures for triggering testing and results generation,
-and new user interfaces to display multiple test results.
+A prerequisite for this approach is the ability to run a single model against
+alternative test suites, which required significant refactoring of our back-end
+procedures for triggering testing and results generation, and new user
+interfaces to display multiple test results.
 
 As a proof of concept, we converted the EMMAA Statements used to generate the
 Ras Machine 2.0 (`rasmachine`) and Melanoma (`skcm`) models into sets of EMMAA
-Tests, and checked the manually-curated Ras Model (`rasmodel`) against
-each set independently. The user can now choose between these alternative
-test corpora in the EMMAA user interface:
+Tests, and checked the manually-curated Ras Model (`rasmodel`) against each set
+independently. The user can now choose between these alternative test corpora
+in the EMMAA user interface:
 
 .. figure:: ../_static/images/test_corpus_selection_cropped.png
   :align: center
@@ -66,7 +66,37 @@ plausibility of a newly-reported finding extracted by text mining.
 Time machine
 ------------
 
-Lorem ipsum
+When EMMAA performs daily updates, it reports which new statements were newly
+added to each model, the new tests that were applied based on the these
+statements, and whether these new tests passed or failed. Until this point the
+user could only see the change in statements and tests from the most recent
+update. This prevented the user from investigating the changes at earlier
+points in time, for example at points where there were large changes in the
+number of tests passing. During this reporting period we have added a "time
+machine" feature to the user interface to allow the user to inspect changes
+in the model statements and tests at specific previous timepoints.
+
+For example, the history of the Ras Machine model
+shows that on 11/26/2019, there was a dramatic change in the pass ratio of
+PyBEL model tests, as shown below:
+
+.. figure:: ../_static/images/ras_machine_pybel_delta.jpeg
+  :align: center
+  :figwidth: 100 %
+
+  *Substantial change in the PyBEL pass ratio for the Ras Machine model on
+  November 26, 2019.*
+
+Clicking on the timepoint after the change refreshes the interface to display
+which tests were newly passed at this point:
+
+.. figure:: ../_static/images/ras_machine_pybel_delta_tests.jpeg
+  :align: center
+  :figwidth: 100 %
+
+Inspection of these newly passed tests along with the changes in model
+statements can help the user understand changes in the causal structure
+of the model over time.
 
 Dynamical model simulation and testing
 --------------------------------------
