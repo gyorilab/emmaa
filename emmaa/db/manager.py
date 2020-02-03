@@ -349,6 +349,17 @@ class EmmaaDatabaseManager(object):
         return users
 
     def get_subscribed_queries(self, email):
+        """Get a list of (query object, model id, query hash) for a user
+
+        Parameters
+        ----------
+        email : str
+            The email address to check subscribed queries for
+
+        Returns
+        -------
+        list(tuple(emmaa.queries.Query, str, query_hash))
+        """
         logger.info(f"Got request to list user queries for {email}")
         # Get the query json for which email is subscribed
         with self.get_session() as sess:
@@ -359,7 +370,8 @@ class EmmaaDatabaseManager(object):
                 UserQuery.subscription
             )
             # Returns list of (query json, query hash) tuples
-        return q.all()
+        return [(QueryObject._from_json(qj), mid, qh)
+                for qj, mid, qh in q.all()]
 
     def get_subscribed_users(self):
         """Get all users who have subscriptions
