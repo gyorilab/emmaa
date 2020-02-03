@@ -38,6 +38,18 @@ and which statements were added to the model during the most recent update.
 Tests Tab
 ---------
 
+At the top of the tests tab, a drop down menu displays which test corpus was
+used for the currently displayed test results. Clicking on the drop down menu
+will display all available test corpora for the current model. Clicking
+"Load Test Results" will load the test results for the selected test corpus.
+
+.. figure:: ../_static/images/test_corpus_selection_cropped.png
+  :align: center
+  :figwidth: 100 %
+
+  *The results from different test corpora can be loaded. Here "Large Corpus
+  Tests", "Rasmachine Tests" and "Skcm test" are available.*
+
 The tests tab contains two related plots: one showing the evolution over time
 of the percentage of applicable tests that passed, and another showing the
 absolute number of tests that were applied to the model and the number of tests
@@ -73,7 +85,7 @@ New tests that passed for any of the model types are shown under
 the path are can be seen by clicking on a path which links out to the detailed
 test results page for the test.
 
-.. figure:: ../_static/images/new_applied_tests.png
+.. figure:: ../_static/images/new_passed_tests.png
   :align: center
   :figwidth: 100 %
   
@@ -89,3 +101,33 @@ status, linking to detailed test results page.
 
   *Part of the list showing all applied tests with a status indicator for
   passed/failed*
+
+Load Previous State of Model
+----------------------------
+
+To view the state of the selected model together with the test results for a
+particualar date, click on any data point for the desired date in any of the
+time series shown on either the Model tab or the Tests tab.
+
+.. figure:: ../_static/images/time_machine_selection_cropped.png
+  :align: center
+  :figwidth: 100 %
+
+  *Clicking on a data point in any time series will link to the state of the
+  model and the test results for the associated date.*
+
+Clicking the data point will link back to the same models page with data
+loaded for the selected date. The model info section displays the selected
+date as well as the date for the most recent data. Any time series show data
+up to the selected date. Any section showing new updates, such as "New
+Passed Tests", shows what was new on the selected date while "All Test
+Results" shows the state of the results were in. Clicking on "Go To Latest"
+on the top panel will link back to the most recent state of the model.
+
+.. figure:: ../_static/images/previous_date_cropped.png
+  :align: center
+  :figwidth: 100 %
+
+  *When the state of the model for a previous date is shown, the date is
+  diplayed in "Data Displayed". Clicking on "Go To Latest" on the top panel
+  will link back to the most recent state of the model*
