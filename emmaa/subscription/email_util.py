@@ -39,11 +39,11 @@ def generate_unsubscribe_qs(email, days=7):
 def generate_unsubscribe_link(email, days=7, domain='emmaa.indra.bio'):
     """Generate an unsubscribe link for the provided email address
 
-    Given an email, generate an unsubscribe link for that user. Optionally
-    provide the number of days into the future the link should be valid
-    until and the domain name. The domain name is expeceted to be of the
-    format some.domain.com. The appropriate path and prefixes will be added
-    together with the query string. Example
+    Given an email address, generate an unsubscribe link using that email
+    address. Optionally provide the number of days into the future the link
+    should be valid until and the domain name. The domain name is expeceted
+    to be of the format "some.domain.com". The appropriate path and prefixes
+    will be added together with the query string. Example:
 
     >>> generate_unsubscribe_link('user@email.com', domain='some.domain.com')
     >>> 'https://some.domain.com/query/unsubscribe?email=user%40email.com' +
