@@ -28,13 +28,40 @@ and new user interfaces to display multiple test results.
 As a proof of concept, we converted the EMMAA Statements used to generate the
 Ras Machine 2.0 (`rasmachine`) and Melanoma (`skcm`) models into sets of EMMAA
 Tests, and checked the manually-curated Ras Model (`rasmodel`) against
-each set independently.
+each set independently. The user can now choose between these alternative
+test corpora in the EMMAA user interface:
 
+.. figure:: ../_static/images/test_corpus_selection_cropped.png
+  :align: center
+  :figwidth: 100 %
 
+  *Selecting test results to view among "Large Corpus Tests", "Rasmachine
+  Tests" and "Skcm tests".*
 
+Examining the performance of the curated Ras Model against these three
+different corpora reveals striking differences. The PySB implementation of the
+Ras Model has a passing rate of 55% for the BEL Large Corpus (100/182 tests),
+but only 16% (120/730 tests) for the Ras Machine test corpus and 7% (6/86
+tests) for the Melanoma test corpus. We inspected a handful of the tests from
+the Ras Machine that the Ras Model did not pass. Many of these failed tests
+highlighted aspects of the Ras Model that were failing either for minor
+technical reasons (e.g., "CCND1 activates CDK4", which failed due to the active
+form of CDK4 being defined explicitly in the model); others represented
+knowledge gaps that could guide additions to the model (e.g., "RPS6KA1
+activates RPTOR"). This latter category represent an opportunity for
+*test-driven modeling* as we described in an earlier report, with the
+additional feature that here the system is *automatically* providing guidance
+for model extension based on ongoing mining of the literature.
 
-Models as te
-
+In addition, we also found a number of cases where the failure of the Ras Model
+to pass a test highlighted errors in the underlying machine reading underlying
+the test. For example, the Melanoma Model included the test "PTEN ubuitinates
+PTEN", which was derived from jointly incorrect extractions from three distinct
+sentences. As the Ras Model is extended to cover more of the true biology of
+the Ras pathway, we anticipate that failed tests will be increasingly likely to
+be erroneous. From a larger perspective, we believe that this approach
+highlights the prospect of using causal models to determine the *a priori*
+plausibility of a newly-reported finding extracted by text mining.
 
 Time machine
 ------------
