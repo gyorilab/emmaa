@@ -137,6 +137,7 @@ class QueryManager(object):
             Whether the new_results are already stored in the database.
         report_format : str
             A format to write reports in. Accepted values: 'str' and 'html'.
+            Default: 'str'.
         include_no_diff : bool
             If True, also report results that haven't changed. Default: True.
 
@@ -145,6 +146,9 @@ class QueryManager(object):
         reports : list[str]
             A list of reports on changes for each of the queries.
         """
+        if report_format not in {'html', 'str'}:
+            raise ValueError('Argument report_format must be either "html" '
+                             'or "str"')
         processed_query_mc = []
         reports = []
         # If latest results are in db, retrieve the second latest
