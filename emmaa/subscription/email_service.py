@@ -40,7 +40,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
         The text body of the email
     body_html : str
         The html body of the email. Must be a valid html body (starting
-        with <html>).
+        with <html>, ending with </html>).
     source_arn : str
         The source ARN of the sender. Should be of the format
         "arn:aws:ses:us-east-1:123456789012:identity/user@example.com" or
@@ -59,8 +59,6 @@ def send_email(sender, recipients, subject, body_text, body_html,
         The return path ARN for the sender. This is the ARN associated
         with the return email. Can be the same as the source_arn if return
         email is the same as the sender.
-    region : str
-        AWS region. Default: us-east-1
 
     Returns
     -------
