@@ -279,20 +279,20 @@ class QueryManager(object):
                 msg = f'\nThis is the first result to query ' \
                       f'{query.to_english()} in {model_name} with' \
                       f' {mc_type} model checker.\nThe result is:'
-                msg += _process_result_to_str(new_result_json)
+                msg += _process_result_to_str(new_result_json, 'str')
             else:
                 msg = f'\nA new result to query {query.to_english()}' \
                       f' in {model_name} was found with {mc_type}' \
                       f' model checker. '
                 msg += '\nPrevious result was:'
-                msg += _process_result_to_str(old_result_json)
+                msg += _process_result_to_str(old_result_json, 'str')
                 msg += '\nNew result is:'
-                msg += _process_result_to_str(new_result_json)
+                msg += _process_result_to_str(new_result_json, 'str')
         else:
             msg = f'\nA result to query {query.to_english()} in ' \
                   f'{model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:'
-            msg += _process_result_to_str(new_result_json)
+            msg += _process_result_to_str(new_result_json, 'str')
         return msg
 
     def make_html_one_query_report(self, model_name, query, mc_type,
@@ -313,22 +313,22 @@ class QueryManager(object):
                 msg = f'<p>This is the first result to query ' \
                       f'"{query.to_english()}" in {model_name} ' \
                       f'with {mc_type} model checker. The result is:<br>'
-                msg += _process_result_to_str(new_result_json)
+                msg += _process_result_to_str(new_result_json, 'html')
                 msg += '</p>'
             else:
                 msg = f'<p>A new result to query ' \
                       f'"{query.to_english()}" in {model_name} ' \
                       f'was found with {mc_type} model checker.<br>'
                 msg += '<br>Previous result was:<br>'
-                msg += _process_result_to_str(old_result_json)
+                msg += _process_result_to_str(old_result_json, 'html')
                 msg += '<br>New result is:<br>'
-                msg += _process_result_to_str(new_result_json)
+                msg += _process_result_to_str(new_result_json, 'html')
                 msg += '</p>'
         else:
             msg = f'<p>A result to query "{query.to_english()}" ' \
                   f'in {model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:<br>'
-            msg += _process_result_to_str(new_result_json)
+            msg += _process_result_to_str(new_result_json, 'html')
             msg += '</p>'
         return msg
 
@@ -460,15 +460,15 @@ def load_model_manager_from_cache(model_name, bucket=EMMAA_BUCKET_NAME):
     return model_manager
 
 
-def _process_result_to_str(result_json):
-    msg = '\n'
+def _process_result_to_str(result_json, format='str'):
+    msg = '\n' if format == 'str' else '<br>'
     for v in result_json.values():
         if isinstance(v, str):
             msg += v
         elif isinstance(v, dict):
             if 'path' in v.keys():
                 msg += v['path']
-                msg += '\n'
+                msg += '\n' if format == 'str' else '<br>'
             else:
                 msg += f'Satisfaction rate: {v["sat_rate"]}, '
                 msg += f'Number of simulations: {v["num_sim"]}, '
