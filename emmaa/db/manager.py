@@ -263,7 +263,7 @@ class EmmaaDatabaseManager(object):
             q = sess.query(Query.json).filter(
                 Query.model_id == model_id,
                 Query.hash == UserQuery.query_hash,
-                UserQuery.subscription)
+                UserQuery.subscription).distinct()
             queries = [QueryObject._from_json(q) for q, in q.all()]
         return queries
 
