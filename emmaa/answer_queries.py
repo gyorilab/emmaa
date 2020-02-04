@@ -303,8 +303,8 @@ class QueryManager(object):
             # Generate unsubscribe link
             link = generate_unsubscribe_link(email=email, domain=domain)
             msg += f'<footer>If you wish to unsubscribe from future ' \
-                   f'notifications, click on this link:<br><a href=' \
-                   f'"{link}">{link}</a></footer>'
+                   f'notifications, click on the following link:' \
+                   f'<br><a href="{link}">{link}</a></footer>'
             msg += '</body></html>'
         return msg
 
