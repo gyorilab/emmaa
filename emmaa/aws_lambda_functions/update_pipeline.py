@@ -53,11 +53,19 @@ def lambda_handler(event, context):
         config_key = f'{prefix}config.json'
         obj = s3.get_object(Bucket='emmaa', Key=config_key)
         config = json.loads(obj['Body'].read().decode('utf8'))
-        if config.get('run_daily_update', False):
-            model_name = prefix[7:-1]
+        model_name = prefix[7:-1]
+        if model_name == 'test':
+            continue
+        elif config.get('run_daily_update', False):
             payload = {"model": model_name}
             resp = lam.invoke(FunctionName='emmaa-model-update',
                               InvocationType='RequestResponse',
                               Payload=json.dumps(payload))
             print(resp['Payload'].read())
+        else:
+            payload = {"Records": [{"s3": {"object": {
+                "key": f"models/{model_name}/model_2020-01-01-00-00-00.pkl"}}}]}
+            resp = lam.invoke(FunctionName='emmaa-mm-update',
+                              InvocationType='RequestResponse',
+                              Payload=json.dumps(payload))
     return {'statusCode': 200, 'result': 'SUCCESS'}
