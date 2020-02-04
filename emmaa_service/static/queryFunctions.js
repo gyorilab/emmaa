@@ -10,17 +10,16 @@ function postQuery(queryContainer) {
   if (queryContainer.id == 'query-container') {
     var statusId = 'query-status';
     var tab = 'static';
+    var reg = document.getElementById('register-query').checked;
   } else {
     var statusId = 'dyn-query-status';
     var tab = 'dynamic';
+    var reg = document.getElementById('register-dyn-query').checked;
   }
   if (querySel.length < 2) {
     queryNotify('Did not send query', statusId);
     return;
   }
-
-  // Check if user wants to register query
-  let reg = document.getElementById('register-query').checked;
 
   let ajax_response = submitQuery({
     models: querySel[0],
