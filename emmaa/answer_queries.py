@@ -110,7 +110,8 @@ class QueryManager(object):
         return format_results(results, query_type)
 
     def make_reports_from_results(
-            self, new_results, stored=True, report_format='str'):
+            self, new_results, stored=True, report_format='str',
+            include_no_diff=True):
         """Make a report given latest results and queries the results are for.
 
         Parameters
@@ -122,6 +123,9 @@ class QueryManager(object):
             Whether the new_results are already stored in the database.
         report_format : str
             A format to write reports in. Accepted values: 'str' and 'html'.
+        include_no_diff : bool
+            If True, also report results that haven't changed. Default: True.
+
         Returns
         -------
         reports : list[str]
@@ -148,30 +152,39 @@ class QueryManager(object):
                             if report_format == 'str':
                                 report = self.make_str_report_one_query(
                                     model_name, query, mc_type,
-                                    new_result_json, old_result_json)
+                                    new_result_json, old_result_json,
+                                    include_no_diff=include_no_diff)
                             elif report_format == 'html':
                                 report = self._make_html_one_query_inner(
                                     model_name, query, mc_type,
-                                    new_result_json, old_result_json)
-                            reports.append(report)
+                                    new_result_json, old_result_json,
+                                    include_no_diff=include_no_diff)
+                            if report:
+                                reports.append(report)
                 else:
                     logger.info('No previous result was found.')
                     if report_format == 'str':
                         report = self.make_str_report_one_query(
-                            model_name, query, mc_type, new_result_json, None)
+                            model_name, query, mc_type, new_result_json,
+                            None, include_no_diff=include_no_diff)
                     elif report_format == 'html':
                         report = self._make_html_one_query_inner(
-                            model_name, query, mc_type, new_result_json, None)
-                    reports.append(report)
+                            model_name, query, mc_type, new_result_json,
+                            None, include_no_diff=include_no_diff)
+                    if report:
+                        reports.append(report)
             except IndexError:
                 logger.info('No result for desired date back was found.')
                 if report_format == 'str':
                     report = self.make_str_report_one_query(
-                        model_name, query, mc_type, new_result_json, None)
+                        model_name, query, mc_type, new_result_json, None,
+                        include_no_diff=include_no_diff)
                 elif report_format == 'html':
                     report = self._make_html_one_query_inner(
-                        model_name, query, mc_type, new_result_json, None)
-                reports.append(report)
+                        model_name, query, mc_type, new_result_json, None,
+                        include_no_diff=include_no_diff)
+                if report:
+                    reports.append(report)
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
@@ -195,13 +208,16 @@ class QueryManager(object):
         results = self.db.get_results(user_email, latest_order=1)
 
         # Make text report
-        str_report = self.make_str_report_per_user(results)
+
+        str_report = self.make_str_report_per_user(results,
+                                                   include_no_diff=False)
         str_report = '\n'.join(str_report[:10]) if str_report else None
 
         # Make html report
         html_report = self.make_html_report_per_user(results, user_email,
                                                      domain=domain,
-                                                     limit=10)
+                                                     limit=10,
+                                                     include_no_diff=False)
         html_report = html_report if html_report else None
 
         return str_report, html_report
@@ -221,9 +237,11 @@ class QueryManager(object):
             return self.make_reports_from_results(new_results, True, 'html')
         return self.make_reports_from_results(new_results, True, 'str')
 
-    def make_str_report_per_user(self, results, filename=None):
+    def make_str_report_per_user(self, results, filename=None,
+                                 include_no_diff=True):
         """Produce a report for all query results per user in a text file."""
-        reports = self.make_reports_from_results(results, True, 'str')
+        reports = self.make_reports_from_results(
+            results, True, 'str', include_no_diff=include_no_diff)
         if filename:
             with open(filename, 'w') as f:
                 for report in reports:
@@ -232,7 +250,8 @@ class QueryManager(object):
             return reports
 
     def make_html_report_per_user(self, results, email,
-                                  domain='emmaa.indra.bio', limit=None):
+                                  domain='emmaa.indra.bio', limit=None,
+                                  include_no_diff=True):
         """Produce a report for all query results per user in an html file.
 
         Parameters
@@ -256,7 +275,8 @@ class QueryManager(object):
             A string containing an html document
         """
         results = results[:limit] if limit else results
-        reports = self.make_reports_from_results(results, True, 'html')
+        reports = self.make_reports_from_results(
+            results, True, 'html', include_no_diff=include_no_diff)
         msg = ''
         if reports:
             msg += '<html><body>'
@@ -271,7 +291,8 @@ class QueryManager(object):
         return msg
 
     def make_str_report_one_query(self, model_name, query, mc_type,
-                                  new_result_json, old_result_json=None):
+                                  new_result_json, old_result_json=None,
+                                  include_no_diff=True):
         """Return a string message containing information about a query and any
         change in the results."""
         if is_query_result_diff(new_result_json, old_result_json):
@@ -288,25 +309,55 @@ class QueryManager(object):
                 msg += _process_result_to_str(old_result_json, 'str')
                 msg += '\nNew result is:'
                 msg += _process_result_to_str(new_result_json, 'str')
-        else:
+        elif include_no_diff:
             msg = f'\nA result to query {query.to_english()} in ' \
                   f'{model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:'
             msg += _process_result_to_str(new_result_json, 'str')
+        else:
+            msg = None
         return msg
 
     def make_html_one_query_report(self, model_name, query, mc_type,
-                                   new_result_json, old_result_json=None):
-        """Return an html page containing information about a query and any
-        change in the results."""
-        msg = '<html><body>'
-        msg += self._make_html_one_query_inner(
-            model_name, query, mc_type, new_result_json, old_result_json)
-        msg += '</body></html>'
+                                   new_result_json, old_result_json=None,
+                                   include_no_diff=True):
+        """Return an html page containing information about a query
+
+        Parameters
+        ----------
+        model_name : str
+            Name of model
+        query : emmaa.query.Query
+            The query object representing the query
+        mc_type : str
+            The model type
+        new_result_json : dict
+            The json containing the new results
+        old_result_json : dict
+            The json the new results are to be compared with
+        include_no_diff : bool
+            If True, also report results that haven't changed. Default: True.
+
+        Returns
+        -------
+        str
+            The string containing the report.
+        """
+        html_msg = self._make_html_one_query_inner(
+            model_name, query, mc_type, new_result_json, old_result_json,
+            include_no_diff=include_no_diff
+        )
+        if html_msg:
+            msg = '<html><body>'
+            msg += html_msg
+            msg += '</body></html>'
+        else:
+            msg = None
         return msg
 
     def _make_html_one_query_inner(self, model_name, query, mc_type,
-                                   new_result_json, old_result_json=None):
+                                   new_result_json, old_result_json=None,
+                                   include_no_diff=True):
         # Create an html part for one query to be used in producing html report
         if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
@@ -324,12 +375,14 @@ class QueryManager(object):
                 msg += '<br>New result is:<br>'
                 msg += _process_result_to_str(new_result_json, 'html')
                 msg += '</p>'
-        else:
+        elif include_no_diff:
             msg = f'<p>A result to query "{query.to_english()}" ' \
                   f'in {model_name} from {mc_type} model checker ' \
                   f'did not change. The result is:<br>'
             msg += _process_result_to_str(new_result_json, 'html')
             msg += '</p>'
+        else:
+            msg = None
         return msg
 
     def notify_user(
@@ -337,9 +390,11 @@ class QueryManager(object):
             old_result_json=None):
         """Create a query result delta report and send it to user."""
         str_msg = self.make_str_report_one_query(
-            model_name, query, mc_type, new_result_json, old_result_json)
+            model_name, query, mc_type, new_result_json, old_result_json,
+            include_no_diff=False)
         html_msg = self.make_html_one_query_report(
-            model_name, query, mc_type, new_result_json, old_result_json)
+            model_name, query, mc_type, new_result_json, old_result_json,
+            include_no_diff=False)
 
         self.__send_email_notification(
             recipients=[user_email],
