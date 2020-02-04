@@ -72,12 +72,26 @@ class QueryManager(object):
                 self.db.put_results(model_name, results_to_store)
         return {query_type: query_hashes}
 
-    def answer_registered_queries(
-            self, model_name, find_delta=True, notify=False, use_kappa=False,
-            bucket=EMMAA_BUCKET_NAME):
-        """Retrieve queries registered on database for a given model,
-        answer them, calculate delta between results, notify users in case of
-        any changes, and put results to a database.
+    def answer_registered_queries(self, model_name, find_delta=True,
+                                  use_kappa=False, bucket=EMMAA_BUCKET_NAME):
+        """Retrieve and asnwer registered queries
+
+        Retrieve queries registered on database for a given model,
+        answer them, calculate delta between results and put results to a
+        database.
+
+        Parameters
+        ----------
+        model_name : str
+            The name of the model
+        find_delta : bool
+            If True, also generate a report for the logs on what the delta
+            is for the new results compared to the previous results.
+            Default: True
+        use_kappa : bool
+            If True, use kappa modeling when answering the dynamic query
+        bucket : str
+            The bucket to save the results to
         """
         model_manager = self.get_model_manager(model_name)
         queries = self.db.get_queries(model_name)
@@ -294,7 +308,28 @@ class QueryManager(object):
                                   new_result_json, old_result_json=None,
                                   include_no_diff=True):
         """Return a string message containing information about a query and any
-        change in the results."""
+        change in the results.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of model
+        query : emmaa.query.Query
+            The query object representing the query
+        mc_type : str
+            The model type
+        new_result_json : dict
+            The json containing the new results
+        old_result_json : dict
+            The json the new results are to be compared with
+        include_no_diff : bool
+            If True, also report results that haven't changed. Default: True.
+
+        Returns
+        -------
+        str
+            The string containing the report.
+        """
         if is_query_result_diff(new_result_json, old_result_json):
             if not old_result_json:
                 msg = f'\nThis is the first result to query ' \
