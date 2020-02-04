@@ -619,6 +619,7 @@ def update_model_manager_on_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     model = EmmaaModel.load_from_s3(model_name, bucket=bucket)
     mm = ModelManager(model)
     save_model_manager_to_s3(model_name, mm, bucket=bucket)
+    return mm
 
 
 def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):

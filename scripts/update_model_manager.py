@@ -8,4 +8,5 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', help='Model name', required=True)
     args = parser.parse_args()
 
-    update_model_manager_on_s3(args.model)
+    mm = update_model_manager_on_s3(args.model)
+    mm.model.update_to_ndex()
