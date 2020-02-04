@@ -14,7 +14,7 @@ function postQuery(queryContainer) {
   } else {
     var statusId = 'dyn-query-status';
     var tab = 'dynamic';
-    var reg = document.getElementById('register-dev-query').checked;
+    var reg = document.getElementById('register-dyn-query').checked;
   }
   if (querySel.length < 2) {
     queryNotify('Did not send query', statusId);
