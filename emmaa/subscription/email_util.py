@@ -94,9 +94,8 @@ def generate_signature(email, expire_str, digestmod=hashlib.sha256):
         A hexadecimal string representing the signature
     """
     if not EMAIL_SIGNATURE_KEY:
-        logger.error('No secret key set for email signature.'
-                     'Cannot generate signature')
-        return
+        raise ValueError('No secret key set for email signature. '
+                         'Cannot generate signature')
 
     digester = hmac.new(key=EMAIL_SIGNATURE_KEY.encode(encoding='utf-8'),
                         msg=__sign_str_concat(
