@@ -16,7 +16,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
-    does_exist, EMMAA_BUCKET_NAME
+    does_exist, EMMAA_BUCKET_NAME, list_s3_files
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
@@ -108,10 +108,9 @@ def get_latest_available_date(
                 f'and {test_corpus}.')
 
 
-def _get_test_corpora(model, config, bucket=EMMAA_BUCKET_NAME):
-    tests = config['test'].get('test_corpus', 'large_corpus_tests')
-    if isinstance(tests, str):
-        tests = [tests]
+def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
+    all_files = list_s3_files(bucket, f'stats/{model}/test_stats_', '.json')
+    tests = set([os.path.basename(key)[11:-25] for key in all_files])
     tests_with_dates = {}
     for test in tests:
         tests_with_dates[test] = get_latest_available_date(
@@ -210,7 +209,7 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date):
     new_app_hashes = test_stats_json['tests_delta']['applied_hashes_delta'][
         'added']
     if len(new_app_hashes) == 0:
-        return 'No new tests were applied'
+        return 'No new tests were applied' 
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
     return _format_table_array(new_app_tests, model_types, model_name, date)
 
@@ -330,9 +329,9 @@ def get_model_dashboard(model):
     for mid, mmd, tc, av_date in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
-            available_tests = _get_test_corpora(model, mmd)
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
+    available_tests = _get_test_corpora(model)
     latest_date = get_latest_available_date(model, test_corpus)
     model_info_contents = [
         [('', 'Latest Data Available', ''), ('', latest_date, '')],

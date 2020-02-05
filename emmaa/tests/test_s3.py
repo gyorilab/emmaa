@@ -349,7 +349,7 @@ def test_api_load_from_s3():
         'test', 'simple_tests', refresh=True, bucket=TEST_BUCKET_NAME) == today
     config = get_model_config('test', TEST_BUCKET_NAME)
     assert config
-    test_corpora = _get_test_corpora('test', config, TEST_BUCKET_NAME)
+    test_corpora = _get_test_corpora('test', TEST_BUCKET_NAME)
     assert test_corpora == {'simple_tests': today}
     # metadata always looks for 'large_corpus_tests'
     date_str = last_updated_date(
