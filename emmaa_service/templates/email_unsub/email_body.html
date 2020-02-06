@@ -2,13 +2,14 @@
 <body>
   <meta charset="UTF-8">
   {% if static_query_deltas %}
-    <h1>Updates to your <a href="{{ static_tab_link }}">static
-      queries</a></h1>
+    <h3>Updates to your <a href="{{ static_tab_link }}">static
+      queries</a></h3>
     <ul>
     {% for english_query, detailed_query_link, model, model_type in
     static_query_deltas %}
       <li>"{{ english_query }}" in {{ model }} using the {{ model_type }}
-        model type</li>
+        model type. For details click
+        <a href="{{ detailed_query_link }}">here</a>.</li>
     {% endfor %}
     </ul>
   {% endif %}
