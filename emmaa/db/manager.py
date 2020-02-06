@@ -315,6 +315,12 @@ class EmmaaDatabaseManager(object):
         ----------
         user_email : str
             The email of a user.
+        latest_order : int
+            Which result in the order from the latest to get. Default: 1 (
+            latest).
+        query_type : str
+            Filter results to specific query type. Default: None (all query
+            types will be returned).
 
         Returns
         -------
