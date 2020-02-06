@@ -285,8 +285,7 @@ class QueryManager(object):
             return reports
 
     def make_html_report_per_user(self, results, email,
-                                  domain='emmaa.indra.bio', limit=None,
-                                  include_no_diff=True):
+                                  domain='emmaa.indra.bio', limit=None):
         """Produce a report for all query results per user in an html file.
 
         Parameters
