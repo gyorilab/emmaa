@@ -11,7 +11,7 @@ from emmaa.subscription.email_util import verify_email_signature, \
 
 test_email = 'test@testing.com'
 actual_test_receiver = os.environ.get('EMAIL_TEST_RECEIVER')
-indra_bio_arn = os.environ.get('INDRA_EMAIL_SOURCE_ARN')
+indra_bio_arn = os.environ.get('INDRA_BIO_ARN')
 text_body = "This is an email automatically generated from a nosetest"
 html_body = """<html>
 <head></head>
@@ -33,7 +33,7 @@ options = {'sender': notifications_sender_default,
 
 
 def test_01_email_options():
-    assert indra_bio_arn, 'INDRA_EMAIL_SOURCE_ARN not set in environment'
+    assert indra_bio_arn, 'INDRA_BIO_ARN not set in environment'
 
 
 def _run_sandbox(address):
