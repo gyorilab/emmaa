@@ -125,7 +125,7 @@ class QueryManager(object):
 
     def make_reports_from_results(
             self, new_results, stored=True, report_format='str',
-            include_no_diff=True):
+            include_no_diff=True, domain='emmaa.indra.bio'):
         """Make a report given latest results and queries the results are for.
 
         Parameters
@@ -164,31 +164,50 @@ class QueryManager(object):
                 old_results = self.db.get_results_from_query(
                     query, [model_name], order)
                 if old_results:
-                    for old_result in old_results:
-                        if mc_type == old_result[2]:
-                            old_result_json = old_result[3]
+                    for old_model_name, old_query, old_mc_type,\
+                            old_result_json, _ in old_results:
+                        if mc_type == old_mc_type and \
+                                is_query_result_diff(new_result_json,
+                                                     old_result_json):
                             if report_format == 'str':
                                 report = self.make_str_report_one_query(
                                     model_name, query, mc_type,
                                     new_result_json, old_result_json,
                                     include_no_diff=include_no_diff)
+                                if report:
+                                    reports.append(report)
                             elif report_format == 'html':
-                                report = self._make_html_one_query_inner(
-                                    model_name, query, mc_type,
-                                    new_result_json, old_result_json,
-                                    include_no_diff=include_no_diff)
-                            if report:
-                                reports.append(report)
-                else:
+                                delta = [
+                                    query.to_english(),
+                                    _detailed_page_link(
+                                        domain,
+                                        model_name,
+                                        mc_type,
+                                        query.get_hash_with_model(
+                                            model_name)),
+                                    model_name,
+                                    mc_type
+                                ]
+                                try:
+                                    # static
+                                    if query.get_type() == 'path_property':
+                                        reports[0].append(delta)
+                                    # dynamic
+                                    else:
+                                        # Remove link for dynamic
+                                        _ = delta.pop(1)
+                                        reports[1].append(delta)
+                                except IndexError:
+                                    # Set first entry = [static], [dynamic]
+                                    pl = ([delta], []) if \
+                                        query.get_type() == \
+                                        'path_propety' else ([delta], [])
+                                    reports = [*pl]
+                elif report_format == 'str':
                     logger.info('No previous result was found.')
-                    if report_format == 'str':
-                        report = self.make_str_report_one_query(
-                            model_name, query, mc_type, new_result_json,
-                            None, include_no_diff=include_no_diff)
-                    elif report_format == 'html':
-                        report = self._make_html_one_query_inner(
-                            model_name, query, mc_type, new_result_json,
-                            None, include_no_diff=include_no_diff)
+                    report = self.make_str_report_one_query(
+                        model_name, query, mc_type, new_result_json,
+                        None, include_no_diff=include_no_diff)
                     if report:
                         reports.append(report)
             except IndexError:
@@ -197,12 +216,8 @@ class QueryManager(object):
                     report = self.make_str_report_one_query(
                         model_name, query, mc_type, new_result_json, None,
                         include_no_diff=include_no_diff)
-                elif report_format == 'html':
-                    report = self._make_html_one_query_inner(
-                        model_name, query, mc_type, new_result_json, None,
-                        include_no_diff=include_no_diff)
-                if report:
-                    reports.append(report)
+                    if report:
+                        reports.append(report)
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
@@ -478,6 +493,13 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     old_result_hashes = [k for k in old_result_json.keys()]
     new_result_hashes = [k for k in new_result_json.keys()]
     return not set(new_result_hashes) == set(old_result_hashes)
+
+
+def _detailed_page_link(domain, model_name, model_type, query_hash):
+    # example:
+    # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash=4911955502409811
+    return f'https://{domain}/query/{model_name}/?model_type=' \
+           f'{model_type}&query_hash={query_hash}'
 
 
 def format_results(results, query_type='path_property'):
