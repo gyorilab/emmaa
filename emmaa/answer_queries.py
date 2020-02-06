@@ -144,7 +144,7 @@ class QueryManager(object):
 
         Returns
         -------
-        reports : list[str]
+        reports : list
             A list of reports on changes for each of the queries.
         """
         if report_format not in {'html', 'str'}:
@@ -178,6 +178,8 @@ class QueryManager(object):
                                 if report:
                                     reports.append(report)
                             elif report_format == 'html':
+                                model_type_name = FORMATTED_TYPE_NAMES[
+                                    mc_type] if mc_type else mc_type
                                 delta = [
                                     query.to_english(),
                                     _detailed_page_link(
@@ -187,7 +189,7 @@ class QueryManager(object):
                                         query.get_hash_with_model(
                                             model_name)),
                                     model_name,
-                                    mc_type
+                                    model_type_name
                                 ]
                                 try:
                                     # static
@@ -242,7 +244,6 @@ class QueryManager(object):
         results = self.db.get_results(user_email, latest_order=1)
 
         # Make text report
-
         str_report = self.make_str_report_per_user(results,
                                                    include_no_diff=False)
         str_report = '\n'.join(str_report[:10]) if str_report else None
@@ -350,15 +351,18 @@ class QueryManager(object):
         str
             The string containing the report.
         """
+        model_type_name = FORMATTED_TYPE_NAMES[mc_type] if mc_type else mc_type
+
         if is_query_result_diff(new_result_json, old_result_json):
+
             if not old_result_json:
                 msg = f'\nThis is the first result to query ' \
                       f'{query.to_english()} in {model_name} with' \
-                      f' {mc_type} model checker.\nThe result is:'
+                      f' {model_type_name} model checker.\nThe result is:'
                 msg += _process_result_to_str(new_result_json, 'str')
             else:
                 msg = f'\nA new result to query {query.to_english()}' \
-                      f' in {model_name} was found with {mc_type}' \
+                      f' in {model_name} was found with {model_type_name}' \
                       f' model checker. '
                 msg += '\nPrevious result was:'
                 msg += _process_result_to_str(old_result_json, 'str')
@@ -366,7 +370,7 @@ class QueryManager(object):
                 msg += _process_result_to_str(new_result_json, 'str')
         elif include_no_diff:
             msg = f'\nA result to query {query.to_english()} in ' \
-                  f'{model_name} from {mc_type} model checker ' \
+                  f'{model_name} from {model_type_name} model checker ' \
                   f'did not change. The result is:'
             msg += _process_result_to_str(new_result_json, 'str')
         else:
