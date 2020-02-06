@@ -2,6 +2,8 @@ import os
 import re
 import boto3
 import logging
+from flask import Flask
+from pathlib import Path
 from datetime import datetime, timedelta
 from botocore import UNSIGNED
 from botocore.client import Config
@@ -205,6 +207,54 @@ def get_class_from_name(cls_name, parent_cls):
             return cl
     raise NotAClassName(f'{cls_name} is not recognized as a '
                         f'{parent_cls.__name__} type!')
+
+
+def _get_flask_app():
+    emmaa_service_dir = Path(__file__).parent.parent.joinpath(
+        'emmaa_service', 'templates')
+    app = Flask('Static app', template_folder=emmaa_service_dir.as_posix())
+    return app
+
+
+class EmailHtmlBody(object):
+    app = _get_flask_app()
+
+    def __init__(self, domain='emmaa.indra.bio',
+                 template_path='email_unsub/email_body.html'):
+        self.template = self.app.jinja_env.get_template(template_path)
+        self.domain = domain
+        self.static_tab_link = f'https://{domain}/query?tab=static'
+        self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
+
+    def render(self, static_query_deltas, dynamic_query_deltas, unsub_link):
+        """Provided the delta json objects, render HTML to put in email body
+
+        Parameters
+        ----------
+        static_query_deltas : json
+            A list of lists that names which queries have updates. Expected
+            structure:
+            [(english_query, detailed_query_link, model, model_type)]
+        dynamic_query_deltas : list[
+            A list of lists that names which queries have updates. Expected
+            structure:
+            [(english_query, model, model_type)]
+        unsub_link : str
+
+        Returns
+        -------
+        html
+            An html string rendered from the associated jinja2 template
+        """
+        if not static_query_deltas and not dynamic_query_deltas:
+            raise ValueError('No query deltas provided')
+        return self.template.render(
+            static_tab_link=self.static_tab_link,
+            static_query_deltas=static_query_deltas,
+            dynamic_tab_link=self.dynamic_tab_link,
+            dynamic_query_deltas=dynamic_query_deltas,
+            unsub_link=unsub_link
+        ).replace('\n', '')
 
 
 class NotAClassName(Exception):
