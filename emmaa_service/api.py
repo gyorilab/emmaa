@@ -670,9 +670,25 @@ def email_unsubscribe_post():
     queries = query.get('queries')
     expiration = query.get('expiration')
     signature = query.get('signature')
-    logger.info(f'Got unsubscribe request for {email} for quereis {queries}')
-    if verify_email_signature(signature=signature, email=email,
-                              expiration=expiration):
+    logger.info(f'Got unsubscribe request for {email} for queries {queries}')
+
+    # Check that required query parameters are present
+    if bool(email) and bool(expiration) and bool(signature):
+        # Check that expiration is in the future
+        not_expired = datetime.utcnow() < datetime.fromtimestamp(int(
+            expiration))
+    else:
+        logger.info('signature has expired')
+        not_expired = False
+
+    if not_expired:
+        verified = verify_email_signature(signature=signature, email=email,
+                                          expiration=expiration)
+    else:
+        logger.info('Failed to verify signature')
+        verified = False
+
+    if verified:
         success = register_email_unsubscribe(email, queries)
         return jsonify({'result': success})
     else:
