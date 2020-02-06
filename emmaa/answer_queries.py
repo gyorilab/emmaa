@@ -3,7 +3,7 @@ from datetime import datetime
 
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
-from emmaa.util import get_s3_client, make_date_str, find_latest_s3_file, \
+from emmaa.util import make_date_str, find_latest_s3_file, EmailHtmlBody, \
     EMMAA_BUCKET_NAME
 from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.subscription.email_service import send_email, \
@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 model_manager_cache = {}
 
 FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
-                         'pybel': 'PyBEL',
-                         'signed_graph': 'Signed Graph',
-                         'unsigned_graph': 'Unsigned Graph'}
+                        'pybel': 'PyBEL',
+                        'signed_graph': 'Signed Graph',
+                        'unsigned_graph': 'Unsigned Graph'}
+email_html = EmailHtmlBody()
 
 
 class QueryManager(object):
@@ -308,20 +309,20 @@ class QueryManager(object):
             A string containing an html document
         """
         results = results[:limit] if limit else results
-        reports = self.make_reports_from_results(
-            results, True, 'html', include_no_diff=include_no_diff)
-        msg = ''
-        if reports:
-            msg += '<html><body>'
-            for report in reports:
-                msg += report
-            # Generate unsubscribe link
-            link = generate_unsubscribe_link(email=email, domain=domain)
-            msg += f'<footer>If you wish to unsubscribe from future ' \
-                   f'notifications, click on the following link:' \
-                   f'<br><a href="{link}">{link}</a></footer>'
-            msg += '</body></html>'
-        return msg
+
+        # Get the query deltas
+        static_results_delta, dynamic_results_delta = \
+            self.make_reports_from_results(results, report_format='html',
+                                           include_no_diff=False,
+                                           domain=domain)
+
+        # Generate unsubscribe link
+        link = generate_unsubscribe_link(email=email, domain=domain)
+
+        # return html_str
+        return email_html.render(static_query_deltas=static_results_delta,
+                                 dynamic_query_deltas=dynamic_results_delta,
+                                 unsub_link=link)
 
     def make_str_report_one_query(self, model_name, query, mc_type,
                                   new_result_json, old_result_json=None,
