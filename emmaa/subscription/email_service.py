@@ -11,7 +11,7 @@ notifications_sender_default = 'emmaa_notifications@indra.bio'
 indra_bio_ARN_id = os.environ.get('INDRA_BIO_ARN')
 
 
-def _get_ses_client():
+def _get_ses_client(region='us-east-1'):
     # First look for keys in environ:
     ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
     SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
@@ -21,19 +21,19 @@ def _get_ses_client():
         ses = boto3.session.Session(
             aws_access_key_id=ACCESS_KEY,
             aws_secret_access_key=SECRET_KEY).client(
-            'ses', region_name='us-east-1')
+            'ses', region_name=region)
     # If not, try to get the email_profile from the AWS credentials file
     else:
         ses = boto3.session.Session(
             profile_name=email_profile).client(
-            'ses', region_name='us-east-1')
+            'ses', region_name=region)
         logger.info('Got ses client from AWS credentials file')
     return ses
 
 
 def send_email(sender, recipients, subject, body_text, body_html,
                source_arn=indra_bio_ARN_id, return_email=None,
-               return_arn=None):
+               return_arn=None, region='us-east-1'):
     """Wrapper function for the send_email method of the boto3 SES client
 
     IMPORTANT: sending is limited to 14 emails per second.
@@ -79,6 +79,8 @@ def send_email(sender, recipients, subject, body_text, body_html,
         The return path ARN for the sender. This is the ARN associated
         with the return email. Can be the same as the source_arn if return
         email is the same as the sender.
+    region : str
+        AWS region to use for the SES client. Default: us-east-1
 
     Returns
     -------
@@ -110,7 +112,7 @@ def send_email(sender, recipients, subject, body_text, body_html,
     charset = "UTF-8"
 
     # Create a new SES client with the email profile
-    ses = _get_ses_client()
+    ses = _get_ses_client(region)
 
     if return_arn is None:
         return_arn = source_arn
