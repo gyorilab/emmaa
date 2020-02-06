@@ -227,8 +227,4 @@ if __name__ == '__main__':
         'return_arn': input('Specify ReturnPathArn: ')
     }
     resp = send_email(**ses_options)
-    if resp:
-        print('Email(s) sent successfully')
-        print(repr(resp))
-    else:
-        print('Email failed to send...')
+    print(repr(resp))
