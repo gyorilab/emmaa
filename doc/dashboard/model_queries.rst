@@ -149,7 +149,12 @@ updates that will be sent out if there is an update to any of the subscribed
 queries. An update to a query is defined as there being a change in the
 associated model that answers the query.
 
-FIGURE email notification
+.. figure:: ../_static/images/email_notification.png
+  :align: center
+  :figwidth: 100 %
+
+  *An example of an email notification for a query, in this case for the
+  query Activation(FLT3, KRAS) of the AML cancer model.*
 
 Unsubscribing From Query Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,5 +167,11 @@ unsubscribing from all subscribe queries. After ticking the appropriate
 boxes and submitting the unsubscribe request, a message will be shown
 describing the status of the request once it resolves.
 
-FIGURE UNSUBSCRIBE
+.. figure:: ../_static/images/unsubscribe_page.png
+  :align: center
+  :figwidth: 100 %
 
+  *An example of how the unsubscribe page looks like. All subscribed queries
+  for a given user is shown. Each query can be individually marked for
+  unsubscription. All queries can be unsubscribed by ticking the box for
+  "unsubscribe from all"*
