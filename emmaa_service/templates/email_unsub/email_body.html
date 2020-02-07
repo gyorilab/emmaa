@@ -14,8 +14,8 @@
     </ul>
   {% endif %}
   {% if dynamic_query_deltas %}
-    <h1>Updates to your <a href="{{ dynamic_tab_link }}">dynamic
-      queries</a></h1>
+    <h3>Updates to your <a href="{{ dynamic_tab_link }}">dynamic
+      queries</a></h3>
     <ul>
     {% for english_query, model, model_type in dynamic_query_deltas %}
       <li>"{{ english_query }}" in {{ model }} using the {{ model_type }}
