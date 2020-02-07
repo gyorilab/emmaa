@@ -99,6 +99,28 @@
         </div>
       </div>
       {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Vue statements</h4>
+        </div>
+        <div class="card-body">
+          <div id="app">
+            <statement :english="'Crotonaldehyde activates cPLA2alpha.'"
+                       :hash="'-35078834544876951'"
+                       :evidence="[{
+                        source_api: 'reach',
+                        text: 'We propose a testable model in which cPLA2alpha is activated by CRD agonist occupied Smo at the ciliary base or transition zone to produce arachidonic acid derivatives, which in turn target the 7TM of active Smo to enhance its ciliary trafficking and activity (XREF_FIG).',
+                        annotations: {'found_by': 'Positive_activation_syntax_2_verb',
+                        agents: {'coords': [[64, 67], [37, 47]]}},
+                        epistemics: {'direct': false, 'section_type': null},
+                        text_refs: {'PMID': '22153363'},
+                        source_hash: '-2472852236292526022'}]"></statement> 
+          </div>
+          <script>
+            var app = new Vue({el: '#app'});
+          </script>
+        </div>
+      </div>
     </div>
 
   </div>
