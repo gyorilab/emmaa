@@ -147,15 +147,19 @@ Email Notifications of Subscribed Queries
 If a user subscribes to a query, they are also signed up for daily email
 updates that will be sent out if there is an update to any of the subscribed
 queries. An update to a query is defined as there being a change in the
-associated model that answers the query.
+associated model that answers the query. The email lists the updates by
+query type, query, model and model type. If are no updates for one of the
+query types, only the query type that has any updates will be shown. For
+static queries, a direct link to the detailed query results is provided.
 
 .. figure:: ../_static/images/email_notification.png
   :align: center
   :figwidth: 100 %
 
-  *An example of an email notification for a query, in this case for the
-  query Activation(FLT3, KRAS) of the Ras Machine model. The unsubscribe link
-  at the bottom links out to the unsubscribe page (see below).*
+  *An example of an email notification for a query. Here, an update to the
+  query Activation(FLT3, KRAS) of the Ras Machine model of the PyBEL model
+  type is shown under "static queries". The unsubscribe link at the bottom
+  links out to the unsubscribe page (see below).*
 
 Unsubscribing From Query Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
