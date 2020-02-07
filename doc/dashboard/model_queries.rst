@@ -144,8 +144,23 @@ together with their latest results.
 Email Notifications of Subscribed Queries
 -----------------------------------------
 
-During the daily updates, all subscribed queries are checked against the
-updated models. If there is a change to a query result, an email notification
-with a summary of the changed results is sent out.
+If a user subscribes to a query, they are also signed up for daily email
+updates that will be sent out if there is an update to any of the subscribed
+queries. An update to a query is defined as there being a change in the
+associated model that answers the query.
 
 FIGURE email notification
+
+Unsubscribing From Query Notifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In every email notification there is an unsubscribe link in the footer of
+the email. To unsubscribe from queries, follow the link to the unsubscribe
+page. On the unsubscribe page, all active subscriptions for the associated
+email are shown with tick boxes for each subscription and one tick box for
+unsubscribing from all subscribe queries. After ticking the appropriate
+boxes and submitting the unsubscribe request, a message will be shown
+describing the status of the request once it resolves.
+
+FIGURE UNSUBSCRIBE
+
