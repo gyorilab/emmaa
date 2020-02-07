@@ -251,8 +251,7 @@ class QueryManager(object):
         # Make html report
         html_report = self.make_html_report_per_user(results, user_email,
                                                      domain=domain,
-                                                     limit=10,
-                                                     include_no_diff=False)
+                                                     limit=10)
         html_report = html_report if html_report else None
 
         return str_report, html_report
