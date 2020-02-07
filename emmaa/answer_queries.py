@@ -366,10 +366,16 @@ def format_results(results, query_type='path_property'):
 
 def load_model_manager_from_cache(model_name, bucket=EMMAA_BUCKET_NAME):
     model_manager = model_manager_cache.get(model_name)
-    if model_manager and model_manager.date_str in find_latest_s3_file(
-            bucket, f'results/{model_name}/model_manager_', '.pkl'):
-        logger.info(f'Loaded model manager for {model_name} from cache.')
-        return model_manager
+    if model_manager:
+        latest_on_s3 = find_latest_s3_file(
+            bucket, f'results/{model_name}/model_manager_', '.pkl')
+        cached_date = model_manager.date_str
+        logger.info(f'Found model manager cached on {cached_date} and '
+                    f'latest file on S3 is {latest_on_s3}')
+        if cached_date in latest_on_s3:
+            logger.info(f'Loaded model manager for {model_name} from cache.')
+            return model_manager
+    logger.info(f'Loading model manager for {model_name} from S3.')
     model_manager = load_model_manager_from_s3(
         model_name=model_name, bucket=bucket)
     model_manager_cache[model_name] = model_manager
