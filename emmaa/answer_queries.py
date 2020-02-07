@@ -151,7 +151,7 @@ class QueryManager(object):
             raise ValueError('Argument report_format must be either "html" '
                              'or "str"')
         processed_query_mc = []
-        reports = []
+        reports = [] if report_format == 'str' else [[], []]
         # If latest results are in db, retrieve the second latest
         if stored:
             order = 2
@@ -318,10 +318,14 @@ class QueryManager(object):
         # Generate unsubscribe link
         link = generate_unsubscribe_link(email=email, domain=domain)
 
-        # return html_str
-        return email_html.render(static_query_deltas=static_results_delta,
-                                 dynamic_query_deltas=dynamic_results_delta,
-                                 unsub_link=link)
+        if static_results_delta or dynamic_results_delta:
+            return email_html.render(
+                static_query_deltas=static_results_delta,
+                dynamic_query_deltas=dynamic_results_delta,
+                unsub_link=link
+            )
+        else:
+            return ''
 
     def make_str_report_one_query(self, model_name, query, mc_type,
                                   new_result_json, old_result_json=None,
