@@ -1,7 +1,7 @@
 import boto3
 import pickle
 import unittest
-from indra.tools.reading.submit_reading_pipeline import BatchMonitor
+from indra_reading.scripts.submit_reading_pipeline import BatchMonitor
 
 from emmaa.aws_lambda_functions.model_tests import lambda_handler, QUEUE
 from emmaa.util import make_date_str, get_s3_client
