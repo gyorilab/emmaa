@@ -53,6 +53,18 @@ def make_date_str(date=None):
     return date.strftime(FORMAT)
 
 
+def list_s3_files(bucket, prefix, extension=None):
+    client = get_s3_client()
+    resp = client.list_objects(Bucket=bucket, Prefix=prefix)
+    files = resp.get('Contents', [])
+    if extension:
+        keys = [file['Key'] for file in files if
+                file['Key'].endswith(extension)]
+    else:
+        keys = [file['Key'] for file in files]
+    return keys
+
+
 def sort_s3_files_by_date(bucket, prefix, extension=None):
     """
     Return the list of keys of the files on an S3 path sorted by date starting
@@ -63,14 +75,7 @@ def sort_s3_files_by_date(bucket, prefix, extension=None):
         fname = os.path.splitext(fname_with_extension)[0]
         date_str = fname.split('_')[-1]
         return get_date_from_str(date_str)
-    client = get_s3_client()
-    resp = client.list_objects(Bucket=bucket, Prefix=prefix)
-    files = resp.get('Contents', [])
-    if extension:
-        keys = [file['Key'] for file in files if
-                file['Key'].endswith(extension)]
-    else:
-        keys = [file['Key'] for file in files]
+    keys = list_s3_files(bucket, prefix, extension=extension)
     keys = sorted(keys, key=lambda k: process_key(k), reverse=True)
     return keys
 
@@ -118,7 +123,7 @@ def does_exist(bucket, prefix, extension=None):
     """Check if the file with exact key or starting with prefix and/or with
     extension exist in a bucket.
     """
-    all_files = sort_s3_files_by_date(bucket, prefix, extension)
+    all_files = list_s3_files(bucket, prefix, extension)
     if any(fname.startswith(prefix) for fname in all_files):
         return True
     return False

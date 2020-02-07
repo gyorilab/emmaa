@@ -11,4 +11,3 @@ if __name__ == '__main__':
     em = EmmaaModel.load_from_s3(args.model)
     em.get_new_readings()
     em.save_to_s3()
-    em.update_to_ndex()

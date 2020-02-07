@@ -57,4 +57,12 @@ def lambda_handler(event, context):
                               InvocationType='RequestResponse',
                               Payload=json.dumps(payload))
             print(resp['Payload'].read())
+        config_key = f'models/{model_name}/config.json'
+        obj = s3.get_object(Bucket='emmaa', Key=config_key)
+        config = json.loads(obj['Body'].read().decode('utf8'))
+        if config.get('make_tests', False):
+            resp = lam.invoke(FunctionName='emmaa-test-update',
+                              InvocationType='RequestResponse',
+                              Payload=json.dumps(payload))
+            print(resp['Payload'].read())
     return {'statusCode': 200, 'result': 'SUCCESS'}
