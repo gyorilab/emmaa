@@ -248,6 +248,8 @@ class EmailHtmlBody(object):
         """
         if not static_query_deltas and not dynamic_query_deltas:
             raise ValueError('No query deltas provided')
+        # Todo consider generating unsubscribe link here, will probably have
+        #  to solve import loops for that though
         return self.template.render(
             static_tab_link=self.static_tab_link,
             static_query_deltas=static_query_deltas,
