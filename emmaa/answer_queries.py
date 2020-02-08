@@ -240,6 +240,7 @@ class QueryManager(object):
         tuple(str, html_str)
             A tuple with (str report, html report)
         """
+        logger.info(f'Finding query delta for {user_email}')
         # Get results of user's query
         results = self.db.get_results(user_email, latest_order=1)
 
@@ -254,6 +255,10 @@ class QueryManager(object):
                                                      limit=10)
         html_report = html_report if html_report else None
 
+        if html_report:
+            logger.info(f'Found query delta for {user_email}')
+        else:
+            logger.info(f'No query delta to report for {user_email}')
         return str_report, html_report
 
     def get_report_per_query(self, model_name, query, format='str'):
