@@ -7,7 +7,6 @@ from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_model import create_model
-from emmaa.model import EmmaaModel
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',

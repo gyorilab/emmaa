@@ -6,8 +6,6 @@ from emmaa.db import get_db
 from emmaa.util import make_date_str, find_latest_s3_file, EmailHtmlBody, \
     EMMAA_BUCKET_NAME
 from emmaa.subscription.email_util import generate_unsubscribe_link
-from emmaa.subscription.email_service import send_email, \
-    notifications_sender_default
 
 
 logger = logging.getLogger(__name__)

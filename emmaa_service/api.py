@@ -14,8 +14,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
-from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
-    does_exist, EMMAA_BUCKET_NAME, list_s3_files
+from emmaa.util import does_exist, EMMAA_BUCKET_NAME, list_s3_files
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
