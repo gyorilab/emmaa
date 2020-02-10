@@ -12,7 +12,6 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-from indra.preassembler import Preassembler
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.statements import Event, Association
 from indra_db.client.principal.curation import get_curations
