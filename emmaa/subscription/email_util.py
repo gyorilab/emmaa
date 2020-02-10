@@ -24,6 +24,21 @@ def __sign_str_concat(email, expiration_str):
 
 
 def generate_unsubscribe_qs(email, days=7):
+    """Generate an unsubscribe query string for a url
+
+    Parameters
+    ----------
+    email : str
+        A valid email address
+    days : int
+        The number of days the query string should be valid. Default: 7.
+
+    Returns
+    -------
+    str
+        A query string of the format 'email=<urlenc
+        email>&expiration=<timestamp>&signature=<sha256 hex>'
+    """
     if days < 1:
         logger.warning('Expiration date is less than one day into the '
                        'future. Link will likely already be expired.')

@@ -82,7 +82,33 @@ def sort_s3_files_by_date_str(bucket, prefix, extension=None):
 def sort_s3_files_by_last_mod(bucket, prefix, time_delta=None,
                               extension=None, unsigned=True, reverse=False,
                               w_dt=False):
-    """Return a list of s3 objects sorted by their LastModified date on S3
+    """Return a list of s3 object keys sorted by their LastModified date on S3
+
+    Parameters
+    ----------
+    bucket : str
+        s3 bucket to look for keys in
+    prefix : str
+        The prefix to use for the s3 keys
+    time_delta : Optional[datetime.timedelta]
+        If used, should specify how far back the to look for files on s3.
+        Default: None
+    extension : Optional[str]
+        If used, limit keys to those with the matching file extension.
+        Default: None.
+    unsigned : bool
+        If True, use unsigned s3 client. Default: True.
+    reverse : bool
+        Reverse the sort order of the returned s3 files. Default: False.
+    w_dt : bool
+        If True, return list with datetime object along with key as tuple
+        (key, datetime.datetime). Default: False.
+
+    Returns
+    -------
+    list
+        A list of s3 keys. If w_dt is True, each item is a tuple of
+        (key, datetime.datetime) of the LastModified date.
     """
     if time_delta is None:
         time_delta = timedelta()  # zero timedelta
@@ -149,11 +175,15 @@ def find_latest_emails(email_type, time_delta=None, w_dt=False):
         complaint emails sent to the ReturnPath address.
     time_delta : datetime.timedelta
         The timedelta to look backwards for listing emails.
+    w_dt : bool
+        If True, return a list of (key, datetime.datetime) tuples.
 
     Returns
     -------
     list[Keys]
-        A list of keys to the emails of the specified type.
+        A list of keys to the emails of the specified type. If w_dt is True,
+        each item is a tuple of (key, datetime.datetime) of the LastModified
+        date.
     """
     email_list = sort_s3_files_by_last_mod(email_bucket, email_type,
                                            time_delta, unsigned=False,
