@@ -301,6 +301,12 @@ def session_expiration_check():
     app.permanent_session_lifetime = timedelta(minutes=10)
 
 
+@app.route('/health')
+@jwt_optional
+def health():
+    return jsonify({'status': 'pass'})
+
+
 @app.route('/')
 @app.route('/home')
 @jwt_optional
