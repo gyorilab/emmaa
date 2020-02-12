@@ -78,6 +78,7 @@ def test_actual_email():
 def test_success():
     # Simulates the recipient's email provider accepting the email.
     address = 'success@simulator.amazonses.com'
+    assert not close_to_quota_max(), 'Too close to max send quota'
     resp = _run_sandbox(address)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
@@ -88,6 +89,7 @@ def test_bounce():
     # Simulates the recipient's email provider rejecting your email with an
     # SMTP  550 5.1.1 ("Unknown User") response code.
     address = 'bounce@simulator.amazonses.com'
+    assert not close_to_quota_max(), 'Too close to max send quota'
     resp = _run_sandbox(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
@@ -112,6 +114,7 @@ def test_auto_response():
     # Simulates the recipient's email provider accepting the email and
     # sending an automatic response.
     address = 'ooto@simulator.amazonses.com'
+    assert not close_to_quota_max(), 'Too close to max send quota'
     resp = _run_sandbox(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
@@ -133,6 +136,7 @@ def test_complaint():
     # delivering it to the recipient's inbox, but the recipient marks it as
     # spam. Amazon SES forwards the complaint notification to you.
     address = 'complaint@simulator.amazonses.com'
+    assert not close_to_quota_max(), 'Too close to max send quota'
     resp = _run_sandbox(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
@@ -156,6 +160,7 @@ def test_suppression_list():
     # Simulates a hard bounce by Amazon SES generating a hard bounce as if
     # the recipient's address is on the Amazon SES suppression list.
     address = 'suppressionlist@simulator.amazonses.com'
+    assert not close_to_quota_max(), 'Too close to max send quota'
     resp = _run_sandbox(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
