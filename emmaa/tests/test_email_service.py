@@ -5,11 +5,12 @@ from datetime import datetime, timedelta, timezone
 from nose.plugins.attrib import attr
 from emmaa.util import find_latest_emails, get_email_content
 from emmaa.subscription.email_service import send_email, \
-    notifications_sender_default, close_to_quota_max
+    notifications_sender_default, close_to_quota_max, \
+    notifications_return_default
 from emmaa.subscription.email_util import verify_email_signature, \
     generate_unsubscribe_qs
 
-test_email = 'test@testing.com'
+test_email = 'test@testing.com'  # Don't use for actual sending
 actual_test_receiver = os.environ.get('EMAIL_TEST_RECEIVER')
 indra_bio_arn = os.environ.get('INDRA_BIO_ARN')
 text_body = "This is an email automatically generated from a nosetest"
@@ -27,7 +28,7 @@ options = {'sender': notifications_sender_default,
            'body_text': text_body,
            'body_html': html_body,
            'source_arn': indra_bio_arn,
-           'return_email': 'feedback@indra.bio',
+           'return_email': notifications_return_default,
            'return_arn': indra_bio_arn,
            'region': 'us-east-1'}
 
