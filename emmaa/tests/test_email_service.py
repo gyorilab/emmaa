@@ -48,11 +48,18 @@ def _get_latest_email_keys(directory, past_minutes=1, w_dt=False):
                               w_dt=w_dt)
 
 
-def _get_latest_feedback_email_content():
+def _get_latest_feedback_email_content(past_minutes=1):
     """Return the string containing the contents of the latest feedback
     email"""
-    latest_email_key = _get_latest_email_keys('feedback')[-1]
-    return get_email_content(latest_email_key)
+    latest_email_key = _get_latest_email_keys('feedback', past_minutes)[-1]
+    return get_email_content(key=latest_email_key)
+
+
+def _get_latest_other_email_content(past_minutes=1):
+    """Return the string containing the contents of the latest 'other' email
+    """
+    latest_email_key = _get_latest_email_keys('other', past_minutes)[-1]
+    return get_email_content(key=latest_email_key)
 
 
 # Only run this test scarcely, since it will take from the send quota
