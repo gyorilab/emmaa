@@ -88,8 +88,8 @@ def test_bounce():
     # Simulates the recipient's email provider rejecting your email with an
     # SMTP  550 5.1.1 ("Unknown User") response code.
     address = 'bounce@simulator.amazonses.com'
-    dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     resp = _run_sandbox(address)
+    dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
     print('Sleeping to let email be stored on s3..')
@@ -113,10 +113,18 @@ def test_auto_response():
     # sending an automatic response.
     address = 'ooto@simulator.amazonses.com'
     resp = _run_sandbox(address)
+    dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
-    # Todo check other or feedback directory on bucket for auto response
-    #  message
+    print('Sleeping to let email be stored on s3..')
+    sleep(3)
+    feedback_content = _get_latest_feedback_email_content()
+    key, dt_feedback = _get_latest_email_keys('feedback', w_dt=True)[-1]
+    assert dt_sent_email < dt_feedback
+    # Test if we have the correct email
+    assert resp['MessageId'] in feedback_content
+    assert notifications_return_default in feedback_content
+    assert 'Emmaa email nosetest' in feedback_content
 
 
 @attr('nonpublic')
@@ -126,9 +134,21 @@ def test_complaint():
     # spam. Amazon SES forwards the complaint notification to you.
     address = 'complaint@simulator.amazonses.com'
     resp = _run_sandbox(address)
+    dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
-    # Todo check feedback directory on bucket for complaint message
+    print('Sleeping to let email be stored on s3..')
+    sleep(3)
+    feedback_content = _get_latest_feedback_email_content()
+    key, dt_feedback = _get_latest_email_keys('feedback', w_dt=True)[-1]
+    assert dt_sent_email < dt_feedback
+    # assert 'Content-Description: Delivery Status Notification'\
+    #        in feedback_content
+    assert html_body_rn in feedback_content
+    # Test if we have the correct email
+    assert resp['MessageId'] in feedback_content
+    assert notifications_return_default in feedback_content
+    assert 'Emmaa email nosetest' in feedback_content
 
 
 @attr('nonpublic')
