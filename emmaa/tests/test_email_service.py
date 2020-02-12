@@ -170,14 +170,10 @@ def test_suppression_list():
     assert dt_sent_email < dt_feedback
 
 
-@attr('nonpublic')
-def test_reject():
-    # ToDo implement rejection test
-    # See here:
-    # https://docs.aws.amazon.com/ses/latest/DeveloperGuide/ +
-    # mailbox-simulator.html#mailbox-simulator-reject
-    pass
-    # Todo check feedback directory on bucket for reject message??
+# ToDo implement rejection test
+# See here:
+# https://docs.aws.amazon.com/ses/latest/DeveloperGuide/ +
+# mailbox-simulator.html#mailbox-simulator-reject
 
 
 def test_unsubscribe_qs_generation():
