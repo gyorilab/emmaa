@@ -18,7 +18,7 @@ def _get_ses_client(region='us-east-1'):
     SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     if ACCESS_KEY and SECRET_KEY:
         logger.info('Using access keys from environment variables to get '
-                    'ses client')
+                    'ses client.')
         ses = boto3.session.Session(
             aws_access_key_id=ACCESS_KEY,
             aws_secret_access_key=SECRET_KEY).client(
@@ -28,7 +28,7 @@ def _get_ses_client(region='us-east-1'):
         ses = boto3.session.Session(
             profile_name=email_profile).client(
             'ses', region_name=region)
-        logger.info('Got ses client from AWS credentials file')
+        logger.info('Using AWS credentials file to get ses client.')
     return ses
 
 
@@ -202,6 +202,39 @@ def close_to_quota_max(used_quota=0.95, region='us-east-1'):
         profile_name=email_profile).client('ses', region_name=region)
     ratio_used = _get_quota_sent_max_ratio(ses)
     return ratio_used > used_quota
+
+
+def get_send_statistics(region='us-east-1'):
+    """Return the sending statistics, like bounce and complaint rates
+
+    See
+    https://boto3.amazonaws.com/v1/documentation/api/latest/
+    reference/services/ses.html#SES.Client.get_send_statistics
+    for more info
+
+    Parameters
+    ----------
+    region : Optional[str]
+        Specify AWS region
+
+    Returns
+    -------
+    dict
+        Response syntax:
+            {
+                'SendDataPoints': [
+                    {
+                        'Timestamp': datetime(2015, 1, 1),
+                        'DeliveryAttempts': 123,
+                        'Bounces': 123,
+                        'Complaints': 123,
+                        'Rejects': 123
+                    },
+                ]
+            }
+    """
+    ses = _get_ses_client(region)
+    return ses.get_send_statistics()
 
 
 if __name__ == '__main__':
