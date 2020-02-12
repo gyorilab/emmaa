@@ -85,14 +85,18 @@ def test_bounce():
     resp = _run_sandbox(address)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
-    sleep(2)
+    print('Sleeping to let email be stored on s3..')
+    sleep(3)
     feedback_content = _get_latest_feedback_email_content()
+    key, dt_feedback = _get_latest_email_keys('feedback', w_dt=True)[-1]
+    assert dt_sent_email < dt_feedback
     assert 'Content-Description: Delivery Status Notification'\
            in feedback_content
     assert html_body_rn in feedback_content
+    # Test if we have the correct email
     assert resp['MessageId'] in feedback_content
-    key, dt_feedback = _get_latest_email_keys('feedback', w_dt=True)[-1]
-    assert dt_sent_email < dt_feedback
+    assert notifications_return_default in feedback_content
+    assert 'Emmaa email nosetest' in feedback_content
 
 
 @attr('nonpublic')
