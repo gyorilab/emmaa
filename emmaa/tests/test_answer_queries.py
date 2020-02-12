@@ -194,3 +194,21 @@ def test_report_files():
     assert msg
     assert 'A new result to query' in msg
     assert 'BRAF → MAP2K1 → MAPK1' in msg
+
+
+@attr('nonpublic')
+def test_user_query_delta():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    # Using results from db
+    qm.db.put_queries(test_email, 1, query_object, ['test'],
+                      subscribe=True)
+    qm.db.put_results('test', [(query_object, 'pysb', test_response),
+                               (query_object, 'pysb', query_not_appl)])
+    str_rep, html_rep = qm.get_user_query_delta(user_email=test_email)
+    assert str_rep, print(str_rep)
+    assert html_rep, print(html_rep)
+    assert '</html>' in html_rep
+    assert '</body>' in html_rep
+    assert 'pysb' in html_rep
+    assert 'unsubscribe' in html_rep
