@@ -63,7 +63,7 @@ def _get_latest_other_email_content(past_minutes=1):
 
 
 # Only run this test scarcely, since it will take from the send quota
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_actual_email():
     assert not close_to_quota_max(),\
         'Can\'t test email to real address, too close to max quota'
@@ -74,7 +74,7 @@ def test_actual_email():
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
 
 
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_success():
     # Simulates the recipient's email provider accepting the email.
     address = 'success@simulator.amazonses.com'
@@ -83,7 +83,7 @@ def test_success():
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
 
 
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_bounce():
     # Simulates the recipient's email provider rejecting your email with an
     # SMTP  550 5.1.1 ("Unknown User") response code.
@@ -106,7 +106,7 @@ def test_bounce():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_auto_response():
     # Tests automated replies, e.g. "I'm Out Of The Office until Monday"
     # Simulates the recipient's email provider accepting the email and
@@ -127,7 +127,7 @@ def test_auto_response():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_complaint():
     # Simulates the recipient's email provider accepting the email and
     # delivering it to the recipient's inbox, but the recipient marks it as
@@ -151,7 +151,7 @@ def test_complaint():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('nonpublic', 'skip')
+@attr('notravis')
 def test_suppression_list():
     # Simulates a hard bounce by Amazon SES generating a hard bounce as if
     # the recipient's address is on the Amazon SES suppression list.
