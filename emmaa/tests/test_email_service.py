@@ -33,6 +33,7 @@ options = {'sender': notifications_sender_default,
            'region': 'us-east-1'}
 
 
+@attr('notravis')
 def test_01_email_options():
     assert indra_bio_arn, 'INDRA_BIO_ARN not set in environment'
 
