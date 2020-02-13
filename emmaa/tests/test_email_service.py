@@ -38,7 +38,10 @@ def test_01_email_options():
     assert indra_bio_arn, 'INDRA_BIO_ARN not set in environment'
 
 
-def _run_sandbox(address):
+def _run_mailbox_simulator(address):
+    """Runs the AWS SES mailbox-simulator see:
+    docs.aws.amazon.com/ses/latest/DeveloperGuide/mailbox-simulator.html
+    """
     options['recipients'] = [address]
     return send_email(**options)
 
@@ -80,7 +83,7 @@ def test_success():
     # Simulates the recipient's email provider accepting the email.
     address = 'success@simulator.amazonses.com'
     assert not close_to_quota_max(), 'Too close to max send quota'
-    resp = _run_sandbox(address)
+    resp = _run_mailbox_simulator(address)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
 
@@ -91,7 +94,7 @@ def test_bounce():
     # SMTP  550 5.1.1 ("Unknown User") response code.
     address = 'bounce@simulator.amazonses.com'
     assert not close_to_quota_max(), 'Too close to max send quota'
-    resp = _run_sandbox(address)
+    resp = _run_mailbox_simulator(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
@@ -116,7 +119,7 @@ def test_auto_response():
     # sending an automatic response.
     address = 'ooto@simulator.amazonses.com'
     assert not close_to_quota_max(), 'Too close to max send quota'
-    resp = _run_sandbox(address)
+    resp = _run_mailbox_simulator(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
@@ -138,7 +141,7 @@ def test_complaint():
     # spam. Amazon SES forwards the complaint notification to you.
     address = 'complaint@simulator.amazonses.com'
     assert not close_to_quota_max(), 'Too close to max send quota'
-    resp = _run_sandbox(address)
+    resp = _run_mailbox_simulator(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
@@ -162,7 +165,7 @@ def test_suppression_list():
     # the recipient's address is on the Amazon SES suppression list.
     address = 'suppressionlist@simulator.amazonses.com'
     assert not close_to_quota_max(), 'Too close to max send quota'
-    resp = _run_sandbox(address)
+    resp = _run_mailbox_simulator(address)
     dt_sent_email = datetime.utcnow().replace(tzinfo=timezone.utc)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
