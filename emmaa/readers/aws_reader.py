@@ -1,7 +1,7 @@
 import datetime
 from indra.sources import reach
 from indra.literature.s3_client import get_reader_json_str, get_full_text
-from indra.tools.reading.submit_reading_pipeline import \
+from indra_reading.scripts.submit_reading_pipeline import \
     submit_reading, BatchMonitor
 from emmaa.statements import EmmaaStatement
 
