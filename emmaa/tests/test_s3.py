@@ -50,7 +50,8 @@ def setup_bucket(
             'search_terms': [{'db_refs': {'HGNC': '20974'}, 'name': 'MAPK1',
                               'search_term': 'MAPK1', 'type': 'gene'}],
             'test': {'test_corpus': 'simple_tests'},
-            'human_readable_name': 'Test Model'
+            'human_readable_name': 'Test Model',
+            'assembly': {'skip_curations': True}
             }
         save_config_to_s3('test', config_dict, bucket=TEST_BUCKET_NAME)
         emmaa_model = create_model()

@@ -15,6 +15,7 @@ from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler import Preassembler
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.statements import Event, Association
+from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms
@@ -261,6 +262,10 @@ class EmmaaModel(object):
         relevance_policy = self.assembly_config.get('filter_relevance')
         if relevance_policy:
             stmts = self.filter_relevance(stmts, relevance_policy)
+        if not self.assembly_config.get('skip_curations'):
+            curations = get_curations()
+            stmts = ac.filter_by_curation(
+                stmts, curations, 'any', ['correct'], update_belief=True)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
