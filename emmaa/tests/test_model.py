@@ -33,7 +33,7 @@ def create_model(relevance=None):
             'make_links': True},
         'assembly': {'skip_curations': True}}
     if relevance:
-        config_dict['assembly'] = {'filter_relevance': relevance}
+        config_dict['assembly']['filter_relevance'] = relevance
     emmaa_model = EmmaaModel('test', config_dict)
     emmaa_model.add_statements(emmaa_stmts)
     return emmaa_model
