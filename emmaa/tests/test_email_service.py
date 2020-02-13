@@ -76,9 +76,10 @@ def test_actual_email():
     resp = send_email(**options)
     assert resp['ResponseMetadata']['HTTPStatusCode'] == 200,\
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
+    print(f'Test only passes if {actual_test_receiver} saw their email.')
 
 
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_success():
     # Simulates the recipient's email provider accepting the email.
     address = 'success@simulator.amazonses.com'
@@ -88,7 +89,7 @@ def test_success():
         'HTTP Status Code %d' % resp['ResponseMetadata']['HTTPStatusCode']
 
 
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_bounce():
     # Simulates the recipient's email provider rejecting your email with an
     # SMTP  550 5.1.1 ("Unknown User") response code.
@@ -112,7 +113,7 @@ def test_bounce():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_auto_response():
     # Tests automated replies, e.g. "I'm Out Of The Office until Monday"
     # Simulates the recipient's email provider accepting the email and
@@ -134,7 +135,7 @@ def test_auto_response():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_complaint():
     # Simulates the recipient's email provider accepting the email and
     # delivering it to the recipient's inbox, but the recipient marks it as
@@ -159,7 +160,7 @@ def test_complaint():
     assert 'Emmaa email nosetest' in feedback_content
 
 
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_suppression_list():
     # Simulates a hard bounce by Amazon SES generating a hard bounce as if
     # the recipient's address is on the Amazon SES suppression list.
@@ -185,6 +186,7 @@ def test_suppression_list():
 # mailbox-simulator.html#mailbox-simulator-reject
 
 
+@attr('nonpublic')
 def test_unsubscribe_qs_generation():
     days = 1
     expiry = datetime.utcnow() + timedelta(days=days)
@@ -202,6 +204,7 @@ def test_unsubscribe_qs_generation():
                                   expiration=qsd.get('expiration')[0])
 
 
+@attr('nonpublic')
 def test_incorrect_signature():
     # jibberish
     jibberish = 'notasignature'
