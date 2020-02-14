@@ -139,23 +139,7 @@ def find_nth_latest_s3_file(n, bucket, prefix, extension=None):
 
 def find_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with latest date string on an S3 path"""
-    files = sort_s3_files_by_date_str(bucket, prefix, extension)
-    try:
-        latest = files[0]
-        return latest
-    except IndexError:
-        logger.debug('File is not found.')
-
-
-def find_second_latest_s3_file(bucket, prefix, extension=None):
-    """Return the key of the file with second latest date string on an S3 path
-    """
-    files = sort_s3_files_by_date_str(bucket, prefix, extension)
-    try:
-        latest = files[1]
-        return latest
-    except IndexError:
-        logger.debug("File is not found.")
+    return find_nth_latest_s3_file(0, bucket, prefix, extension)
 
 
 def find_latest_s3_files(number_of_files, bucket, prefix, extension=None):

@@ -330,9 +330,9 @@ def test_util_find_on_s3_functions():
                                       'results/test/results_')
     assert len(files) == 1
     assert find_latest_s3_file(TEST_BUCKET_NAME, 'results/test/results_')
-    assert not find_second_latest_s3_file(
-        TEST_BUCKET_NAME, 'results/test/results_')
-    assert find_second_latest_s3_file(TEST_BUCKET_NAME, 'results/test/')
+    assert not find_nth_latest_s3_file(
+        1, TEST_BUCKET_NAME, 'results/test/results_')
+    assert find_nth_latest_s3_file(1, TEST_BUCKET_NAME, 'results/test/')
     assert find_number_of_files_on_s3(TEST_BUCKET_NAME, 'results/test/') == 2
     assert find_number_of_files_on_s3(
         TEST_BUCKET_NAME, 'results/test/results_') == 1
