@@ -14,7 +14,9 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
 
-from emmaa.util import does_exist, EMMAA_BUCKET_NAME, list_s3_files
+from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
+    does_exist, EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
+    find_number_of_files_on_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
@@ -199,7 +201,8 @@ def _make_query(query_dict, use_grouding_service=True):
     return query, tab
 
 
-def _new_applied_tests(test_stats_json, model_types, model_name, date):
+def _new_applied_tests(
+        test_stats_json, model_types, model_name, date, test_corpus):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -214,7 +217,7 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date):
     return _format_table_array(new_app_tests, model_types, model_name, date)
 
 
-def _format_table_array(tests_json, model_types, model_name, date):
+def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
@@ -222,7 +225,8 @@ def _format_table_array(tests_json, model_types, model_name, date):
                    if len(test['test']) == 2 else test['test']]
         for mt in model_types:
             url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date})
+                {'model_type': mt, 'test_hash': th, 'date': date,
+                 'test_corpus': test_corpus})
             new_row.append((f'/tests/{model_name}?{url_param}',
                             test[mt][0], pass_fail_msg))
         table_array.append(new_row)
@@ -239,7 +243,7 @@ def _format_query_results(formatted_results):
                     f'Click to see details about {model}')]
         for mt in model_types:
             url_param = parse.urlencode(
-                {'model_type': mt, 'query_hash': qh})
+                {'model_type': mt, 'query_hash': qh, 'order': 1})
             new_res.append((f'/query/{model}?{url_param}', res[mt][0],
                             'Click to see detailed results for this query'))
         result_array.append(new_res)
@@ -326,8 +330,8 @@ def get_model_dashboard(model):
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    model_stats = get_model_stats(model, 'model', date=date)
-    test_stats = get_model_stats(model, 'test', tests=test_corpus, date=date)
+    model_stats, _ = get_model_stats(model, 'model', date=date)
+    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus, date=date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
@@ -388,12 +392,14 @@ def get_model_dashboard(model):
                                test_stats_json=test_stats,
                                model_types=current_model_types,
                                model_name=model,
-                               date=date),
+                               date=date,
+                               test_corpus=test_corpus),
                            all_test_results=_format_table_array(
                                tests_json=all_tests,
                                model_types=current_model_types,
                                model_name=model,
-                               date=date),
+                               date=date,
+                               test_corpus=test_corpus),
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date),
                            date=date,
