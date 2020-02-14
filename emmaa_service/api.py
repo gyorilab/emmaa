@@ -214,7 +214,8 @@ def _new_applied_tests(
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(new_app_tests, model_types, model_name, date)
+    return _format_table_array(
+        new_app_tests, model_types, model_name, date, test_corpus)
 
 
 def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
