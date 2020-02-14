@@ -126,6 +126,17 @@ def sort_s3_files_by_last_mod(bucket, prefix, time_delta=None,
         return key_list if w_dt else [t[0] for t in key_list]
 
 
+def find_nth_latest_s3_file(n, bucket, prefix, extension=None):
+    """Return the key of the file with nth (0-indexed) latest date string on
+    an S3 path"""
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
+    try:
+        latest = files[n]
+        return latest
+    except IndexError:
+        logger.debug('File is not found.')
+
+
 def find_latest_s3_file(bucket, prefix, extension=None):
     """Return the key of the file with latest date string on an S3 path"""
     files = sort_s3_files_by_date_str(bucket, prefix, extension)
@@ -198,6 +209,12 @@ def get_email_content(key):
     s3 = get_s3_client(unsigned=False)
     email_obj = s3.get_object(Bucket=email_bucket, Key=key)
     return email_obj['Body'].read().decode()
+
+
+def find_index_of_s3_file(key, bucket, prefix, extension=None):
+    files = sort_s3_files_by_date_str(bucket, prefix, extension)
+    ix = files.index(key)
+    return ix
 
 
 def does_exist(bucket, prefix, extension=None):
