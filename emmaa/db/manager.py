@@ -452,6 +452,12 @@ class EmmaaDatabaseManager(object):
             logger.exception(e)
             return False
 
+    def get_number_of_results(self, query_hash):
+        with self.get_session() as sess:
+            q = (sess.query(Result.id).filter(Result.query_hash == query_hash,
+                                              Query.hash == Result.query_hash))
+        return len(q.all())
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter: (model_id, query(object), result_json, date)
