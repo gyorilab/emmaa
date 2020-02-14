@@ -116,10 +116,11 @@ class QueryManager(object):
         results = self.db.get_results(user_email, query_type=query_type)
         return format_results(results, query_type)
 
-    def retrieve_results_from_hashes(self, query_hashes,
-                                     query_type='path_property'):
+    def retrieve_results_from_hashes(
+            self, query_hashes, query_type='path_property', latest_order=1):
         """Retrieve results from a db given a list of query-model hashes."""
-        results = self.db.get_results_from_hashes(query_hashes)
+        results = self.db.get_results_from_hashes(
+            query_hashes, latest_order=latest_order)
         return format_results(results, query_type)
 
     def make_reports_from_results(
