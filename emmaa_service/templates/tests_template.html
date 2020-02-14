@@ -17,6 +17,12 @@
   <button class="btn btn-outline-secondary" onClick="redirectToDate('{{ latest_date }}')" type="button">Go to Latest</button>
   {% endif %}
 </div>
+{% else %}
+<div class="input-group-append">
+  {% if next %}
+  <button class="btn btn-outline-secondary" onClick="redirectOneStep(1, 1)" type="button">Go to Latest</button>
+  {% endif %}
+</div>
 {% endif %}
 <!-- Model type select dropdown -->
 <div class="d-inline-flex p-2 input-group" style="width: 300px; height: 54px;">
