@@ -154,25 +154,30 @@ def test_get_model_statistics():
     from emmaa.model import get_model_stats
     client = setup_bucket(add_model_stats=True, add_test_stats=True)
     # Get latest model stats
-    model_stats = get_model_stats('test', 'model', bucket=TEST_BUCKET_NAME)
+    model_stats, key = get_model_stats(
+        'test', 'model', bucket=TEST_BUCKET_NAME)
     assert isinstance(model_stats, dict)
+    assert key.startswith('model_stats/test/model_stats_')
     # Get latest test stats
-    test_stats = get_model_stats('test', 'test', 'simple_tests',
-                                 bucket=TEST_BUCKET_NAME)
+    test_stats, key = get_model_stats('test', 'test', 'simple_tests',
+                                      bucket=TEST_BUCKET_NAME)
     assert isinstance(test_stats, dict)
+    assert key.startswith('stats/test/test_stats_')
     # Try with a different date
-    new_stats = get_model_stats(
+    new_stats, key = get_model_stats(
         'test', 'model', date='2020-01-01', bucket=TEST_BUCKET_NAME)
     assert not new_stats
+    assert not key
     # Put missing file and try again
     client.put_object(
         Body=json.dumps(previous_model_stats, indent=1),
         Bucket=TEST_BUCKET_NAME,
         Key=f'model_stats/test/model_stats_2020-01-01-00-00-00.json')
-    new_stats = get_model_stats(
+    new_stats, key = get_model_stats(
         'test', 'model', date='2020-01-01', bucket=TEST_BUCKET_NAME)
     assert new_stats
     assert isinstance(new_stats, dict)
+    assert key == 'model_stats/test/model_stats_2020-01-01-00-00-00.json'
 
 
 @mock_s3
@@ -357,7 +362,7 @@ def test_api_load_from_s3():
     assert test_corpora == {'simple_tests': today}
     # metadata always looks for 'large_corpus_tests'
     date_str = last_updated_date(
-        'test', 'test_stats', 'datetime', 'simple_tests', '.json',
+        'test', 'test_stats', 'datetime', 'simple_tests', '.json', 0,
         TEST_BUCKET_NAME)
     client.put_object(
         Body=json.dumps(previous_test_stats, indent=1),
