@@ -117,6 +117,19 @@ function testRedirect(ddSelect) {
 }
 
 
+function redirectOneStep(value, isQuery) {
+  let loc = window.location.href;
+  if (isQuery) {
+    let currentOrder = new URL(loc).searchParams.get('order')
+    var redirect = loc.replace(`order=${currentOrder}`, `order=${value}`)
+  } else {
+    let currentDate = new URL(loc).searchParams.get('date')
+    var redirect = loc.replace(`date=${currentDate}`, `date=${value}`)
+  };
+  location.replace(redirect);
+}
+
+
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
     clearTable(tableBody)
