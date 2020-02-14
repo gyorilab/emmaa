@@ -705,7 +705,7 @@ class TestStatsGenerator(StatsGenerator):
             logger.info(f'Could not find a key to the previous statistics '
                         f'for {self.model_name} model, trying with the'
                         ' earlier file.')
-            self.previous_round self._get_previous_round(attempt=2)
+            self.previous_round = self._get_previous_round(attempt=2)
             key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                    f'{self.previous_round.date_str}.json')
             if key is None:
