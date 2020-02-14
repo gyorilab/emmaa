@@ -411,10 +411,12 @@ def get_model_dashboard(model):
 def get_model_tests_page(model):
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
+    test_corpus = request.args.get('test_corpus')
     date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    test_stats = get_model_stats(model, 'test', date=date)
+    test_stats, file_key = get_model_stats(
+        model, 'test', tests=test_corpus, date=date)
     if not test_stats:
         abort(Response(f'Data for {model} for {date} was not found', 404))
     try:
@@ -426,8 +428,22 @@ def get_model_tests_page(model):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
-    test_corpus = _default_test(model)
     latest_date = get_latest_available_date(model, test_corpus)
+    prefix = f'stats/{model}/test_stats_{test_corpus}_'
+    cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
+    if (cur_ix + 1) < find_number_of_files_on_s3(
+            EMMAA_BUCKET_NAME, prefix, '.json'):
+        prev_date = last_updated_date(
+            model, 'test_stats', 'date', tests=test_corpus, extension='.json',
+            n=(cur_ix + 1), bucket=EMMAA_BUCKET_NAME)
+    else:
+        prev_date = None
+    if cur_ix > 0:
+        next_date = last_updated_date(
+            model, 'test_stats', 'date', tests=test_corpus, extension='.json',
+            n=(cur_ix - 1), bucket=EMMAA_BUCKET_NAME)
+    else:
+        next_date = None
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -439,7 +455,9 @@ def get_model_tests_page(model):
                            path_list=path_list,
                            formatted_names=FORMATTED_TYPE_NAMES,
                            date=date,
-                           latest_date=latest_date)
+                           latest_date=latest_date,
+                           prev=prev_date,
+                           next=next_date)
 
 
 @app.route('/query')
@@ -514,11 +532,16 @@ def get_query_page():
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
-    results = qm.retrieve_results_from_hashes([query_hash], 'path_property')
+    order = int(request.args.get('order'))
+    results = qm.retrieve_results_from_hashes(
+        [query_hash], 'path_property', order)
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
     date = results[query_hash]['date']
     card_title = ('', results[query_hash]['query'] if results else '', '')
+    next_order = order - 1 if order > 1 else None
+    prev_order = order + 1 if order < qm.db.get_number_of_results(query_hash) \
+        else None
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -530,7 +553,9 @@ def get_query_tests_page(model):
                            test_status=detailed_results[0],
                            path_list=detailed_results[1],
                            formatted_names=FORMATTED_TYPE_NAMES,
-                           date=date)
+                           date=date,
+                           prev=prev_order,
+                           next=next_order)
 
 
 @app.route('/query/submit', methods=['POST'])
