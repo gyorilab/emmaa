@@ -4,7 +4,7 @@ import jsonpickle
 from collections import defaultdict
 from emmaa.model import _default_test
 from emmaa.model_tests import elsevier_url, load_model_manager_from_s3
-from emmaa.util import (find_latest_s3_file, find_second_latest_s3_file,
+from emmaa.util import (find_latest_s3_file, find_nth_latest_s3_file,
                         strip_out_date, get_s3_client, EMMAA_BUCKET_NAME,
                         FORMAT)
 from indra.statements.statements import Statement
@@ -351,7 +351,7 @@ class StatsGenerator(object):
         else:
             self.latest_round = latest_round
         if not previous_round:
-            self.previous_round = self._get_previous_round()
+            self.previous_round = self._get_previous_round(attempt=1)
         else:
             self.previous_round = previous_round
         self.json_stats = {}
@@ -377,11 +377,12 @@ class StatsGenerator(object):
         return previous_dates
 
     def save_to_s3_key(self, stats_key):
-        json_stats_str = json.dumps(self.json_stats, indent=1)
-        client = get_s3_client(unsigned=False)
-        logger.info(f'Uploading statistics to {stats_key}')
-        client.put_object(Bucket=self.bucket, Key=stats_key,
-                          Body=json_stats_str.encode('utf8'))
+        if self.json_stats:
+            json_stats_str = json.dumps(self.json_stats, indent=1)
+            client = get_s3_client(unsigned=False)
+            logger.info(f'Uploading statistics to {stats_key}')
+            client.put_object(Bucket=self.bucket, Key=stats_key,
+                              Body=json_stats_str.encode('utf8'))
 
     def save_to_s3(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -389,7 +390,7 @@ class StatsGenerator(object):
     def _get_latest_round(self):
         raise NotImplementedError("Method must be implemented in child class.")
 
-    def _get_previous_round(self):
+    def _get_previous_round(self, attempt=1):
         raise NotImplementedError("Method must be implemented in child class.")
 
     def _get_previous_json_stats(self):
@@ -432,6 +433,9 @@ class ModelStatsGenerator(StatsGenerator):
         """
         if not self.latest_round:
             logger.info(f'Latest round for {self.model_name} is not found.')
+            return
+        if self.previous_round and not self.previous_json_stats:
+            logger.info(f'Latest round is found but latest stats are not.')
             return
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
@@ -498,12 +502,14 @@ class ModelStatsGenerator(StatsGenerator):
         mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket)
         return mr
 
-    def _get_previous_round(self):
-        previous_key = find_second_latest_s3_file(
-            self.bucket, f'results/{self.model_name}/model_manager_',
+    def _get_previous_round(self, attempt=1):
+        previous_key = find_nth_latest_s3_file(
+            attempt, self.bucket, f'results/{self.model_name}/model_manager_',
             extension='.pkl')
         if previous_key is None:
-            previous_key = f'results/{self.model_name}/latest_model_manager.pkl'
+            logger.info(f'Could not find a key to the previous model manager '
+                        f'for {self.model_name} model.')
+            return
         mr = ModelRound.load_from_s3_key(previous_key, bucket=self.bucket)
         return mr
 
@@ -512,22 +518,21 @@ class ModelStatsGenerator(StatsGenerator):
             logger.info('Not loading previous stats without previous round')
             return
         client = get_s3_client()
-        try:
+        key = (f'model_stats/{self.model_name}/model_stats_'
+               f'{self.previous_round.date_str}.json')
+        if key is None:
+            logger.info(f'Could not find a key to the previous statistics '
+                        f'for {self.model_name} model, trying with the'
+                        ' earlier file.')
+            self.previous_round = self._get_previous_round(attempt=2)
             key = (f'model_stats/{self.model_name}/model_stats_'
                    f'{self.previous_round.date_str}.json')
-            obj = client.get_object(Bucket=self.bucket, Key=key)
-        except Exception:
-            logger.info(f'Could not load earlier statistics from {key}')
-            key = find_latest_s3_file(
-                self.bucket, f'stats/{self.model_name}/stats_',
-                extension='.json')
             if key is None:
                 logger.info(f'Could not find a key to the previous statistics '
-                            f'for {self.model_name} model.')
+                            f'for {self.model_name} model after 2 attempts.')
                 return
-            else:
-                logger.info(f'Loading earlier statistics from {key}')
-                obj = client.get_object(Bucket=self.bucket, Key=key)
+        logger.info(f'Loading earlier statistics from {key}')
+        obj = client.get_object(Bucket=self.bucket, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
@@ -572,6 +577,9 @@ class TestStatsGenerator(StatsGenerator):
         """
         if not self.latest_round:
             logger.info(f'Latest round for {self.model_name} is not found.')
+            return
+        if self.previous_round and not self.previous_json_stats:
+            logger.info(f'Latest round is found but latest stats are not.')
             return
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_test_summary()
@@ -673,16 +681,12 @@ class TestStatsGenerator(StatsGenerator):
         tr = TestRound.load_from_s3_key(latest_key, bucket=self.bucket)
         return tr
 
-    def _get_previous_round(self):
-        previous_key = find_second_latest_s3_file(
+    def _get_previous_round(self, attempt=1):
+        previous_key = find_nth_latest_s3_file(
+            attempt,
             self.bucket,
             f'results/{self.model_name}/results_{self.test_corpus}',
             extension='.json')
-        def_test = _default_test(self.model_name)
-        if previous_key is None and self.test_corpus == def_test:
-            previous_key = find_latest_s3_file(
-                self.bucket, f'results/{self.model_name}/results_',
-                extension='.json')
         if previous_key is None:
             logger.info(f'Could not find a key to the previous test results '
                         f'for {self.model_name} model.')
@@ -695,26 +699,21 @@ class TestStatsGenerator(StatsGenerator):
             logger.info('Not loading previous stats without previous round')
             return
         client = get_s3_client()
-        try:
+        key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
+               f'{self.previous_round.date_str}.json')
+        if key is None:
+            logger.info(f'Could not find a key to the previous statistics '
+                        f'for {self.model_name} model, trying with the'
+                        ' earlier file.')
+            self.previous_round self._get_previous_round(attempt=2)
             key = (f'stats/{self.model_name}/test_stats_{self.test_corpus}_'
                    f'{self.previous_round.date_str}.json')
-            obj = client.get_object(Bucket=self.bucket, Key=key)
-        except Exception:
-            logger.info(f'Could not load earlier statistics from {key}')
-            def_test = _default_test(self.model_name)
-            if self.test_corpus == def_test:
-                key = find_latest_s3_file(
-                    self.bucket, f'stats/{self.model_name}/stats_',
-                    extension='.json')
-            else:
-                key = None
             if key is None:
                 logger.info(f'Could not find a key to the previous statistics '
-                            f'for {self.model_name} model.')
+                            f'for {self.model_name} model after 2 attempts.')
                 return
-            else:
-                logger.info(f'Loading earlier statistics from {key}')
-                obj = client.get_object(Bucket=self.bucket, Key=key)
+        logger.info(f'Loading earlier statistics from {key}')
+        obj = client.get_object(Bucket=self.bucket, Key=key)
         previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
         return previous_json_stats
 
