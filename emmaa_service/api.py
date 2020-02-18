@@ -541,8 +541,8 @@ def get_query_tests_page(model):
     date = results[query_hash]['date']
     card_title = ('', results[query_hash]['query'] if results else '', '')
     next_order = order - 1 if order > 1 else None
-    prev_order = order + 1 if order < qm.db.get_number_of_results(query_hash) \
-        else None
+    prev_order = order + 1 if \
+        order < qm.db.get_number_of_results(query_hash, model_type) else None
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,

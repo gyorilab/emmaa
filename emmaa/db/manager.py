@@ -452,10 +452,11 @@ class EmmaaDatabaseManager(object):
             logger.exception(e)
             return False
 
-    def get_number_of_results(self, query_hash):
+    def get_number_of_results(self, query_hash, mc_type):
         with self.get_session() as sess:
             q = (sess.query(Result.id).filter(Result.query_hash == query_hash,
-                                              Query.hash == Result.query_hash))
+                                              Query.hash == Result.query_hash,
+                                              Result.mc_type == mc_type))
         return len(q.all())
 
 
