@@ -533,7 +533,7 @@ def get_query_page():
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
-    order = int(request.args.get('order'))
+    order = int(request.args.get('order', 1))
     results = qm.retrieve_results_from_hashes(
         [query_hash], 'path_property', order)
     detailed_results = results[query_hash][model_type]\
