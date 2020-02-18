@@ -337,7 +337,8 @@ def get_model_dashboard(model):
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     model_stats, _ = get_model_stats(model, 'model', date=date)
-    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus, date=date)
+    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus,
+                                    date=date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
