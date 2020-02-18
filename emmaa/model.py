@@ -509,7 +509,8 @@ def _default_test(model):
 def last_updated_date(model, file_type='model', date_format='date',
                       tests='large_corpus_tests', extension='.pkl', n=0,
                       bucket=EMMAA_BUCKET_NAME):
-    """Find the most recent pickle file of model and return its creation date
+    """Find the most recent or the nth file of given type on S3 and return its
+    creation date.
 
     Example file name:
     models/aml/model_2018-12-13-18-11-54.pkl
@@ -527,6 +528,10 @@ def last_updated_date(model, file_type='model', date_format='date',
         in the format "YYYY-MM-DD"). Default is 'date'.
     extension : str
         The extension the model file needs to have. Default is '.pkl'
+    n : int
+        Index of the file in list of S3 files sorted by date (0-indexed).
+    bucket : str
+        Name of bucket on S3.
 
     Returns
     -------
@@ -584,13 +589,17 @@ def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
     date : str or None
         Date for which the stats will be returned in "YYYY-MM-DD" format.
     extension : str
-
+        Extension of the file.
+    n : int
+        Index of the file in list of S3 files sorted by date (0-indexed).
+    bucket : str
+        Name of bucket on S3.
     Returns
     -------
     model_data : json
         The json formatted data containing the statistics for the model
     """
-    # If date is not specified, get the latest
+    # If date is not specified, get the latest or the nth
     if not date:
         if mode == 'model':
             date = last_updated_date(model, 'model_stats', 'date',
