@@ -120,8 +120,14 @@ function testRedirect(ddSelect) {
 function redirectOneStep(value, isQuery) {
   let loc = window.location.href;
   if (isQuery) {
-    let currentOrder = new URL(loc).searchParams.get('order')
-    var redirect = loc.replace(`order=${currentOrder}`, `order=${value}`)
+    let currentOrder = new URL(loc).searchParams.get('order');
+    var redirect = '';
+    if (currentOrder) {
+      redirect = loc.replace(`order=${currentOrder}`, `order=${value}`)
+    } else {
+      // Default if no order in query string
+      redirect = loc.concat('&order=1')
+    }
   } else {
     let currentDate = new URL(loc).searchParams.get('date')
     var redirect = loc.replace(`date=${currentDate}`, `date=${value}`)
