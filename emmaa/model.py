@@ -21,7 +21,7 @@ from emmaa.readers.db_client_reader import read_db_pmid_search_terms
 from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
-    strip_out_date, EMMAA_BUCKET_NAME
+    strip_out_date, EMMAA_BUCKET_NAME, find_nth_latest_s3_file
 
 
 logger = logging.getLogger(__name__)
@@ -507,9 +507,10 @@ def _default_test(model):
 
 
 def last_updated_date(model, file_type='model', date_format='date',
-                      tests='large_corpus_tests', extension='.pkl',
+                      tests='large_corpus_tests', extension='.pkl', n=0,
                       bucket=EMMAA_BUCKET_NAME):
-    """Find the most recent pickle file of model and return its creation date
+    """Find the most recent or the nth file of given type on S3 and return its
+    creation date.
 
     Example file name:
     models/aml/model_2018-12-13-18-11-54.pkl
@@ -527,6 +528,10 @@ def last_updated_date(model, file_type='model', date_format='date',
         in the format "YYYY-MM-DD"). Default is 'date'.
     extension : str
         The extension the model file needs to have. Default is '.pkl'
+    n : int
+        Index of the file in list of S3 files sorted by date (0-indexed).
+    bucket : str
+        Name of bucket on S3.
 
     Returns
     -------
@@ -549,7 +554,8 @@ def last_updated_date(model, file_type='model', date_format='date',
         raise TypeError(f'Files of type {file_type} are not supported')
     try:
         return strip_out_date(
-            find_latest_s3_file(
+            find_nth_latest_s3_file(
+                n=n,
                 bucket=bucket,
                 prefix=prefix_new,
                 extension=extension),
@@ -557,7 +563,8 @@ def last_updated_date(model, file_type='model', date_format='date',
     except TypeError:
         try:
             return strip_out_date(
-                find_latest_s3_file(
+                find_nth_latest_s3_file(
+                    n=n,
                     bucket=bucket,
                     prefix=prefix_old,
                     extension=extension),
@@ -567,8 +574,8 @@ def last_updated_date(model, file_type='model', date_format='date',
             return ''
 
 
-def get_model_stats(model, mode, tests='large_corpus_tests',
-                    date=None, extension='.json', bucket=EMMAA_BUCKET_NAME):
+def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
+                    extension='.json', n=0, bucket=EMMAA_BUCKET_NAME):
     """Gets the latest statistics for the given model
 
     Parameters
@@ -582,20 +589,24 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
     date : str or None
         Date for which the stats will be returned in "YYYY-MM-DD" format.
     extension : str
-
+        Extension of the file.
+    n : int
+        Index of the file in list of S3 files sorted by date (0-indexed).
+    bucket : str
+        Name of bucket on S3.
     Returns
     -------
     model_data : json
         The json formatted data containing the statistics for the model
     """
-    # If date is not specified, get the latest
+    # If date is not specified, get the latest or the nth
     if not date:
         if mode == 'model':
             date = last_updated_date(model, 'model_stats', 'date',
-                                     extension=extension, bucket=bucket)
+                                     extension=extension, n=n, bucket=bucket)
         elif mode == 'test':
             date = last_updated_date(model, 'test_stats', 'date', tests=tests,
-                                     extension=extension, bucket=bucket)
+                                     extension=extension, n=n, bucket=bucket)
         else:
             raise TypeError('Mode must be either model or tests')
     s3 = get_s3_client()
@@ -628,7 +639,8 @@ def get_model_stats(model, mode, tests='large_corpus_tests',
                                               extension=extension)
     # If we still didn't filnd the file it probably does not exist
     if not latest_file_key:
-        return None
+        return None, None
     model_data_object = s3.get_object(Bucket=bucket,
                                       Key=latest_file_key)
-    return json.loads(model_data_object['Body'].read().decode('utf8'))
+    return (json.loads(model_data_object['Body'].read().decode('utf8')),
+            latest_file_key)

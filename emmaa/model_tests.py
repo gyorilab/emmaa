@@ -253,7 +253,7 @@ class ModelManager(object):
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, [query.path_stmt])
                 max_path_length, max_paths = self._get_test_configs(
-                    mode='query', mc_type=mc_type)
+                    mode='query', mc_type=mc_type, default_paths=5)
                 result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
                 results.append((mc_type, self.process_response(mc_type, result)))
