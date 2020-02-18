@@ -239,8 +239,12 @@ def _format_query_results(formatted_results):
     for qh, res in formatted_results.items():
         model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
         model = res['model']
+        latest_date = get_latest_available_date(
+            model, _get_test_corpora(model))
         new_res = [('', res["query"], ''),
-                   (f'/dashboard/{model}', model,
+                   (f'/dashboard/{model}/?date={latest_date}' +
+                    f'&test_corpus={_get_test_corpora(model)}&tab=model',
+                    model,
                     f'Click to see details about {model}')]
         for mt in model_types:
             url_param = parse.urlencode(
