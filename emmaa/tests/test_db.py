@@ -46,7 +46,12 @@ def test_get_queries():
     db = _get_test_db()
     for query in test_queries:
         db.put_queries('joshua', 1, query, ['aml', 'luad'])
+        db.put_queries('test_user', 2, query, ['aml'])
+    # We should only get distinct queries, independent of number of users
     queries = db.get_queries('aml')
+    assert len(queries) == 2, len(queries)
+    assert all(isinstance(query, PathProperty) for query in queries)
+    queries = db.get_queries('luad')
     assert len(queries) == 2, len(queries)
     assert all(isinstance(query, PathProperty) for query in queries)
 

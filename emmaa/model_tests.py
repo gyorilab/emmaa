@@ -1,13 +1,10 @@
 """This module implements the object model for EMMAA model testing."""
 import json
-import boto3
 import pickle
 import logging
-import datetime
 import itertools
 import jsonpickle
 import os
-from collections import defaultdict
 from fnvhash import fnv1a_32
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
@@ -19,7 +16,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
-from emmaa.model import EmmaaModel, load_config_from_s3
+from emmaa.model import EmmaaModel
 from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file

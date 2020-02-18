@@ -7,7 +7,6 @@ from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_model import create_model
-from emmaa.model import EmmaaModel
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
@@ -37,6 +36,7 @@ fail_response = {'521653329': 'No path found that satisfies the test statement'}
 # on S3 version
 test_model = create_model()
 test_mm = ModelManager(test_model)
+test_email = 'tester@test.com'
 
 
 def test_format_results():
@@ -66,7 +66,7 @@ def test_answer_immediate_query():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     query_hashes = qm.answer_immediate_query(
-        'tester@test.com', 1, query_object, ['test'], subscribe=False)[
+        test_email, 1, query_object, ['test'], subscribe=False)[
             'path_property']
     assert query_hashes == [35683418474694258], query_hashes
     results = qm.retrieve_results_from_hashes(query_hashes)
@@ -88,7 +88,7 @@ def test_immediate_dynamic():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     query_hashes = qm.answer_immediate_query(
-        'tester@test.com', 1, dyn_query, ['test'], subscribe=False)[
+        test_email, 1, dyn_query, ['test'], subscribe=False)[
             'dynamic_property']
     assert query_hashes == [-27775603206605897], query_hashes
     results = qm.retrieve_results_from_hashes(query_hashes, 'dynamic_property')
@@ -108,13 +108,13 @@ def test_answer_get_registered_queries():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     # Put both path and dynamic queries in db, answer together
-    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
+    qm.db.put_queries(test_email, 1, query_object, ['test'],
                       subscribe=True)
-    qm.db.put_queries('tester@test.com', 1, dyn_query, ['test'],
+    qm.db.put_queries(test_email, 1, dyn_query, ['test'],
                       subscribe=True)
     qm.answer_registered_queries('test')
     # Retrieve results for path query
-    results = qm.get_registered_queries('tester@test.com', 'path_property')
+    results = qm.get_registered_queries(test_email, 'path_property')
     qh = query_object.get_hash_with_model('test')
     assert qh in results
     assert len(results) == 1
@@ -127,7 +127,7 @@ def test_answer_get_registered_queries():
     assert results[qh]['signed_graph'][0] == 'Pass'
     assert results[qh]['unsigned_graph'][0] == 'Pass'
     # Retrieve results for dynamic query
-    results = qm.get_registered_queries('tester@test.com', 'dynamic_property')
+    results = qm.get_registered_queries(test_email, 'dynamic_property')
     qh = dyn_query.get_hash_with_model('test')
     assert qh in results
     assert results[qh]['model'] == 'test'
@@ -148,7 +148,7 @@ def test_report_one_query():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     # Using results from db
-    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
+    qm.db.put_queries(test_email, 1, query_object, ['test'],
                       subscribe=True)
     qm.db.put_results('test', [(query_object, 'pysb', test_response),
                                (query_object, 'pysb', query_not_appl)])
@@ -164,22 +164,17 @@ def test_report_one_query():
     assert 'A new result to query' in str_msg, str_msg
     assert 'Query is not applicable for this model' in str_msg
     assert 'BRAF → MAP2K1 → MAPK1' in str_msg
-    # Html report given two responses explicitly
-    html_msg = qm.make_html_one_query_report(
-        'test', query_object, 'pysb', test_response, query_not_appl)
-    assert html_msg
-    assert 'A new result to query' in html_msg
-    assert 'Query is not applicable for this model' in html_msg
+    assert simple_query in str_msg
 
 
 @attr('nonpublic')
 def test_report_files():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    qm.db.put_queries('tester@test.com', 1, query_object, ['test'],
+    qm.db.put_queries(test_email, 1, query_object, ['test'],
                       subscribe=True)
     qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
-    results = qm.db.get_results('tester@test.com', latest_order=1)
+    results = qm.db.get_results(test_email, latest_order=1)
     qm.make_str_report_per_user(results,
                                 filename='test_query_delta.txt')
     report_file = join(dirname(abspath(__file__)), 'test_query_delta.txt')
@@ -189,7 +184,7 @@ def test_report_files():
     assert 'This is the first result to query' in msg, msg
     assert 'Query is not applicable for this model' in msg
     qm.db.put_results('test', [(query_object, 'pysb', test_response)])
-    results = qm.db.get_results('tester@test.com', latest_order=1)
+    results = qm.db.get_results(test_email, latest_order=1)
     qm.make_str_report_per_user(results,
                                 filename='new_test_query_delta.txt')
     new_report_file = join(dirname(abspath(__file__)),
@@ -199,3 +194,21 @@ def test_report_files():
     assert msg
     assert 'A new result to query' in msg
     assert 'BRAF → MAP2K1 → MAPK1' in msg
+
+
+@attr('nonpublic')
+def test_user_query_delta():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    # Using results from db
+    qm.db.put_queries(test_email, 1, query_object, ['test'],
+                      subscribe=True)
+    qm.db.put_results('test', [(query_object, 'pysb', test_response),
+                               (query_object, 'pysb', query_not_appl)])
+    str_rep, html_rep = qm.get_user_query_delta(user_email=test_email)
+    assert str_rep, print(str_rep)
+    assert html_rep, print(html_rep)
+    assert '</html>' in html_rep
+    assert '</body>' in html_rep
+    assert 'pysb' in html_rep
+    assert 'unsubscribe' in html_rep

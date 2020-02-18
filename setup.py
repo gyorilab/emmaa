@@ -26,5 +26,5 @@ setup(name='emmaa',
       install_requires=['indra', 'boto3', 'jsonpickle', 'kappy==4.0.0rc1',
                         'pygraphviz', 'fnvhash', 'sqlalchemy', 'inflection',
                         'pybel', 'flask_jwt_extended'],
-      extras_require={'test': ['nose', 'coverage', 'python-coveralls', 'moto']}
+      extras_require={'test': ['nose', 'coverage', 'moto']}
       )

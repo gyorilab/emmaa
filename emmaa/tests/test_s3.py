@@ -209,7 +209,8 @@ def test_save_load_update_model_manager():
     # Local imports are recommended when using moto
     from emmaa.model_tests import ModelManager, save_model_manager_to_s3, \
         load_model_manager_from_s3, update_model_manager_on_s3
-    from emmaa.util import find_number_of_files_on_s3, sort_s3_files_by_date
+    from emmaa.util import find_number_of_files_on_s3, \
+        sort_s3_files_by_date_str
     client = setup_bucket(add_model=True)
     # Should be None if no model manager
     assert find_number_of_files_on_s3(
@@ -308,18 +309,20 @@ def test_answer_queries_from_s3():
 @mock_s3
 def test_util_find_on_s3_functions():
     # Local imports are recommended when using moto
-    from emmaa.util import sort_s3_files_by_date, find_latest_s3_file, \
+    from emmaa.util import sort_s3_files_by_date_str, find_latest_s3_file, \
         find_second_latest_s3_file, find_number_of_files_on_s3
     # Bucket has mm (pkl) and results (json) files, both in results folder
     client = setup_bucket(add_mm=True, add_results=True)
     # Get both
-    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/')
+    files = sort_s3_files_by_date_str(TEST_BUCKET_NAME, 'results/test/')
     assert len(files) == 2
     # Specific extension
-    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/', '.json')
+    files = sort_s3_files_by_date_str(TEST_BUCKET_NAME, 'results/test/',
+                                     '.json')
     assert len(files) == 1
     # Longer prefix
-    files = sort_s3_files_by_date(TEST_BUCKET_NAME, 'results/test/results_')
+    files = sort_s3_files_by_date_str(TEST_BUCKET_NAME,
+                                      'results/test/results_')
     assert len(files) == 1
     assert find_latest_s3_file(TEST_BUCKET_NAME, 'results/test/results_')
     assert not find_second_latest_s3_file(
