@@ -315,7 +315,7 @@ def test_answer_queries_from_s3():
 def test_util_find_on_s3_functions():
     # Local imports are recommended when using moto
     from emmaa.util import sort_s3_files_by_date_str, find_latest_s3_file, \
-        find_second_latest_s3_file, find_number_of_files_on_s3
+        find_nth_latest_s3_file, find_number_of_files_on_s3
     # Bucket has mm (pkl) and results (json) files, both in results folder
     client = setup_bucket(add_mm=True, add_results=True)
     # Get both
