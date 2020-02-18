@@ -330,7 +330,8 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
-    date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    date = request.args.get('date', get_latest_available_date(
+        model, _get_test_corpora(model)))
     test_corpus = request.args.get('test_corpus', _default_test(model))
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
