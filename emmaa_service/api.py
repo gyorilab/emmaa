@@ -326,8 +326,8 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
-    date = request.args.get('date')
-    test_corpus = request.args.get('test_corpus')
+    date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    test_corpus = request.args.get('test_corpus', _default_test(model))
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
