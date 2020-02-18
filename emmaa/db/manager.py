@@ -302,7 +302,7 @@ class EmmaaDatabaseManager(object):
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
                             Result.result_json, Result.date)
                  .filter(Result.query_hash.in_(query_hashes),
-                         Query.hash == Result.query_hash))
+                         Query.hash == Result.query_hash)).distinct()
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
