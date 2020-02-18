@@ -432,7 +432,9 @@ def get_model_tests_page(model):
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
     cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
-    if (cur_ix + 1) < find_number_of_files_on_s3(
+    if test_hash in test_stats['tests_delta']['applied_hashes_delta']['added']:
+        prev_date = None
+    elif (cur_ix + 1) < find_number_of_files_on_s3(
             EMMAA_BUCKET_NAME, prefix, '.json'):
         prev_date = last_updated_date(
             model, 'test_stats', 'date', tests=test_corpus, extension='.json',
