@@ -302,7 +302,7 @@ class EmmaaDatabaseManager(object):
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
                             Result.result_json, Result.date)
                  .filter(Result.query_hash.in_(query_hashes),
-                         Query.hash == Result.query_hash))
+                         Query.hash == Result.query_hash)).distinct()
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
@@ -452,10 +452,11 @@ class EmmaaDatabaseManager(object):
             logger.exception(e)
             return False
 
-    def get_number_of_results(self, query_hash):
+    def get_number_of_results(self, query_hash, mc_type):
         with self.get_session() as sess:
             q = (sess.query(Result.id).filter(Result.query_hash == query_hash,
-                                              Query.hash == Result.query_hash))
+                                              Query.hash == Result.query_hash,
+                                              Result.mc_type == mc_type))
         return len(q.all())
 
 

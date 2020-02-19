@@ -239,8 +239,12 @@ def _format_query_results(formatted_results):
     for qh, res in formatted_results.items():
         model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
         model = res['model']
+        latest_date = get_latest_available_date(
+            model, _get_test_corpora(model))
         new_res = [('', res["query"], ''),
-                   (f'/dashboard/{model}', model,
+                   (f'/dashboard/{model}/?date={latest_date}' +
+                    f'&test_corpus={_get_test_corpora(model)}&tab=model',
+                    model,
                     f'Click to see details about {model}')]
         for mt in model_types:
             url_param = parse.urlencode(
@@ -326,13 +330,15 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
-    date = request.args.get('date')
-    test_corpus = request.args.get('test_corpus')
+    date = request.args.get('date', get_latest_available_date(
+        model, _get_test_corpora(model)))
+    test_corpus = request.args.get('test_corpus', _default_test(model))
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
     model_stats, _ = get_model_stats(model, 'model', date=date)
-    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus, date=date)
+    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus,
+                                    date=date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
@@ -432,7 +438,9 @@ def get_model_tests_page(model):
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
     cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
-    if (cur_ix + 1) < find_number_of_files_on_s3(
+    if test_hash in test_stats['tests_delta']['applied_hashes_delta']['added']:
+        prev_date = None
+    elif (cur_ix + 1) < find_number_of_files_on_s3(
             EMMAA_BUCKET_NAME, prefix, '.json'):
         prev_date = last_updated_date(
             model, 'test_stats', 'date', tests=test_corpus, extension='.json',
@@ -533,7 +541,7 @@ def get_query_page():
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
-    order = int(request.args.get('order'))
+    order = int(request.args.get('order', 1))
     results = qm.retrieve_results_from_hashes(
         [query_hash], 'path_property', order)
     detailed_results = results[query_hash][model_type]\
@@ -541,8 +549,8 @@ def get_query_tests_page(model):
     date = results[query_hash]['date']
     card_title = ('', results[query_hash]['query'] if results else '', '')
     next_order = order - 1 if order > 1 else None
-    prev_order = order + 1 if order < qm.db.get_number_of_results(query_hash) \
-        else None
+    prev_order = order + 1 if \
+        order < qm.db.get_number_of_results(query_hash, model_type) else None
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,

@@ -38,13 +38,13 @@ function modelRedirect(ddSelect, current_model) {
   window.location.replace(redirect);
 }
 function redirectToPast(x) { 
-  let new_date = x.x
-  static_date = new Date('2019-09-30')
+  let new_date = x.x;
+  let static_date = new Date('2019-09-30');
   if (new_date >= static_date) {
-    var year = new_date.getFullYear();
-    var month = (1 + new_date.getMonth()).toString();
+    let year = new_date.getFullYear();
+    let month = (1 + new_date.getMonth()).toString();
     month = month.length > 1 ? month : '0' + month;
-    day = new_date.getDate().toString();
+    let day = new_date.getDate().toString();
     day = day.length > 1 ? day : '0' + day;
     let new_date_str = year + '-' + month + '-' + day;
     console.log(new_date_str)
@@ -55,9 +55,21 @@ function redirectToPast(x) {
 }
 
 function redirectToDate(new_date_str) {
-  let loc = window.location.href
-  let current_date = new URL(loc).searchParams.get('date')
-  let redirect = loc.replace(current_date, new_date_str)
+  let loc = window.location.href;
+  let current_date = new URL(loc).searchParams.get('date');
+  let redirect = '';
+  if (current_date) {
+    redirect = loc.replace(current_date, new_date_str)
+  } else {
+    if (loc.includes('?')) {
+      // There are already other query paramters, append
+      redirect = loc.concat(`&date=${new_date_str}`)
+    } else {
+      // This is only query paramter, add
+      redirect = loc.concat(`?date=${new_date_str}`)
+    }
+  }
+
   location.replace(redirect);
 }
 
@@ -120,8 +132,14 @@ function testRedirect(ddSelect) {
 function redirectOneStep(value, isQuery) {
   let loc = window.location.href;
   if (isQuery) {
-    let currentOrder = new URL(loc).searchParams.get('order')
-    var redirect = loc.replace(`order=${currentOrder}`, `order=${value}`)
+    let currentOrder = new URL(loc).searchParams.get('order');
+    var redirect = '';
+    if (currentOrder) {
+      redirect = loc.replace(`order=${currentOrder}`, `order=${value}`)
+    } else {
+      // Default if no order in query string
+      redirect = loc.concat('&order=1')
+    }
   } else {
     let currentDate = new URL(loc).searchParams.get('date')
     var redirect = loc.replace(`date=${currentDate}`, `date=${value}`)
