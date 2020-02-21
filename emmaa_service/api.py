@@ -411,7 +411,8 @@ def get_model_dashboard(model):
                                model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date,
-                           tab=tab)
+                           tab=tab,
+                           all_stmts=all_stmts)
 
 
 @app.route('/tests/<model>/')
@@ -733,6 +734,19 @@ def email_unsubscribe_post():
     else:
         logger.info('Could not verify signature, aborting unsubscribe')
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
+
+
+@app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
+def get_statement_by_hash_model(model, hash_val):
+    mm = load_model_manager_from_cache(model)
+    for st in mm.model.assembled_stmts:
+        if str(st.get_hash()) == str(hash_val):
+            st_json = st.to_json()
+            for evid in st_json['evidence']:
+                evid['source_hash'] = str(evid['source_hash'])
+        else:
+            st_json = {}
+    return {'statements': {hash_val: st_json}}
 
 
 if __name__ == '__main__':
