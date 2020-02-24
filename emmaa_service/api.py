@@ -368,16 +368,17 @@ def get_model_dashboard(model):
             all_tests.append((k, v))
 
     all_stmts = model_stats['model_summary']['all_stmts']
-    most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
-                         if len(all_stmts[h]) == 2 else all_stmts[h],
-                         ('', str(c), '')) for h, c in most_supported]
+    top_stmts_counts = [[h, all_stmts[h][1], ev_count] for h, ev_count in
+                        model_stats['model_summary']['stmts_by_evidence'][:10]]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [[(*all_stmts[h], stmt_db_link_msg)
-                        if len(all_stmts[h]) == 2 else all_stmts[h]] for h in
-                       added_stmts_hashes]
+        added_stmts = []
+        for st_h in added_stmts_hashes:
+            for h, count in model_stats['model_summary']['stmts_by_evidence']:
+                if st_h == h:
+                    evid_count = count
+            added_stmts.append((h, all_stmts[h][1], evid_count))
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
@@ -411,8 +412,7 @@ def get_model_dashboard(model):
                                model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date,
-                           tab=tab,
-                           all_stmts=all_stmts)
+                           tab=tab)
 
 
 @app.route('/tests/<model>/')
@@ -739,13 +739,12 @@ def email_unsubscribe_post():
 @app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, hash_val):
     mm = load_model_manager_from_cache(model)
+    st_json = {}
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
             for evid in st_json['evidence']:
                 evid['source_hash'] = str(evid['source_hash'])
-        else:
-            st_json = {}
     return {'statements': {hash_val: st_json}}
 
 

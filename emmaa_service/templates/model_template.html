@@ -89,7 +89,26 @@
           <div class="container" id="agentDistr"></div>
         </div>
       </div>
-      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence") }}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
+        </div>
+        <div class="card-body">
+          <div id="app0">
+            {% for sh, stmt, evid in stmts_counts %}
+            <statement english="{{ stmt }}"
+                      hash="{{ sh }}"
+                      :evidence="[]"
+                      :loadable="true"
+                      :total_evidence="{{ evid }}"></statement>
+            {% endfor %}
+          </div>
+          <script>
+            Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
+            var app = new Vue({el: '#app0'});
+          </script>
+        </div>
+      </div>
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
@@ -98,25 +117,28 @@
           <div class="container" id="stmtsOverTime"></div>
         </div>
       </div>
-      {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
       <div class="card">
         <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Vue statements</h4>
+          <h4 class="my-0 font-weight-normal">New Added Statements</h4>
         </div>
         <div class="card-body">
+          {% if added_stmts is string %}
+          <p>{{ added_stmts }}</p>
+          {% else %}
           <div id="app">
-            {% for sh in all_stmts %}
-            <statement english="{{ all_stmts[sh][1] }}"
+            {% for sh, stmt, evid in added_stmts %}
+            <statement english="{{ stmt }}"
                        hash="{{ sh }}"
                        :evidence="[]"
                        :loadable="true"
-                       :total_evidence="10"></statement>
+                       :total_evidence="{{ evid }}"></statement>
             {% endfor %}
           </div>
           <script>
             Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
             var app = new Vue({el: '#app'});
           </script>
+          {% endif %}
         </div>
       </div>
     </div>
