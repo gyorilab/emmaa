@@ -9,10 +9,12 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
 from flask_jwt_extended import jwt_optional
 from urllib import parse
+from collections import defaultdict
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
+from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
     does_exist, EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
@@ -366,10 +368,14 @@ def get_model_dashboard(model):
             continue
         else:
             all_tests.append((k, v))
-
     all_stmts = model_stats['model_summary']['all_stmts']
-    top_stmts_counts = [[h, all_stmts[h][1], ev_count] for h, ev_count in
-                        model_stats['model_summary']['stmts_by_evidence'][:10]]
+    cur_counts = defaultdict(int)
+    curations = get_curations(pa_hash=set(all_stmts.keys()))
+    for curation in curations:
+        cur_counts[str(curation.pa_hash)] += 1
+    top_stmts_counts = [
+        [h, all_stmts[h][1], ev_count, cur_counts[h]] for h, ev_count in
+        model_stats['model_summary']['stmts_by_evidence'][:10]]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
@@ -378,9 +384,13 @@ def get_model_dashboard(model):
             for h, count in model_stats['model_summary']['stmts_by_evidence']:
                 if st_h == h:
                     evid_count = count
-            added_stmts.append((h, all_stmts[h][1], evid_count))
+                    added_stmts.append(
+                        (h, all_stmts[h][1], evid_count, cur_counts[h]))
     else:
         added_stmts = 'No new statements were added'
+    model_stmts = [
+        [h, all_stmts[h][1], ev_count, cur_counts[h]] for h, ev_count
+        in model_stats['model_summary']['stmts_by_evidence']]
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -412,7 +422,8 @@ def get_model_dashboard(model):
                                model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date,
-                           tab=tab)
+                           tab=tab,
+                           model_stmts=model_stmts)
 
 
 @app.route('/tests/<model>/')
@@ -746,6 +757,51 @@ def get_statement_by_hash_model(model, hash_val):
             for evid in st_json['evidence']:
                 evid['source_hash'] = str(evid['source_hash'])
     return {'statements': {hash_val: st_json}}
+
+
+@app.route('/curation/submit/<hash_val>', methods=['POST'])
+@jwt_optional
+def submit_curation_endpoint(hash_val, **kwargs):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    if user:
+        email = user.email
+    else:
+        email = request.json.get('email')
+        if not email:
+            res_dict = {"result": "failure",
+                        "reason": "POST with API key requires a user email."}
+            return jsonify(res_dict), 400
+
+    logger.info("Adding curation for statement %s." % hash_val)
+    ev_hash = request.json.get('ev_hash')
+    source_api = request.json.pop('source', 'EMMAA')
+    tag = request.json.get('tag')
+    ip = request.remote_addr
+    text = request.json.get('text')
+    is_test = 'test' in request.args
+    if not is_test:
+        assert tag is not 'test'
+        try:
+            dbid = submit_curation(hash_val, tag, email, ip, text, ev_hash,
+                                   source_api)
+        except BadHashError as e:
+            abort(Response("Invalid hash: %s." % e.mk_hash, 400))
+        res = {'result': 'success', 'ref': {'id': dbid}}
+    else:
+        res = {'result': 'test passed', 'ref': None}
+    logger.info("Got result: %s" % str(res))
+    return jsonify(res)
+
+
+@app.route('/curation/list/<stmt_hash>/<src_hash>', methods=['GET'])
+def list_curations(stmt_hash, src_hash):
+    curations = get_curations(pa_hash=stmt_hash, source_hash=src_hash)
+    curation_json = [cur.to_json() for cur in curations]
+    return jsonify(curation_json)
 
 
 if __name__ == '__main__':
