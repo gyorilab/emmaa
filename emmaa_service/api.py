@@ -158,6 +158,7 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 GLOBAL_PRELOAD = False
 model_cache = {}
 model_dates = {}
+all_models = {mid for mid, _, _, _ in _get_model_meta_data()}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -220,12 +221,18 @@ def _new_applied_tests(
         new_app_tests, model_types, model_name, date, test_corpus)
 
 
-def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
+def _format_table_array(tests_json, model_types, model_name, date, test_corpus,
+                        model_tests=False, **kwargs):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
-    for th, test in tests_json:
-        new_row = [(*test['test'], stmt_db_link_msg)
-                   if len(test['test']) == 2 else test['test']]
+    for row in tests_json:
+        if model_tests:
+            th, test, evid_count, cur_count = row
+            new_row = [(th, test['test'][1], evid_count, cur_count)]
+        else:
+            th, test = row
+            new_row = [(*test['test'], stmt_db_link_msg)
+                       if len(test['test']) == 2 else test['test']]
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'test_hash': th, 'date': date,
@@ -332,6 +339,7 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
+    # First load stats and extract general info
     date = request.args.get('date', get_latest_available_date(
         model, _get_test_corpora(model)))
     test_corpus = request.args.get('test_corpus', _default_test(model))
@@ -369,12 +377,14 @@ def get_model_dashboard(model):
         else:
             all_tests.append((k, v))
     all_stmts = model_stats['model_summary']['all_stmts']
+    # Process curations
     cur_counts = defaultdict(int)
-    curations = get_curations(pa_hash=set(all_stmts.keys()))
+    curations = get_curations()
     for curation in curations:
         cur_counts[str(curation.pa_hash)] += 1
+    # Get statement related stats with evidence count and curation data
     top_stmts_counts = [
-        [h, all_stmts[h][1], ev_count, cur_counts[h]] for h, ev_count in
+        [(h, all_stmts[h][1], ev_count, cur_counts[h])] for h, ev_count in
         model_stats['model_summary']['stmts_by_evidence'][:10]]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
@@ -385,12 +395,55 @@ def get_model_dashboard(model):
                 if st_h == h:
                     evid_count = count
                     added_stmts.append(
-                        (h, all_stmts[h][1], evid_count, cur_counts[h]))
+                        [(h, all_stmts[h][1], evid_count, cur_counts[h])])
     else:
         added_stmts = 'No new statements were added'
     model_stmts = [
-        [h, all_stmts[h][1], ev_count, cur_counts[h]] for h, ev_count
+        [(h, all_stmts[h][1], ev_count, cur_counts[h])] for h, ev_count
         in model_stats['model_summary']['stmts_by_evidence']]
+    # Process test stats depending on the source of the test corpus
+    model_test = None
+    if test_corpus[:-6] in all_models:
+        model_test = test_corpus[:-6]
+    # If we got a model test name, we can load evidences and incorporate
+    # curations in the tables
+    all_test_results = None
+    new_applied_tests = None
+    if model_test:
+        test_model_stats, _ = get_model_stats(model_test, 'model')
+        if test_model_stats:
+            all_model_tests = []
+            new_applied_model_tests = []
+            new_app_hashes = test_stats['tests_delta'][
+                'applied_hashes_delta']['added']
+            for th, test in all_tests:
+                for h, count in \
+                        test_model_stats['model_summary']['stmts_by_evidence']:
+                    if th == h:
+                        evid_count = count
+                        all_model_tests.append(
+                            [th, test, evid_count, cur_counts[th]])
+                        if th in new_app_hashes:
+                            new_applied_model_tests.append(
+                                [th, test[1], evid_count, cur_counts[th]])
+            all_test_results = _format_table_array(
+                tests_json=all_model_tests, model_types=current_model_types,
+                model_name=model, date=date, test_corpus=test_corpus,
+                model_tests=True)
+            if new_applied_model_tests:
+                new_applied_tests = _format_table_array(
+                    tests_json=new_applied_model_tests,
+                    model_types=current_model_types, model_name=model,
+                    date=date, test_corpus=test_corpus, model_tests=True)
+            else:
+                new_applied_tests = 'No new tests were applied'
+    if not all_test_results:
+        all_test_results = _format_table_array(
+            tests_json=all_tests, model_types=current_model_types,
+            model_name=model, date=date, test_corpus=test_corpus)
+        new_applied_tests = _new_applied_tests(
+            test_stats_json=test_stats, model_types=current_model_types,
+            model_name=model, date=date, test_corpus=test_corpus)
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -406,24 +459,15 @@ def get_model_dashboard(model):
                            model_types=["Test", *[FORMATTED_TYPE_NAMES[mt]
                                                   for mt in
                                                   current_model_types]],
-                           new_applied_tests=_new_applied_tests(
-                               test_stats_json=test_stats,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
-                           all_test_results=_format_table_array(
-                               tests_json=all_tests,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
+                           new_applied_tests=new_applied_tests,
+                           all_test_results=all_test_results,
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
-                           model_stmts=model_stmts)
+                           model_stmts=model_stmts,
+                           model_test=model_test)
 
 
 @app.route('/tests/<model>/')
@@ -747,8 +791,8 @@ def email_unsubscribe_post():
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
-@app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
-def get_statement_by_hash_model(model, hash_val):
+@app.route('/statements/from_hash/<model>/<test_corpus>/<hash_val>', methods=['GET'])
+def get_statement_by_hash_model(model, test_corpus, hash_val):
     mm = load_model_manager_from_cache(model)
     st_json = {}
     for st in mm.model.assembled_stmts:
@@ -756,6 +800,14 @@ def get_statement_by_hash_model(model, hash_val):
             st_json = st.to_json()
             for evid in st_json['evidence']:
                 evid['source_hash'] = str(evid['source_hash'])
+    if not st_json:
+        if test_corpus[:-6] in all_models:
+            mm = load_model_manager_from_cache(test_corpus[:-6])
+            for st in mm.model.assembled_stmts:
+                if str(st.get_hash()) == str(hash_val):
+                    st_json = st.to_json()
+                    for evid in st_json['evidence']:
+                        evid['source_hash'] = str(evid['source_hash'])
     return {'statements': {hash_val: st_json}}
 
 
