@@ -71,7 +71,7 @@
     <!-- Model stuff goes here -->
 
     <!-- This table displays model data -->
-    <div class="container">
+    <div class="container" id="app">
       {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
       <div class="card">
         <div class="card-header">
@@ -94,19 +94,14 @@
           <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
         </div>
         <div class="card-body">
-          <div id="app0">
-            {% for sh, stmt, evid in stmts_counts %}
-            <statement english="{{ stmt }}"
-                      hash="{{ sh }}"
-                      :evidence="[]"
-                      :loadable="true"
-                      :total_evidence="{{ evid }}"></statement>
-            {% endfor %}
-          </div>
-          <script>
-            Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
-            var app = new Vue({el: '#app0'});
-          </script>
+          {% for sh, stmt, num_evid, num_cur in stmts_counts %}
+          <statement english="{{ stmt }}"
+                    hash="{{ sh }}"
+                    :evidence="[]"
+                    :loadable="true"
+                    :total_evidence="{{ num_evid }}"
+                    :num_curations="{{ num_cur }}"></statement>
+          {% endfor %}
         </div>
       </div>
       <div class="card">
@@ -125,24 +120,39 @@
           {% if added_stmts is string %}
           <p>{{ added_stmts }}</p>
           {% else %}
-          <div id="app">
-            {% for sh, stmt, evid in added_stmts %}
-            <statement english="{{ stmt }}"
-                       hash="{{ sh }}"
-                       :evidence="[]"
-                       :loadable="true"
-                       :total_evidence="{{ evid }}"></statement>
-            {% endfor %}
-          </div>
-          <script>
-            Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
-            var app = new Vue({el: '#app'});
-          </script>
+          {% for sh, stmt, num_evid, num_cur in added_stmts %}  
+          <statement english="{{ stmt }}"
+                      hash="{{ sh }}"
+                      :evidence="[]"
+                      :loadable="true"
+                      :total_evidence="{{ num_evid }}"
+                      :num_curations="{{ num_cur }}"></statement>
+          {% endfor %}
           {% endif %}
         </div>
       </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal"> All Model Statements</h4>
+        </div>
+        <div class="card-body">
+          {% for sh, stmt, num_evid, num_cur in model_stmts %}
+          <statement english="{{ stmt }}"
+                      hash="{{ sh }}"
+                      :evidence="[]"
+                      :loadable="true"
+                      :total_evidence="{{ num_evid }}"
+                      :num_curations="{{ num_cur }}"></statement>
+          {% endfor %}
+        </div>
+      </div>
     </div>
-
+    <script>
+      Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
+      Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
+      Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
+      var app = new Vue({el: '#app'});
+    </script>
   </div>
   {% if tab == 'model' %}
   <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
