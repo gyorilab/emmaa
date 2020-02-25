@@ -62,6 +62,7 @@
     </div>
   </nav>
 </div>
+<div id="app">
 <div class="tab-content" id="nav-tabContent">
   {% if tab == 'model' %}
   <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
@@ -71,7 +72,7 @@
     <!-- Model stuff goes here -->
 
     <!-- This table displays model data -->
-    <div class="container" id="app">
+    <div class="container">
       {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
       <div class="card">
         <div class="card-header">
@@ -89,21 +90,7 @@
           <div class="container" id="agentDistr"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Most Supported Statements</h4>
-        </div>
-        <div class="card-body">
-          {% for sh, stmt, num_evid, num_cur in stmts_counts %}
-          <statement english="{{ stmt }}"
-                    hash="{{ sh }}"
-                    :evidence="[]"
-                    :loadable="true"
-                    :total_evidence="{{ num_evid }}"
-                    :num_curations="{{ num_cur }}"></statement>
-          {% endfor %}
-        </div>
-      </div>
+      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence") }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
@@ -112,47 +99,10 @@
           <div class="container" id="stmtsOverTime"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">New Added Statements</h4>
-        </div>
-        <div class="card-body">
-          {% if added_stmts is string %}
-          <p>{{ added_stmts }}</p>
-          {% else %}
-          {% for sh, stmt, num_evid, num_cur in added_stmts %}  
-          <statement english="{{ stmt }}"
-                      hash="{{ sh }}"
-                      :evidence="[]"
-                      :loadable="true"
-                      :total_evidence="{{ num_evid }}"
-                      :num_curations="{{ num_cur }}"></statement>
-          {% endfor %}
-          {% endif %}
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal"> All Model Statements</h4>
-        </div>
-        <div class="card-body">
-          {% for sh, stmt, num_evid, num_cur in model_stmts %}
-          <statement english="{{ stmt }}"
-                      hash="{{ sh }}"
-                      :evidence="[]"
-                      :loadable="true"
-                      :total_evidence="{{ num_evid }}"
-                      :num_curations="{{ num_cur }}"></statement>
-          {% endfor %}
-        </div>
-      </div>
+      {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
+      {{ path_card(model_stmts, "All Statements", "allStmtsTable", ["Statement"], "allStmts") }}
     </div>
-    <script>
-      Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
-      Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
-      Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
-      var app = new Vue({el: '#app'});
-    </script>
+
   </div>
   {% if tab == 'model' %}
   <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
@@ -206,4 +156,11 @@
 
   </div>
 </div>
+</div>
+<script>
+  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, test_corpus=test_corpus, hash_val='') }}";
+  Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
+  Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
+  var app = new Vue({el: '#app'});
+</script>
 {% endblock %}
