@@ -21,6 +21,7 @@ from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
     find_number_of_files_on_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
+from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
     FORMATTED_TYPE_NAMES
 from emmaa.subscription.email_util import verify_email_signature,\
@@ -158,7 +159,7 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 GLOBAL_PRELOAD = False
 model_cache = {}
 model_dates = {}
-all_models = {mid for mid, _, _, _ in _get_model_meta_data()}
+tests_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -204,35 +205,12 @@ def _make_query(query_dict, use_grouding_service=True):
     return query, tab
 
 
-def _new_applied_tests(
-        test_stats_json, model_types, model_name, date, test_corpus):
-    # Extract new applied tests into:
-    #   list of tests (one per row)
-    #       each test is a list of tuples (one tuple per column)
-    #           each tuple is a (href, link_text) pair
-    all_test_results = test_stats_json['test_round_summary'][
-        'all_test_results']
-    new_app_hashes = test_stats_json['tests_delta']['applied_hashes_delta'][
-        'added']
-    if len(new_app_hashes) == 0:
-        return 'No new tests were applied'
-    new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(
-        new_app_tests, model_types, model_name, date, test_corpus)
-
-
-def _format_table_array(tests_json, model_types, model_name, date, test_corpus,
-                        model_tests=False, **kwargs):
-    # tests_json needs to have the structure: [(test_hash, tests)]
+def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
+    # tests_json needs to have the structure:
+    # [(test_hash, test_with_results, evid_count, cur_count)]
     table_array = []
-    for row in tests_json:
-        if model_tests:
-            th, test, evid_count, cur_count = row
-            new_row = [(th, test['test'][1], evid_count, cur_count)]
-        else:
-            th, test = row
-            new_row = [(*test['test'], stmt_db_link_msg)
-                       if len(test['test']) == 2 else test['test']]
+    for th, test, evid_count, cur_count in tests_json:
+        new_row = [(th, test['test'][1], evid_count, cur_count)]
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'test_hash': th, 'date': date,
@@ -411,49 +389,28 @@ def get_model_dashboard(model):
     model_stmts = [
         [(h, all_stmts[h][1], ev_count, cur_counts[h])] for h, ev_count
         in model_stats['model_summary']['stmts_by_evidence']]
-    # Process test stats depending on the source of the test corpus
-    model_test = None
-    if test_corpus[:-6] in all_models:
-        model_test = test_corpus[:-6]
-    # If we got a model test name, we can load evidences and incorporate
-    # curations in the tables
-    all_test_results = None
-    new_applied_tests = None
-    if model_test:
-        test_model_stats, _ = get_model_stats(model_test, 'model')
-        if test_model_stats:
-            all_model_tests = []
-            new_applied_model_tests = []
-            new_app_hashes = test_stats['tests_delta'][
-                'applied_hashes_delta']['added']
-            for th, test in all_tests:
-                for h, count in \
-                        test_model_stats['model_summary']['stmts_by_evidence']:
-                    if th == h:
-                        evid_count = count
-                        all_model_tests.append(
-                            [th, test, evid_count, cur_counts[th]])
-                        if th in new_app_hashes:
-                            new_applied_model_tests.append(
-                                [th, test[1], evid_count, cur_counts[th]])
-            all_test_results = _format_table_array(
-                tests_json=all_model_tests, model_types=current_model_types,
-                model_name=model, date=date, test_corpus=test_corpus,
-                model_tests=True)
-            if new_applied_model_tests:
-                new_applied_tests = _format_table_array(
-                    tests_json=new_applied_model_tests,
-                    model_types=current_model_types, model_name=model,
-                    date=date, test_corpus=test_corpus, model_tests=True)
-            else:
-                new_applied_tests = 'No new tests were applied'
-    if not all_test_results:
-        all_test_results = _format_table_array(
-            tests_json=all_tests, model_types=current_model_types,
-            model_name=model, date=date, test_corpus=test_corpus)
-        new_applied_tests = _new_applied_tests(
-            test_stats_json=test_stats, model_types=current_model_types,
-            model_name=model, date=date, test_corpus=test_corpus)
+    tests = _load_tests_from_cache(test_corpus)
+    test_ev_count = {}
+    for t in tests:
+        test_ev_count[str(t.stmt.get_hash())] = len(t.stmt.evidence)
+    all_model_tests = []
+    new_applied_tests = []
+    new_app_hashes = test_stats['tests_delta']['applied_hashes_delta']['added']
+    for th, test in all_tests:
+        if th in new_app_hashes:
+            new_applied_tests.append(
+                (th, test, test_ev_count[th], cur_counts[th]))
+        all_model_tests.append((th, test, test_ev_count[th], cur_counts[th]))
+    all_test_results = _format_table_array(
+        tests_json=all_model_tests, model_types=current_model_types,
+        model_name=model, date=date, test_corpus=test_corpus)
+    if new_applied_tests:
+        new_applied_test_results = _format_table_array(
+            tests_json=new_applied_model_tests,
+            model_types=current_model_types, model_name=model,
+            date=date, test_corpus=test_corpus)
+    else:
+        new_applied_test_results = 'No new tests were applied'
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -469,15 +426,14 @@ def get_model_dashboard(model):
                            model_types=["Test", *[FORMATTED_TYPE_NAMES[mt]
                                                   for mt in
                                                   current_model_types]],
-                           new_applied_tests=new_applied_tests,
+                           new_applied_tests=new_applied_test_results,
                            all_test_results=all_test_results,
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date),
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
-                           model_stmts=model_stmts,
-                           model_test=model_test)
+                           model_stmts=model_stmts)
 
 
 @app.route('/tests/<model>/')
@@ -820,8 +776,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-                    for evid in st_json['evidence']:
-                        evid['source_hash'] = str(evid['source_hash'])
+            for evid in st_json['evidence']:
+                evid['source_hash'] = str(evid['source_hash'])
     return {'statements': {hash_val: st_json}}
 
 
