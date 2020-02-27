@@ -801,8 +801,8 @@ def email_unsubscribe_post():
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
-@app.route('/statements/from_hash/<model>/<test_corpus>/<hash_val>', methods=['GET'])
-def get_statement_by_hash_model(model, test_corpus, hash_val):
+@app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
+def get_statement_by_hash_model(model, hash_val):
     mm = load_model_manager_from_cache(model)
     st_json = {}
     for st in mm.model.assembled_stmts:
@@ -810,12 +810,16 @@ def get_statement_by_hash_model(model, test_corpus, hash_val):
             st_json = st.to_json()
             for evid in st_json['evidence']:
                 evid['source_hash'] = str(evid['source_hash'])
-    if not st_json:
-        if test_corpus[:-6] in all_models:
-            mm = load_model_manager_from_cache(test_corpus[:-6])
-            for st in mm.model.assembled_stmts:
-                if str(st.get_hash()) == str(hash_val):
-                    st_json = st.to_json()
+    return {'statements': {hash_val: st_json}}
+
+
+@app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
+def get_tests_by_hash(test_corpus, hash_val):
+    tests = _load_tests_from_cache(test_corpus)
+    st_json = {}
+    for test in tests:
+        if str(test.stmt.get_hash()) == str(hash_val):
+            st_json = test.stmt.to_json()
                     for evid in st_json['evidence']:
                         evid['source_hash'] = str(evid['source_hash'])
     return {'statements': {hash_val: st_json}}
