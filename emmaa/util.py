@@ -75,6 +75,8 @@ def sort_s3_files_by_date_str(bucket, prefix, extension=None):
         date_str = fname.split('_')[-1]
         return get_date_from_str(date_str)
     keys = list_s3_files(bucket, prefix, extension=extension)
+    if len(keys) < 2:
+        return keys
     keys = sorted(keys, key=lambda k: process_key(k), reverse=True)
     return keys
 

@@ -311,6 +311,16 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
     return 'No new tests were passed'
 
 
+def _load_tests_from_cache(test_corpus):
+    tests, file_key = tests_cache.get(test_corpus, (None, None))
+    latest_on_s3 = find_latest_s3_file(
+        EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
+    if file_key != latest_on_s3:
+        tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
+        tests_cache[test_corpus] = (tests, file_key)
+    return tests
+
+
 # Deletes session after the specified time
 @app.before_request
 def session_expiration_check():

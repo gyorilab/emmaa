@@ -573,7 +573,7 @@ def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Loading tests from {test_key}')
     obj = client.get_object(Bucket=bucket, Key=test_key)
     tests = pickle.loads(obj['Body'].read())
-    return tests
+    return tests, test_key
 
 
 def save_model_manager_to_s3(model_name, model_manager,
@@ -657,7 +657,7 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         tests and the test results.
     """
     mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
-    tests = load_tests_from_s3(test_corpus, bucket=bucket)
+    tests, _ = load_tests_from_s3(test_corpus, bucket=bucket)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()

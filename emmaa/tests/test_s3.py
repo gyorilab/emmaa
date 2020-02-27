@@ -185,7 +185,7 @@ def test_load_tests_from_s3():
     # Local imports are recommended when using moto
     from emmaa.model_tests import load_tests_from_s3, StatementCheckingTest
     client = setup_bucket(add_tests=True)
-    tests = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
+    tests, _ = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
     assert isinstance(tests, list)
     assert len(tests) == 1
     test = tests[0]
@@ -247,7 +247,7 @@ def test_model_to_tests():
     tests = model_to_tests('test', bucket=TEST_BUCKET_NAME)
     assert len(tests) == 2
     assert isinstance(tests[0], StatementCheckingTest)
-    loaded_tests = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
+    loaded_tests, _ = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
     assert loaded_tests
 
 
