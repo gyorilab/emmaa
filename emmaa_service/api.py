@@ -257,7 +257,8 @@ def _format_dynamic_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
+def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
+                      test_ev_count, cur_counts):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -269,17 +270,16 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
         mt_rows = [[('', f'New passed tests for '
                          f'{FORMATTED_TYPE_NAMES[mt]} model.',
                      '')]]
-        for test_hash in new_passed_hashes:
-            test = all_test_results[test_hash]
+        for th in new_passed_hashes:
+            test = all_test_results[th]
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
             else:
                 path = path_loc
             url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': test_hash, 'date': date})
-            new_row = [(*test['test'], stmt_db_link_msg)
-                       if len(test['test']) == 2 else test['test'],
+                {'model_type': mt, 'test_hash': th, 'date': date})
+            new_row = [(th, test['test'][1], test_ev_count[th], cur_counts[th]),
                        (f'/tests/{model_name}?{url_param}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
@@ -429,7 +429,8 @@ def get_model_dashboard(model):
                            new_applied_tests=new_applied_test_results,
                            all_test_results=all_test_results,
                            new_passed_tests=_new_passed_tests(
-                               model, test_stats, current_model_types, date),
+                               model, test_stats, current_model_types, date,
+                               test_ev_count, cur_counts),
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
