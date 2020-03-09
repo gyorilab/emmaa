@@ -406,7 +406,7 @@ def get_model_dashboard(model):
         model_name=model, date=date, test_corpus=test_corpus)
     if new_applied_tests:
         new_applied_test_results = _format_table_array(
-            tests_json=new_applied_model_tests,
+            tests_json=new_applied_tests,
             model_types=current_model_types, model_name=model,
             date=date, test_corpus=test_corpus)
     else:
