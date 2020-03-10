@@ -258,7 +258,7 @@ def _format_dynamic_query_results(formatted_results):
 
 
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
-                      test_ev_count, cur_counts):
+                      test_corpus, test_ev_count, cur_counts):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -278,7 +278,8 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             else:
                 path = path_loc
             url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date})
+                {'model_type': mt, 'test_hash': th, 'date': date,
+                 'test_corpus': test_corpus})
             new_row = [(th, test['test'][1], test_ev_count[th], cur_counts[th]),
                        (f'/tests/{model_name}?{url_param}', path,
                         pass_fail_msg)]
