@@ -431,7 +431,7 @@ def get_model_dashboard(model):
                            all_test_results=all_test_results,
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date,
-                               test_ev_count, cur_counts),
+                               test_corpus, test_ev_count, cur_counts),
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
