@@ -97,7 +97,6 @@ def get_latest_available_date(
             model_dates[model] = model_date
         return model_date
     min_date = min(model_date, test_date)
-    print(min_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
         if test_corpus == _default_test(model):
             model_dates[model] = min_date
@@ -136,7 +135,8 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         test_corpus = _default_test(model)
         latest_date = get_latest_available_date(
             model, test_corpus, refresh=refresh, bucket=bucket)
-        logger.info(f'Latest available date for {model} is {latest_date}')
+        if refresh:
+            logger.info(f'Latest available date for {model} is {latest_date}')
         model_data.append((model, config_json, test_corpus, latest_date))
     return model_data
 
