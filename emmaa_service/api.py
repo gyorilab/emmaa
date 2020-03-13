@@ -561,6 +561,44 @@ def get_query_page():
                            tab=tab)
 
 
+@app.route('/evidence/<stmt_hash>/')
+def get_statement_evidence_page(stmt_hash):
+    source = request.args.get('source')
+    model = request.args.get('model')
+    test_corpus = request.args.get('test_corpus', '')
+    if source == 'model_statement':
+        stats, _ = get_model_stats(model, 'model')
+    elif source == 'test':
+        if test_corpus:
+            stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+        else:
+            abort(Response(f'Need test corpus name to load evidence', 404))
+    else:
+        abort(Response(f'Source should be model_statement or test', 404))
+    if not stats:
+        abort(Response(f'Could not find data for {model}', 404))
+    curations = get_curations(pa_hash=stmt_hash)
+    if source == 'model_statement':
+        stmt = stats['model_summary']['all_stmts'][stmt_hash]
+        for h, count in stats['model_summary']['stmts_by_evidence']:
+            if stmt_hash == h:
+                evid_count = count
+                stmt_row = [[(stmt_hash, stmt[1], evid_count, len(curations))]]
+    else:
+        stmt = stats['test_round_summary']['all_test_results'][stmt_hash]
+        tests = _load_tests_from_cache(test_corpus)
+        for t in tests:
+            if str(t.stmt.get_hash()) == str(stmt_hash):
+                evid_count = len(t.stmt.evidence)
+                stmt_row = [[
+                    (stmt_hash, stmt['test'][1], evid_count, len(curations))]]
+    return render_template('evidence_template.html',
+                           stmt_row=stmt_row,
+                           model=model,
+                           source=source,
+                           test_corpus=test_corpus if test_corpus else None)
+
+
 @app.route('/query/<model>/')
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
