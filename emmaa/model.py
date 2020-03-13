@@ -583,7 +583,7 @@ def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
     model : str
         Model name to look for
     mode : str
-        Type of stats to generate (model or tests)
+        Type of stats to generate (model or test)
     tests : str
         A name of a test corpus. Default is large_corpus_tests.
     date : str or None
