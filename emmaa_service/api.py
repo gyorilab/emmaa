@@ -250,8 +250,12 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        new_row = [(*test['test'], stmt_db_link_msg)
-                   if len(test['test']) == 2 else test['test']]
+        ev_url_par = parse.urlencode(
+            {'source': 'test', 'model': model_name,
+             'test_corpus': test_corpus})
+        test['test'][0] = '/evidence/{st_hash}?{ev_url_par}'
+        test['test'][2] = stmt_db_link_msg
+        new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'test_hash': th, 'date': date,
@@ -298,7 +302,8 @@ def _format_dynamic_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
+def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
+                      test_corpus):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -312,6 +317,11 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
                      '')]]
         for th in new_passed_hashes:
             test = all_test_results[th]
+            ev_url_par = parse.urlencode(
+                {'source': 'test', 'model': model_name,
+                 'test_corpus': test_corpus})
+            test['test'][0] = '/evidence/{st_hash}?{url_par}'
+            test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
@@ -320,8 +330,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
             url_param = parse.urlencode(
                 {'model_type': mt, 'test_hash': th, 'date': date,
                  'test_corpus': test_corpus})
-            new_row = [(*test['test'], stmt_db_link_msg)
-                       if len(test['test']) == 2 else test['test'],
+            new_row = [(test['test']),
                        (f'/tests/{model_name}?{url_param}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
@@ -397,16 +406,18 @@ def get_model_dashboard(model):
             all_tests.append((k, v))
 
     all_stmts = model_stats['model_summary']['all_stmts']
+    for st_hash, st_value in all_stmts.items():
+        url_param = parse.urlencode(
+            {'source': 'model_statement', 'model': model})
+        st_value[0] = f'/evidence/{st_hash}?{url_param}'
+        st_value[2] = stmt_db_link_msg
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
-                         if len(all_stmts[h]) == 2 else all_stmts[h],
-                         ('', str(c), '')) for h, c in most_supported]
+    top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
+                        for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [[(*all_stmts[h], stmt_db_link_msg)
-                        if len(all_stmts[h]) == 2 else all_stmts[h]] for h in
-                       added_stmts_hashes]
+        added_stmts = [((all_stmts[h])) for h in added_stmts_hashes]
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
@@ -437,7 +448,8 @@ def get_model_dashboard(model):
                                date=date,
                                test_corpus=test_corpus),
                            new_passed_tests=_new_passed_tests(
-                               model, test_stats, current_model_types, date),
+                               model, test_stats, current_model_types, date,
+                               test_corpus),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)

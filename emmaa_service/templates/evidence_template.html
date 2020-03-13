@@ -3,7 +3,7 @@
 
 {% block body %}
 <div class="container" id="app">
-  {% if tab == 'model_statement' %}
+  {% if source == 'model_statement' %}
   {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='') %}
   {% else %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
