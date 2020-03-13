@@ -62,107 +62,96 @@
     </div>
   </nav>
 </div>
-<div id="app">
-  {% set model_url = url_for('get_statement_by_hash_model', model=model, hash_val='') %}
-  {% set test_url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
-  <div class="tab-content" id="nav-tabContent">
-    {% if tab == 'model' %}
-    <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
-    {% else %}
-    <div class="tab-pane" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
-    {% endif %} 
-      <!-- Model stuff goes here -->
+<div class="tab-content" id="nav-tabContent">
+  {% if tab == 'model' %}
+  <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+  {% else %}
+  <div class="tab-pane" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
+  {% endif %} 
+    <!-- Model stuff goes here -->
 
-      <!-- This table displays model data -->
-      <div class="container">
-        {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
-          </div>
-          <div class="card-body">
-            <div class="container" id="modelTestResultBody"></div>
-          </div>
+    <!-- This table displays model data -->
+    <div class="container">
+      {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
         </div>
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
-          </div>
-          <div class="card-body">
-            <div class="container" id="agentDistr"></div>
-          </div>
+        <div class="card-body">
+          <div class="container" id="modelTestResultBody"></div>
         </div>
-        {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement"], "stmtEvidence", url=model_url) }}
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
-          </div>
-          <div class="card-body">
-            <div class="container" id="stmtsOverTime"></div>
-          </div>
-        </div>
-        {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts", url=model_url) }}
-        {{ path_card(model_stmts, "All Statements", "allStmtsTable", ["Statement"], "allStmts", url=model_url) }}
       </div>
-
-    </div>
-    {% if tab == 'model' %}
-    <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
-    {% else %}
-    <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
-    {% endif %}
-      <!-- Test stuff goes here -->
-
-      <div class="container" id="modelTestResult">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Test Corpus Selection</h4>
-          </div>
-          <div class="card-body">
-            <select class="custom-select" id="testSelectDD" aria-label="Example select with button addon" style="width: 300px">
-              <option selected disabled hidden>Select test...</option>
-              {% for test, test_date in available_tests.items() %}
-                {% if test == test_corpus %}
-                  <option selected value="{{ test }} {{ date }}">{{ test.replace('_', ' ').capitalize() }}</option>
-                {% else %}
-                  <option value="{{ test }} {{ test_date }}">{{ test.replace('_', ' ').capitalize() }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-            <div class="d-inline-flex button-container p-2">
-              <button class="btn btn-outline-secondary" onClick="testRedirect(document.getElementById('testSelectDD'))" type="button">Load Test Results</button>
-            </div>
-          </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
         </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
-          </div>
-          <div class="card-body">
-            <div class="container" id="passedRatio"></div>
-          </div>
+        <div class="card-body">
+          <div class="container" id="agentDistr"></div>
         </div>
-        <div class="card">
-          <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
-          </div>
-          <div class="card-body">
-            <div class="container" id="passedApplied"></div>
-          </div>
-        </div>
-        {{ path_card(new_applied_tests, "New Applied Tests", None, model_types, "newAppliedTests", url=test_url) }}
-        {{ path_card(new_passed_tests, "New Passed Tests", None, ["Test", "Top Path"], "newPassedTests", true, url=test_url)}}
-        {{ path_card(all_test_results, "All Test Results", None, model_types, "allTestResults", url=test_url) }}
       </div>
-
+      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence") }}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="stmtsOverTime"></div>
+        </div>
+      </div>
+      {{ path_card(added_stmts, "New Added Statements", "addedStmtsTable", ["Statement"], "addedStmts") }}
     </div>
+
+  </div>
+  {% if tab == 'model' %}
+  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% else %}
+  <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% endif %}
+    <!-- Test stuff goes here -->
+
+    <div class="container" id="modelTestResult">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Test Corpus Selection</h4>
+        </div>
+        <div class="card-body">
+          <select class="custom-select" id="testSelectDD" aria-label="Example select with button addon" style="width: 300px">
+            <option selected disabled hidden>Select test...</option>
+            {% for test, test_date in available_tests.items() %}
+              {% if test == test_corpus %}
+                <option selected value="{{ test }} {{ date }}">{{ test.replace('_', ' ').capitalize() }}</option>
+              {% else %}
+                <option value="{{ test }} {{ test_date }}">{{ test.replace('_', ' ').capitalize() }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <div class="d-inline-flex button-container p-2">
+            <button class="btn btn-outline-secondary" onClick="testRedirect(document.getElementById('testSelectDD'))" type="button">Load Test Results</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="passedRatio"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
+        </div>
+        <div class="card-body">
+          <div class="container" id="passedApplied"></div>
+        </div>
+      </div>
+      {{ path_card(new_applied_tests, "New Applied Tests", None, model_types, "newAppliedTests") }}
+      {{ path_card(new_passed_tests, "New Passed Tests", None, ["Test", "Top Path"], "newPassedTests", true)}}
+      {{ path_card(all_test_results, "All Test Results", None, model_types, "allTestResults") }}
+    </div>
+
   </div>
 </div>
-<script>
-  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
-  Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
-  Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
-  var app = new Vue({el: '#app'});
-</script>
 {% endblock %}
