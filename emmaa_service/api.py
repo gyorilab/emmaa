@@ -122,6 +122,27 @@ def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     return tests_with_dates
 
 
+def _get_all_tests():
+    s3 = boto3.client('s3')
+    resp = s3.list_objects(Bucket=bucket, Prefix='tests/',
+                           Delimiter='_tests')
+    tests = []
+    for pref in resp['CommonPrefixes']:
+        test = pref['Prefix'].split('/')[1]
+        tests.append(test)
+    return tests
+
+
+def _load_tests_from_cache(test_corpus):
+    tests, file_key = tests_cache.get(test_corpus, (None, None))
+    latest_on_s3 = find_latest_s3_file(
+        EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
+    if file_key != latest_on_s3:
+        tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
+        tests_cache[test_corpus] = (tests, file_key)
+    return tests
+
+
 def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
@@ -166,6 +187,9 @@ if GLOBAL_PRELOAD:
     # Load all the model managers for queries
     for model, _, _, _ in model_meta_data:
         load_model_manager_from_cache(model)
+    tests = _get_all_tests()
+    for test_corpus in tests:
+        _load_tests_from_cache(test_corpus)
 
 
 def get_queryable_stmt_types():
@@ -288,16 +312,6 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
     if len(new_passed_tests) > 0:
         return new_passed_tests
     return 'No new tests were passed'
-
-
-def _load_tests_from_cache(test_corpus):
-    tests, file_key = tests_cache.get(test_corpus, (None, None))
-    latest_on_s3 = find_latest_s3_file(
-        EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
-    if file_key != latest_on_s3:
-        tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
-        tests_cache[test_corpus] = (tests, file_key)
-    return tests
 
 
 # Deletes session after the specified time
