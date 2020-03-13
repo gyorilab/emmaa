@@ -1,0 +1,19 @@
+{% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import path_table, path_card %}
+
+{% block body %}
+<div class="container" id="app">
+  {% if tab == 'model_statement' %}
+  {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='') %}
+  {% else %}
+  {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
+  {% endif %}
+  {{ path_card(stmt_row, "Statement Evidence and Curation", "EvidId", [], url=url) }}
+</div>
+<script>
+  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
+  Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
+  Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
+  var app = new Vue({el: '#app'});
+</script>
+{% endblock %}
