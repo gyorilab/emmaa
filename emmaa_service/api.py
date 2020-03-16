@@ -585,32 +585,26 @@ def get_statement_evidence_page(stmt_hash):
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
-    if source == 'model_statement':
-        stats, _ = get_model_stats(model, 'model')
-    elif source == 'test':
-        if test_corpus:
-            stats, _ = get_model_stats(model, 'test', tests=test_corpus)
-        else:
-            abort(Response(f'Need test corpus name to load evidence', 404))
-    else:
-        abort(Response(f'Source should be model_statement or test', 404))
-    if not stats:
-        abort(Response(f'Could not find data for {model}', 404))
     curations = get_curations(pa_hash=stmt_hash)
+    cur_count = len(curations)
     if source == 'model_statement':
-        stmt = stats['model_summary']['all_stmts'][stmt_hash]
-        for h, count in stats['model_summary']['stmts_by_evidence']:
-            if stmt_hash == h:
-                evid_count = count
-                stmt_row = [[(stmt_hash, stmt[1], evid_count, len(curations))]]
-    else:
-        stmt = stats['test_round_summary']['all_test_results'][stmt_hash]
+        mm = load_model_manager_from_cache(model)
+        for stmt in mm.model.assembled_stmts:
+            if str(stmt.get_hash()) == str(stmt_hash):
+                english = _format_stmt_text(stmt)
+                evid_count = len(stmt.evidence)
+                stmt_row = [[(stmt_hash, english, evid_count, cur_count)]]
+    elif source == 'test':
+        if not test_corpus:
+            abort(Response(f'Need test corpus name to load evidence', 404))
         tests = _load_tests_from_cache(test_corpus)
         for t in tests:
             if str(t.stmt.get_hash()) == str(stmt_hash):
+                english = _format_stmt_text(t.stmt)
                 evid_count = len(t.stmt.evidence)
-                stmt_row = [[
-                    (stmt_hash, stmt['test'][1], evid_count, len(curations))]]
+                stmt_row = [[(stmt_hash, english, evid_count, cur_count)]]
+    else:
+        abort(Response(f'Source should be model_statement or test', 404))
     return render_template('evidence_template.html',
                            stmt_row=stmt_row,
                            model=model,
