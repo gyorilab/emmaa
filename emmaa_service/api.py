@@ -14,6 +14,8 @@ from collections import defaultdict
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
+from indra.assemblers.html.assembler import _format_evidence_text, \
+    _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
@@ -821,8 +823,8 @@ def get_statement_by_hash_model(model, hash_val):
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
-            for evid in st_json['evidence']:
-                evid['source_hash'] = str(evid['source_hash'])
+            ev_list = _format_evidence_text(st)
+            st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
 
@@ -833,8 +835,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-            for evid in st_json['evidence']:
-                evid['source_hash'] = str(evid['source_hash'])
+            ev_list = _format_evidence_text(test.stmt)
+            st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
 

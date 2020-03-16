@@ -1,6 +1,45 @@
 {% extends "emmaa_page_template.html" %}
 {% from "path_macros.html" import path_table, path_card %}
 
+{% block additional_scripts %}
+<style>
+  .badge-subject {
+    background-color: #4a36aa;
+    color: #FFFFFF;
+  }
+  .badge-object {
+    background-color: #2d8e4c;
+    color: #FFFFFF;
+  }
+  .badge-other {
+    background-color: #606060;
+    color: #FFFFFF;
+  }
+  .badge-source {
+    font-size: 8pt;
+    margin: 0;
+    padding-left: 5px;
+    cursor: pointer;
+  }
+
+  .frozen-box {
+    background-color: #f0f0f0;
+    border: 1px solid #a0a0a0;
+    border-radius: 2px;
+    padding: 5px;
+  }
+
+  #search-reopen {
+    cursor: pointer;
+  }
+
+  .nvm {
+    padding-left: 0;
+    padding-right: 0;
+  }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container" id="app">
   {% if source == 'model_statement' %}
