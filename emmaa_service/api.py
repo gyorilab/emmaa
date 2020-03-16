@@ -253,7 +253,7 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
         ev_url_par = parse.urlencode(
             {'source': 'test', 'model': model_name,
              'test_corpus': test_corpus})
-        test['test'][0] = '/evidence/{st_hash}?{ev_url_par}'
+        test['test'][0] = f'/evidence/{th}?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
@@ -320,7 +320,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             ev_url_par = parse.urlencode(
                 {'source': 'test', 'model': model_name,
                  'test_corpus': test_corpus})
-            test['test'][0] = '/evidence/{st_hash}?{url_par}'
+            test['test'][0] = f'/evidence/{th}?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
