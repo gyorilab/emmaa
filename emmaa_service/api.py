@@ -124,7 +124,7 @@ def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     return tests_with_dates
 
 
-def _get_all_tests():
+def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='tests/',
                            Delimiter='_tests')
