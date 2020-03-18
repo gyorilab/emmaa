@@ -253,9 +253,9 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
     table_array = []
     for th, test in tests_json:
         ev_url_par = parse.urlencode(
-            {'source': 'test', 'model': model_name,
+            {'stmt_hash': th, 'source': 'test', 'model': model_name,
              'test_corpus': test_corpus})
-        test['test'][0] = f'/evidence/{th}?{ev_url_par}'
+        test['test'][0] = f'/evidence/?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
@@ -320,9 +320,9 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
         for th in new_passed_hashes:
             test = all_test_results[th]
             ev_url_par = parse.urlencode(
-                {'source': 'test', 'model': model_name,
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
                  'test_corpus': test_corpus})
-            test['test'][0] = f'/evidence/{th}?{ev_url_par}'
+            test['test'][0] = f'/evidence/?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
@@ -410,8 +410,8 @@ def get_model_dashboard(model):
     all_stmts = model_stats['model_summary']['all_stmts']
     for st_hash, st_value in all_stmts.items():
         url_param = parse.urlencode(
-            {'source': 'model_statement', 'model': model})
-        st_value[0] = f'/evidence/{st_hash}?{url_param}'
+            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
+        st_value[0] = f'/evidence/?{url_param}'
         st_value[2] = stmt_db_link_msg
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
@@ -580,33 +580,39 @@ def get_query_page():
                            tab=tab)
 
 
-@app.route('/evidence/<stmt_hash>/')
-def get_statement_evidence_page(stmt_hash):
+@app.route('/evidence/')
+def get_statement_evidence_page():
+    stmt_hashes = request.args.getlist('stmt_hash')
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
     curations = get_curations(pa_hash=stmt_hash)
     cur_count = len(curations)
+    stmt_rows = []
     if source == 'model_statement':
         mm = load_model_manager_from_cache(model)
         for stmt in mm.model.assembled_stmts:
+            for stmt_hash in stmt_hashes:
             if str(stmt.get_hash()) == str(stmt_hash):
                 english = _format_stmt_text(stmt)
                 evid_count = len(stmt.evidence)
-                stmt_row = [[(stmt_hash, english, evid_count, cur_count)]]
+                    stmt_row = [(stmt_hash, english, evid_count, cur_count)]
+                    stmt_rows.append(stmt_row)
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
         tests = _load_tests_from_cache(test_corpus)
         for t in tests:
+            for stmt_hash in stmt_hashes:
             if str(t.stmt.get_hash()) == str(stmt_hash):
                 english = _format_stmt_text(t.stmt)
                 evid_count = len(t.stmt.evidence)
-                stmt_row = [[(stmt_hash, english, evid_count, cur_count)]]
+                    stmt_row = [(stmt_hash, english, evid_count, cur_count)]
+                    stmt_rows.append(stmt_row)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
     return render_template('evidence_template.html',
-                           stmt_row=stmt_row,
+                           stmt_row=stmt_rows,
                            model=model,
                            source=source,
                            test_corpus=test_corpus if test_corpus else None)
