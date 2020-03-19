@@ -596,7 +596,8 @@ def get_statement_evidence_page():
             if str(stmt.get_hash()) == str(stmt_hash):
                 english = _format_stmt_text(stmt)
                 evid_count = len(stmt.evidence)
-                    stmt_row = [(stmt_hash, english, evid_count, cur_count)]
+                    evid = _format_evidence_text(stmt)[:10]
+                    stmt_row = [(stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
     elif source == 'test':
         if not test_corpus:
@@ -607,7 +608,8 @@ def get_statement_evidence_page():
             if str(t.stmt.get_hash()) == str(stmt_hash):
                 english = _format_stmt_text(t.stmt)
                 evid_count = len(t.stmt.evidence)
-                    stmt_row = [(stmt_hash, english, evid_count, cur_count)]
+                    evid = _format_evidence_text(t.stmt)[:10]
+                    stmt_row = [(stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
