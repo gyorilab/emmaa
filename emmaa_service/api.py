@@ -231,8 +231,8 @@ def _make_query(query_dict, use_grouding_service=True):
     return query, tab
 
 
-def _new_applied_tests(
-        test_stats_json, model_types, model_name, date, test_corpus):
+def _new_applied_tests(test_stats_json, model_types, model_name, date,
+                       test_corpus, correct, incorrect):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -244,11 +244,12 @@ def _new_applied_tests(
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(
-        new_app_tests, model_types, model_name, date, test_corpus)
+    return _format_table_array(new_app_tests, model_types, model_name, date,
+                               test_corpus, correct, incorrect)
 
 
-def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
+def _format_table_array(tests_json, model_types, model_name, date, test_corpus,
+                        correct, incorrect):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
@@ -257,6 +258,12 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
              'test_corpus': test_corpus})
         test['test'][0] = f'/evidence/?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
+        cur = ''
+        if th in correct:
+            cur = 'correct'
+        elif th in incorrect:
+            cur = 'incorrect'
+        test['test'].append(cur)
         new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
@@ -305,7 +312,7 @@ def _format_dynamic_query_results(formatted_results):
 
 
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
-                      test_corpus):
+                      test_corpus, correct, incorrect):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -324,6 +331,12 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                  'test_corpus': test_corpus})
             test['test'][0] = f'/evidence/?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
+            cur = ''
+            if th in correct:
+                cur = 'correct'
+            elif th in incorrect:
+                cur = 'incorrect'
+            test['test'].append(cur)
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
@@ -399,6 +412,9 @@ def get_model_dashboard(model):
           'Click to see network on Ndex')]]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
+    curations = get_curations()
+    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
+    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
@@ -413,6 +429,12 @@ def get_model_dashboard(model):
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
         st_value[0] = f'/evidence/?{url_param}'
         st_value[2] = stmt_db_link_msg
+        cur = ''
+        if st_hash in correct:
+            cur = 'correct'
+        elif st_hash in incorrect:
+            cur = 'incorrect'
+        st_value.append(cur)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
                         for h, c in most_supported]
@@ -438,20 +460,14 @@ def get_model_dashboard(model):
                                                   for mt in
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
-                               test_stats_json=test_stats,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
+                               test_stats, current_model_types, model, date,
+                               test_corpus, correct, incorrect),
                            all_test_results=_format_table_array(
-                               tests_json=all_tests,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
+                               all_tests, current_model_types, model, date,
+                               test_corpus, correct, incorrect),
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date,
-                               test_corpus),
+                               test_corpus, correct, incorrect),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)
@@ -478,6 +494,21 @@ def get_model_tests_page(model):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
+    curations = get_curations()
+    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
+    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
+    for path in path_list:
+        for edge in path['edge_list']:
+            for stmt in edge['stmts']:
+                cur = ''
+                url = stmt[0]
+                if 'stmt_hash' in url:
+                    stmt_hashes = parse.parse_qs(parse.urlparse(url).query)['stmt_hash']
+                    if set(stmt_hashes).intersection(correct):
+                        cur = 'correct'
+                    elif set(stmt_hashes).intersection(incorrect):
+                        cur = 'incorrect'
+                stmt.append(cur)
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
     cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
