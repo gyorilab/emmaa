@@ -593,11 +593,12 @@ def get_statement_evidence_page():
         mm = load_model_manager_from_cache(model)
         for stmt in mm.model.assembled_stmts:
             for stmt_hash in stmt_hashes:
-            if str(stmt.get_hash()) == str(stmt_hash):
-                english = _format_stmt_text(stmt)
-                evid_count = len(stmt.evidence)
+                if str(stmt.get_hash()) == str(stmt_hash):
+                    english = _format_stmt_text(stmt)
+                    evid_count = len(stmt.evidence)
                     evid = _format_evidence_text(stmt)[:10]
-                    stmt_row = [(stmt_hash, english, evid, evid_count, cur_count)]
+                    stmt_row = [
+                        (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
     elif source == 'test':
         if not test_corpus:
@@ -605,19 +606,45 @@ def get_statement_evidence_page():
         tests = _load_tests_from_cache(test_corpus)
         for t in tests:
             for stmt_hash in stmt_hashes:
-            if str(t.stmt.get_hash()) == str(stmt_hash):
-                english = _format_stmt_text(t.stmt)
-                evid_count = len(t.stmt.evidence)
+                if str(t.stmt.get_hash()) == str(stmt_hash):
+                    english = _format_stmt_text(t.stmt)
+                    evid_count = len(t.stmt.evidence)
                     evid = _format_evidence_text(t.stmt)[:10]
-                    stmt_row = [(stmt_hash, english, evid, evid_count, cur_count)]
+                    stmt_row = [
+                        (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
     return render_template('evidence_template.html',
-                           stmt_row=stmt_rows,
+                           stmt_rows=stmt_rows,
                            model=model,
                            source=source,
-                           test_corpus=test_corpus if test_corpus else None)
+                           test_corpus=test_corpus if test_corpus else None,
+                           table_title='Statement Evidence and Curation')
+
+
+@app.route('/all_statements/<model>/')
+def get_all_statements_page(model):
+    mm = load_model_manager_from_cache(model)
+    stmts = sorted(mm.model.assembled_stmts, key=lambda x: len(x.evidence),
+                   reverse=True)
+    curations = get_curations(pa_hash=set(all_stmts.keys()))
+    cur_counts = defaultdict(int)
+    for curation in curations:
+        cur_counts[str(curation.pa_hash)] += 1
+    stmt_rows = []
+    for stmt in stmts:
+        sh = stmt.get_hash()
+        english = _format_stmt_text(stmt)
+        evid_count = len(stmt.evidence)
+        stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
+        stmt_rows.append(stmt_row)
+    table_title = f'All statements in {model.upper()} model.'
+    return render_template('evidence_template.html',
+                           stmt_rows=stmt_rows,
+                           model=model,
+                           source='model_statement',
+                           table_title=table_title)
 
 
 @app.route('/query/<model>/')

@@ -47,7 +47,7 @@
   {% else %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
   {% endif %}
-  {{ path_card(stmt_row, "Statement Evidence and Curation", "EvidId", [], url=url) }}
+  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
 </div>
 <script>
   Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
