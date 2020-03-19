@@ -6,6 +6,7 @@ import itertools
 import jsonpickle
 import os
 from fnvhash import fnv1a_32
+from urllib import parse
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -195,17 +196,16 @@ class ModelManager(object):
         sentences = []
         if merge:
             groups = group_and_sort_statements(stmts)
-            new_stmts = []
             for group in groups:
+                group_stmts = group[-1]
                 stmt_type = group[0][-1]
                 agent_names = group[0][1]
-                evid = stmts[0].evidence
-                if len(agent_names) != 2:
+                if len(agent_names) < 2:
                     continue
                 if stmt_type == 'Influence':
                     stmt = get_class_from_name(stmt_type, Statement)(
                         Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])), evidence=evid)
+                        Event(Concept(agent_names[1])))
                 else:
                     try:
                         stmt = get_class_from_name(stmt_type, Statement)(
@@ -213,27 +213,28 @@ class ModelManager(object):
                     except ValueError:
                         stmt = get_class_from_name(stmt_type, Statement)(
                             [Agent(ag_name) for ag_name in agent_names])
-                new_stmts.append(stmt)
-            stmts = new_stmts
-        for stmt in stmts:
-            if isinstance(stmt, PybelEdge):
-                sentence = pybel_edge_to_english(stmt)
-                sentences.append(('', sentence, ''))
-            else:
                 ea = EnglishAssembler([stmt])
                 sentence = ea.make_model()
-                if self.link_type == 'indra_db':
-                    link = get_statement_queries([stmt])[0] + '&format=html'
-                    sentences.append((link, sentence, ''))
-                elif self.link_type == 'elsevier':
-                    pii = stmt.evidence[0].annotations.get('pii', None)
-                    if pii:
-                        link = elsevier_url + pii
-                        sentences.append((link, sentence, stmt.evidence[0].text))
-                    else:
-                        sentences.append(('', sentence, stmt.evidence[0].text))
-                elif self.link_type == 'test':
+                stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
+                url_param = parse.urlencode(
+                    {'stmt_hash': stmt_hashes, 'source': 'model_statement',
+                     'model': self.model.name}, doseq=True)
+                link = f'/evidence/?{url_param}'
+                sentences.append((link, sentence, ''))
+        else:
+            for stmt in stmts:
+                if isinstance(stmt, PybelEdge):
+                    sentence = pybel_edge_to_english(stmt)
                     sentences.append(('', sentence, ''))
+                else:
+                    ea = EnglishAssembler([stmt])
+                    sentence = ea.make_model()
+                    stmt_hashes = [stmt.get_hash()]
+                    url_param = parse.urlencode(
+                        {'stmt_hash': stmt_hashes, 'source': 'model_statement',
+                         'model': self.model.name}, doseq=True)
+                    link = f'/evidence/?{url_param}'
+                    sentences.append((link, sentence, ''))
         return sentences
 
     def make_result_code(self, result):
