@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
-elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -67,11 +66,6 @@ class ModelManager(object):
         A list of entities of EMMAA model.
     applicable_tests : list[emmaa.model_tests.EmmaaTest]
         A list of EMMAA tests applicable for given EMMAA model.
-    make_links : bool
-        Whether to include links to INDRA db in test results.
-    link_type : str
-        A name of a source to link the statements to (e.g. 'indra_db' or
-        'elsevier')
     date_str : str
         Time when this object was created.
     """
@@ -98,8 +92,6 @@ class ModelManager(object):
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.make_links = model.test_config.get('make_links', True)
-        self.link_type = model.test_config.get('link_type', 'indra_db')
         self.date_str = make_date_str()
 
     def get_updated_mc(self, mc_type, stmts):
@@ -408,8 +400,7 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'link_type': self.link_type})
+            'mc_types': [mc_type for mc_type in self.mc_types.keys()]})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
