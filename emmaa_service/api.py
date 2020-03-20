@@ -619,7 +619,7 @@ def get_statement_evidence_page():
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
-    curations = get_curations(pa_hash=stmt_hash)
+    curations = get_curations(pa_hash=stmt_hashes)
     cur_count = len(curations)
     stmt_rows = []
     if source == 'model_statement':
