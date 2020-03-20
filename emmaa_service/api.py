@@ -258,8 +258,6 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus,
              'test_corpus': test_corpus})
         test['test'][0] = f'/evidence/?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
-        cur = _set_curation(th, correct, incorrect)
-        test['test'].append(cur)
         new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
@@ -327,8 +325,6 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                  'test_corpus': test_corpus})
             test['test'][0] = f'/evidence/?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
-            cur = _set_curation(correct, incorrect)
-            test['test'].append(cur)
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
@@ -431,6 +427,8 @@ def get_model_dashboard(model):
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
+        cur = _set_curation(k, correct, incorrect)
+        v['test'].append(cur)
         if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
             continue
         else:
