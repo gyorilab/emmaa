@@ -148,6 +148,11 @@ function redirectOneStep(value, isQuery) {
 }
 
 
+function redirectToAllStmts() {
+  let model = window.location.pathname.split('/')[2]
+  window.open(`/all_statements/${model}`, target="_blank")
+}
+
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
     clearTable(tableBody)
