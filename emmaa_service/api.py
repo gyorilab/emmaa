@@ -503,15 +503,17 @@ def get_model_tests_page(model):
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
     correct, incorrect = _label_curations()
-    for path in path_list:
-        for edge in path['edge_list']:
-            for stmt in edge['stmts']:
-                cur = ''
-                url = stmt[0]
-                if 'stmt_hash' in url:
-                    stmt_hashes = parse.parse_qs(parse.urlparse(url).query)['stmt_hash']
-                    cur = _set_curation(stmt_hashes, correct, incorrect)
-                stmt.append(cur)
+    if isinstance(path_list, list):
+        for path in path_list:
+            for edge in path['edge_list']:
+                for stmt in edge['stmts']:
+                    cur = ''
+                    url = stmt[0]
+                    if 'stmt_hash' in url:
+                        stmt_hashes = parse.parse_qs(
+                            parse.urlparse(url).query)['stmt_hash']
+                        cur = _set_curation(stmt_hashes, correct, incorrect)
+                    stmt.append(cur)
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
     cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
