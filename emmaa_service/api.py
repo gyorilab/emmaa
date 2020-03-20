@@ -696,6 +696,19 @@ def get_query_tests_page(model):
     next_order = order - 1 if order > 1 else None
     prev_order = order + 1 if \
         order < qm.db.get_number_of_results(query_hash, model_type) else None
+    correct, incorrect = _label_curations()
+    path_list = detailed_results[1]
+    if isinstance(path_list, list):
+        for path in path_list:
+            for edge in path['edge_list']:
+                for stmt in edge['stmts']:
+                    cur = ''
+                    url = stmt[0]
+                    if 'stmt_hash' in url:
+                        stmt_hashes = parse.parse_qs(
+                            parse.urlparse(url).query)['stmt_hash']
+                        cur = _set_curation(stmt_hashes, correct, incorrect)
+                    stmt.append(cur)
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -705,7 +718,7 @@ def get_query_tests_page(model):
                            test=card_title,
                            is_query_page=True,
                            test_status=detailed_results[0],
-                           path_list=detailed_results[1],
+                           path_list=path_list,
                            formatted_names=FORMATTED_TYPE_NAMES,
                            date=date,
                            prev=prev_order,
