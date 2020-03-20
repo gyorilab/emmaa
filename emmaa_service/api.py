@@ -258,11 +258,7 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus,
              'test_corpus': test_corpus})
         test['test'][0] = f'/evidence/?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
-        cur = ''
-        if th in correct:
-            cur = 'correct'
-        elif th in incorrect:
-            cur = 'incorrect'
+        cur = _set_curation(th, correct, incorrect)
         test['test'].append(cur)
         new_row = [(test['test'])]
         for mt in model_types:
@@ -331,11 +327,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                  'test_corpus': test_corpus})
             test['test'][0] = f'/evidence/?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
-            cur = ''
-            if th in correct:
-                cur = 'correct'
-            elif th in incorrect:
-                cur = 'incorrect'
+            cur = _set_curation(correct, incorrect)
             test['test'].append(cur)
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
@@ -353,6 +345,28 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
     if len(new_passed_tests) > 0:
         return new_passed_tests
     return 'No new tests were passed'
+
+
+def _set_curation(stmt_hash, correct, incorrect):
+    cur = ''
+    if isinstance(stmt_hash, list):
+        if set(stmt_hash).intersection(correct):
+            cur = 'correct'
+        elif set(stmt_hash).intersection(incorrect):
+            cur = 'incorrect'
+    else:
+        if stmt_hash in correct:
+            cur = 'correct'
+        if stmt_hash in incorrect:
+            cur = 'incorrect'
+    return cur
+
+
+def _label_curations(**kwargs):
+    curations = get_curations(**kwargs)
+    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
+    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
+    return correct, incorrect
 
 
 # Deletes session after the specified time
@@ -412,9 +426,8 @@ def get_model_dashboard(model):
           'Click to see network on Ndex')]]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
-    curations = get_curations()
-    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
-    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
+    # Get correct and incorrect curation hashes to pass it per stmt
+    correct, incorrect = _label_curations()
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
@@ -429,11 +442,7 @@ def get_model_dashboard(model):
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
         st_value[0] = f'/evidence/?{url_param}'
         st_value[2] = stmt_db_link_msg
-        cur = ''
-        if st_hash in correct:
-            cur = 'correct'
-        elif st_hash in incorrect:
-            cur = 'incorrect'
+        cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
@@ -494,9 +503,7 @@ def get_model_tests_page(model):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
-    curations = get_curations()
-    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
-    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
+    correct, incorrect = _label_curations()
     for path in path_list:
         for edge in path['edge_list']:
             for stmt in edge['stmts']:
@@ -504,10 +511,7 @@ def get_model_tests_page(model):
                 url = stmt[0]
                 if 'stmt_hash' in url:
                     stmt_hashes = parse.parse_qs(parse.urlparse(url).query)['stmt_hash']
-                    if set(stmt_hashes).intersection(correct):
-                        cur = 'correct'
-                    elif set(stmt_hashes).intersection(incorrect):
-                        cur = 'incorrect'
+                    cur = _set_curation(stmt_hashes, correct, incorrect)
                 stmt.append(cur)
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
