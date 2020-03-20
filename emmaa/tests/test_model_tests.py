@@ -34,8 +34,6 @@ def test_model_manager_structure():
         mm.mc_types['unsigned_graph']['model_checker'],
         UnsignedGraphModelChecker)
     assert isinstance(mm.entities[0], Agent)
-    assert mm.make_links is True
-    assert mm.link_type == 'indra_db'
     assert isinstance(mm.date_str, str)
 
 
