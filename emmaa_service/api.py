@@ -361,7 +361,8 @@ def _set_curation(stmt_hash, correct, incorrect):
 def _label_curations(**kwargs):
     curations = get_curations(**kwargs)
     correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
-    incorrect = {str(c.pa_hash) for c in curations if c.pa_hash not in correct}
+    incorrect = {str(c.pa_hash) for c in curations if
+                 str(c.pa_hash) not in correct}
     return correct, incorrect
 
 
@@ -661,7 +662,7 @@ def get_all_statements_page(model):
     mm = load_model_manager_from_cache(model)
     stmts = sorted(mm.model.assembled_stmts, key=lambda x: len(x.evidence),
                    reverse=True)
-    curations = get_curations(pa_hash=set(all_stmts.keys()))
+    curations = get_curations()
     cur_counts = defaultdict(int)
     for curation in curations:
         cur_counts[str(curation.pa_hash)] += 1
