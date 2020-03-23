@@ -288,6 +288,12 @@ class TestRound(Round):
                         get_path_or_code(ix, result, mc_type)]
         return tests_by_hash
 
+    def get_path_stmt_counts(self):
+        path_stmt_counts = self.json_results[0].get('path_stmt_counts')
+        if path_stmt_counts:
+            return sorted(path_stmt_counts.items(), key=lambda x: x[1])
+        return []
+
     def _get_results(self, mc_type):
         unpickler = jsonpickle.unpickler.Unpickler()
         test_results = [unpickler.restore(result[mc_type]['result_json'])
@@ -573,7 +579,8 @@ class TestStatsGenerator(StatsGenerator):
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
-            'all_test_results': self.latest_round.english_test_results}
+            'all_test_results': self.latest_round.english_test_results,
+            'path_stmt_counts': self.latest_round.get_path_stmt_counts()}
         for mc_type in self.latest_round.mc_types_results:
             self.json_stats['test_round_summary'][mc_type] = {
                 'number_passed_tests': (
