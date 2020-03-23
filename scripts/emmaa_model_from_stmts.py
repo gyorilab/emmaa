@@ -28,6 +28,7 @@ def create_upload_model(model_name, full_name, indra_stmts, ndex_id=None):
     """
     emmaa_stmts = to_emmaa_stmts(indra_stmts, datetime.datetime.now(), [])
     # Get updated CX content for the INDRA Statements
+    """
     cxa = CxAssembler(indra_stmts)
     cx_str = cxa.make_model()
     # If we don't have an NDex ID, create network and upload to Ndex
@@ -37,9 +38,23 @@ def create_upload_model(model_name, full_name, indra_stmts, ndex_id=None):
     # If the NDEx ID is provided, update the existing network
     else:
         ndex_client.update_network(cx_str, ndex_id)
+    """
     # Create the config dictionary
     config_dict = {'ndex': {'network': ndex_id},
-                   'search_terms': []}
+                   'search_terms': [],
+                   'human_readable_name': full_name,
+                   'assembly': {'filter_ungrounded': False},
+                   'test': {
+                       'statement_checking': {
+                           'max_path_length': 10,
+                           'max_paths': 1,
+                       },
+                       'mc_types': ['pysb', 'pybel', 'signed_graph',
+                                    'unsigned_graph'],
+                       'make_links': True,
+                       },
+                   'description': full_name,
+                   }
     # Create EMMAA model
     emmaa_model = EmmaaModel(model_name, config_dict)
     emmaa_model.add_statements(emmaa_stmts)
@@ -47,12 +62,20 @@ def create_upload_model(model_name, full_name, indra_stmts, ndex_id=None):
     emmaa_model.save_to_s3()
     s3_client = boto3.client('s3')
     save_config_to_s3(model_name, config_dict)
+    #s3_client = boto3.client('s3')
+    #config_json = json.dumps(config_dict, indent=2)
+    #s3_client.put_object(Body=config_json.encode('utf8'),
+    #                     Key='models/%s/config.json' % model_name,
+    #                     Bucket='emmaa')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
          description='Create and upload an EMMAA model from INDRA Statements.')
-    parser.add_argument('-m', '--model_name', help='Model name', required=True)
+    parser.add_argument('-l', '--label', help='Model short label',
+                        required=True)
+    parser.add_argument('-m', '--model_name', help='Model full name',
+                        required=True)
     parser.add_argument('-s', '--stmt_pkl', help='Statement pickle file',
                         required=True)
     parser.add_argument('-n', '--ndex_id',
@@ -65,5 +88,5 @@ if __name__ == '__main__':
     indra_stmts = ac.load_statements(args.stmt_pkl)
 
     # Create the model
-    create_upload_model(args.model_name, indra_stmts, args.ndex_id)
+    create_upload_model(args.label, args.model_name, indra_stmts, args.ndex_id)
 
