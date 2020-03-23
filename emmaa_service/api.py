@@ -656,7 +656,9 @@ def get_statement_evidence_page():
                            model=model,
                            source=source,
                            test_corpus=test_corpus if test_corpus else None,
-                           table_title='Statement Evidence and Curation')
+                           table_title='Statement Evidence and Curation',
+                           msg=None,
+                           is_all_stmts=False)
 
 
 @app.route('/all_statements/<model>/')
@@ -665,20 +667,34 @@ def get_all_statements_page(model):
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
+    filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = mm.model.assembled_stmts
+    msg = None
     curations = get_curations()
     cur_counts = defaultdict(int)
     for curation in curations:
         cur_counts[str(curation.pa_hash)] += 1
-    if filter_curated == 'true':
+    if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
                  cur_counts]
+    if len(stmts) % 1000 == 0:
+        total_pages = len(stmts)//1000
+    else:
+        total_pages = len(stmts)//1000 + 1
+    if page + 1 <= total_pages:
+        next_page = page + 1
+    else:
+        next_page = None
+    if page != 1:
+        prev_page = page - 1
+    else:
+        prev_page = None
     if sort_by == 'evidence':
         stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
             offset:offset+1000]
     elif sort_by == 'paths':
-        test_stats = get_model_stats(model, 'test')
+        test_stats, _ = get_model_stats(model, 'test')
         stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts')
         if not stmt_counts:
             msg = 'Sorting by paths is not available, sorting by evidence'
@@ -688,8 +704,12 @@ def get_all_statements_page(model):
             stmts_by_hash = {}
             for stmt in stmts:
                 stmts_by_hash[stmt.get_hash()] = stmt
-            stmts = [stmts_by_hash[stmt_hash] for (stmt_hash, count) in
-                     stmt_counts[offset:offset+1000]]
+            stmts = []
+            for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
+                try:
+                    stmts.append(stmts_by_hash[stmt_hash])
+                except KeyError:
+                    continue
     stmt_rows = []
     for stmt in stmts:
         sh = str(stmt.get_hash())
@@ -698,11 +718,18 @@ def get_all_statements_page(model):
         stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
+
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
                            source='model_statement',
-                           table_title=table_title)
+                           table_title=table_title,
+                           msg=msg,
+                           is_all_stmts=True,
+                           prev=prev_page,
+                           next=next_page,
+                           filter_curated=filter_curated,
+                           sort_by=sort_by)
 
 
 @app.route('/query/<model>/')
