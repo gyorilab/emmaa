@@ -574,7 +574,7 @@ def last_updated_date(model, file_type='model', date_format='date',
             return ''
 
 
-def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
+def get_model_stats(model, mode, tests=None, date=None,
                     extension='.json', n=0, bucket=EMMAA_BUCKET_NAME):
     """Gets the latest statistics for the given model
 
@@ -599,6 +599,8 @@ def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
     model_data : json
         The json formatted data containing the statistics for the model
     """
+    if not tests:
+        tests = _default_test(model)
     # If date is not specified, get the latest or the nth
     if not date:
         if mode == 'model':
