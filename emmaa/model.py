@@ -498,12 +498,12 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
-def _default_test(model):
-    if model == 'food_insecurity':
-        test = 'world_modelers_tests'
+def _default_test(model, config=None):
+    if config:
+        return config['test']['default_test_corpus']
     else:
-        test = 'large_corpus_tests'
-    return test
+        config = load_config_from_s3(model)
+        return _default_test(model, config)
 
 
 def last_updated_date(model, file_type='model', date_format='date',
