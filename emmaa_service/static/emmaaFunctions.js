@@ -150,7 +150,7 @@ function redirectOneStep(value, isQuery) {
 
 function redirectToAllStmts() {
   let model = window.location.pathname.split('/')[2]
-  window.open(`/all_statements/${model}`, target="_blank")
+  window.open(`/all_statements/${model}/?sort_by=evidence&page=1&filter_curated=false`, target="_blank")
 }
 
 function clearTables(arrayOfTableBodies) {
