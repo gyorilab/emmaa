@@ -5,6 +5,7 @@ import logging
 import itertools
 import jsonpickle
 import os
+from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
 from indra.explanation.model_checker import PysbModelChecker, \
@@ -93,6 +94,7 @@ class ModelManager(object):
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
         self.date_str = make_date_str()
+        self.path_stmt_counts = defaultdict(int)
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -160,6 +162,8 @@ class ModelManager(object):
                         edge_nodes.append(u"\u2192")
                         edge_nodes.append(target.name)
                     else:
+                        for stmt in step:
+                            self.path_stmt_counts[stmt.get_hash()] += 1
                         for j, ag in enumerate(step[0].agent_list()):
                             if ag is not None:
                                 edge_nodes.append(ag.name)
@@ -400,7 +404,8 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'mc_types': [mc_type for mc_type in self.mc_types.keys()]})
+            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
+            'path_stmt_counts': self.path_stmt_counts})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
