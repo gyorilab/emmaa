@@ -155,7 +155,7 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        test_corpus = _default_test(model)
+        test_corpus = _default_test(model, config_json)
         latest_date = get_latest_available_date(
             model, test_corpus, refresh=refresh, bucket=bucket)
         if refresh:
@@ -393,9 +393,10 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
+    test_corpus = request.args.get('test_corpus', _default_test(
+        model, get_model_config(model)))
     date = request.args.get('date', get_latest_available_date(
-        model, _get_test_corpora(model)))
-    test_corpus = request.args.get('test_corpus', _default_test(model))
+        model, test_corpus))
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
