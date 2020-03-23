@@ -291,7 +291,8 @@ class TestRound(Round):
     def get_path_stmt_counts(self):
         path_stmt_counts = self.json_results[0].get('path_stmt_counts')
         if path_stmt_counts:
-            return sorted(path_stmt_counts.items(), key=lambda x: x[1])
+            return sorted(
+                path_stmt_counts.items(), key=lambda x: x[1], reverse=True)
         return []
 
     def _get_results(self, mc_type):
