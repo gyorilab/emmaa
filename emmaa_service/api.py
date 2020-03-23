@@ -662,15 +662,37 @@ def get_statement_evidence_page():
 @app.route('/all_statements/<model>/')
 def get_all_statements_page(model):
     mm = load_model_manager_from_cache(model)
-    stmts = sorted(mm.model.assembled_stmts, key=lambda x: len(x.evidence),
-                   reverse=True)
+    sort_by = request.args.get('sort_by', 'evidence')
+    page = int(request.args.get('page', 1))
+    filter_curated = request.args.get('filter_curated', False)
+    offset = (page - 1)*1000
+    stmts = mm.model.assembled_stmts
     curations = get_curations()
     cur_counts = defaultdict(int)
     for curation in curations:
         cur_counts[str(curation.pa_hash)] += 1
+    if filter_curated == 'true':
+        stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
+                 cur_counts]
+    if sort_by == 'evidence':
+        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+            offset:offset+1000]
+    elif sort_by == 'paths':
+        test_stats = get_model_stats(model, 'test')
+        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts')
+        if not stmt_counts:
+            msg = 'Sorting by paths is not available, sorting by evidence'
+            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+                offset:offset+1000]
+        else:
+            stmts_by_hash = {}
+            for stmt in stmts:
+                stmts_by_hash[stmt.get_hash()] = stmt
+            stmts = [stmts_by_hash[stmt_hash] for (stmt_hash, count) in
+                     stmt_counts[offset:offset+1000]]
     stmt_rows = []
     for stmt in stmts:
-        sh = stmt.get_hash()
+        sh = str(stmt.get_hash())
         english = _format_stmt_text(stmt)
         evid_count = len(stmt.evidence)
         stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
