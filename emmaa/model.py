@@ -498,12 +498,12 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
-def _default_test(model, config=None):
+def _default_test(model, config=None, bucket=EMMAA_BUCKET_NAME):
     if config:
         return config['test']['default_test_corpus']
     else:
-        config = load_config_from_s3(model)
-        return _default_test(model, config)
+        config = load_config_from_s3(model, bucket=bucket)
+        return _default_test(model, config, bucket=bucket)
 
 
 def last_updated_date(model, file_type='model', date_format='date',
@@ -600,7 +600,7 @@ def get_model_stats(model, mode, tests=None, date=None,
         The json formatted data containing the statistics for the model
     """
     if not tests:
-        tests = _default_test(model)
+        tests = _default_test(model, bucket=bucket)
     # If date is not specified, get the latest or the nth
     if not date:
         if mode == 'model':
