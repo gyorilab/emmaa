@@ -46,7 +46,7 @@ new_stmts = previous_stmts + [
 
 
 def test_model_round():
-    mr = ModelRound(previous_stmts, 'test', '2020-01-01-00-00-00')
+    mr = ModelRound(previous_stmts, '2020-01-01-00-00-00')
     assert mr
     assert mr.get_total_statements() == 2
     assert len(mr.get_stmt_hashes()) == 2
@@ -55,7 +55,7 @@ def test_model_round():
                [('BRAF', 1), ('MAP2K1', 2), ('MAPK1', 1)])
     assert all((stmt_hash, 1) in mr.get_statements_by_evidence() for stmt_hash
                in mr.get_stmt_hashes())
-    mr2 = ModelRound(new_stmts, 'test', '2020-01-02-00-00-00')
+    mr2 = ModelRound(new_stmts, '2020-01-02-00-00-00')
     assert mr2
     assert mr2.get_total_statements() == 4
     assert len(mr2.get_stmt_hashes()) == 4
@@ -67,13 +67,13 @@ def test_model_round():
 
 
 def test_test_round():
-    tr = TestRound(previous_results, 'test', '2020-01-01-00-00-00')
+    tr = TestRound(previous_results, '2020-01-01-00-00-00')
     assert tr
     assert tr.get_total_applied_tests() == 1
     assert tr.get_number_passed_tests() == 1
     assert tr.get_applied_test_hashes() == tr.get_passed_test_hashes()
     assert tr.passed_over_total() == 1.0
-    tr2 = TestRound(new_results, 'test', '2020-01-02-00-00-00')
+    tr2 = TestRound(new_results, '2020-01-02-00-00-00')
     assert tr2
     assert tr2.get_total_applied_tests() == 2
     assert tr2.get_number_passed_tests() == 2
@@ -85,8 +85,8 @@ def test_test_round():
 
 
 def test_model_stats_generator():
-    latest_round = ModelRound(new_stmts, 'test', '2020-01-02-00-00-00')
-    previous_round = ModelRound(previous_stmts, 'test', '2020-01-01-00-00-00')
+    latest_round = ModelRound(new_stmts, '2020-01-02-00-00-00')
+    previous_round = ModelRound(previous_stmts, '2020-01-01-00-00-00')
     sg = ModelStatsGenerator('test', latest_round=latest_round,
                              previous_round=previous_round,
                              previous_json_stats=previous_model_stats)
@@ -109,8 +109,8 @@ def test_model_stats_generator():
 
 
 def test_test_stats_generator():
-    latest_round = TestRound(new_results, 'test', '2020-01-02-00-00-00')
-    previous_round = TestRound(previous_results, 'test', '2020-01-01-00-00-00')
+    latest_round = TestRound(new_results, '2020-01-02-00-00-00')
+    previous_round = TestRound(previous_results, '2020-01-01-00-00-00')
     sg = TestStatsGenerator('test', latest_round=latest_round,
                             previous_round=previous_round,
                             previous_json_stats=previous_test_stats)

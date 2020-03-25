@@ -5,7 +5,9 @@ import logging
 import itertools
 import jsonpickle
 import os
+from collections import defaultdict
 from fnvhash import fnv1a_32
+from urllib import parse
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -26,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
-elsevier_url = 'https://www.sciencedirect.com/science/article/pii/'
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -66,11 +67,6 @@ class ModelManager(object):
         A list of entities of EMMAA model.
     applicable_tests : list[emmaa.model_tests.EmmaaTest]
         A list of EMMAA tests applicable for given EMMAA model.
-    make_links : bool
-        Whether to include links to INDRA db in test results.
-    link_type : str
-        A name of a source to link the statements to (e.g. 'indra_db' or
-        'elsevier')
     date_str : str
         Time when this object was created.
     """
@@ -97,9 +93,8 @@ class ModelManager(object):
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.make_links = model.test_config.get('make_links', True)
-        self.link_type = model.test_config.get('link_type', 'indra_db')
         self.date_str = make_date_str()
+        self.path_stmt_counts = defaultdict(int)
 
     def get_updated_mc(self, mc_type, stmts):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -167,6 +162,8 @@ class ModelManager(object):
                         edge_nodes.append(u"\u2192")
                         edge_nodes.append(target.name)
                     else:
+                        for stmt in step:
+                            self.path_stmt_counts[stmt.get_hash()] += 1
                         for j, ag in enumerate(step[0].agent_list()):
                             if ag is not None:
                                 edge_nodes.append(ag.name)
@@ -195,17 +192,16 @@ class ModelManager(object):
         sentences = []
         if merge:
             groups = group_and_sort_statements(stmts)
-            new_stmts = []
             for group in groups:
+                group_stmts = group[-1]
                 stmt_type = group[0][-1]
                 agent_names = group[0][1]
-                evid = stmts[0].evidence
-                if len(agent_names) != 2:
+                if len(agent_names) < 2:
                     continue
                 if stmt_type == 'Influence':
                     stmt = get_class_from_name(stmt_type, Statement)(
                         Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])), evidence=evid)
+                        Event(Concept(agent_names[1])))
                 else:
                     try:
                         stmt = get_class_from_name(stmt_type, Statement)(
@@ -213,27 +209,28 @@ class ModelManager(object):
                     except ValueError:
                         stmt = get_class_from_name(stmt_type, Statement)(
                             [Agent(ag_name) for ag_name in agent_names])
-                new_stmts.append(stmt)
-            stmts = new_stmts
-        for stmt in stmts:
-            if isinstance(stmt, PybelEdge):
-                sentence = pybel_edge_to_english(stmt)
-                sentences.append(('', sentence, ''))
-            else:
                 ea = EnglishAssembler([stmt])
                 sentence = ea.make_model()
-                if self.link_type == 'indra_db':
-                    link = get_statement_queries([stmt])[0] + '&format=html'
-                    sentences.append((link, sentence, ''))
-                elif self.link_type == 'elsevier':
-                    pii = stmt.evidence[0].annotations.get('pii', None)
-                    if pii:
-                        link = elsevier_url + pii
-                        sentences.append((link, sentence, stmt.evidence[0].text))
-                    else:
-                        sentences.append(('', sentence, stmt.evidence[0].text))
-                elif self.link_type == 'test':
+                stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
+                url_param = parse.urlencode(
+                    {'stmt_hash': stmt_hashes, 'source': 'model_statement',
+                     'model': self.model.name}, doseq=True)
+                link = f'/evidence/?{url_param}'
+                sentences.append((link, sentence, ''))
+        else:
+            for stmt in stmts:
+                if isinstance(stmt, PybelEdge):
+                    sentence = pybel_edge_to_english(stmt)
                     sentences.append(('', sentence, ''))
+                else:
+                    ea = EnglishAssembler([stmt])
+                    sentence = ea.make_model()
+                    stmt_hashes = [stmt.get_hash()]
+                    url_param = parse.urlencode(
+                        {'stmt_hash': stmt_hashes, 'source': 'model_statement',
+                         'model': self.model.name}, doseq=True)
+                    link = f'/evidence/?{url_param}'
+                    sentences.append((link, sentence, ''))
         return sentences
 
     def make_result_code(self, result):
@@ -408,7 +405,7 @@ class ModelManager(object):
         results_json.append({
             'model_name': self.model.name,
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'link_type': self.link_type})
+            'path_stmt_counts': self.path_stmt_counts})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
@@ -573,7 +570,7 @@ def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Loading tests from {test_key}')
     obj = client.get_object(Bucket=bucket, Key=test_key)
     tests = pickle.loads(obj['Body'].read())
-    return tests
+    return tests, test_key
 
 
 def save_model_manager_to_s3(model_name, model_manager,
@@ -657,7 +654,7 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         tests and the test results.
     """
     mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
-    tests = load_tests_from_s3(test_corpus, bucket=bucket)
+    tests, _ = load_tests_from_s3(test_corpus, bucket=bucket)
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()

@@ -24,11 +24,11 @@ test_response = {
         'edge_list': [
             {'edge': 'BRAF → MAP2K1',
              'stmts': [
-                 ['https://db.indra.bio/statements/from_agents?subject=1097@HGNC&object=6840@HGNC&type=Activation&format=html',
+                 ['/evidence/?stmt_hash=-23078353002754841&source=model_statement&model=test',
                   'BRAF activates MAP2K1.', '']]},
             {'edge': 'MAP2K1 → MAPK1',
              'stmts': [
-                 ['https://db.indra.bio/statements/from_agents?subject=6840@HGNC&object=6871@HGNC&type=Activation&format=html',
+                 ['/evidence/?stmt_hash=-34603994586320440&source=model_statement&model=test',
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
 fail_response = {'521653329': 'No path found that satisfies the test statement'}
@@ -203,8 +203,8 @@ def test_user_query_delta():
     # Using results from db
     qm.db.put_queries(test_email, 1, query_object, ['test'],
                       subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', test_response),
-                               (query_object, 'pysb', query_not_appl)])
+    qm.db.put_results('test', [(query_object, 'pysb', test_response)])
+    qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
     str_rep, html_rep = qm.get_user_query_delta(user_email=test_email)
     assert str_rep, print(str_rep)
     assert html_rep, print(html_rep)

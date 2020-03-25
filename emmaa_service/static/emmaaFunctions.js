@@ -148,6 +148,32 @@ function redirectOneStep(value, isQuery) {
 }
 
 
+function redirectOneArgument(newValue, param) {
+  let loc = window.location.href;
+  let currentValue = new URL(loc).searchParams.get(param);
+  var redirect = loc.replace(`${param}=${currentValue}`, `${param}=${newValue}`)
+  location.replace(redirect);
+}
+
+
+function redirectSelection(ddSelect, param) {
+  // Get selected option
+  let newValue = ''
+  for (child of ddSelect.children) {
+    if (child.selected) {
+      newValue = child.value
+      break;
+    }
+  }
+  console.log(newValue)
+  redirectOneArgument(newValue, param);
+}
+
+function redirectToAllStmts() {
+  let model = window.location.pathname.split('/')[2]
+  window.open(`/all_statements/${model}/?sort_by=evidence&page=1&filter_curated=false`, target="_blank")
+}
+
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
     clearTable(tableBody)

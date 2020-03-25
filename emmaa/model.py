@@ -264,7 +264,8 @@ class EmmaaModel(object):
         if not self.assembly_config.get('skip_curations'):
             curations = get_curations()
             stmts = ac.filter_by_curation(
-                stmts, curations, 'any', ['correct'], update_belief=True)
+                stmts, curations, 'any',
+                ['correct', 'act_vs_amt', 'hypothesis'], update_belief=True)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
@@ -498,12 +499,12 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
-def _default_test(model):
-    if model == 'food_insecurity':
-        test = 'world_modelers_tests'
+def _default_test(model, config=None, bucket=EMMAA_BUCKET_NAME):
+    if config:
+        return config['test']['default_test_corpus']
     else:
-        test = 'large_corpus_tests'
-    return test
+        config = load_config_from_s3(model, bucket=bucket)
+        return _default_test(model, config, bucket=bucket)
 
 
 def last_updated_date(model, file_type='model', date_format='date',
@@ -574,7 +575,7 @@ def last_updated_date(model, file_type='model', date_format='date',
             return ''
 
 
-def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
+def get_model_stats(model, mode, tests=None, date=None,
                     extension='.json', n=0, bucket=EMMAA_BUCKET_NAME):
     """Gets the latest statistics for the given model
 
@@ -583,7 +584,7 @@ def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
     model : str
         Model name to look for
     mode : str
-        Type of stats to generate (model or tests)
+        Type of stats to generate (model or test)
     tests : str
         A name of a test corpus. Default is large_corpus_tests.
     date : str or None
@@ -599,6 +600,8 @@ def get_model_stats(model, mode, tests='large_corpus_tests', date=None,
     model_data : json
         The json formatted data containing the statistics for the model
     """
+    if not tests:
+        tests = _default_test(model, bucket=bucket)
     # If date is not specified, get the latest or the nth
     if not date:
         if mode == 'model':

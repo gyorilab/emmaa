@@ -9,16 +9,21 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
 from flask_jwt_extended import jwt_optional
 from urllib import parse
+from collections import defaultdict
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
+from indra.assemblers.html.assembler import _format_evidence_text, \
+    _format_stmt_text
+from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
     does_exist, EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
+from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
     FORMATTED_TYPE_NAMES
 from emmaa.subscription.email_util import verify_email_signature,\
@@ -82,28 +87,31 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
 
 def get_latest_available_date(
         model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
-    if test_corpus == _default_test(model) and not refresh and \
-            model in model_dates:
+    if test_corpus == _default_test(
+        model, config=get_model_config(model, bucket=bucket)) and not refresh \
+            and model in model_dates:
         return model_dates[model]
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
                                   extension='.json', bucket=bucket)
     if model_date == test_date:
-        if test_corpus == _default_test(model):
+        if test_corpus == _default_test(
+                model, config=get_model_config(model, bucket=bucket)):
             model_dates[model] = model_date
         return model_date
     min_date = min(model_date, test_date)
-    print(min_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
-        if test_corpus == _default_test(model):
+        if test_corpus == _default_test(
+                model, config=get_model_config(model, bucket=bucket)):
             model_dates[model] = min_date
         return min_date
     min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
     for day_count in range(1, 30):
         earlier_date = min_date_obj - timedelta(days=day_count)
         if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            if test_corpus == _default_test(model):
+            if test_corpus == _default_test(
+                    model, config=get_model_config(model, bucket=bucket)):
                 model_dates[model] = earlier_date
             return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
@@ -120,6 +128,27 @@ def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     return tests_with_dates
 
 
+def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
+    s3 = boto3.client('s3')
+    resp = s3.list_objects(Bucket=bucket, Prefix='tests/',
+                           Delimiter='_tests')
+    tests = []
+    for pref in resp['CommonPrefixes']:
+        test = pref['Prefix'].split('/')[1]
+        tests.append(test)
+    return tests
+
+
+def _load_tests_from_cache(test_corpus):
+    tests, file_key = tests_cache.get(test_corpus, (None, None))
+    latest_on_s3 = find_latest_s3_file(
+        EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
+    if file_key != latest_on_s3:
+        tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
+        tests_cache[test_corpus] = (tests, file_key)
+    return tests
+
+
 def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
@@ -130,10 +159,11 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        test_corpus = _default_test(model)
+        test_corpus = _default_test(model, config_json)
         latest_date = get_latest_available_date(
             model, test_corpus, refresh=refresh, bucket=bucket)
-        logger.info(f'Latest available date for {model} is {latest_date}')
+        if refresh:
+            logger.info(f'Latest available date for {model} is {latest_date}')
         model_data.append((model, config_json, test_corpus, latest_date))
     return model_data
 
@@ -156,12 +186,16 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 GLOBAL_PRELOAD = False
 model_cache = {}
 model_dates = {}
+tests_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
     for model, _, _, _ in model_meta_data:
         load_model_manager_from_cache(model)
+    tests = _get_all_tests()
+    for test_corpus in tests:
+        _load_tests_from_cache(test_corpus)
 
 
 def get_queryable_stmt_types():
@@ -201,8 +235,8 @@ def _make_query(query_dict, use_grouding_service=True):
     return query, tab
 
 
-def _new_applied_tests(
-        test_stats_json, model_types, model_name, date, test_corpus):
+def _new_applied_tests(test_stats_json, model_types, model_name, date,
+                       test_corpus):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -214,16 +248,20 @@ def _new_applied_tests(
     if len(new_app_hashes) == 0:
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
-    return _format_table_array(
-        new_app_tests, model_types, model_name, date, test_corpus)
+    return _format_table_array(new_app_tests, model_types, model_name, date,
+                               test_corpus)
 
 
 def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        new_row = [(*test['test'], stmt_db_link_msg)
-                   if len(test['test']) == 2 else test['test']]
+        ev_url_par = parse.urlencode(
+            {'stmt_hash': th, 'source': 'test', 'model': model_name,
+             'test_corpus': test_corpus})
+        test['test'][0] = f'/evidence/?{ev_url_par}'
+        test['test'][2] = stmt_db_link_msg
+        new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'test_hash': th, 'date': date,
@@ -270,7 +308,8 @@ def _format_dynamic_query_results(formatted_results):
     return result_array
 
 
-def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
+def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
+                      test_corpus):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -282,17 +321,22 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
         mt_rows = [[('', f'New passed tests for '
                          f'{FORMATTED_TYPE_NAMES[mt]} model.',
                      '')]]
-        for test_hash in new_passed_hashes:
-            test = all_test_results[test_hash]
+        for th in new_passed_hashes:
+            test = all_test_results[th]
+            ev_url_par = parse.urlencode(
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                 'test_corpus': test_corpus})
+            test['test'][0] = f'/evidence/?{ev_url_par}'
+            test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
             else:
                 path = path_loc
             url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': test_hash, 'date': date})
-            new_row = [(*test['test'], stmt_db_link_msg)
-                       if len(test['test']) == 2 else test['test'],
+                {'model_type': mt, 'test_hash': th, 'date': date,
+                 'test_corpus': test_corpus})
+            new_row = [(test['test']),
                        (f'/tests/{model_name}?{url_param}', path,
                         pass_fail_msg)]
             mt_rows.append(new_row)
@@ -300,6 +344,30 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date):
     if len(new_passed_tests) > 0:
         return new_passed_tests
     return 'No new tests were passed'
+
+
+def _set_curation(stmt_hash, correct, incorrect):
+    cur = ''
+    if isinstance(stmt_hash, list):
+        if set(stmt_hash).intersection(correct):
+            cur = 'correct'
+        elif set(stmt_hash).intersection(incorrect):
+            cur = 'incorrect'
+    else:
+        if stmt_hash in correct:
+            cur = 'correct'
+        if stmt_hash in incorrect:
+            cur = 'incorrect'
+    return cur
+
+
+def _label_curations(**kwargs):
+    curations = get_curations(**kwargs)
+    correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
+    correct = {str(c.pa_hash) for c in curations if c.tag in correct_tags}
+    incorrect = {str(c.pa_hash) for c in curations if
+                 str(c.pa_hash) not in correct}
+    return correct, incorrect
 
 
 # Deletes session after the specified time
@@ -330,9 +398,10 @@ def get_home():
 @app.route('/dashboard/<model>/')
 @jwt_optional
 def get_model_dashboard(model):
+    test_corpus = request.args.get('test_corpus', _default_test(
+        model, get_model_config(model)))
     date = request.args.get('date', get_latest_available_date(
-        model, _get_test_corpora(model)))
-    test_corpus = request.args.get('test_corpus', _default_test(model))
+        model, test_corpus))
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
@@ -359,25 +428,33 @@ def get_model_dashboard(model):
           'Click to see network on Ndex')]]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
+    # Get correct and incorrect curation hashes to pass it per stmt
+    correct, incorrect = _label_curations()
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
+        cur = _set_curation(k, correct, incorrect)
+        v['test'].append(cur)
         if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
             continue
         else:
             all_tests.append((k, v))
 
     all_stmts = model_stats['model_summary']['all_stmts']
+    for st_hash, st_value in all_stmts.items():
+        url_param = parse.urlencode(
+            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
+        st_value[0] = f'/evidence/?{url_param}'
+        st_value[2] = stmt_db_link_msg
+        cur = _set_curation(st_hash, correct, incorrect)
+        st_value.append(cur)
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [((*all_stmts[h], stmt_db_link_msg)
-                         if len(all_stmts[h]) == 2 else all_stmts[h],
-                         ('', str(c), '')) for h, c in most_supported]
+    top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
+                        for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [[(*all_stmts[h], stmt_db_link_msg)
-                        if len(all_stmts[h]) == 2 else all_stmts[h]] for h in
-                       added_stmts_hashes]
+        added_stmts = [((all_stmts[h])) for h in added_stmts_hashes]
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
@@ -396,19 +473,14 @@ def get_model_dashboard(model):
                                                   for mt in
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
-                               test_stats_json=test_stats,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
+                               test_stats, current_model_types, model, date,
+                               test_corpus),
                            all_test_results=_format_table_array(
-                               tests_json=all_tests,
-                               model_types=current_model_types,
-                               model_name=model,
-                               date=date,
-                               test_corpus=test_corpus),
+                               all_tests, current_model_types, model, date,
+                               test_corpus),
                            new_passed_tests=_new_passed_tests(
-                               model, test_stats, current_model_types, date),
+                               model, test_stats, current_model_types, date,
+                               test_corpus),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)
@@ -435,6 +507,18 @@ def get_model_tests_page(model):
                            test_stats['test_round_summary']]
     test = current_test["test"]
     test_status, path_list = current_test[model_type]
+    correct, incorrect = _label_curations()
+    if isinstance(path_list, list):
+        for path in path_list:
+            for edge in path['edge_list']:
+                for stmt in edge['stmts']:
+                    cur = ''
+                    url = stmt[0]
+                    if 'stmt_hash' in url:
+                        stmt_hashes = parse.parse_qs(
+                            parse.urlparse(url).query)['stmt_hash']
+                        cur = _set_curation(stmt_hashes, correct, incorrect)
+                    stmt.append(cur)
     latest_date = get_latest_available_date(model, test_corpus)
     prefix = f'stats/{model}/test_stats_{test_corpus}_'
     cur_ix = find_index_of_s3_file(file_key, EMMAA_BUCKET_NAME, prefix)
@@ -537,6 +621,122 @@ def get_query_page():
                            tab=tab)
 
 
+@app.route('/evidence/')
+def get_statement_evidence_page():
+    stmt_hashes = request.args.getlist('stmt_hash')
+    source = request.args.get('source')
+    model = request.args.get('model')
+    test_corpus = request.args.get('test_corpus', '')
+    curations = get_curations(pa_hash=stmt_hashes)
+    cur_count = len(curations)
+    stmt_rows = []
+    if source == 'model_statement':
+        mm = load_model_manager_from_cache(model)
+        for stmt in mm.model.assembled_stmts:
+            for stmt_hash in stmt_hashes:
+                if str(stmt.get_hash()) == str(stmt_hash):
+                    english = _format_stmt_text(stmt)
+                    evid_count = len(stmt.evidence)
+                    evid = _format_evidence_text(stmt)[:10]
+                    stmt_row = [
+                        (stmt_hash, english, evid, evid_count, cur_count)]
+                    stmt_rows.append(stmt_row)
+    elif source == 'test':
+        if not test_corpus:
+            abort(Response(f'Need test corpus name to load evidence', 404))
+        tests = _load_tests_from_cache(test_corpus)
+        for t in tests:
+            for stmt_hash in stmt_hashes:
+                if str(t.stmt.get_hash()) == str(stmt_hash):
+                    english = _format_stmt_text(t.stmt)
+                    evid_count = len(t.stmt.evidence)
+                    evid = _format_evidence_text(t.stmt)[:10]
+                    stmt_row = [
+                        (stmt_hash, english, evid, evid_count, cur_count)]
+                    stmt_rows.append(stmt_row)
+    else:
+        abort(Response(f'Source should be model_statement or test', 404))
+    return render_template('evidence_template.html',
+                           stmt_rows=stmt_rows,
+                           model=model,
+                           source=source,
+                           test_corpus=test_corpus if test_corpus else None,
+                           table_title='Statement Evidence and Curation',
+                           msg=None,
+                           is_all_stmts=False)
+
+
+@app.route('/all_statements/<model>/')
+def get_all_statements_page(model):
+    mm = load_model_manager_from_cache(model)
+    sort_by = request.args.get('sort_by', 'evidence')
+    page = int(request.args.get('page', 1))
+    filter_curated = request.args.get('filter_curated', False)
+    filter_curated = (filter_curated == 'true')
+    offset = (page - 1)*1000
+    stmts = mm.model.assembled_stmts
+    msg = None
+    curations = get_curations()
+    cur_counts = defaultdict(int)
+    for curation in curations:
+        cur_counts[str(curation.pa_hash)] += 1
+    if filter_curated:
+        stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
+                 cur_counts]
+    if len(stmts) % 1000 == 0:
+        total_pages = len(stmts)//1000
+    else:
+        total_pages = len(stmts)//1000 + 1
+    if page + 1 <= total_pages:
+        next_page = page + 1
+    else:
+        next_page = None
+    if page != 1:
+        prev_page = page - 1
+    else:
+        prev_page = None
+    if sort_by == 'evidence':
+        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+            offset:offset+1000]
+    elif sort_by == 'paths':
+        test_stats, _ = get_model_stats(model, 'test')
+        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts')
+        if not stmt_counts:
+            msg = 'Sorting by paths is not available, sorting by evidence'
+            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+                offset:offset+1000]
+        else:
+            stmts_by_hash = {}
+            for stmt in stmts:
+                stmts_by_hash[stmt.get_hash()] = stmt
+            stmts = []
+            for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
+                try:
+                    stmts.append(stmts_by_hash[stmt_hash])
+                except KeyError:
+                    continue
+    stmt_rows = []
+    for stmt in stmts:
+        sh = str(stmt.get_hash())
+        english = _format_stmt_text(stmt)
+        evid_count = len(stmt.evidence)
+        stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
+        stmt_rows.append(stmt_row)
+    table_title = f'All statements in {model.upper()} model.'
+
+    return render_template('evidence_template.html',
+                           stmt_rows=stmt_rows,
+                           model=model,
+                           source='model_statement',
+                           table_title=table_title,
+                           msg=msg,
+                           is_all_stmts=True,
+                           prev=prev_page,
+                           next=next_page,
+                           filter_curated=filter_curated,
+                           sort_by=sort_by)
+
+
 @app.route('/query/<model>/')
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
@@ -551,6 +751,19 @@ def get_query_tests_page(model):
     next_order = order - 1 if order > 1 else None
     prev_order = order + 1 if \
         order < qm.db.get_number_of_results(query_hash, model_type) else None
+    correct, incorrect = _label_curations()
+    path_list = detailed_results[1]
+    if isinstance(path_list, list):
+        for path in path_list:
+            for edge in path['edge_list']:
+                for stmt in edge['stmts']:
+                    cur = ''
+                    url = stmt[0]
+                    if 'stmt_hash' in url:
+                        stmt_hashes = parse.parse_qs(
+                            parse.urlparse(url).query)['stmt_hash']
+                        cur = _set_curation(stmt_hashes, correct, incorrect)
+                    stmt.append(cur)
     return render_template('tests_template.html',
                            link_list=link_list,
                            model=model,
@@ -560,7 +773,7 @@ def get_query_tests_page(model):
                            test=card_title,
                            is_query_page=True,
                            test_status=detailed_results[0],
-                           path_list=detailed_results[1],
+                           path_list=path_list,
                            formatted_names=FORMATTED_TYPE_NAMES,
                            date=date,
                            prev=prev_order,
@@ -733,6 +946,75 @@ def email_unsubscribe_post():
     else:
         logger.info('Could not verify signature, aborting unsubscribe')
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
+
+
+@app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
+def get_statement_by_hash_model(model, hash_val):
+    mm = load_model_manager_from_cache(model)
+    st_json = {}
+    for st in mm.model.assembled_stmts:
+        if str(st.get_hash()) == str(hash_val):
+            st_json = st.to_json()
+            ev_list = _format_evidence_text(st)
+            st_json['evidence'] = ev_list
+    return {'statements': {hash_val: st_json}}
+
+
+@app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
+def get_tests_by_hash(test_corpus, hash_val):
+    tests = _load_tests_from_cache(test_corpus)
+    st_json = {}
+    for test in tests:
+        if str(test.stmt.get_hash()) == str(hash_val):
+            st_json = test.stmt.to_json()
+            ev_list = _format_evidence_text(test.stmt)
+            st_json['evidence'] = ev_list
+    return {'statements': {hash_val: st_json}}
+
+
+@app.route('/curation/submit/<hash_val>', methods=['POST'])
+@jwt_optional
+def submit_curation_endpoint(hash_val, **kwargs):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    if user:
+        email = user.email
+    else:
+        email = request.json.get('email')
+        if not email:
+            res_dict = {"result": "failure",
+                        "reason": "POST with API key requires a user email."}
+            return jsonify(res_dict), 400
+
+    logger.info("Adding curation for statement %s." % hash_val)
+    ev_hash = request.json.get('ev_hash')
+    source_api = request.json.pop('source', 'EMMAA')
+    tag = request.json.get('tag')
+    ip = request.remote_addr
+    text = request.json.get('text')
+    is_test = 'test' in request.args
+    if not is_test:
+        assert tag is not 'test'
+        try:
+            dbid = submit_curation(hash_val, tag, email, ip, text, ev_hash,
+                                   source_api)
+        except BadHashError as e:
+            abort(Response("Invalid hash: %s." % e.mk_hash, 400))
+        res = {'result': 'success', 'ref': {'id': dbid}}
+    else:
+        res = {'result': 'test passed', 'ref': None}
+    logger.info("Got result: %s" % str(res))
+    return jsonify(res)
+
+
+@app.route('/curation/list/<stmt_hash>/<src_hash>', methods=['GET'])
+def list_curations(stmt_hash, src_hash):
+    curations = get_curations(pa_hash=stmt_hash, source_hash=src_hash)
+    curation_json = [cur.to_json() for cur in curations]
+    return jsonify(curation_json)
 
 
 if __name__ == '__main__':

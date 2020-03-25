@@ -49,7 +49,8 @@ def setup_bucket(
             'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
             'search_terms': [{'db_refs': {'HGNC': '20974'}, 'name': 'MAPK1',
                               'search_term': 'MAPK1', 'type': 'gene'}],
-            'test': {'test_corpus': 'simple_tests'},
+            'test': {'test_corpus': 'simple_tests',
+                     'default_test_corpus': 'simple_tests'},
             'human_readable_name': 'Test Model',
             'assembly': {'skip_curations': True}
             }
@@ -152,7 +153,7 @@ def test_last_updated():
 def test_get_model_statistics():
     # Local imports are recommended when using moto
     from emmaa.model import get_model_stats
-    client = setup_bucket(add_model_stats=True, add_test_stats=True)
+    client = setup_bucket(add_model=True, add_model_stats=True, add_test_stats=True)
     # Get latest model stats
     model_stats, key = get_model_stats(
         'test', 'model', bucket=TEST_BUCKET_NAME)
@@ -185,7 +186,7 @@ def test_load_tests_from_s3():
     # Local imports are recommended when using moto
     from emmaa.model_tests import load_tests_from_s3, StatementCheckingTest
     client = setup_bucket(add_tests=True)
-    tests = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
+    tests, _ = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
     assert isinstance(tests, list)
     assert len(tests) == 1
     test = tests[0]
@@ -247,7 +248,7 @@ def test_model_to_tests():
     tests = model_to_tests('test', bucket=TEST_BUCKET_NAME)
     assert len(tests) == 2
     assert isinstance(tests[0], StatementCheckingTest)
-    loaded_tests = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
+    loaded_tests, _ = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
     assert loaded_tests
 
 
@@ -360,7 +361,7 @@ def test_api_load_from_s3():
     assert config
     test_corpora = _get_test_corpora('test', TEST_BUCKET_NAME)
     assert test_corpora == {'simple_tests': today}
-    # metadata always looks for 'large_corpus_tests'
+    # metadata always looks for default test
     date_str = last_updated_date(
         'test', 'test_stats', 'datetime', 'simple_tests', '.json', 0,
         TEST_BUCKET_NAME)
@@ -373,5 +374,5 @@ def test_api_load_from_s3():
     assert len(metadata[0]) == 4
     assert metadata[0][0] == 'test'
     assert metadata[0][1] == config
-    assert metadata[0][2] == 'large_corpus_tests'
+    assert metadata[0][2] == 'simple_tests'
     assert metadata[0][3] == today

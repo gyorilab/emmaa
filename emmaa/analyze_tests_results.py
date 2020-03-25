@@ -3,7 +3,7 @@ import logging
 import jsonpickle
 from collections import defaultdict
 from emmaa.model import _default_test
-from emmaa.model_tests import elsevier_url, load_model_manager_from_s3
+from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import (find_latest_s3_file, find_nth_latest_s3_file,
                         strip_out_date, get_s3_client, EMMAA_BUCKET_NAME,
                         FORMAT)
@@ -28,9 +28,6 @@ class Round(object):
 
     Parameters
     ----------
-    link_type : str
-        A name of a source to link the statements to (e.g. 'indra_db' or
-        'elsevier')
     date_str : str
         Time when ModelManager responsible for this round was created.
 
@@ -44,8 +41,7 @@ class Round(object):
         while the second returns an English description of a given content type
         for a single hash.
     """
-    def __init__(self, link_type, date_str):
-        self.link_type = link_type
+    def __init__(self, date_str):
         self.date_str = date_str
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
@@ -56,19 +52,7 @@ class Round(object):
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
         sentence = ea.make_model()
-        if self.link_type == 'indra_db':
-            link = get_statement_queries([stmt])[0] + '&format=html'
-            evid_text = ''
-        elif self.link_type == 'elsevier':
-            pii = stmt.evidence[0].annotations.get('pii', None)
-            if pii:
-                link = elsevier_url + pii
-            else:
-                link = ''
-            evid_text = stmt.evidence[0].text
-        elif self.link_type == 'test':
-            link = evid_text = ''
-        return (link, sentence, evid_text)
+        return ('', sentence, '')
 
     def find_delta_hashes(self, other_round, content_type, **kwargs):
         """Return a dictionary of changed hashes of a given content type. This
@@ -116,8 +100,8 @@ class ModelRound(Round):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements used to assemble a model.
     """
-    def __init__(self, statements, link_type, date_str):
-        super().__init__(link_type, date_str)
+    def __init__(self, statements, date_str):
+        super().__init__(date_str)
         self.statements = statements
 
     @classmethod
@@ -126,7 +110,6 @@ class ModelRound(Round):
         if not mm:
             return
         statements = mm.model.assembled_stmts
-        link_type = mm.link_type
         try:
             date_str = mm.date_str
         except AttributeError:
@@ -136,7 +119,7 @@ class ModelRound(Round):
                 Prefix='results/rasmodel/latest_model_manager.pkl')
             date = keys['Contents'][0]['LastModified']
             date_str = date.strftime(FORMAT)
-        return cls(statements, link_type, date_str)
+        return cls(statements, date_str)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -210,8 +193,8 @@ class TestRound(Round):
         description, result in Pass/Fail/n_a form and either a path if it
         was found or a result code if it was not.
     """
-    def __init__(self, json_results, link_type, date_str):
-        super().__init__(link_type, date_str)
+    def __init__(self, json_results, date_str):
+        super().__init__(date_str)
         self.json_results = json_results
         mc_types = self.json_results[0].get('mc_types', ['pysb'])
         self.mc_types_results = {}
@@ -226,9 +209,8 @@ class TestRound(Round):
         logger.info(f'Loading json from {key}')
         obj = client.get_object(Bucket=bucket, Key=key)
         json_results = json.loads(obj['Body'].read().decode('utf8'))
-        link_type = json_results[0].get('link_type', 'indra_db')
         date_str = json_results[0].get('date_str', strip_out_date(key))
-        return cls(json_results, link_type, date_str)
+        return cls(json_results, date_str)
 
     def get_applied_test_hashes(self):
         """Return a list of hashes for all applied tests."""
@@ -305,6 +287,13 @@ class TestRound(Round):
                         get_pass_fail(result),
                         get_path_or_code(ix, result, mc_type)]
         return tests_by_hash
+
+    def get_path_stmt_counts(self):
+        path_stmt_counts = self.json_results[0].get('path_stmt_counts')
+        if path_stmt_counts:
+            return sorted(
+                path_stmt_counts.items(), key=lambda x: x[1], reverse=True)
+        return []
 
     def _get_results(self, mc_type):
         unpickler = jsonpickle.unpickler.Unpickler()
@@ -591,7 +580,8 @@ class TestStatsGenerator(StatsGenerator):
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
-            'all_test_results': self.latest_round.english_test_results}
+            'all_test_results': self.latest_round.english_test_results,
+            'path_stmt_counts': self.latest_round.get_path_stmt_counts()}
         for mc_type in self.latest_round.mc_types_results:
             self.json_stats['test_round_summary'][mc_type] = {
                 'number_passed_tests': (

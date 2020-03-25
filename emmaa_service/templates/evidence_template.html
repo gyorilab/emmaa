@@ -1,0 +1,87 @@
+{% extends "emmaa_page_template.html" %}
+{% from "path_macros.html" import path_table, path_card %}
+
+{% block additional_scripts %}
+<style>
+  .badge-subject {
+    background-color: #4a36aa;
+    color: #FFFFFF;
+  }
+  .badge-object {
+    background-color: #2d8e4c;
+    color: #FFFFFF;
+  }
+  .badge-other {
+    background-color: #606060;
+    color: #FFFFFF;
+  }
+  .badge-source {
+    font-size: 8pt;
+    margin: 0;
+    padding-left: 5px;
+    cursor: pointer;
+  }
+
+  .nvm {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .text-right {
+    flex: 12%;
+    max-width: 12%;
+  }
+
+  .col-10 {
+    flex: 76%;
+    max-width: 76%;
+  }
+
+</style>
+{% endblock %}
+
+{% block body %}
+{% if is_all_stmts %}
+  {% if msg %}
+  {{ msg }}
+  {% endif %}
+  <div>
+    <button class="btn btn-outline-secondary" {% if not prev %} disabled {% endif %} onClick="redirectOneArgument('{{ prev }}', 'page')" type="button">❮ Previous</button>
+    <button class="btn btn-outline-secondary" {% if not next %} disabled {% endif %} onClick="redirectOneArgument('{{ next }}', 'page')" type="button">Next ❯</button>
+    {% if filter_curated %}
+    <button class="btn btn-outline-secondary" onClick="redirectOneArgument('false', 'filter_curated')" type="button">Show Curated</button>
+    {% else %}
+    <button class="btn btn-outline-secondary" onClick="redirectOneArgument('true', 'filter_curated')" type="button">Filter Curated</button>
+    {% endif %}
+    <div class="d-inline-flex p-2 input-group" style="width: 410px;">
+      <select class="custom-select" id="sortSelect" aria-label="Example select with button addon">
+      {% for sorting in ['evidence', 'paths'] %}
+        {% if sort_by == sorting %}
+          <option selected value="{{ sorting }}">Sorting by {{ sorting }}</option>
+        {% else %}
+          <option value="{{ sorting }}">Sorting by {{ sorting }}</option>
+        {% endif %}
+      {% endfor %}
+      </select>
+      <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" onClick="redirectSelection(document.getElementById('sortSelect'), 'sort_by')" type="button">Load Statements</button>
+      </div>
+    </div>
+  </div>
+{% endif %}
+<div class="container" id="app">
+  {% if source == 'model_statement' %}
+  {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='') %}
+  {% else %}
+  {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
+  {% endif %}
+  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+</div>
+<script>
+  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
+  Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
+  Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
+  var app = new Vue({el: '#app'});
+</script>
+{% endblock %}
