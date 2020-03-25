@@ -363,7 +363,8 @@ def _set_curation(stmt_hash, correct, incorrect):
 
 def _label_curations(**kwargs):
     curations = get_curations(**kwargs)
-    correct = {str(c.pa_hash) for c in curations if c.tag == 'correct'}
+    correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
+    correct = {str(c.pa_hash) for c in curations if c.tag in correct_tags}
     incorrect = {str(c.pa_hash) for c in curations if
                  str(c.pa_hash) not in correct}
     return correct, incorrect
