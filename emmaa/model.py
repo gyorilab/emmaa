@@ -264,7 +264,8 @@ class EmmaaModel(object):
         if not self.assembly_config.get('skip_curations'):
             curations = get_curations()
             stmts = ac.filter_by_curation(
-                stmts, curations, 'any', ['correct'], update_belief=True)
+                stmts, curations, 'any',
+                ['correct', 'act_vs_amt', 'hypothesis'], update_belief=True)
         belief_cutoff = self.assembly_config.get('belief_cutoff')
         if belief_cutoff is not None:
             stmts = ac.filter_belief(stmts, belief_cutoff)
