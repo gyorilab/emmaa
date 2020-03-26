@@ -149,7 +149,7 @@ def _load_tests_from_cache(test_corpus):
     return tests
 
 
-def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
+def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
                            Delimiter='/')
@@ -159,12 +159,7 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        test_corpus = _default_test(model, config_json)
-        latest_date = get_latest_available_date(
-            model, test_corpus, refresh=refresh, bucket=bucket)
-        if refresh:
-            logger.info(f'Latest available date for {model} is {latest_date}')
-        model_data.append((model, config_json, test_corpus, latest_date))
+        model_data.append((model, config_json))
     return model_data
 
 
