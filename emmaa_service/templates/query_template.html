@@ -51,7 +51,7 @@
           <div class="checkbox-container">
             <div class="form-select">
               <select name="model-select" id="model-select" placeholder="Select models" multiple>
-              {% for model_id, config_json, _, _ in model_data %}
+              {% for model_id, config_json in model_data %}
                 <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
               {% endfor %}
               </select>
