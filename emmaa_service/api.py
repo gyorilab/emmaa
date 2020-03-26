@@ -85,34 +85,26 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date(
-        model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
-    if test_corpus == _default_test(
-        model, config=get_model_config(model, bucket=bucket)) and not refresh \
-            and model in model_dates:
-        return model_dates[model]
+def get_latest_available_date( model, test_corpus, bucket=EMMAA_BUCKET_NAME):
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
                                   extension='.json', bucket=bucket)
     if model_date == test_date:
-        if test_corpus == _default_test(
-                model, config=get_model_config(model, bucket=bucket)):
-            model_dates[model] = model_date
+        logger.info(f'Latest available date for {model} model and '
+                    f'{test_corpus} is {model_date}.')
         return model_date
     min_date = min(model_date, test_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
-        if test_corpus == _default_test(
-                model, config=get_model_config(model, bucket=bucket)):
-            model_dates[model] = min_date
+        logger.info(f'Latest available date for {model} model and '
+                    f'{test_corpus} is {min_date}.')
         return min_date
     min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
     for day_count in range(1, 30):
         earlier_date = min_date_obj - timedelta(days=day_count)
         if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            if test_corpus == _default_test(
-                    model, config=get_model_config(model, bucket=bucket)):
-                model_dates[model] = earlier_date
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {earlier_date}.')
             return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
