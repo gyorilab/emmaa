@@ -278,10 +278,10 @@ def _format_query_results(formatted_results):
         model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
         model = res['model']
         latest_date = get_latest_available_date(
-            model, _get_test_corpora(model))
+            model, _default_test(model))
         new_res = [('', res["query"], ''),
                    (f'/dashboard/{model}/?date={latest_date}' +
-                    f'&test_corpus={_get_test_corpora(model)}&tab=model',
+                    f'&test_corpus={_default_test(model)}&tab=model',
                     model,
                     f'Click to see details about {model}')]
         for mt in model_types:
