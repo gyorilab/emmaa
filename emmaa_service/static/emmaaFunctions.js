@@ -32,11 +32,30 @@ function modelRedirect(ddSelect, current_model) {
     }
   }
 
+  let loc = window.location.href;
+  // remove current date and test corpus
+  if (loc.includes('date')) {
+    date = new URL(loc).searchParams.get('date');
+    loc = loc.replace(`date=${date}`, '')
+  }
+  if (loc.includes('test_corpus')) {
+    test_corpus = new URL(loc).searchParams.get('test_corpus');
+    loc = loc.replace(`test_corpus=${test_corpus}`, '')
+  }  
+  if (loc.includes('tab')) {
+    tab = new URL(loc).searchParams.get('tab');
+    loc = loc.replace(`tab=${tab}`, 'tab=model')
+  }  
   // redirect url:
-  let redirect = window.location.href.replace(current_model, newModel);
+  let redirect = loc.replace(current_model, newModel);
+  if (redirect.endsWith('&')) {
+    redirect = redirect.substr(0, redirect.length - 1);
+  }
   console.log(redirect);
   window.location.replace(redirect);
 }
+
+
 function redirectToPast(x) { 
   let new_date = x.x;
   let static_date = new Date('2019-09-30');
@@ -73,58 +92,63 @@ function redirectToDate(new_date_str) {
   location.replace(redirect);
 }
 
-function modelDateRedirect(ddSelect, currentModel) {
+// function modelDateRedirect(ddSelect, currentModel) {
 
-  // Get selected option
-  let newModel = '';
-  for (child of ddSelect.children) {
-    if (child.selected) {
-      selection_str = child.value.split(" ");
-      newModel = selection_str[0];
-      newTest = selection_str[1]
-      newDate = selection_str[2];
-      break;
-    }
-  }
+//   // Get selected option
+//   let newModel = '';
+//   for (child of ddSelect.children) {
+//     if (child.selected) {
+//       selection_str = child.value.split(" ");
+//       newModel = selection_str[0];
+//       newTest = selection_str[1]
+//       newDate = selection_str[2];
+//       break;
+//     }
+//   }
 
-  console.log(newModel)
-  console.log(newDate)
-  console.log(newTest)
-  let loc = window.location.href
-  currentDate = new URL(loc).searchParams.get('date')
-  currentTest = new URL(loc).searchParams.get('test_corpus')
-  currentTab = new URL(loc).searchParams.get('tab')
-  // redirect url:
+//   console.log(newModel)
+//   console.log(newDate)
+//   console.log(newTest)
+//   let loc = window.location.href
+//   currentDate = new URL(loc).searchParams.get('date')
+//   currentTest = new URL(loc).searchParams.get('test_corpus')
+//   currentTab = new URL(loc).searchParams.get('tab')
+//   // redirect url:
 
-  let redirectModel = loc.replace(currentModel, newModel)
-  let redirectDate = redirectModel.replace(currentDate, newDate);
-  let redirectTest = redirectDate.replace(currentTest, newTest);
-  let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=model')
+//   let redirectModel = loc.replace(currentModel, newModel)
+//   let redirectDate = redirectModel.replace(currentDate, newDate);
+//   let redirectTest = redirectDate.replace(currentTest, newTest);
+//   let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=model')
 
-  location.replace(redirectTab);
-}
+//   location.replace(redirectTab);
+// }
 
 
 function testRedirect(ddSelect) {
   for (child of ddSelect.children) {
     if (child.selected) {
-      selection_str = child.value.split(" ");
-      newTest = selection_str[0];
-      newDate = selection_str[1];
+      newTest = child.value;
       break;
     }
   }
 
-  console.log(newTest)
-  console.log(newDate)
+  // remove date if it is in the url
   let loc = window.location.href
-  currentDate = new URL(loc).searchParams.get('date')
-  currentTest = new URL(loc).searchParams.get('test_corpus')
-  currentTab = new URL(loc).searchParams.get('tab')
+  if (loc.includes('date')) {
+    date = new URL(loc).searchParams.get('date');
+    loc = loc.replace(`date=${date}`, '')
+  }
+  // replace or add test corpus
+  if (loc.includes('test_corpus')) {
+    currentTest = new URL(loc).searchParams.get('test_corpus');
+    loc = loc.replace(`test_corpus=${currentTest}`, `test_corpus=${newTest}`)
+  } else {
+    loc = loc.concat(`&test_corpus=${newTest}`)
+  }
+  console.log(loc)
   // redirect url:
-  let redirectDate = loc.replace(currentDate, newDate);
-  let redirectTest = redirectDate.replace(currentTest, newTest);
-  let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=tests')
+  currentTab = new URL(loc).searchParams.get('tab')
+  let redirectTab = loc.replace(`tab=${currentTab}`, 'tab=tests')
   location.replace(redirectTab);
 }
 
