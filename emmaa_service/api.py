@@ -121,11 +121,7 @@ def get_latest_available_date(
 def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     all_files = list_s3_files(bucket, f'stats/{model}/test_stats_', '.json')
     tests = set([os.path.basename(key)[11:-25] for key in all_files])
-    tests_with_dates = {}
-    for test in tests:
-        tests_with_dates[test] = get_latest_available_date(
-            model, test, refresh=True, bucket=bucket)
-    return tests_with_dates
+    return tests
 
 
 def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
