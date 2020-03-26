@@ -92,37 +92,6 @@ function redirectToDate(new_date_str) {
   location.replace(redirect);
 }
 
-// function modelDateRedirect(ddSelect, currentModel) {
-
-//   // Get selected option
-//   let newModel = '';
-//   for (child of ddSelect.children) {
-//     if (child.selected) {
-//       selection_str = child.value.split(" ");
-//       newModel = selection_str[0];
-//       newTest = selection_str[1]
-//       newDate = selection_str[2];
-//       break;
-//     }
-//   }
-
-//   console.log(newModel)
-//   console.log(newDate)
-//   console.log(newTest)
-//   let loc = window.location.href
-//   currentDate = new URL(loc).searchParams.get('date')
-//   currentTest = new URL(loc).searchParams.get('test_corpus')
-//   currentTab = new URL(loc).searchParams.get('tab')
-//   // redirect url:
-
-//   let redirectModel = loc.replace(currentModel, newModel)
-//   let redirectDate = redirectModel.replace(currentDate, newDate);
-//   let redirectTest = redirectDate.replace(currentTest, newTest);
-//   let redirectTab = redirectTest.replace(`tab=${currentTab}`, 'tab=model')
-
-//   location.replace(redirectTab);
-// }
-
 
 function testRedirect(ddSelect) {
   for (child of ddSelect.children) {
