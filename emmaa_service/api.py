@@ -454,7 +454,7 @@ def get_model_dashboard(model):
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [((all_stmts[h])) for h in added_stmts_hashes]
+        added_stmts = [((all_stmts[h]),) for h in added_stmts_hashes]
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
