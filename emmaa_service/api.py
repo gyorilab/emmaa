@@ -168,13 +168,12 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 
 GLOBAL_PRELOAD = False
 model_cache = {}
-model_dates = {}
 tests_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _, _, _ in model_meta_data:
+    for model, _ in model_meta_data:
         load_model_manager_from_cache(model)
     tests = _get_all_tests()
     for test_corpus in tests:
@@ -372,7 +371,7 @@ def health():
 @jwt_optional
 def get_home():
     user, roles = resolve_auth(dict(request.args))
-    model_data = _get_model_meta_data(refresh=True)
+    model_data = _get_model_meta_data()
     return render_template('index_template.html', model_data=model_data,
                            link_list=link_list,
                            user_email=user.email if user else "")
@@ -395,7 +394,7 @@ def get_model_dashboard(model):
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
     ndex_id = 'None available'
-    for mid, mmd, tc, av_date in model_meta_data:
+    for mid, mmd in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
@@ -786,7 +785,7 @@ def process_query():
                                   for pos in ['subject', 'object', 'type']}
     expected_dynamic_query_keys = {f'{pos}Selection'
                                    for pos in ['pattern', 'value', 'agent']}
-    expected_models = {mid for mid, _, _, _ in _get_model_meta_data()}
+    expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:
         # If user tries to register query without logging in, refuse query
@@ -1023,7 +1022,7 @@ if __name__ == '__main__':
         # Load all the model configs
         model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
-        for model, _, _, _ in model_meta_data:
+        for model, _ in model_meta_data:
             load_model_manager_from_cache(model)
 
     print(app.url_map)  # Get all avilable urls and link them
