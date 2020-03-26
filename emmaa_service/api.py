@@ -629,6 +629,9 @@ def get_statement_evidence_page():
     test_corpus = request.args.get('test_corpus', '')
     curations = get_curations(pa_hash=stmt_hashes)
     cur_count = len(curations)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     stmt_rows = []
     if source == 'model_statement':
         mm = load_model_manager_from_cache(model)
@@ -637,7 +640,7 @@ def get_statement_evidence_page():
                 if str(stmt.get_hash()) == str(stmt_hash):
                     english = _format_stmt_text(stmt)
                     evid_count = len(stmt.evidence)
-                    evid = _format_evidence_text(stmt)[:10]
+                    evid = _format_evidence_text(stmt, cur_dict)[:10]
                     stmt_row = [
                         (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
@@ -650,7 +653,7 @@ def get_statement_evidence_page():
                 if str(t.stmt.get_hash()) == str(stmt_hash):
                     english = _format_stmt_text(t.stmt)
                     evid_count = len(t.stmt.evidence)
-                    evid = _format_evidence_text(t.stmt)[:10]
+                    evid = _format_evidence_text(t.stmt, cur_dict)[:10]
                     stmt_row = [
                         (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
@@ -952,10 +955,14 @@ def email_unsubscribe_post():
 def get_statement_by_hash_model(model, hash_val):
     mm = load_model_manager_from_cache(model)
     st_json = {}
+    curations = get_curations(pa_hash=stmt_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
-            ev_list = _format_evidence_text(st)
+            ev_list = _format_evidence_text(st, cur_dict)
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
@@ -963,11 +970,15 @@ def get_statement_by_hash_model(model, hash_val):
 @app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
 def get_tests_by_hash(test_corpus, hash_val):
     tests = _load_tests_from_cache(test_corpus)
+    curations = get_curations(pa_hash=stmt_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     st_json = {}
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-            ev_list = _format_evidence_text(test.stmt)
+            ev_list = _format_evidence_text(test.stmt, cur_dict)
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
