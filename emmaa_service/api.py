@@ -85,34 +85,26 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date(
-        model, test_corpus, refresh=False, bucket=EMMAA_BUCKET_NAME):
-    if test_corpus == _default_test(
-        model, config=get_model_config(model, bucket=bucket)) and not refresh \
-            and model in model_dates:
-        return model_dates[model]
+def get_latest_available_date( model, test_corpus, bucket=EMMAA_BUCKET_NAME):
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
                                   extension='.json', bucket=bucket)
     if model_date == test_date:
-        if test_corpus == _default_test(
-                model, config=get_model_config(model, bucket=bucket)):
-            model_dates[model] = model_date
+        logger.info(f'Latest available date for {model} model and '
+                    f'{test_corpus} is {model_date}.')
         return model_date
     min_date = min(model_date, test_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
-        if test_corpus == _default_test(
-                model, config=get_model_config(model, bucket=bucket)):
-            model_dates[model] = min_date
+        logger.info(f'Latest available date for {model} model and '
+                    f'{test_corpus} is {min_date}.')
         return min_date
     min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
     for day_count in range(1, 30):
         earlier_date = min_date_obj - timedelta(days=day_count)
         if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            if test_corpus == _default_test(
-                    model, config=get_model_config(model, bucket=bucket)):
-                model_dates[model] = earlier_date
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {earlier_date}.')
             return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
@@ -121,11 +113,7 @@ def get_latest_available_date(
 def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     all_files = list_s3_files(bucket, f'stats/{model}/test_stats_', '.json')
     tests = set([os.path.basename(key)[11:-25] for key in all_files])
-    tests_with_dates = {}
-    for test in tests:
-        tests_with_dates[test] = get_latest_available_date(
-            model, test, refresh=True, bucket=bucket)
-    return tests_with_dates
+    return tests
 
 
 def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
@@ -149,7 +137,7 @@ def _load_tests_from_cache(test_corpus):
     return tests
 
 
-def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
+def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
                            Delimiter='/')
@@ -159,12 +147,7 @@ def _get_model_meta_data(refresh=False, bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        test_corpus = _default_test(model, config_json)
-        latest_date = get_latest_available_date(
-            model, test_corpus, refresh=refresh, bucket=bucket)
-        if refresh:
-            logger.info(f'Latest available date for {model} is {latest_date}')
-        model_data.append((model, config_json, test_corpus, latest_date))
+        model_data.append((model, config_json))
     return model_data
 
 
@@ -185,13 +168,12 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 
 GLOBAL_PRELOAD = False
 model_cache = {}
-model_dates = {}
 tests_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
     # Load all the model managers for queries
-    for model, _, _, _ in model_meta_data:
+    for model, _ in model_meta_data:
         load_model_manager_from_cache(model)
     tests = _get_all_tests()
     for test_corpus in tests:
@@ -278,10 +260,10 @@ def _format_query_results(formatted_results):
         model_types = [mt for mt in ALL_MODEL_TYPES if mt in res]
         model = res['model']
         latest_date = get_latest_available_date(
-            model, _get_test_corpora(model))
+            model, _default_test(model))
         new_res = [('', res["query"], ''),
                    (f'/dashboard/{model}/?date={latest_date}' +
-                    f'&test_corpus={_get_test_corpora(model)}&tab=model',
+                    f'&test_corpus={_default_test(model)}&tab=model',
                     model,
                     f'Click to see details about {model}')]
         for mt in model_types:
@@ -389,7 +371,7 @@ def health():
 @jwt_optional
 def get_home():
     user, roles = resolve_auth(dict(request.args))
-    model_data = _get_model_meta_data(refresh=True)
+    model_data = _get_model_meta_data()
     return render_template('index_template.html', model_data=model_data,
                            link_list=link_list,
                            user_email=user.email if user else "")
@@ -412,7 +394,7 @@ def get_model_dashboard(model):
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
     ndex_id = 'None available'
-    for mid, mmd, tc, av_date in model_meta_data:
+    for mid, mmd in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
     if ndex_id == 'None available':
@@ -454,7 +436,7 @@ def get_model_dashboard(model):
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     if len(added_stmts_hashes) > 0:
-        added_stmts = [((all_stmts[h])) for h in added_stmts_hashes]
+        added_stmts = [((all_stmts[h]),) for h in added_stmts_hashes]
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
@@ -629,6 +611,9 @@ def get_statement_evidence_page():
     test_corpus = request.args.get('test_corpus', '')
     curations = get_curations(pa_hash=stmt_hashes)
     cur_count = len(curations)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     stmt_rows = []
     if source == 'model_statement':
         mm = load_model_manager_from_cache(model)
@@ -637,7 +622,7 @@ def get_statement_evidence_page():
                 if str(stmt.get_hash()) == str(stmt_hash):
                     english = _format_stmt_text(stmt)
                     evid_count = len(stmt.evidence)
-                    evid = _format_evidence_text(stmt)[:10]
+                    evid = _format_evidence_text(stmt, cur_dict)[:10]
                     stmt_row = [
                         (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
@@ -650,7 +635,7 @@ def get_statement_evidence_page():
                 if str(t.stmt.get_hash()) == str(stmt_hash):
                     english = _format_stmt_text(t.stmt)
                     evid_count = len(t.stmt.evidence)
-                    evid = _format_evidence_text(t.stmt)[:10]
+                    evid = _format_evidence_text(t.stmt, cur_dict)[:10]
                     stmt_row = [
                         (stmt_hash, english, evid, evid_count, cur_count)]
                     stmt_rows.append(stmt_row)
@@ -800,7 +785,7 @@ def process_query():
                                   for pos in ['subject', 'object', 'type']}
     expected_dynamic_query_keys = {f'{pos}Selection'
                                    for pos in ['pattern', 'value', 'agent']}
-    expected_models = {mid for mid, _, _, _ in _get_model_meta_data()}
+    expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:
         # If user tries to register query without logging in, refuse query
@@ -952,10 +937,14 @@ def email_unsubscribe_post():
 def get_statement_by_hash_model(model, hash_val):
     mm = load_model_manager_from_cache(model)
     st_json = {}
+    curations = get_curations(pa_hash=stmt_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
-            ev_list = _format_evidence_text(st)
+            ev_list = _format_evidence_text(st, cur_dict)
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
@@ -963,11 +952,15 @@ def get_statement_by_hash_model(model, hash_val):
 @app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
 def get_tests_by_hash(test_corpus, hash_val):
     tests = _load_tests_from_cache(test_corpus)
+    curations = get_curations(pa_hash=stmt_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
     st_json = {}
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-            ev_list = _format_evidence_text(test.stmt)
+            ev_list = _format_evidence_text(test.stmt, cur_dict)
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
@@ -1029,7 +1022,7 @@ if __name__ == '__main__':
         # Load all the model configs
         model_meta_data = _get_model_meta_data()
         # Load all the model mamangers for queries
-        for model, _, _, _ in model_meta_data:
+        for model, _ in model_meta_data:
             load_model_manager_from_cache(model)
 
     print(app.url_map)  # Get all avilable urls and link them

@@ -32,17 +32,17 @@
 <div class="d-inline-flex p-2 input-group" style="width: 410px;">
   <select class="custom-select" id="modelSelectDD" aria-label="Example select with button addon">
     <option selected disabled hidden>Select model...</option>
-    {% for model_id, model_meta, test_corpus, date in model_data %}
+    {% for model_id, model_meta in model_data %}
       {% if model_id == model %}
-        <option selected value="{{ model_id }} {{ test_corpus }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+        <option selected value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
       {% else %}
-        <option value="{{ model_id }} {{ test_corpus }} {{ date }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
+        <option value="{{ model_id }}">{{ model_meta['human_readable_name'] }} ({{ model_id.upper() }})</option>
       {% endif %}
     {% endfor %}
   </select>
   <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
   <div class="input-group-append">
-    <button class="btn btn-outline-secondary" onClick="modelDateRedirect(document.getElementById('modelSelectDD'), '{{ model }}')" type="button">Load Model</button>
+    <button class="btn btn-outline-secondary" onClick="modelRedirect(document.getElementById('modelSelectDD'), '{{ model }}')" type="button">Load Model</button>
   </div>
 </div>
 {% endblock %}
@@ -117,11 +117,11 @@
         <div class="card-body">
           <select class="custom-select" id="testSelectDD" aria-label="Example select with button addon" style="width: 300px">
             <option selected disabled hidden>Select test...</option>
-            {% for test, test_date in available_tests.items() %}
+            {% for test in available_tests %}
               {% if test == test_corpus %}
-                <option selected value="{{ test }} {{ date }}">{{ test.replace('_', ' ').capitalize() }}</option>
+                <option selected value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
               {% else %}
-                <option value="{{ test }} {{ test_date }}">{{ test.replace('_', ' ').capitalize() }}</option>
+                <option value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
               {% endif %}
             {% endfor %}
           </select>

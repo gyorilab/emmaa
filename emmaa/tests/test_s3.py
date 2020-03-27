@@ -356,23 +356,13 @@ def test_api_load_from_s3():
     assert not is_available(
         'test', 'simple_tests', other_day, TEST_BUCKET_NAME)
     assert get_latest_available_date(
-        'test', 'simple_tests', refresh=True, bucket=TEST_BUCKET_NAME) == today
+        'test', 'simple_tests', bucket=TEST_BUCKET_NAME) == today
     config = get_model_config('test', TEST_BUCKET_NAME)
     assert config
     test_corpora = _get_test_corpora('test', TEST_BUCKET_NAME)
-    assert test_corpora == {'simple_tests': today}
-    # metadata always looks for default test
-    date_str = last_updated_date(
-        'test', 'test_stats', 'datetime', 'simple_tests', '.json', 0,
-        TEST_BUCKET_NAME)
-    client.put_object(
-        Body=json.dumps(previous_test_stats, indent=1),
-        Bucket=TEST_BUCKET_NAME,
-        Key=f'stats/test/test_stats_large_corpus_tests_{date_str}.json')
+    assert test_corpora == {'simple_tests'}
     metadata = _get_model_meta_data(bucket=TEST_BUCKET_NAME)
     assert len(metadata) == 1
-    assert len(metadata[0]) == 4
+    assert len(metadata[0]) == 2
     assert metadata[0][0] == 'test'
     assert metadata[0][1] == config
-    assert metadata[0][2] == 'simple_tests'
-    assert metadata[0][3] == today
