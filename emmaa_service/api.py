@@ -937,7 +937,7 @@ def email_unsubscribe_post():
 def get_statement_by_hash_model(model, hash_val):
     mm = load_model_manager_from_cache(model)
     st_json = {}
-    curations = get_curations(pa_hash=stmt_hashes)
+    curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
@@ -952,7 +952,7 @@ def get_statement_by_hash_model(model, hash_val):
 @app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
 def get_tests_by_hash(test_corpus, hash_val):
     tests = _load_tests_from_cache(test_corpus)
-    curations = get_curations(pa_hash=stmt_hashes)
+    curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
