@@ -5,6 +5,7 @@
   "search_terms": [],
   "human_readable_name": "Covid-19",
   "assembly": {
+    "skip_filter_human": true,
     "filter_ungrounded": false
   },
   "test": {

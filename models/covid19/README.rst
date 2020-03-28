@@ -15,5 +15,9 @@
       - indra_stmts: cord19_combined_stmts.pkl
       - ndex_id: blank on first load, afterwards set to
         a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf
+
+To run update cycle without using AWS Batch:
+
+- python update_model_manager -m covid19
 - python run_model_stats_from_s3.py -m covid19 -s model -t covid19_curated_tests
 - python run_model_tests_from_s3.py -m covid19 -t covid19_curated_tests
