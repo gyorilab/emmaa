@@ -22,5 +22,6 @@
     ],
     "default_test_corpus": "covid19_curated_tests"
   },
-  "description": "Covid-19 knowledge network automatically assembled from the CORD-19 document corpus."
+  "description": "Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
+  "make_tests": true
 }
