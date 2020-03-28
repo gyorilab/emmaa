@@ -1,0 +1,1 @@
+python ../../scripts/emmaa_model_from_stmts.py -l covid19 -m "Covid-19" -n a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf -s ../../../covid-19/stmts/cord19_combined_stmts.pkl

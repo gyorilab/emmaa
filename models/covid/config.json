@@ -1,0 +1,26 @@
+{
+  "ndex": {
+    "network": "a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf"
+  },
+  "search_terms": [],
+  "human_readable_name": "Covid-19",
+  "assembly": {
+    "filter_ungrounded": false
+  },
+  "test": {
+    "statement_checking": {
+      "max_path_length": 10,
+      "max_paths": 1
+    },
+    "mc_types": [
+      "signed_graph",
+      "unsigned_graph"
+    ],
+    "make_links": true,
+    "test_corpus": [
+        "covid19_curated_tests"
+    ],
+    "default_test_corpus": "covid19_curated_tests"
+  },
+  "description": "Covid-19 knowledge network automatically assembled from the CORD-19 document corpus."
+}
