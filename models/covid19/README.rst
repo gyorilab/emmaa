@@ -6,13 +6,14 @@
 - The resulting pickle file of combined statements was stored in
   s3://indra-covid19/cord19_combined_stmts.pkl
 - Model upload script, upload.sh, in this directory
-    - This pickle file was used to create
-      a model via the script /emmaa/scripts/emmaa_model_from_stmts.py
+    - Uploads config.json (in this directory)
+    - Generate EMMAA model pickle file from cord19_combined_stmts.pkl file
+      via the script /emmaa/scripts/emmaa_model_from_stmts.py
     - Parameters for script:
       - short_name: covid19
       - full_name: Covid-19
       - indra_stmts: cord19_combined_stmts.pkl
-      - ndex_id: 
-    - Upload config.json (in this directory)
-#- python run_model_stats_from_s3.py -m covid19 -s model -t covid19_curated_tests
-#- python run_model_tests_from_s3.py -m covid19 -t covid19_curated_tests
+      - ndex_id: blank on first load, afterwards set to
+        a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf
+- python run_model_stats_from_s3.py -m covid19 -s model -t covid19_curated_tests
+- python run_model_tests_from_s3.py -m covid19 -t covid19_curated_tests
