@@ -19,5 +19,15 @@
 To run update cycle without using AWS Batch:
 
 - python update_model_manager -m covid19
+
+- Usually you will need to manually set the network style::
+
+    from indra.databases.ndex_client import set_style
+    set_style('a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf')
+
 - python run_model_stats_from_s3.py -m covid19 -s model -t covid19_curated_tests
+
 - python run_model_tests_from_s3.py -m covid19 -t covid19_curated_tests
+
+- python run_model_stats_from_s3.py -m covid19 -s tests -t covid19_curated_tests
+
