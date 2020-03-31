@@ -405,7 +405,8 @@ class ModelManager(object):
         results_json.append({
             'model_name': self.model.name,
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'path_stmt_counts': self.path_stmt_counts})
+            'path_stmt_counts': self.path_stmt_counts,
+            'date_str': self.date_str})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
