@@ -8,6 +8,7 @@ import os
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
+from copy import deepcopy
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -272,9 +273,10 @@ class ModelManager(object):
         """Answer user query by simulating a PySB model."""
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern()
+        pysb_model = deepcopy(self.mc_types['pysb']['model'])
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                self.mc_types['pysb']['model'], tp)
+                pysb_model, tp)
             fig_name, ext = os.path.splitext(os.path.basename(fig_path))
             date_str = make_date_str()
             s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
