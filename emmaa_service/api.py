@@ -693,7 +693,7 @@ def get_all_statements_page(model):
         else:
             stmts_by_hash = {}
             for stmt in stmts:
-                stmts_by_hash[stmt.get_hash()] = stmt
+                stmts_by_hash[str(stmt.get_hash())] = stmt
             stmts = []
             for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
                 try:
