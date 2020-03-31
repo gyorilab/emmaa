@@ -9,4 +9,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     mm = update_model_manager_on_s3(args.model)
+    mm.save_assembled_statements()
     mm.model.update_to_ndex()

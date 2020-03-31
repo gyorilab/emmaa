@@ -430,6 +430,16 @@ class ModelManager(object):
         client.put_object(Bucket=bucket, Key=result_key,
                           Body=json_str.encode('utf8'))
 
+    def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
+        """Upload assembled statements jsons to S3 bucket."""
+        stmt_jsons = self.assembled_stmts_to_json()
+        key = f'assembled/{self.model.name}/statements_{self.date_str}.json'
+        json_str = json.dumps(stmt_jsons, indent=1)
+        client = get_s3_client(unsigned=False)
+        logger.info(f'Uploading assembled statements to {key}')
+        client.put_object(Bucket=bucket, Key=key,
+                          Body=json_str.encode('utf8'))
+
 
 class TestManager(object):
     """Manager to generate and run a set of tests on a set of models.
