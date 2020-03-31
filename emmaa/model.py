@@ -13,7 +13,7 @@ from indra.assemblers.indranet import IndraNetAssembler
 from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.belief.wm_scorer import get_eidos_scorer
-from indra.statements import Event, Association
+from indra.statements import Event, Association, Statement
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -647,3 +647,16 @@ def get_model_stats(model, mode, tests=None, date=None,
                                       Key=latest_file_key)
     return (json.loads(model_data_object['Body'].read().decode('utf8')),
             latest_file_key)
+
+
+def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
+    latest_file_key = find_latest_s3_file(
+        bucket, f'assembled/{model}/statements_', '.json')
+    if not latest_file_key:
+        logger.info(f'No assembled statements found for {model}.')
+        return
+    client = get_s3_client()
+    obj = client.get_object(Bucket=bucket, Key=latest_file_key)
+    stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
+    stmts = [Statement._from_json(sj) for sj in stmt_jsons]
+    return stmts
