@@ -42,6 +42,7 @@ app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+DEVMODE = False
 TITLE = 'emmaa title'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
@@ -85,7 +86,7 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date( model, test_corpus, bucket=EMMAA_BUCKET_NAME):
+def get_latest_available_date(model, test_corpus, bucket=EMMAA_BUCKET_NAME):
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
@@ -147,7 +148,14 @@ def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        model_data.append((model, config_json))
+        dev_only = config_json.get('dev_only', False)
+        if dev_only:
+            if DEVMODE:
+                model_data.append((model, config_json))
+            else:
+                continue
+        else:
+            model_data.append((model, config_json))
     return model_data
 
 
