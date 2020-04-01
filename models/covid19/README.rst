@@ -18,7 +18,7 @@
 
 To run update cycle without using AWS Batch:
 
-- python update_model_manager -m covid19
+- python update_model_manager.py -m covid19
 
 - Usually you will need to manually set the network style::
 
