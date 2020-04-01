@@ -164,10 +164,18 @@ class ModelManager(object):
                     else:
                         for stmt in step:
                             self.path_stmt_counts[stmt.get_hash()] += 1
-                        for j, ag in enumerate(step[0].agent_list()):
+                        agents = [ag.name if ag is not None else None
+                                  for ag in step[0].agent_list()]
+                        # For complexes make sure that the agent from the
+                        # previous edge goes first
+                        if stmt_type == 'Complex':
+                            agents = sorted(
+                                [ag for ag in agents if ag is not None],
+                                key=lambda x: x != path_nodes[-1])
+                        for j, ag in enumerate(agents):
                             if ag is not None:
-                                edge_nodes.append(ag.name)
-                            if j == (len(step[0].agent_list()) - 1):
+                                edge_nodes.append(ag)
+                            if j == (len(agents) - 1):
                                 break
                             if stmt_type in ARROW_DICT:
                                 edge_nodes.append(ARROW_DICT[stmt_type])
