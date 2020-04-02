@@ -53,6 +53,11 @@
     {% else %}
     <button class="btn btn-outline-secondary" onClick="redirectOneArgument('true', 'filter_curated')" type="button">Filter Curated</button>
     {% endif %}
+    {% if link %}
+    <a href='{{ link }}' download>
+      <button class="btn btn-outline-secondary" type="button">Download Statements</button>
+    </a> 
+    {% endif %}
     <div class="d-inline-flex p-2 input-group" style="width: 410px;">
       <select class="custom-select" id="sortSelect" aria-label="Example select with button addon">
       {% for sorting in ['evidence', 'paths'] %}

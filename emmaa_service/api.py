@@ -717,6 +717,12 @@ def get_all_statements_page(model):
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
+    if does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+        fkey = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    else:
+        link = None
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -727,7 +733,8 @@ def get_all_statements_page(model):
                            prev=prev_page,
                            next=next_page,
                            filter_curated=filter_curated,
-                           sort_by=sort_by)
+                           sort_by=sort_by,
+                           link=link)
 
 
 @app.route('/query/<model>/')
