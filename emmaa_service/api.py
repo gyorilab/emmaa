@@ -42,7 +42,8 @@ app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-DEVMODE = False
+DEVMODE = int(os.environ.get('DEVMODE', 0))
+GLOBAL_PRELOAD = int(os.environ.get('GLOBAL_PRELOAD', 0))
 TITLE = 'emmaa title'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
@@ -174,7 +175,6 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
     return model_cache[model]
 
 
-GLOBAL_PRELOAD = False
 model_cache = {}
 tests_cache = {}
 if GLOBAL_PRELOAD:
