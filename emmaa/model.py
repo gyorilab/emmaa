@@ -13,7 +13,7 @@ from indra.assemblers.indranet import IndraNetAssembler
 from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.belief.wm_scorer import get_eidos_scorer
-from indra.statements import Event, Association, Statement
+from indra.statements import Event, Association, Statement, stmts_from_json
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -658,5 +658,5 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
     client = get_s3_client()
     obj = client.get_object(Bucket=bucket, Key=latest_file_key)
     stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
-    stmts = [Statement._from_json(sj) for sj in stmt_jsons]
+    stmts = stmts_from_json(stmt_jsons)
     return stmts
