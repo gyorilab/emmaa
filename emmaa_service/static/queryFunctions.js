@@ -116,7 +116,7 @@ function submitQuery(queryDict, tab, test) {
           break;
         case 400:
           console.log('400 response');
-          queryNotify('Query failed: Bad Request (400)', statusId);
+          queryNotify(xhr.responseText, statusId);
           break;
         case 401:
           console.log('401 response', statusId);
