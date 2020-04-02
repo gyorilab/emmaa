@@ -8,6 +8,7 @@ import os
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
+from copy import deepcopy
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -164,10 +165,18 @@ class ModelManager(object):
                     else:
                         for stmt in step:
                             self.path_stmt_counts[stmt.get_hash()] += 1
-                        for j, ag in enumerate(step[0].agent_list()):
+                        agents = [ag.name if ag is not None else None
+                                  for ag in step[0].agent_list()]
+                        # For complexes make sure that the agent from the
+                        # previous edge goes first
+                        if stmt_type == 'Complex':
+                            agents = sorted(
+                                [ag for ag in agents if ag is not None],
+                                key=lambda x: x != path_nodes[-1])
+                        for j, ag in enumerate(agents):
                             if ag is not None:
-                                edge_nodes.append(ag.name)
-                            if j == (len(step[0].agent_list()) - 1):
+                                edge_nodes.append(ag)
+                            if j == (len(agents) - 1):
                                 break
                             if stmt_type in ARROW_DICT:
                                 edge_nodes.append(ARROW_DICT[stmt_type])
@@ -264,9 +273,10 @@ class ModelManager(object):
         """Answer user query by simulating a PySB model."""
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern()
+        pysb_model = deepcopy(self.mc_types['pysb']['model'])
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                self.mc_types['pysb']['model'], tp)
+                pysb_model, tp)
             fig_name, ext = os.path.splitext(os.path.basename(fig_path))
             date_str = make_date_str()
             s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
@@ -405,7 +415,8 @@ class ModelManager(object):
         results_json.append({
             'model_name': self.model.name,
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
-            'path_stmt_counts': self.path_stmt_counts})
+            'path_stmt_counts': self.path_stmt_counts,
+            'date_str': self.date_str})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
@@ -428,6 +439,16 @@ class ModelManager(object):
         client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
         client.put_object(Bucket=bucket, Key=result_key,
+                          Body=json_str.encode('utf8'))
+
+    def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
+        """Upload assembled statements jsons to S3 bucket."""
+        stmt_jsons = self.assembled_stmts_to_json()
+        key = f'assembled/{self.model.name}/statements_{self.date_str}.json'
+        json_str = json.dumps(stmt_jsons, indent=1)
+        client = get_s3_client(unsigned=False)
+        logger.info(f'Uploading assembled statements to {key}')
+        client.put_object(Bucket=bucket, Key=key,
                           Body=json_str.encode('utf8'))
 
 

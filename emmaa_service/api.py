@@ -42,6 +42,8 @@ app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+DEVMODE = int(os.environ.get('DEVMODE', 0))
+GLOBAL_PRELOAD = int(os.environ.get('GLOBAL_PRELOAD', 0))
 TITLE = 'emmaa title'
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
@@ -85,7 +87,7 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date( model, test_corpus, bucket=EMMAA_BUCKET_NAME):
+def get_latest_available_date(model, test_corpus, bucket=EMMAA_BUCKET_NAME):
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
@@ -147,7 +149,14 @@ def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
         config_json = get_model_config(model, bucket=bucket)
         if not config_json:
             continue
-        model_data.append((model, config_json))
+        dev_only = config_json.get('dev_only', False)
+        if dev_only:
+            if DEVMODE:
+                model_data.append((model, config_json))
+            else:
+                continue
+        else:
+            model_data.append((model, config_json))
     return model_data
 
 
@@ -166,7 +175,6 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
     return model_cache[model]
 
 
-GLOBAL_PRELOAD = False
 model_cache = {}
 tests_cache = {}
 if GLOBAL_PRELOAD:
@@ -693,7 +701,7 @@ def get_all_statements_page(model):
         else:
             stmts_by_hash = {}
             for stmt in stmts:
-                stmts_by_hash[stmt.get_hash()] = stmt
+                stmts_by_hash[str(stmt.get_hash())] = stmt
             stmts = []
             for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
                 try:
@@ -709,6 +717,12 @@ def get_all_statements_page(model):
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
+    if does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+        fkey = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    else:
+        link = None
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -719,7 +733,8 @@ def get_all_statements_page(model):
                            prev=prev_page,
                            next=next_page,
                            filter_curated=filter_curated,
-                           sort_by=sort_by)
+                           sort_by=sort_by,
+                           link=link)
 
 
 @app.route('/query/<model>/')

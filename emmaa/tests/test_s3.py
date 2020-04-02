@@ -63,8 +63,8 @@ def setup_bucket(
             emmaa_model = create_model()
         mm = ModelManager(emmaa_model)
         mm.date_str = date_str
-        mm.link_type = 'test'
         save_model_manager_to_s3('test', mm, bucket=TEST_BUCKET_NAME)
+        mm.save_assembled_statements(bucket=TEST_BUCKET_NAME)
     if add_tests:
         tests = [StatementCheckingTest(
             Activation(Agent('BRAF'), Agent('MAPK1')))]
@@ -179,6 +179,16 @@ def test_get_model_statistics():
     assert new_stats
     assert isinstance(new_stats, dict)
     assert key == 'model_stats/test/model_stats_2020-01-01-00-00-00.json'
+
+
+@mock_s3
+def test_get_assembled_stmts():
+    # Local imports are recommended when using moto
+    from emmaa.model import get_assembled_statements
+    client = setup_bucket(add_mm=True)
+    stmts = get_assembled_statements('test', bucket=TEST_BUCKET_NAME)
+    assert len(stmts) == 2
+    assert all([isinstance(stmt, Activation) for stmt in stmts])
 
 
 @mock_s3
