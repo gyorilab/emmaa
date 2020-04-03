@@ -169,7 +169,7 @@ class ModelManager(object):
                                   for ag in step[0].agent_list()]
                         # For complexes make sure that the agent from the
                         # previous edge goes first
-                        if stmt_type == 'Complex':
+                        if stmt_type == 'Complex' and len(path_nodes) > 0:
                             agents = sorted(
                                 [ag for ag in agents if ag is not None],
                                 key=lambda x: x != path_nodes[-1])
