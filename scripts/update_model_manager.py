@@ -1,5 +1,6 @@
 import argparse
-from emmaa.model_tests import update_model_manager_on_s3
+from emmaa.model import EmmaaModel
+from emmaa.model_tests import ModelManager, save_model_manager_to_s3
 
 
 if __name__ == '__main__':
@@ -8,6 +9,8 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', help='Model name', required=True)
     args = parser.parse_args()
 
+    model = EmmaaModel.load_from_s3(args.model)
+    mm = ModelManager(model)
     mm.model.update_to_ndex()
     mm.save_assembled_statements()
-    mm = update_model_manager_on_s3(args.model)
+    save_model_manager_to_s3(args.model, mm)
