@@ -1,0 +1,29 @@
+{
+  "search_terms": [],
+  "dev_only": true,
+  "human_readable_name": "Covid-19 Dev",
+  "assembly": {
+    "skip_filter_human": true,
+    "filter_ungrounded": false
+  },
+  "test": {
+    "statement_checking": {
+      "max_path_length": 10,
+      "max_paths": 1
+    },
+    "mc_types": [
+      "signed_graph",
+      "unsigned_graph"
+    ],
+    "make_links": true,
+    "test_corpus": [
+      "covid19_curated_tests"
+    ],
+    "default_test_corpus": "covid19_curated_tests"
+  },
+  "description": "Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
+  "make_tests": true,
+  "ndex": {
+    "network": "959c94cc-7503-11ea-aaef-0ac135e8bacf"
+  }
+}
