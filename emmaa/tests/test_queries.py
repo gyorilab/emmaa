@@ -1,11 +1,8 @@
 import json
-import os
 from os.path import abspath, dirname, join
-from nose.plugins.attrib import attr
 from indra.statements import Phosphorylation, Agent, ModCondition
 from emmaa.queries import Query, PathProperty, DynamicProperty, \
-    get_agent_from_local_grounding, get_agent_from_grounding_service, \
-    get_grounding_from_name, get_agent_from_text, get_agent_from_trips
+    get_agent_from_text, get_agent_from_trips
 
 
 def test_path_property_from_json():
@@ -111,38 +108,24 @@ def test_dynamic_property_to_english():
     assert query.to_english() == 'Phosphorylated EGFR is eventually low.'
 
 
-def test_grounding_from_name():
-    assert get_grounding_from_name('MAPK1') == ('HGNC', '6871')
-    assert get_grounding_from_name('BRAF') == ('HGNC', '1097')
-
-
-def test_local_grounding():
-    agent = get_agent_from_local_grounding('MAPK1')
+def test_grounding():
+    agent = get_agent_from_text('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'HGNC': '6871'}
+    assert agent.db_refs == {'TEXT': 'MAPK1',
+                             'HGNC': '6871', 'UP': 'P28482'}, agent.db_refs
     # test with lower case
-    agent = get_agent_from_local_grounding('mapk1')
+    agent = get_agent_from_text('mapk1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'HGNC': '6871'}
+    assert agent.db_refs == {'TEXT': 'mapk1',
+                             'HGNC': '6871', 'UP': 'P28482'}, agent.db_refs
     # other agent
-    agent = get_agent_from_local_grounding('BRAF')
+    agent = get_agent_from_text('BRAF')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
-    assert agent.db_refs == {'HGNC': '1097'}
-
-
-@attr('nonpublic')
-def test_grounding_service():
-    agent = get_agent_from_text('MAPK1', use_grouding_service=True)
-    assert isinstance(agent, Agent)
-    assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'HGNC': '6871'}
-    agent = get_agent_from_text('BRAF', use_grouding_service=True)
-    assert isinstance(agent, Agent)
-    assert agent.name == 'BRAF'
-    assert agent.db_refs == {'HGNC': '1097'}
+    assert agent.db_refs == {'TEXT': 'BRAF',
+                             'HGNC': '1097', 'UP': 'P15056'}, agent.db_refs
 
 
 def test_agent_from_trips():

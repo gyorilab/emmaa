@@ -9,3 +9,4 @@ fnvhash
 sqlalchemy
 inflection
 pybel
+gilda

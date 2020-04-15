@@ -1,18 +1,16 @@
 import logging
-import requests
 from inflection import underscore
 from collections import OrderedDict as _o
-from .util import get_class_from_name
+import gilda
+from indra.sources import trips
+from indra.preassembler.grounding_mapper.standardize import \
+    standardize_agent_name
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash
-from indra.databases.hgnc_client import get_hgnc_id
-from indra.databases.chebi_client import get_chebi_id_from_name
-from indra.databases.mesh_client import get_mesh_id_name
-from indra.preassembler.grounding_mapper import gm
-from indra.sources import trips
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
+from .util import get_class_from_name
 
 
 logger = logging.getLogger(__name__)
@@ -262,77 +260,28 @@ class DynamicProperty(Query):
         return f'{agent} is {pattern}.'
 
 
-def get_agent_from_text(ag_name, use_grouding_service=True):
-    """Return an INDRA Agent object."""
-    grounding_url = "http://grounding.indra.bio/ground"
-    if use_grouding_service:
-        try:
-            agent = get_agent_from_grounding_service(ag_name, grounding_url)
-        except Exception as e:
-            logger.warning('Could not get agent from grounding service: %s' % e)
-            agent = get_agent_from_local_grounding(ag_name)
-    else:
-        agent = get_agent_from_local_grounding(ag_name)
-    return agent
-
-
-def get_grounding_from_name(name):
-    """Return grounding given an agent name."""
-    # See if it's a gene name
-    hgnc_id = get_hgnc_id(name)
-    if hgnc_id:
-        return ('HGNC', hgnc_id)
-
-    # Check if it's in the grounding map
-    try:
-        refs = gm[name]
-        if isinstance(refs, dict):
-            for dbn, dbi in refs.items():
-                if dbn != 'TEXT':
-                    return (dbn, dbi)
-    # If not, search by text
-    except KeyError:
-        pass
-
-    chebi_id = get_chebi_id_from_name(name)
-    if chebi_id:
-        return ('CHEBI', f'CHEBI:{chebi_id}')
-
-    mesh_id, _ = get_mesh_id_name(name)
-    if mesh_id:
-        return ('MESH', mesh_id)
-
-    return None
-
-
-def get_agent_from_local_grounding(ag_name):
-    grounding = get_grounding_from_name(ag_name)
-    if not grounding:
-        grounding = get_grounding_from_name(ag_name.upper())
-        ag_name = ag_name.upper()
-    if not grounding:
+# This is the general method to get a grounding agent from text but it doesn't
+# handle agent state which is required for dynamic queries
+def get_agent_from_text(ag_name):
+    """Return an INDRA Agent object by grounding its entity text with Gilda."""
+    matches = gilda.ground(ag_name)
+    if not matches:
         raise GroundingError(f"Could not find grounding for {ag_name}.")
-    agent = Agent(ag_name, db_refs={grounding[0]: grounding[1]})
+    agent = Agent(ag_name,
+                  db_refs={'TEXT': ag_name,
+                           matches[0].term.db: matches[0].term.id})
+    standardize_agent_name(agent, standardize_refs=True)
     return agent
 
 
-def get_agent_from_grounding_service(ag_name, url):
-    res = requests.post(url, json={'text': ag_name})
-    rj = res.json()
-    if not rj:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
-    agent = Agent(name=rj[0]['term']['entry_name'],
-                  db_refs={rj[0]['term']['db']: rj[0]['term']['id']})
-    return agent
-
-
+# This is the method that dynamical queries use to represent agents with
+# state
 def get_agent_from_trips(ag_text):
     tp = trips.process_text(ag_text)
     agent_list = tp.get_agents()
     if agent_list:
         return agent_list[0]
     return None
-
 
 class GroundingError(Exception):
     pass

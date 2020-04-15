@@ -203,14 +203,14 @@ def get_queryable_stmt_types():
     return stmt_types
 
 
-def _make_query(query_dict, use_grouding_service=True):
+def _make_query(query_dict):
     if 'typeSelection' in query_dict.keys():
         stmt_type = query_dict['typeSelection']
         stmt_class = get_statement_by_name(stmt_type)
         subj = get_agent_from_text(
-            query_dict['subjectSelection'], use_grouding_service)
+            query_dict['subjectSelection'])
         obj = get_agent_from_text(
-            query_dict['objectSelection'], use_grouding_service)
+            query_dict['objectSelection'])
         stmt = stmt_class(subj, obj)
         query = PathProperty(path_stmt=stmt)
         tab = 'static'
