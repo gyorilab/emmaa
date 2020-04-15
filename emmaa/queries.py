@@ -1,5 +1,4 @@
 import logging
-import requests
 from inflection import underscore
 from collections import OrderedDict as _o
 from .util import get_class_from_name
@@ -8,11 +7,6 @@ from indra.preassembler.grounding_mapper.standardize import \
     standardize_agent_name
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash
-from indra.databases.hgnc_client import get_hgnc_id
-from indra.databases.chebi_client import get_chebi_id_from_name
-from indra.databases.mesh_client import get_mesh_id_name
-from indra.preassembler.grounding_mapper import gm
-from indra.sources import trips
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
