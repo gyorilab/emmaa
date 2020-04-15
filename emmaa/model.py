@@ -12,6 +12,7 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.mechlinker import MechLinker
 from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+from indra.preassembler.grounding_mapper.gilda import ground_statements
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.statements import Event, Association, Statement, stmts_from_json
 from indra_db.client.principal.curation import get_curations
@@ -231,6 +232,11 @@ class EmmaaModel(object):
         stmts = self.get_indra_stmts()
         stmts = self.filter_event_association(stmts)
         stmts = ac.filter_no_hypothesis(stmts)
+        if self.assembly_config.get('ground_stmts'):
+            stmts = ground_statements(stmts, mode='local',
+                                      ungrounded_only=True)
+            stmts = ground_statements(stmts, mode='local', sources=['sparser'],
+                                      ungrounded_only=False)
         if not self.assembly_config.get('skip_map_grounding'):
             stmts = ac.map_grounding(stmts)
         if self.assembly_config.get('filter_ungrounded'):
