@@ -2,7 +2,7 @@ import json
 from os.path import abspath, dirname, join
 from indra.statements import Phosphorylation, Agent, ModCondition
 from emmaa.queries import Query, PathProperty, DynamicProperty, \
-    get_agent_from_text
+    get_agent_from_text, get_agent_from_trips
 
 
 def test_path_property_from_json():
@@ -123,3 +123,12 @@ def test_grounding():
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
     assert agent.db_refs == {'HGNC': '1097'}
+
+
+def test_agent_from_trips():
+    ag = get_agent_from_trips('MAP2K1')
+    assert isinstance(ag, Agent)
+    assert ag.name == 'MAP2K1'
+    assert not ag.mods
+    ag_phos = get_agent_from_trips('phosphorylated MAP2K1')
+    assert ag_phos.mods

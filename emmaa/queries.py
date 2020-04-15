@@ -1,8 +1,8 @@
 import logging
 from inflection import underscore
 from collections import OrderedDict as _o
-from .util import get_class_from_name
 import gilda
+from indra.sources import trips
 from indra.preassembler.grounding_mapper.standardize import \
     standardize_agent_name
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
@@ -10,6 +10,7 @@ from indra.statements.statements import Statement, Agent, get_all_descendants,\
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
+from .util import get_class_from_name
 
 
 logger = logging.getLogger(__name__)
@@ -259,6 +260,8 @@ class DynamicProperty(Query):
         return f'{agent} is {pattern}.'
 
 
+# This is the general method to get a grounding agent from text but it doesn't
+# handle agent state which is required for dynamic queries
 def get_agent_from_text(ag_name):
     """Return an INDRA Agent object by grounding its entity text with Gilda."""
     matches = gilda.ground(ag_name)
@@ -270,6 +273,15 @@ def get_agent_from_text(ag_name):
     standardize_agent_name(agent, standardize_refs=True)
     return agent
 
+
+# This is the method that dynamical queries use to represent agents with
+# state
+def get_agent_from_trips(ag_text):
+    tp = trips.process_text(ag_text)
+    agent_list = tp.get_agents()
+    if agent_list:
+        return agent_list[0]
+    return None
 
 class GroundingError(Exception):
     pass
