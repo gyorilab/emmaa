@@ -25,6 +25,6 @@ setup(name='emmaa',
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'jsonpickle', 'kappy',
                         'pygraphviz', 'fnvhash', 'sqlalchemy', 'inflection',
-                        'pybel', 'flask_jwt_extended'],
+                        'pybel', 'flask_jwt_extended', 'gilda'],
       extras_require={'test': ['nose', 'coverage', 'moto']}
       )
