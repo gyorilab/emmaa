@@ -238,7 +238,13 @@ class EmmaaModel(object):
             stmts = ground_statements(stmts, mode='local', sources=['sparser'],
                                       ungrounded_only=False)
         if not self.assembly_config.get('skip_map_grounding'):
-            stmts = ac.map_grounding(stmts)
+            if self.assembly_config.get('grounding_map'):
+                gm = load_custom_grounding_map(self.name)
+                policy = self.assembly_config['grounding_map'].get('policy')
+                stmts = ac.map_grounding(stmts, grounding_map=gm,
+                                         grounding_map_policy=policy)
+            else:
+                stmts = ac.map_grounding(stmts)
         if self.assembly_config.get('filter_ungrounded'):
             score_threshold = self.assembly_config.get('score_threshold')
             stmts = ac.filter_grounded_only(
@@ -666,3 +672,10 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
     stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
     stmts = stmts_from_json(stmt_jsons)
     return stmts
+
+
+def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
+    key = f'models/{model}/grounding_map.json'
+    client = get_s3_client()
+    obj = client.get_object(Bucket=bucket, Key=key)
+    return json.loads(obj['Body'].read().decode('utf-8'))
