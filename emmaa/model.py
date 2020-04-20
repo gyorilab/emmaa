@@ -302,31 +302,6 @@ class EmmaaModel(object):
 
         self.assembled_stmts = stmts
 
-    def filter_event_association(self, stmts):
-        """Filter a list of Statements to exclude Events and Associations."""
-        logger.info('Filtering Events and Associations.')
-        stmts = [stmt for stmt in stmts if (
-            (not isinstance(stmt, Event)) and
-            (not isinstance(stmt, Association)))]
-        logger.info('%d statements after filter...' % len(stmts))
-        return stmts
-
-    def filter_relevance(self, stmts, policy=None):
-        """Filter a list of Statements to ones matching a search term."""
-        logger.info('Filtering %d statements for relevance...' % len(stmts))
-        stmts_out = []
-        stnames = {s.name for s in self.search_terms}
-        for stmt in stmts:
-            agnames = {a.name for a in stmt.agent_list() if a is not None}
-            if policy == 'prior_one' and (agnames & stnames):
-                stmts_out.append(stmt)
-            elif policy == 'prior_all' and agnames.issubset(stnames):
-                stmts_out.append(stmt)
-            elif policy is None:
-                stmts_out.append(stmt)
-        logger.info('%d statements after filter...' % len(stmts_out))
-        return stmts_out
-
     def update_to_ndex(self):
         """Update assembled model as CX on NDEx, updates existing network."""
         if not self.assembled_stmts:
@@ -445,6 +420,22 @@ class EmmaaModel(object):
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
+
+
+def filter_relevance(stmts, st_names, policy=None):
+    """Filter a list of Statements to ones matching a search term."""
+    logger.info('Filtering %d statements for relevance...' % len(stmts))
+    stmts_out = []
+    for stmt in stmts:
+        agnames = {a.name for a in stmt.agent_list() if a is not None}
+        if policy == 'prior_one' and (agnames & stnames):
+            stmts_out.append(stmt)
+        elif policy == 'prior_all' and agnames.issubset(stnames):
+            stmts_out.append(stmt)
+        elif policy is None:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    return stmts_out
 
 
 def load_config_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
@@ -678,4 +669,6 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
     client = get_s3_client()
     obj = client.get_object(Bucket=bucket, Key=key)
-    return json.loads(obj['Body'].read().decode('utf-8'))
+    gr_map = json.loads(obj['Body'].read().decode('utf-8'))
+    logger.info(gr_map)
+    return gr_map
