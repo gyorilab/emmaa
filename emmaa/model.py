@@ -15,6 +15,7 @@ from indra.preassembler.hierarchy_manager import get_wm_hierarchies
 from indra.preassembler.grounding_mapper.gilda import ground_statements
 from indra.belief.wm_scorer import get_eidos_scorer
 from indra.statements import Event, Association, Statement, stmts_from_json
+from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -422,6 +423,7 @@ class EmmaaModel(object):
                    (self.name, len(self.stmts), len(self.search_terms))
 
 
+@register_pipeline
 def filter_relevance(stmts, st_names, policy=None):
     """Filter a list of Statements to ones matching a search term."""
     logger.info('Filtering %d statements for relevance...' % len(stmts))
