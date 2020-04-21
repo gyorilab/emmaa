@@ -232,77 +232,9 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
-        stmts = self.filter_event_association(stmts)
-        stmts = ac.filter_no_hypothesis(stmts)
-        if self.assembly_config.get('ground_stmts'):
-            stmts = ground_statements(stmts, mode='local',
-                                      ungrounded_only=True)
-            stmts = ground_statements(stmts, mode='local', sources=['sparser'],
-                                      ungrounded_only=False)
-        if not self.assembly_config.get('skip_map_grounding'):
-            if self.assembly_config.get('grounding_map'):
-                gm = load_custom_grounding_map(self.name)
-                policy = self.assembly_config['grounding_map'].get('policy')
-                stmts = ac.map_grounding(stmts, grounding_map=gm,
-                                         grounding_map_policy=policy)
-            else:
-                stmts = ac.map_grounding(stmts)
-        if self.assembly_config.get('filter_ungrounded'):
-            score_threshold = self.assembly_config.get('score_threshold')
-            stmts = ac.filter_grounded_only(
-                stmts, score_threshold=score_threshold)
-        if not self.assembly_config.get('skip_filter_human'):
-            stmts = ac.filter_human_only(stmts)
-        if not self.assembly_config.get('skip_map_sequence'):
-            stmts = ac.map_sequence(stmts)
-        # Use WM hierarchies and belief scorer for WM preassembly
-        preassembly_mode = self.assembly_config.get('preassembly_mode')
-        if preassembly_mode == 'wm':
-            hierarchies = get_wm_hierarchies()
-            belief_scorer = get_eidos_scorer()
-            stmts = ac.run_preassembly(
-                stmts, return_toplevel=False, belief_scorer=belief_scorer,
-                hierarchies=hierarchies, normalize_equivalences=True,
-                normalize_opposites=True, normalize_ns='WM')
-        else:
-            stmts = ac.run_preassembly(stmts, return_toplevel=False)
-        if self.assembly_config.get('standardize_names'):
-            ac.standardize_names_groundings(stmts)
-        if self.assembly_config.get('merge_groundings'):
-            stmts = ac.merge_groundings(stmts)
-        if self.assembly_config.get('merge_deltas'):
-            stmts = ac.merge_deltas(stmts)
-        relevance_policy = self.assembly_config.get('filter_relevance')
-        if relevance_policy:
-            stmts = self.filter_relevance(stmts, relevance_policy)
-        if not self.assembly_config.get('skip_curations'):
-            curations = get_curations()
-            stmts = ac.filter_by_curation(
-                stmts, curations, 'any',
-                ['correct', 'act_vs_amt', 'hypothesis'], update_belief=True)
-        belief_cutoff = self.assembly_config.get('belief_cutoff')
-        if belief_cutoff is not None:
-            stmts = ac.filter_belief(stmts, belief_cutoff)
-        stmts = ac.filter_top_level(stmts)
-
-        if self.assembly_config.get('filter_direct'):
-            stmts = ac.filter_direct(stmts)
-            stmts = ac.filter_enzyme_kinase(stmts)
-            stmts = ac.filter_mod_nokinase(stmts)
-            stmts = ac.filter_transcription_factor(stmts)
-
-        if self.assembly_config.get('mechanism_linking'):
-            ml = MechLinker(stmts)
-            ml.gather_explicit_activities()
-            ml.reduce_activities()
-            ml.gather_modifications()
-            ml.reduce_modifications()
-            ml.gather_explicit_activities()
-            ml.replace_activations()
-            ml.require_active_forms()
-            stmts = ml.statements
-
-        self.assembled_stmts = stmts
+        stnames = {s.name for s in self.search_terms}
+        ap = AssemblyPipeline(self.assembly_config)
+        self.assembled_stmts = ap.run(stmts, stnames=stnames)
 
     def update_to_ndex(self):
         """Update assembled model as CX on NDEx, updates existing network."""
