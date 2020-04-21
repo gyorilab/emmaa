@@ -27,6 +27,7 @@ from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
 
 
 logger = logging.getLogger(__name__)
+register_pipeline(get_curations)
 
 
 class EmmaaModel(object):
@@ -424,7 +425,7 @@ class EmmaaModel(object):
 
 
 @register_pipeline
-def filter_relevance(stmts, st_names, policy=None):
+def filter_relevance(stmts, stnames, policy=None):
     """Filter a list of Statements to ones matching a search term."""
     logger.info('Filtering %d statements for relevance...' % len(stmts))
     stmts_out = []
@@ -667,10 +668,10 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
+@register_pipeline
 def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
     client = get_s3_client()
     obj = client.get_object(Bucket=bucket, Key=key)
     gr_map = json.loads(obj['Body'].read().decode('utf-8'))
-    logger.info(gr_map)
     return gr_map
