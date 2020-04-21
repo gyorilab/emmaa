@@ -4,17 +4,12 @@ import pickle
 import logging
 import datetime
 from indra.databases import ndex_client
-import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.mechlinker import MechLinker
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-from indra.preassembler.grounding_mapper.gilda import ground_statements
-from indra.belief.wm_scorer import get_eidos_scorer
-from indra.statements import Event, Association, Statement, stmts_from_json
+from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
