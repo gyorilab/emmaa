@@ -719,7 +719,11 @@ def get_all_statements_page(model):
         sh = str(stmt.get_hash())
         english = _format_stmt_text(stmt)
         evid_count = len(stmt.evidence)
-        stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
+        url_param = parse.urlencode(
+            {'stmt_hash': sh, 'source': 'model_statement', 'model': model,
+             'format': 'json'})
+        json_link = f'/evidence/?{url_param}'
+        stmt_row = [(sh, english, [], evid_count, cur_counts[sh], json_link)]
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
