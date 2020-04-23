@@ -623,25 +623,13 @@ def get_statement_evidence_page():
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
-    stmt_rows = []
+    stmts = []
     if source == 'model_statement':
         mm = load_model_manager_from_cache(model)
         for stmt in mm.model.assembled_stmts:
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
-                    if display_format == 'html':
-                        english = _format_stmt_text(stmt)
-                        evid_count = len(stmt.evidence)
-                        evid = _format_evidence_text(stmt, cur_dict)[:10]
-                        url_param = parse.urlencode(
-                            {'stmt_hash': stmt_hash, 'source': source,
-                             'model': model, 'format': 'json'})
-                        json_link = f'/evidence/?{url_param}'
-                        stmt_row = [(stmt_hash, english, evid, evid_count,
-                                    cur_count, json_link)]
-                        stmt_rows.append(stmt_row)
-                    else:
-                        return jsonify(stmt.to_json())
+                    stmts.append(stmt)
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -649,22 +637,24 @@ def get_statement_evidence_page():
         for t in tests:
             for stmt_hash in stmt_hashes:
                 if str(t.stmt.get_hash()) == str(stmt_hash):
-                    if display_format == 'html':
-                        english = _format_stmt_text(t.stmt)
-                        evid_count = len(t.stmt.evidence)
-                        evid = _format_evidence_text(t.stmt, cur_dict)[:10]
-                        url_param = parse.urlencode(
-                            {'stmt_hash': stmt_hash, 'source': source,
-                             'model': model, 'test_corpus': test_corpus,
-                             'format': 'json'})
-                        json_link = f'/evidence/?{url_param}'
-                        stmt_row = [(stmt_hash, english, evid, evid_count,
-                                    cur_count, json_link)]
-                        stmt_rows.append(stmt_row)
-                    else:
-                        return jsonify(t.stmt.to_json())
+                    stmts.append(t.stmt)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
+    if display_format == 'html':
+        stmt_rows = []
+        for stmt in stmts:
+            english = _format_stmt_text(stmt)
+            evid_count = len(stmt.evidence)
+            evid = _format_evidence_text(stmt, cur_dict)[:10]
+            url_param = parse.urlencode(
+                {'stmt_hash': stmt_hash, 'source': source,
+                    'model': model, 'format': 'json'})
+            json_link = f'/evidence/?{url_param}'
+            stmt_row = [(stmt_hash, english, evid, evid_count,
+                        cur_count, json_link)]
+            stmt_rows.append(stmt_row)
+    else:
+        return jsonify(stmts[0].to_json())
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
