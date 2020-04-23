@@ -654,7 +654,8 @@ def get_statement_evidence_page():
                         cur_count, json_link)]
             stmt_rows.append(stmt_row)
     else:
-        return jsonify(stmts[0].to_json())
+        stmt_json = json.dumps(stmts[0].to_json(), indent=1)
+        return Response(stmt_json, mimetype='application/json')
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
