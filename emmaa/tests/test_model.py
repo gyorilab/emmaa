@@ -31,9 +31,17 @@ def create_model(relevance=None):
             'test_corpus': 'simple_tests',
             'mc_types': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
             'make_links': True},
-        'assembly': {'skip_curations': True}}
+        'assembly': [
+            {'function': 'filter_no_hypothesis'},
+            {'function': 'map_grounding'},
+            {'function': 'filter_grounded_only'},
+            {'function': 'filter_human_only'},
+            {'function': 'map_sequence'},
+            {'function': 'run_preassembly', 'kwargs': {
+                'return_toplevel': False}}]}
     if relevance:
-        config_dict['assembly']['filter_relevance'] = relevance
+        config_dict['assembly'].append(
+            {'function': 'filter_relevance', 'kwargs': {'policy': relevance}})
     emmaa_model = EmmaaModel('test', config_dict)
     emmaa_model.add_statements(emmaa_stmts)
     return emmaa_model
