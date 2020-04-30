@@ -70,8 +70,20 @@ function collectQuery(queryContainer) {
   if (queryContainer.id == 'query-container') {
     query['subjectSelection'] = document.getElementById('subjectInput').value;
     query['objectSelection'] = document.getElementById('objectInput').value;
+    if (query['subjectSelection'] === '') {
+      alert('Must provide a subject!');
+      return;
+    }
+    if (query['objectSelection'] === '') {
+      alert('Must provide an object!');
+      return;      
+    }
   } else {
     query['agentSelection'] = document.getElementById('agentInput').value;
+    if (query['agentSelection'] === '') {
+      alert('Must provide an agent description!');
+      return;
+    } 
   };
   result.push(query);
   return result;
