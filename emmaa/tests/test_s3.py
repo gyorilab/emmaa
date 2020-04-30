@@ -52,7 +52,15 @@ def setup_bucket(
             'test': {'test_corpus': 'simple_tests',
                      'default_test_corpus': 'simple_tests'},
             'human_readable_name': 'Test Model',
-            'assembly': {'skip_curations': True}
+            'assembly': [
+                {'function': 'filter_no_hypothesis'},
+                {'function': 'map_grounding'},
+                {'function': 'filter_grounded_only'},
+                {'function': 'filter_human_only'},
+                {'function': 'map_sequence'},
+                {'function': 'run_preassembly', 'kwargs': {
+                    'return_toplevel': False}},
+                {'function': 'filter_top_level'}]
             }
         save_config_to_s3('test', config_dict, bucket=TEST_BUCKET_NAME)
         emmaa_model = create_model()

@@ -4,17 +4,13 @@ import pickle
 import logging
 import datetime
 from indra.databases import ndex_client
-import indra.tools.assemble_corpus as ac
 from indra.literature import pubmed_client, elsevier_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.mechlinker import MechLinker
-from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-from indra.preassembler.grounding_mapper.gilda import ground_statements
-from indra.belief.wm_scorer import get_eidos_scorer
-from indra.statements import Event, Association, Statement, stmts_from_json
+from indra.statements import stmts_from_json
+from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -26,6 +22,7 @@ from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
 
 
 logger = logging.getLogger(__name__)
+register_pipeline(get_curations)
 
 
 class EmmaaModel(object):
@@ -230,102 +227,9 @@ class EmmaaModel(object):
         """Run INDRA's assembly pipeline on the Statements."""
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
-        stmts = self.filter_event_association(stmts)
-        stmts = ac.filter_no_hypothesis(stmts)
-        if self.assembly_config.get('ground_stmts'):
-            stmts = ground_statements(stmts, mode='local',
-                                      ungrounded_only=True)
-            stmts = ground_statements(stmts, mode='local', sources=['sparser'],
-                                      ungrounded_only=False)
-        if not self.assembly_config.get('skip_map_grounding'):
-            if self.assembly_config.get('grounding_map'):
-                gm = load_custom_grounding_map(self.name)
-                policy = self.assembly_config['grounding_map'].get('policy')
-                stmts = ac.map_grounding(stmts, grounding_map=gm,
-                                         grounding_map_policy=policy)
-            else:
-                stmts = ac.map_grounding(stmts)
-        if self.assembly_config.get('filter_ungrounded'):
-            score_threshold = self.assembly_config.get('score_threshold')
-            stmts = ac.filter_grounded_only(
-                stmts, score_threshold=score_threshold)
-        if not self.assembly_config.get('skip_filter_human'):
-            stmts = ac.filter_human_only(stmts)
-        if not self.assembly_config.get('skip_map_sequence'):
-            stmts = ac.map_sequence(stmts)
-        # Use WM hierarchies and belief scorer for WM preassembly
-        preassembly_mode = self.assembly_config.get('preassembly_mode')
-        if preassembly_mode == 'wm':
-            hierarchies = get_wm_hierarchies()
-            belief_scorer = get_eidos_scorer()
-            stmts = ac.run_preassembly(
-                stmts, return_toplevel=False, belief_scorer=belief_scorer,
-                hierarchies=hierarchies, normalize_equivalences=True,
-                normalize_opposites=True, normalize_ns='WM')
-        else:
-            stmts = ac.run_preassembly(stmts, return_toplevel=False)
-        if self.assembly_config.get('standardize_names'):
-            ac.standardize_names_groundings(stmts)
-        if self.assembly_config.get('merge_groundings'):
-            stmts = ac.merge_groundings(stmts)
-        if self.assembly_config.get('merge_deltas'):
-            stmts = ac.merge_deltas(stmts)
-        relevance_policy = self.assembly_config.get('filter_relevance')
-        if relevance_policy:
-            stmts = self.filter_relevance(stmts, relevance_policy)
-        if not self.assembly_config.get('skip_curations'):
-            curations = get_curations()
-            stmts = ac.filter_by_curation(
-                stmts, curations, 'any',
-                ['correct', 'act_vs_amt', 'hypothesis'], update_belief=True)
-        belief_cutoff = self.assembly_config.get('belief_cutoff')
-        if belief_cutoff is not None:
-            stmts = ac.filter_belief(stmts, belief_cutoff)
-        stmts = ac.filter_top_level(stmts)
-
-        if self.assembly_config.get('filter_direct'):
-            stmts = ac.filter_direct(stmts)
-            stmts = ac.filter_enzyme_kinase(stmts)
-            stmts = ac.filter_mod_nokinase(stmts)
-            stmts = ac.filter_transcription_factor(stmts)
-
-        if self.assembly_config.get('mechanism_linking'):
-            ml = MechLinker(stmts)
-            ml.gather_explicit_activities()
-            ml.reduce_activities()
-            ml.gather_modifications()
-            ml.reduce_modifications()
-            ml.gather_explicit_activities()
-            ml.replace_activations()
-            ml.require_active_forms()
-            stmts = ml.statements
-
-        self.assembled_stmts = stmts
-
-    def filter_event_association(self, stmts):
-        """Filter a list of Statements to exclude Events and Associations."""
-        logger.info('Filtering Events and Associations.')
-        stmts = [stmt for stmt in stmts if (
-            (not isinstance(stmt, Event)) and
-            (not isinstance(stmt, Association)))]
-        logger.info('%d statements after filter...' % len(stmts))
-        return stmts
-
-    def filter_relevance(self, stmts, policy=None):
-        """Filter a list of Statements to ones matching a search term."""
-        logger.info('Filtering %d statements for relevance...' % len(stmts))
-        stmts_out = []
         stnames = {s.name for s in self.search_terms}
-        for stmt in stmts:
-            agnames = {a.name for a in stmt.agent_list() if a is not None}
-            if policy == 'prior_one' and (agnames & stnames):
-                stmts_out.append(stmt)
-            elif policy == 'prior_all' and agnames.issubset(stnames):
-                stmts_out.append(stmt)
-            elif policy is None:
-                stmts_out.append(stmt)
-        logger.info('%d statements after filter...' % len(stmts_out))
-        return stmts_out
+        ap = AssemblyPipeline(self.assembly_config)
+        self.assembled_stmts = ap.run(stmts, stnames=stnames)
 
     def update_to_ndex(self):
         """Update assembled model as CX on NDEx, updates existing network."""
@@ -445,6 +349,23 @@ class EmmaaModel(object):
     def __repr__(self):
         return "EmmaModel(%s, %d stmts, %d search terms)" % \
                    (self.name, len(self.stmts), len(self.search_terms))
+
+
+@register_pipeline
+def filter_relevance(stmts, stnames, policy=None):
+    """Filter a list of Statements to ones matching a search term."""
+    logger.info('Filtering %d statements for relevance...' % len(stmts))
+    stmts_out = []
+    for stmt in stmts:
+        agnames = {a.name for a in stmt.agent_list() if a is not None}
+        if policy == 'prior_one' and (agnames & stnames):
+            stmts_out.append(stmt)
+        elif policy == 'prior_all' and agnames.issubset(stnames):
+            stmts_out.append(stmt)
+        elif policy is None:
+            stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    return stmts_out
 
 
 def load_config_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
@@ -674,8 +595,10 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
     return stmts
 
 
+@register_pipeline
 def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
     client = get_s3_client()
     obj = client.get_object(Bucket=bucket, Key=key)
-    return json.loads(obj['Body'].read().decode('utf-8'))
+    gr_map = json.loads(obj['Body'].read().decode('utf-8'))
+    return gr_map
