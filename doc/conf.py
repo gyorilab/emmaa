@@ -16,6 +16,7 @@ import mock
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+from emmaa import __version__ as emmaa_version
 
 
 # -- Project information -----------------------------------------------------
@@ -25,9 +26,9 @@ copyright = '2020, EMMAA developers'
 author = 'EMMAA developers'
 
 # The short X.Y version
-version = '1.6'
+version = '.'.join(emmaa_version.split('.')[:1])
 # The full version, including alpha/beta/rc tags
-release = '1.6.0'
+release = emmaa_version
 
 
 # -- General configuration ---------------------------------------------------
