@@ -96,6 +96,10 @@ capture the relevant existing literature (by building on the CORD-19 corpus).
 The model also self-updates each day with new literature on Covid-19, which is
 now appearing at a pace of ~500 papers a day, and accelerating.
 
+.. figure:: ../_static/images/covid19_model_card.png
+  :align: center
+  :figwidth: 30 %
+
 We have made a number of enhancements to the underlying reading and assembly
 pipelines to:
 
