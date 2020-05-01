@@ -98,3 +98,12 @@ appearing at a pace of ~500 papers a day, and accelerating.
 Configurable model assembly pipeline
 ------------------------------------
 
+Each EMMAA model is defined by a configuration file which determines
+what search terms the model is built around, other metadata (name, description
+etc.), and other settings specific to the model.
+Building on the new Pipeline feature in INDRA, EMMAA models can
+now define the assembly pipeline applied to each model in a fully
+declarative way, as part of the configuration file. This simplifies the EMMAA
+codebase, and makes the instantiation of new models much easier, in a way
+that is decoupled from code. This could open up exciting possibilities such
+as instantiating EMMAA models on-demand, potentially through a UI.
