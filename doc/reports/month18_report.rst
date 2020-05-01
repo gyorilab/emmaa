@@ -87,13 +87,48 @@ would receive:
 
 A model of Covid-19
 -------------------
-Before starting the project, we had planned to set up at least one EMMAA
-model of a relevant public health-related process. As the Covid-19 crisis
-emerged, we set up an EMMAA model
-(https://emmaa.indra.bio/dashboard/covid19/?tab=model) to capture the
-relevant existing literature (by building on the CORD-19 corpus). The model
-also self-updates each day with new literature on Covid-19, which is now
-appearing at a pace of ~500 papers a day, and accelerating.
+
+Before starting the project, we had planned to set up at least one EMMAA model
+of a relevant public health-related process. As the Covid-19 crisis emerged, we
+set up an EMMAA model (https://emmaa.indra.bio/dashboard/covid19/?tab=model) to
+capture the relevant existing literature (by building on the CORD-19 corpus).
+The model also self-updates each day with new literature on Covid-19, which is
+now appearing at a pace of ~500 papers a day, and accelerating.
+
+We have made a number of enhancements to the underlying reading and assembly
+pipelines to:
+
+1. Incorporate full text content from the CORD-19 corpus alongside our other
+   sources (PubMed Central, MEDLINE, Elsevier, xDD)
+2. Improve grounding of viral proteins, e.g., "SARS-CoV-2 Spike protein"
+3. Use GILDA (https://github.com/indralab/gilda) to ground named entities
+   identified by the University of Arizona open-domain reading system Eidos
+   to extract and integrate high-level causal relations (e.g., viruses
+   cause respiratory inf.
+
+In addition, we have added curated tests describing empirically observed
+inhibitors of SARS-CoV-2 (e.g., "Imatinib methanesulfonate inhibits severe
+acute respiratory syndrome coronavirus 2") to determine whether the model
+can identify a mechanistic explanation for the effectiveness of these drugs.
+
+Integration of content from UW xDD system
+-----------------------------------------
+
+During this reporting period we have continued to develop our pipeline to
+integrate content from the University of Wisconsin xDD platform and have
+completed 5 pilot runs. We have created new command-line endpoints to run
+machine reading and statement extraction within our Dockerized system. INDRA
+Statements extracted from the xDD content are posted to a shared private AWS S3
+bucket along with associated document metadata.  In successive pilot runs we
+have refined metadata formats and adapted the schema of the INDRA DB to allow
+INDRA Statements to be linked to articles in the absence of article content (we
+only obtain INDRA Statements from xDD, while xDD retains the articles
+themselves). Next steps include:
+
+1) Determining relevance of xDD documents to specific EMMAA models
+    by linking documents to specific xDD-indexed terms/keywords
+2) Scaling up to larger document runs focusing on Pubmed-indexed documents
+for which we do not have full texts available from other sources.
 
 Configurable model assembly pipeline
 ------------------------------------
