@@ -16,15 +16,51 @@ key places that allow curation include
 
 - The list of most supported statements on the Model tab.
 - The list of new added statements on the Model tab.
-- 
+- The page where all statements in a model can be browsed.
+- Each model's Test tab allows curating tests themselves (which in some cases
+  are also prone to errors) and also the results of test, i.e., paths of
+  mechanisms satisfying the test.
+- Results of new queries and registered queries on the Queries page.
+
+Existing curations for all of the above content are also accessible within
+the dashboard.
+
+The figure below shows an example of the interface for entering new curations.
+as well as the visual annotations used to show existing curations and their
+properties for each statement or evidence.
+.. figure:: ../_static/images/all_statements_curation.png
+  :align: center
+  :figwidth: 100 %
 
 
 Viewing and ranking all statements in a model
 ---------------------------------------------
-All statements page / ranking by evidence or test paths
+We also recognized the importance of being able to inspect the contents
+of the model as a whole, in a view which exposes all the literature evidence
+and also enables in-place curation (as opposed to the NDEx network view).
+Therefore, we added a "View All Statements" button to each Model page which
+allows browsing all statements in the model. To overcome the challenge of
+the model potentially containing a very large number of statements,
+the page uses an auto-expand feature which loads statements in real time
+as the user scrolls further down on the page. Similarly, evidences for
+each statement are loaded during runtime, and only when requested by the user.
+
+The default view on the All Statements page ranks statements by the number
+of evidence that support them. This allows curators to focus on statements
+that are prominently discussed in the subset of literature corresponding
+to the scope of the model. However, this ranking doesn't necessarily
+correspond to a statement's importance in terms of functionally affecting
+a model's behavior. Therefore, we added another option to sort statements by
+the number of model tests whose result rely on the statement. In other words,
+if a given mechanism is essential for many tests passing, it will be ranked
+high on this page. This view is particularly useful if a user intends to
+curate the model in a way that they focus on identifying incorrect
+statements that have the biggest functional effect on model behavior, without
+spending time on statements that do not play an important role in this
+sense.
 
 
-iEmail notifications
+Email notifications
 -------------------
 The system of user notifications for registered queries is now in place and
 available to any registered user. On the Query page, when a query is
@@ -33,6 +69,20 @@ that each time a relevant new result is available for the query, the user
 receives an email informing them what the new result is, and linking them
 to the page on which the new result and its effect on model behavior
 can be inspected.
+
+A representative use case for this is a query about
+a drug and an indirect downstream effect that could be explained by many
+possible parallel paths of mechanisms (e.g., "how does quercetin inhibit
+TMPRSS2?"). Each day, as a model is updated, new mechanisms that were
+extracted from the latest literature may provide links between previously
+unconnected concepts that can contribute to new results for a query.
+
+The figure below shows an example notification email that an EMMAA user
+would receive:
+
+.. figure:: ../_static/images/email_notification.png
+  :align: center
+  :figwidth: 100 %
 
 A model of Covid-19
 -------------------
