@@ -28,6 +28,7 @@ the dashboard.
 The figure below shows an example of the interface for entering new curations.
 as well as the visual annotations used to show existing curations and their
 properties for each statement or evidence.
+
 .. figure:: ../_static/images/all_statements_curation.png
   :align: center
   :figwidth: 100 %
