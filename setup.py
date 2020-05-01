@@ -1,3 +1,4 @@
+import re
 from os import path
 from setuptools import setup, find_packages
 
@@ -8,8 +9,18 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 
+with open(path.join(here, 'emmaa', '__init__.py'), 'r') as fh:
+    for line in fh.readlines():
+        match = re.match(r'__version__ = \'(.+)\'', line)
+        if match:
+            emmaa_version = match.groups()[0]
+            break
+    else:
+        raise ValueError('Could not get version from emmaa/__init__.py')
+
+
 setup(name='emmaa',
-      version='1.6.0',
+      version=emmaa_version,
       description='Ecosystem of Machine-maintained Models with ' + \
                   'Automated Analysis',
       long_description=long_description,

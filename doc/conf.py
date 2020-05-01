@@ -16,18 +16,19 @@ import mock
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+from emmaa import __version__ as emmaa_version
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'emmaa'
-copyright = '2019, EMMAA developers'
+copyright = '2020, EMMAA developers'
 author = 'EMMAA developers'
 
 # The short X.Y version
-version = '1.6'
+version = '.'.join(emmaa_version.split('.')[:2])
 # The full version, including alpha/beta/rc tags
-release = '1.6.0'
+release = emmaa_version
 
 
 # -- General configuration ---------------------------------------------------
@@ -173,7 +174,11 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 MOCK_MODULES = [
     'indra_db', 'indra_db.client', 'indra_db.client.statements',
-    'indra_db.util', 'pygraphviz'
+    'indra_db.client.principal', 'indra_db.client.principal.curation',
+    'indra_db.util', 'pygraphviz', 'bioagents', 'bioagents.tra',
+    'bioagents.tra.tra', 'indra.pipeline',
+    'indra_reading', 'indra_reading.scripts',
+    'indra_reading.scripts.submit_reading_pipeline'
 ]
 
 for mod_name in MOCK_MODULES:
