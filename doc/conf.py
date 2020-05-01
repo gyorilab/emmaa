@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'emmaa'
-copyright = '2019, EMMAA developers'
+copyright = '2020, EMMAA developers'
 author = 'EMMAA developers'
 
 # The short X.Y version
@@ -173,7 +173,8 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 MOCK_MODULES = [
     'indra_db', 'indra_db.client', 'indra_db.client.statements',
-    'indra_db.util', 'pygraphviz'
+    'indra_db.util', 'pygraphviz', 'bioagents', 'indra.pipeline',
+    'indra_reading'
 ]
 
 for mod_name in MOCK_MODULES:
