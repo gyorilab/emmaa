@@ -173,8 +173,11 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 MOCK_MODULES = [
     'indra_db', 'indra_db.client', 'indra_db.client.statements',
-    'indra_db.util', 'pygraphviz', 'bioagents', 'indra.pipeline',
-    'indra_reading'
+    'indra_db.client.principal', 'indra_db.client.principal.curation',
+    'indra_db.util', 'pygraphviz', 'bioagents', 'bioagents.tra',
+    'bioagents.tra.tra', 'indra.pipeline',
+    'indra_reading', 'indra_reading.scripts',
+    'indra_reading.scripts.submit_reading_pipeline'
 ]
 
 for mod_name in MOCK_MODULES:
