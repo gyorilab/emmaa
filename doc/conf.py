@@ -26,7 +26,7 @@ copyright = '2020, EMMAA developers'
 author = 'EMMAA developers'
 
 # The short X.Y version
-version = '.'.join(emmaa_version.split('.')[:1])
+version = '.'.join(emmaa_version.split('.')[:2])
 # The full version, including alpha/beta/rc tags
 release = emmaa_version
 
