@@ -249,7 +249,7 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
         ev_url_par = parse.urlencode(
             {'stmt_hash': th, 'source': 'test', 'model': model_name,
              'test_corpus': test_corpus})
-        test['test'][0] = f'/evidence/?{ev_url_par}'
+        test['test'][0] = f'/evidence?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
@@ -270,14 +270,14 @@ def _format_query_results(formatted_results):
         latest_date = get_latest_available_date(
             model, _default_test(model))
         new_res = [('', res["query"], ''),
-                   (f'/dashboard/{model}/?date={latest_date}' +
+                   (f'/dashboard/{model}?date={latest_date}' +
                     f'&test_corpus={_default_test(model)}&tab=model',
                     model,
                     f'Click to see details about {model}')]
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'query_hash': qh, 'order': 1})
-            new_res.append((f'/query/{model}?{url_param}', res[mt][0],
+            new_res.append((f'/query{model}?{url_param}', res[mt][0],
                             'Click to see detailed results for this query'))
         result_array.append(new_res)
     return result_array
@@ -316,7 +316,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             ev_url_par = parse.urlencode(
                 {'stmt_hash': th, 'source': 'test', 'model': model_name,
                  'test_corpus': test_corpus})
-            test['test'][0] = f'/evidence/?{ev_url_par}'
+            test['test'][0] = f'/evidence?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
@@ -462,7 +462,7 @@ def get_home():
                            user_email=user.email if user else "")
 
 
-@app.route('/dashboard/<model>/')
+@app.route('/dashboard/<model>')
 @jwt_optional
 def get_model_dashboard(model):
     test_corpus = request.args.get('test_corpus', _default_test(
@@ -511,7 +511,7 @@ def get_model_dashboard(model):
     for st_hash, st_value in all_stmts.items():
         url_param = parse.urlencode(
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
-        st_value[0] = f'/evidence/?{url_param}'
+        st_value[0] = f'/evidence?{url_param}'
         st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
@@ -553,7 +553,7 @@ def get_model_dashboard(model):
                            tab=tab)
 
 
-@app.route('/tests/<model>/')
+@app.route('/tests/<model>')
 def get_model_tests_page(model):
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
@@ -688,7 +688,7 @@ def get_query_page():
                            tab=tab)
 
 
-@app.route('/evidence/')
+@app.route('/evidence')
 def get_statement_evidence_page():
     stmt_hashes = request.args.getlist('stmt_hash')
     source = request.args.get('source')
@@ -744,7 +744,7 @@ def get_statement_evidence_page():
                            is_all_stmts=False)
 
 
-@app.route('/all_statements/<model>/')
+@app.route('/all_statements/<model>')
 def get_all_statements_page(model):
     mm = load_model_manager_from_cache(model)
     sort_by = request.args.get('sort_by', 'evidence')
@@ -819,7 +819,7 @@ def get_all_statements_page(model):
                            link=link)
 
 
-@app.route('/query/<model>/')
+@app.route('/query/<model>')
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
