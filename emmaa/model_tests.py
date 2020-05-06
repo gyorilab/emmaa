@@ -224,7 +224,7 @@ class ModelManager(object):
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                      'model': self.model.name}, doseq=True)
-                link = f'/evidence/?{url_param}'
+                link = f'/evidence?{url_param}'
                 sentences.append((link, sentence, ''))
         else:
             for stmt in stmts:
@@ -238,7 +238,7 @@ class ModelManager(object):
                     url_param = parse.urlencode(
                         {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                          'model': self.model.name}, doseq=True)
-                    link = f'/evidence/?{url_param}'
+                    link = f'/evidence?{url_param}'
                     sentences.append((link, sentence, ''))
         return sentences
 
