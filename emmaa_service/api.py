@@ -691,12 +691,15 @@ def get_statement_evidence_page():
     test_corpus = request.args.get('test_corpus', '')
     display_format = request.args.get('format', 'html')
     curations = get_curations(pa_hash=stmt_hashes)
-    cur_count = len(curations)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+    cur_counts = _count_curations(curations)
     stmts = []
     if source == 'model_statement':
+        test_stats, _ = get_model_stats(model, 'test')
+        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+        stmt_counts_dict = dict(stmt_counts)
         mm = load_model_manager_from_cache(model)
         for stmt in mm.model.assembled_stmts:
             for stmt_hash in stmt_hashes:
@@ -706,6 +709,7 @@ def get_statement_evidence_page():
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
         tests = _load_tests_from_cache(test_corpus)
+        stmt_counts_dict = None
         for t in tests:
             for stmt_hash in stmt_hashes:
                 if str(t.stmt.get_hash()) == str(stmt_hash):
@@ -715,15 +719,8 @@ def get_statement_evidence_page():
     if display_format == 'html':
         stmt_rows = []
         for stmt in stmts:
-            english = _format_stmt_text(stmt)
-            evid_count = len(stmt.evidence)
-            evid = _format_evidence_text(stmt, cur_dict)[:10]
-            url_param = parse.urlencode(
-                {'stmt_hash': stmt_hash, 'source': source,
-                    'model': model, 'format': 'json'})
-            json_link = f'/evidence/?{url_param}'
-            stmt_row = [(stmt_hash, english, evid, evid_count,
-                        cur_count, json_link)]
+            stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
+                                     stmt_counts_dict, cur_dict, True)
             stmt_rows.append(stmt_row)
     else:
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
@@ -749,12 +746,13 @@ def get_all_statements_page(model):
     stmts = mm.model.assembled_stmts
     msg = None
     curations = get_curations()
-    cur_counts = defaultdict(int)
-    for curation in curations:
-        cur_counts[str(curation.pa_hash)] += 1
+    cur_counts = _count_curations(curations)
     if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
                  cur_counts]
+    test_stats, _ = get_model_stats(model, 'test')
+    stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+    stmt_counts_dict = dict(stmt_counts)
     if len(stmts) % 1000 == 0:
         total_pages = len(stmts)//1000
     else:
@@ -771,8 +769,6 @@ def get_all_statements_page(model):
         stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
             offset:offset+1000]
     elif sort_by == 'paths':
-        test_stats, _ = get_model_stats(model, 'test')
-        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts')
         if not stmt_counts:
             msg = 'Sorting by paths is not available, sorting by evidence'
             stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
@@ -789,14 +785,8 @@ def get_all_statements_page(model):
                     continue
     stmt_rows = []
     for stmt in stmts:
-        sh = str(stmt.get_hash())
-        english = _format_stmt_text(stmt)
-        evid_count = len(stmt.evidence)
-        url_param = parse.urlencode(
-            {'stmt_hash': sh, 'source': 'model_statement', 'model': model,
-             'format': 'json'})
-        json_link = f'/evidence/?{url_param}'
-        stmt_row = [(sh, english, [], evid_count, cur_counts[sh], json_link)]
+        stmt_row = _get_stmt_row(
+            stmt, 'model_statement', model, cur_counts, stmt_counts_dict)
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
