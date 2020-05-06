@@ -360,6 +360,78 @@ def _label_curations(**kwargs):
     return correct, incorrect
 
 
+def _count_curations(curations=None, **kwargs):
+    if not curations:
+        curations = get_curations(**kwargs)
+    correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
+    cur_counts = {}
+    for cur in curations:
+        stmt_hash = str(cur.pa_hash)
+        if stmt_hash not in cur_counts:
+            cur_counts[stmt_hash] = {
+                'emmaa': defaultdict(int),
+                'other': defaultdict(int),
+            }
+        if cur.tag in correct_tags:
+            cur_tag = 'correct'
+        else:
+            cur_tag = 'incorrect'
+        if cur.source == 'EMMAA':
+            cur_source = 'emmaa'
+        else:
+            cur_source = 'other'
+        cur_counts[stmt_hash][cur_source][cur_tag] += 1
+    return cur_counts
+
+
+def _get_stmt_row(stmt, source, model, cur_counts, path_counts=None,
+                  cur_dict=None, with_evid=False):
+    stmt_hash = str(stmt.get_hash())
+    english = _format_stmt_text(stmt)
+    evid_count = len(stmt.evidence)
+    evid = []
+    if with_evid and cur_dict:
+        evid = _format_evidence_text(stmt, cur_dict)[:10]
+    url_param = parse.urlencode(
+        {'stmt_hash': stmt_hash, 'source': source,
+            'model': model, 'format': 'json'})
+    json_link = f'/evidence/?{url_param}'
+    path_count = 0
+    if path_counts:
+        path_count = path_counts.get(stmt_hash)
+    badges = _make_badges(evid_count, json_link, path_count,
+                          cur_counts.get(stmt_hash))
+    stmt_row = [
+        (stmt.get_hash(), english, evid, evid_count, badges)]
+    return stmt_row
+
+
+def _make_badges(evid_count, json_link, path_count, cur_counts=None):
+    badges = [
+        {'label': 'evidence', 'num': evid_count, 'color': 'grey',
+         'symbol': None, 'title': 'Evidence count for this statement'},
+        {'label': 'paths', 'num': path_count, 'symbol': '\u2713',
+         'color': '#28a745', 'title': 'Number of paths with this statement'},
+        {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
+         'symbol': None, 'title': 'View statement JSON', 'href': json_link}]
+    if cur_counts:
+        badges += [
+            {'label': 'incorrect_other', 'symbol': '\u270E', 'loc': 'right',
+             'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
+             'title': 'Curated as incorrect outside of EMMAA'},
+            {'label': 'correct_other', 'num': cur_counts['other']['correct'],
+             'color': '#adebbb', 'symbol': '\u270E',
+             'title': 'Curated as correct outside of EMMAA', 'loc': 'right'},
+            {'label': 'incorrect_emmaa', 'num': cur_counts['emmaa']['incorrect'],
+             'color': '#ff8080', 'symbol': '\u270E',
+             'title': 'Curated as incorrect in EMMAA', 'loc': 'right'},
+            {'label': 'correct_emmaa', 'num': cur_counts['emmaa']['correct'],
+             'color': '#28a745', 'symbol':  '\u270E',
+             'title': 'Curated as correct in EMMAA', 'loc': 'right'}
+        ]
+    return badges
+
+
 # Deletes session after the specified time
 @app.before_request
 def session_expiration_check():
