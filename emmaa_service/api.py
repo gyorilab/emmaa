@@ -410,27 +410,28 @@ def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
 
 def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     badges = [
-        {'label': 'evidence', 'num': evid_count, 'color': 'grey',
-         'symbol': None, 'title': 'Evidence count for this statement'},
-        {'label': 'paths', 'num': path_count, 'symbol': '\u2713',
-         'color': '#28a745', 'title': 'Number of paths with this statement'},
         {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
-         'symbol': None, 'title': 'View statement JSON', 'href': json_link}]
+         'symbol': None, 'title': 'View statement JSON', 'href': json_link,
+         'loc': 'right'},
+        {'label': 'evidence', 'num': evid_count, 'color': 'grey',
+         'symbol': None, 'title': 'Evidence count for this statement',
+         'loc': 'right'},
+        {'label': 'paths', 'num': path_count, 'symbol': '\u2713',
+         'color': '#28a745', 'title': 'Number of paths with this statement'}]
     if cur_counts:
         badges += [
-            {'label': 'incorrect_other', 'symbol': '\u270E', 'loc': 'right',
-             'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
-             'title': 'Curated as incorrect outside of EMMAA'},
-            {'label': 'correct_other', 'num': cur_counts['other']['correct'],
-             'color': '#adebbb', 'symbol': '\u270E',
-             'title': 'Curated as correct outside of EMMAA', 'loc': 'right'},
-            {'label': 'incorrect_emmaa', 'num': cur_counts['emmaa']['incorrect'],
-             'color': '#ff8080', 'symbol': '\u270E',
-             'title': 'Curated as incorrect in EMMAA', 'loc': 'right'},
             {'label': 'correct_emmaa', 'num': cur_counts['emmaa']['correct'],
              'color': '#28a745', 'symbol':  '\u270E',
-             'title': 'Curated as correct in EMMAA', 'loc': 'right'}
-        ]
+             'title': 'Curated as correct in EMMAA'},
+            {'label': 'incorrect_emmaa', 'num': cur_counts['emmaa']['incorrect'],
+             'color': '#ff8080', 'symbol': '\u270E',
+             'title': 'Curated as incorrect in EMMAA'},
+            {'label': 'correct_other', 'num': cur_counts['other']['correct'],
+             'color': '#adebbb', 'symbol': '\u270E',
+             'title': 'Curated as correct outside of EMMAA'},
+            {'label': 'incorrect_other', 'symbol': '\u270E',
+             'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
+             'title': 'Curated as incorrect outside of EMMAA'}]
     return badges
 
 
