@@ -384,17 +384,19 @@ def _count_curations(curations=None, **kwargs):
     return cur_counts
 
 
-def _get_stmt_row(stmt, source, model, cur_counts, path_counts=None,
-                  cur_dict=None, with_evid=False):
+def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
+                  path_counts=None, cur_dict=None, with_evid=False):
     stmt_hash = str(stmt.get_hash())
     english = _format_stmt_text(stmt)
     evid_count = len(stmt.evidence)
     evid = []
     if with_evid and cur_dict:
         evid = _format_evidence_text(stmt, cur_dict)[:10]
-    url_param = parse.urlencode(
-        {'stmt_hash': stmt_hash, 'source': source,
-            'model': model, 'format': 'json'})
+    params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
+              'format': 'json'}
+    if test_corpus:
+        params.update({'test_corpus': test_corpus})
+    url_param = parse.urlencode(params)
     json_link = f'/evidence/?{url_param}'
     path_count = 0
     if path_counts:
@@ -720,7 +722,8 @@ def get_statement_evidence_page():
         stmt_rows = []
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
-                                     stmt_counts_dict, cur_dict, True)
+                                     test_corpus, stmt_counts_dict,
+                                     cur_dict, True)
             stmt_rows.append(stmt_row)
     else:
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
@@ -785,8 +788,8 @@ def get_all_statements_page(model):
                     continue
     stmt_rows = []
     for stmt in stmts:
-        stmt_row = _get_stmt_row(
-            stmt, 'model_statement', model, cur_counts, stmt_counts_dict)
+        stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
+                                 None, stmt_counts_dict)
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
