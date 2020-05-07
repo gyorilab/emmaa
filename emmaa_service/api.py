@@ -399,7 +399,7 @@ def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
     if test_corpus:
         params.update({'test_corpus': test_corpus})
     url_param = parse.urlencode(params)
-    json_link = f'/evidence/?{url_param}'
+    json_link = f'/evidence?{url_param}'
     path_count = 0
     if path_counts:
         path_count = path_counts.get(stmt_hash)
