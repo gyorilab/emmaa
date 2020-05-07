@@ -277,7 +277,7 @@ def _format_query_results(formatted_results):
         for mt in model_types:
             url_param = parse.urlencode(
                 {'model_type': mt, 'query_hash': qh, 'order': 1})
-            new_res.append((f'/query{model}?{url_param}', res[mt][0],
+            new_res.append((f'/query/{model}?{url_param}', res[mt][0],
                             'Click to see detailed results for this query'))
         result_array.append(new_res)
     return result_array
