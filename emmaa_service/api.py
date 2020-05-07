@@ -360,24 +360,25 @@ def _label_curations(**kwargs):
     return correct, incorrect
 
 
-def _count_curations(curations=None, **kwargs):
-    if not curations:
-        curations = get_curations(**kwargs)
+def _count_curations(curations, stmts_by_hash):
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     cur_counts = {}
     for cur in curations:
         stmt_hash = str(cur.pa_hash)
+        if stmt_hash not in stmts_by_hash:
+            continue
         if stmt_hash not in cur_counts:
             cur_counts[stmt_hash] = {
-                'emmaa': defaultdict(int),
+                'this': defaultdict(int),
                 'other': defaultdict(int),
             }
         if cur.tag in correct_tags:
             cur_tag = 'correct'
         else:
             cur_tag = 'incorrect'
-        if cur.source == 'EMMAA':
-            cur_source = 'emmaa'
+        if cur.source_hash in [evid.get_source_hash() for evid in
+                               stmts_by_hash[stmt_hash].evidence]:
+            cur_source = 'this'
         else:
             cur_source = 'other'
         cur_counts[stmt_hash][cur_source][cur_tag] += 1
@@ -420,18 +421,18 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
          'color': '#28a745', 'title': 'Number of paths with this statement'}]
     if cur_counts:
         badges += [
-            {'label': 'correct_emmaa', 'num': cur_counts['emmaa']['correct'],
+            {'label': 'correct_this', 'num': cur_counts['this']['correct'],
              'color': '#28a745', 'symbol':  '\u270E',
-             'title': 'Curated as correct in EMMAA'},
-            {'label': 'incorrect_emmaa', 'num': cur_counts['emmaa']['incorrect'],
+             'title': 'Curated as correct in this model'},
+            {'label': 'incorrect_this', 'num': cur_counts['this']['incorrect'],
              'color': '#ff8080', 'symbol': '\u270E',
-             'title': 'Curated as incorrect in EMMAA'},
+             'title': 'Curated as incorrect in this model'},
             {'label': 'correct_other', 'num': cur_counts['other']['correct'],
              'color': '#adebbb', 'symbol': '\u270E',
-             'title': 'Curated as correct outside of EMMAA'},
+             'title': 'Curated as correct outside of this model'},
             {'label': 'incorrect_other', 'symbol': '\u270E',
              'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
-             'title': 'Curated as incorrect outside of EMMAA'}]
+             'title': 'Curated as incorrect outside of this model'}]
     return badges
 
 
@@ -693,11 +694,6 @@ def get_statement_evidence_page():
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
     display_format = request.args.get('format', 'html')
-    curations = get_curations(pa_hash=stmt_hashes)
-    cur_dict = defaultdict(list)
-    for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
-    cur_counts = _count_curations(curations)
     stmts = []
     if source == 'model_statement':
         test_stats, _ = get_model_stats(model, 'test')
@@ -721,6 +717,14 @@ def get_statement_evidence_page():
         abort(Response(f'Source should be model_statement or test', 404))
     if display_format == 'html':
         stmt_rows = []
+        stmts_by_hash = {}
+        for stmt in stmts:
+            stmts_by_hash[str(stmt.get_hash())] = stmt
+        curations = get_curations(pa_hash=stmt_hashes)
+        cur_dict = defaultdict(list)
+        for cur in curations:
+            cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+        cur_counts = _count_curations(curations, stmts_by_hash)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
                                      test_corpus, stmt_counts_dict,
@@ -748,9 +752,12 @@ def get_all_statements_page(model):
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = mm.model.assembled_stmts
+    stmts_by_hash = {}
+    for stmt in stmts:
+        stmts_by_hash[str(stmt.get_hash())] = stmt
     msg = None
     curations = get_curations()
-    cur_counts = _count_curations(curations)
+    cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
                  cur_counts]
@@ -778,9 +785,6 @@ def get_all_statements_page(model):
             stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
                 offset:offset+1000]
         else:
-            stmts_by_hash = {}
-            for stmt in stmts:
-                stmts_by_hash[str(stmt.get_hash())] = stmt
             stmts = []
             for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
                 try:
