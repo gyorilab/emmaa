@@ -11,6 +11,7 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
+from indra.tools.assemble_corpus import filter_grounded_only
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -364,6 +365,25 @@ def filter_relevance(stmts, stnames, policy=None):
             stmts_out.append(stmt)
         elif policy is None:
             stmts_out.append(stmt)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    return stmts_out
+
+
+@register_pipeline
+def filter_eidos_ungrounded(stmts):
+    """Filter out statements from Eidos with ungrounded agents."""
+    logger.info(
+        'Filtering out ungrounded Eidos statements from %d statements...'
+        % len(stmts))
+    stmts_out = []
+    eidos_stmts = []
+    for stmt in stmts:
+        if stmt.evidence[0].source_api == 'eidos':
+            eidos_stmts.append(stmt)
+        else:
+            stmts_out.append(stmt)
+    eidos_grounded = filter_grounded_only(eidos_stmts)
+    stmts_out += eidos_grounded
     logger.info('%d statements after filter...' % len(stmts_out))
     return stmts_out
 
