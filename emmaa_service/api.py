@@ -392,7 +392,8 @@ def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
     evid_count = len(stmt.evidence)
     evid = []
     if with_evid and cur_dict:
-        evid = _format_evidence_text(stmt, cur_dict)[:10]
+        evid = _format_evidence_text(
+            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])[:10]
     params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
               'format': 'json'}
     if test_corpus:
@@ -1040,7 +1041,8 @@ def get_statement_by_hash_model(model, hash_val):
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
-            ev_list = _format_evidence_text(st, cur_dict)
+            ev_list = _format_evidence_text(
+                st, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
@@ -1056,7 +1058,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-            ev_list = _format_evidence_text(test.stmt, cur_dict)
+            ev_list = _format_evidence_text(
+                test.stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
