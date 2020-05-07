@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Service Maintenance</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    #wrap {
+      min-height: 100%;
+    }
+
+    #main {
+      overflow: auto;
+      padding-bottom: 180px;
+      /* must be same height as the footer */
+    }
+
+    #footer {
+      position: relative;
+      margin-top: -180px;
+      /* negative value of footer height */
+      height: 180px;
+      clear: both;
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <div id="main">
+  <h1>We're working on it</h1>
+  <p style="font-size: large">The service is currently down for maintenance,
+    please check back later today</p>
+  </div>
+</div>
+  <footer id="footer" class="footer text-muted" style="background: #F5F5F5;">
+    <div class="container">
+      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+      <small>
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+        <p><a href="https://indralab.github.io" target="_blank">INDRALAB</a></p>
+        <p><a href="http://hits.harvard.edu" target="_blank">Harvard Program in Therapeutic Science (HiTS)</a></p>
+        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) is a part of the DARPA ASKE program, which is part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project is funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+      </small>
+    </div>
+  </footer>
+</body>
+</html>
