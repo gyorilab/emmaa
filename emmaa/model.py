@@ -204,17 +204,22 @@ class EmmaaModel(object):
             estmts = read_elsevier_eidos_search_terms(ids_to_terms)
         else:
             raise ValueError('Unknown reader: %s' % reader)
-
+        logger.info('Got a total of %d new EMMAA Statements from reading' %
+                    len(estmts))
         self.extend_unique(estmts)
 
     def extend_unique(self, estmts):
         """Extend model statements only if it is not already there."""
         source_hashes = {est.stmt.get_hash(shallow=False, refresh=True)
                          for est in self.stmts}
+        len_before = len(self.stmts)
         for estmt in estmts:
             if estmt.stmt.get_hash(shallow=False, refresh=True) not in \
                     source_hashes:
                 self.stmts.append(estmt)
+        len_after = len(self.stmts)
+        logger.info('Extended EMMAA Statements by %d new Statements' %
+                    (len_after - len_before))
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
