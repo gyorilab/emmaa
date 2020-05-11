@@ -48,6 +48,9 @@
    "function": "map_sequence"
   },
   {
+   "function": "filter_eidos_ungrounded"
+  },
+  {
    "function": "run_preassembly",
    "kwargs": {
     "return_toplevel": false
@@ -85,12 +88,13 @@
   ],
   "make_links": true,
   "test_corpus": [
-   "covid19_curated_tests"
+   "covid19_curated_tests",
+   "covid19_mitre_tests"
   ],
   "default_test_corpus": "covid19_curated_tests"
  },
  "description": "Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
- "make_tests": true,
+ "make_tests": false,
  "run_daily_update": true,
  "old_assembly": {
   "ground_stmts": true,
