@@ -243,7 +243,7 @@ class DynamicProperty(Query):
         return str(self)
 
     def to_english(self):
-        agent = _assemble_agent_str(self.entity)
+        agent = _assemble_agent_str(self.entity).agent_str
         agent = agent[0].upper() + agent[1:]
         if self.pattern_type == 'always_value':
             pattern = 'always'

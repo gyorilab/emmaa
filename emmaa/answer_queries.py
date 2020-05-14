@@ -413,7 +413,7 @@ def _detailed_page_link(domain, model_name, model_type, query_hash):
     # example:
     # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash
     # =4911955502409811&order=1
-    return f'https://{domain}/query/{model_name}/?model_type=' \
+    return f'https://{domain}/query/{model_name}?model_type=' \
            f'{model_type}&query_hash={query_hash}&order=1'
 
 

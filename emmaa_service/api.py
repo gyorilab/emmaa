@@ -249,7 +249,7 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
         ev_url_par = parse.urlencode(
             {'stmt_hash': th, 'source': 'test', 'model': model_name,
              'test_corpus': test_corpus})
-        test['test'][0] = f'/evidence/?{ev_url_par}'
+        test['test'][0] = f'/evidence?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
@@ -270,7 +270,7 @@ def _format_query_results(formatted_results):
         latest_date = get_latest_available_date(
             model, _default_test(model))
         new_res = [('', res["query"], ''),
-                   (f'/dashboard/{model}/?date={latest_date}' +
+                   (f'/dashboard/{model}?date={latest_date}' +
                     f'&test_corpus={_default_test(model)}&tab=model',
                     model,
                     f'Click to see details about {model}')]
@@ -316,7 +316,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             ev_url_par = parse.urlencode(
                 {'stmt_hash': th, 'source': 'test', 'model': model_name,
                  'test_corpus': test_corpus})
-            test['test'][0] = f'/evidence/?{ev_url_par}'
+            test['test'][0] = f'/evidence?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
@@ -360,6 +360,83 @@ def _label_curations(**kwargs):
     return correct, incorrect
 
 
+def _count_curations(curations, stmts_by_hash):
+    correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
+    cur_counts = {}
+    for cur in curations:
+        stmt_hash = str(cur.pa_hash)
+        if stmt_hash not in stmts_by_hash:
+            continue
+        if stmt_hash not in cur_counts:
+            cur_counts[stmt_hash] = {
+                'this': defaultdict(int),
+                'other': defaultdict(int),
+            }
+        if cur.tag in correct_tags:
+            cur_tag = 'correct'
+        else:
+            cur_tag = 'incorrect'
+        if cur.source_hash in [evid.get_source_hash() for evid in
+                               stmts_by_hash[stmt_hash].evidence]:
+            cur_source = 'this'
+        else:
+            cur_source = 'other'
+        cur_counts[stmt_hash][cur_source][cur_tag] += 1
+    return cur_counts
+
+
+def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
+                  path_counts=None, cur_dict=None, with_evid=False):
+    stmt_hash = str(stmt.get_hash())
+    english = _format_stmt_text(stmt)
+    evid_count = len(stmt.evidence)
+    evid = []
+    if with_evid and cur_dict:
+        evid = _format_evidence_text(
+            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])[:10]
+    params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
+              'format': 'json'}
+    if test_corpus:
+        params.update({'test_corpus': test_corpus})
+    url_param = parse.urlencode(params)
+    json_link = f'/evidence?{url_param}'
+    path_count = 0
+    if path_counts:
+        path_count = path_counts.get(stmt_hash)
+    badges = _make_badges(evid_count, json_link, path_count,
+                          cur_counts.get(stmt_hash))
+    stmt_row = [
+        (stmt.get_hash(), english, evid, evid_count, badges)]
+    return stmt_row
+
+
+def _make_badges(evid_count, json_link, path_count, cur_counts=None):
+    badges = [
+        {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
+         'symbol': None, 'title': 'View statement JSON', 'href': json_link,
+         'loc': 'right'},
+        {'label': 'evidence', 'num': evid_count, 'color': 'grey',
+         'symbol': None, 'title': 'Evidence count for this statement',
+         'loc': 'right'},
+        {'label': 'paths', 'num': path_count, 'symbol': '\u2713',
+         'color': '#28a745', 'title': 'Number of paths with this statement'}]
+    if cur_counts:
+        badges += [
+            {'label': 'correct_this', 'num': cur_counts['this']['correct'],
+             'color': '#28a745', 'symbol':  '\u270E',
+             'title': 'Curated as correct in this model'},
+            {'label': 'incorrect_this', 'num': cur_counts['this']['incorrect'],
+             'color': '#ff8080', 'symbol': '\u270E',
+             'title': 'Curated as incorrect in this model'},
+            {'label': 'correct_other', 'num': cur_counts['other']['correct'],
+             'color': '#adebbb', 'symbol': '\u270E',
+             'title': 'Curated as correct outside of this model'},
+            {'label': 'incorrect_other', 'symbol': '\u270E',
+             'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
+             'title': 'Curated as incorrect outside of this model'}]
+    return badges
+
+
 # Deletes session after the specified time
 @app.before_request
 def session_expiration_check():
@@ -385,7 +462,7 @@ def get_home():
                            user_email=user.email if user else "")
 
 
-@app.route('/dashboard/<model>/')
+@app.route('/dashboard/<model>')
 @jwt_optional
 def get_model_dashboard(model):
     test_corpus = request.args.get('test_corpus', _default_test(
@@ -434,7 +511,7 @@ def get_model_dashboard(model):
     for st_hash, st_value in all_stmts.items():
         url_param = parse.urlencode(
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
-        st_value[0] = f'/evidence/?{url_param}'
+        st_value[0] = f'/evidence?{url_param}'
         st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
@@ -476,7 +553,7 @@ def get_model_dashboard(model):
                            tab=tab)
 
 
-@app.route('/tests/<model>/')
+@app.route('/tests/<model>')
 def get_model_tests_page(model):
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
@@ -611,44 +688,52 @@ def get_query_page():
                            tab=tab)
 
 
-@app.route('/evidence/')
+@app.route('/evidence')
 def get_statement_evidence_page():
     stmt_hashes = request.args.getlist('stmt_hash')
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
-    curations = get_curations(pa_hash=stmt_hashes)
-    cur_count = len(curations)
-    cur_dict = defaultdict(list)
-    for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
-    stmt_rows = []
+    display_format = request.args.get('format', 'html')
+    stmts = []
     if source == 'model_statement':
+        test_stats, _ = get_model_stats(model, 'test')
+        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+        stmt_counts_dict = dict(stmt_counts)
         mm = load_model_manager_from_cache(model)
         for stmt in mm.model.assembled_stmts:
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
-                    english = _format_stmt_text(stmt)
-                    evid_count = len(stmt.evidence)
-                    evid = _format_evidence_text(stmt, cur_dict)[:10]
-                    stmt_row = [
-                        (stmt_hash, english, evid, evid_count, cur_count)]
-                    stmt_rows.append(stmt_row)
+                    stmts.append(stmt)
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
         tests = _load_tests_from_cache(test_corpus)
+        stmt_counts_dict = None
         for t in tests:
             for stmt_hash in stmt_hashes:
                 if str(t.stmt.get_hash()) == str(stmt_hash):
-                    english = _format_stmt_text(t.stmt)
-                    evid_count = len(t.stmt.evidence)
-                    evid = _format_evidence_text(t.stmt, cur_dict)[:10]
-                    stmt_row = [
-                        (stmt_hash, english, evid, evid_count, cur_count)]
-                    stmt_rows.append(stmt_row)
+                    stmts.append(t.stmt)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
+    if display_format == 'html':
+        stmt_rows = []
+        stmts_by_hash = {}
+        for stmt in stmts:
+            stmts_by_hash[str(stmt.get_hash())] = stmt
+        curations = get_curations(pa_hash=stmt_hashes)
+        cur_dict = defaultdict(list)
+        for cur in curations:
+            cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+        cur_counts = _count_curations(curations, stmts_by_hash)
+        for stmt in stmts:
+            stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
+                                     test_corpus, stmt_counts_dict,
+                                     cur_dict, True)
+            stmt_rows.append(stmt_row)
+    else:
+        stmt_json = json.dumps(stmts[0].to_json(), indent=1)
+        return Response(stmt_json, mimetype='application/json')
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -659,7 +744,7 @@ def get_statement_evidence_page():
                            is_all_stmts=False)
 
 
-@app.route('/all_statements/<model>/')
+@app.route('/all_statements/<model>')
 def get_all_statements_page(model):
     mm = load_model_manager_from_cache(model)
     sort_by = request.args.get('sort_by', 'evidence')
@@ -668,14 +753,18 @@ def get_all_statements_page(model):
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = mm.model.assembled_stmts
+    stmts_by_hash = {}
+    for stmt in stmts:
+        stmts_by_hash[str(stmt.get_hash())] = stmt
     msg = None
     curations = get_curations()
-    cur_counts = defaultdict(int)
-    for curation in curations:
-        cur_counts[str(curation.pa_hash)] += 1
+    cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
                  cur_counts]
+    test_stats, _ = get_model_stats(model, 'test')
+    stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+    stmt_counts_dict = dict(stmt_counts)
     if len(stmts) % 1000 == 0:
         total_pages = len(stmts)//1000
     else:
@@ -692,16 +781,11 @@ def get_all_statements_page(model):
         stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
             offset:offset+1000]
     elif sort_by == 'paths':
-        test_stats, _ = get_model_stats(model, 'test')
-        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts')
         if not stmt_counts:
             msg = 'Sorting by paths is not available, sorting by evidence'
             stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
                 offset:offset+1000]
         else:
-            stmts_by_hash = {}
-            for stmt in stmts:
-                stmts_by_hash[str(stmt.get_hash())] = stmt
             stmts = []
             for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
                 try:
@@ -710,10 +794,8 @@ def get_all_statements_page(model):
                     continue
     stmt_rows = []
     for stmt in stmts:
-        sh = str(stmt.get_hash())
-        english = _format_stmt_text(stmt)
-        evid_count = len(stmt.evidence)
-        stmt_row = [(sh, english, [], evid_count, cur_counts[sh])]
+        stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
+                                 None, stmt_counts_dict)
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
@@ -737,7 +819,7 @@ def get_all_statements_page(model):
                            link=link)
 
 
-@app.route('/query/<model>/')
+@app.route('/query/<model>')
 def get_query_tests_page(model):
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
@@ -959,7 +1041,8 @@ def get_statement_by_hash_model(model, hash_val):
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
-            ev_list = _format_evidence_text(st, cur_dict)
+            ev_list = _format_evidence_text(
+                st, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
@@ -975,7 +1058,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
             st_json = test.stmt.to_json()
-            ev_list = _format_evidence_text(test.stmt, cur_dict)
+            ev_list = _format_evidence_text(
+                test.stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 

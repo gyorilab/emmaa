@@ -224,7 +224,7 @@ class ModelManager(object):
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                      'model': self.model.name}, doseq=True)
-                link = f'/evidence/?{url_param}'
+                link = f'/evidence?{url_param}'
                 sentences.append((link, sentence, ''))
         else:
             for stmt in stmts:
@@ -238,7 +238,7 @@ class ModelManager(object):
                     url_param = parse.urlencode(
                         {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                          'model': self.model.name}, doseq=True)
-                    link = f'/evidence/?{url_param}'
+                    link = f'/evidence?{url_param}'
                     sentences.append((link, sentence, ''))
         return sentences
 
@@ -614,8 +614,9 @@ def load_model_manager_from_s3(model_name=None, key=None,
             body = obj['Body'].read()
             model_manager = pickle.loads(body)
             return model_manager
-        except Exception:
-            logger.info(f'No file found with key {key}')
+        except Exception as e:
+            logger.info('Could not load the model manager')
+            logger.info(e)
     # Now try find the latest key for given model
     if model_name:
         # Versioned
