@@ -4,6 +4,34 @@ from indra_db.util import get_primary_db
 from emmaa.statements import EmmaaStatement
 
 
+def read_db_ids_search_terms(id_search_terms, id_type):
+    """Return extracted EmmaaStatements from INDRA database given an
+    ID-search term dict.
+
+    Parameters
+    ----------
+    id_search_terms : dict
+        A dict representing a set of IDs pointing to search terms that
+        produced them.
+
+    Returns
+    -------
+    list[:py:class:`emmaa.model.EmmaaStatement`]
+        A list of EmmaaStatements extracted from the given IDs.
+    """
+    ids = list(id_search_terms.keys())
+    date = datetime.datetime.utcnow()
+    db = get_primary_db()
+    id_stmts = get_statements_by_paper(ids, id_type=id_type, db=db,
+                                       preassembled=False)
+    estmts = []
+    for _id, stmts in id_stmts.items():
+        for stmt in stmts:
+            es = EmmaaStatement(stmt, date, id_search_terms[_id])
+            estmts.append(es)
+    return estmts
+
+
 def read_db_pmid_search_terms(pmid_search_terms):
     """Return extracted EmmaaStatements from INDRA database given a
     PMID-search term dict.
@@ -19,14 +47,22 @@ def read_db_pmid_search_terms(pmid_search_terms):
     list[:py:class:`emmaa.model.EmmaaStatement`]
         A list of EmmaaStatements extracted from the given PMIDs.
     """
-    pmids = list(pmid_search_terms.keys())
-    date = datetime.datetime.utcnow()
-    db = get_primary_db()
-    pmid_stmts = get_statements_by_paper(pmids, id_type='pmid', db=db,
-                                         preassembled=False)
-    estmts = []
-    for pmid, stmts in pmid_stmts.items():
-        for stmt in stmts:
-            es = EmmaaStatement(stmt, date, pmid_search_terms[pmid])
-            estmts.append(es)
-    return estmts
+    return read_db_ids_search_terms(pmid_search_terms, 'pmid')
+
+
+def read_db_doi_search_terms(doi_search_terms):
+    """Return extracted EmmaaStatements from INDRA database given a
+    DOI-search term dict.
+
+    Parameters
+    ----------
+    doi_search_terms : dict
+        A dict representing a set of DOIs pointing to search terms that
+        produced them.
+
+    Returns
+    -------
+    list[:py:class:`emmaa.model.EmmaaStatement`]
+        A list of EmmaaStatements extracted from the given DOIs.
+    """
+    return read_db_ids_search_terms(doi_search_terms, 'doi')
