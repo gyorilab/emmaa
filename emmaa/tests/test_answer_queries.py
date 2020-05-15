@@ -24,11 +24,11 @@ test_response = {
         'edge_list': [
             {'edge': 'BRAF → MAP2K1',
              'stmts': [
-                 ['/evidence/?stmt_hash=-23078353002754841&source=model_statement&model=test',
+                 ['/evidence?stmt_hash=-23078353002754841&source=model_statement&model=test',
                   'BRAF activates MAP2K1.', '']]},
             {'edge': 'MAP2K1 → MAPK1',
              'stmts': [
-                 ['/evidence/?stmt_hash=-34603994586320440&source=model_statement&model=test',
+                 ['/evidence?stmt_hash=-34603994586320440&source=model_statement&model=test',
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
 fail_response = {'521653329': 'No path found that satisfies the test statement'}
