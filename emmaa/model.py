@@ -124,9 +124,9 @@ class EmmaaModel(object):
         """
         if lit_source == 'pubmed':
             terms_to_ids = self.search_pubmed(self.search_terms, date_limit)
-        elif lit_source == 'bioarxiv':
+        elif lit_source == 'biorxiv':
             collection_id = self.reading_config.get('collection_id', '181')
-            terms_to_ids = self.search_bioarxiv(collection_id, date_limit)
+            terms_to_ids = self.search_biorxiv(collection_id, date_limit)
         elif lit_source == 'elsevier':
             terms_to_ids = self.search_elsevier(self.search_terms, date_limit)
         else:
@@ -196,8 +196,8 @@ class EmmaaModel(object):
         return terms_to_piis
 
     @staticmethod
-    def search_bioarxiv(collection_id, date_limit):
-        """Search Bioarxiv within date_limit.
+    def search_biorxiv(collection_id, date_limit):
+        """Search BioRxiv within date_limit.
 
         Parameters
         ----------
@@ -208,14 +208,14 @@ class EmmaaModel(object):
         Returns
         -------
         terms_to_dois : dict
-            A dict representing bioarxiv collection ID as key and DOIs returned
+            A dict representing biorxiv collection ID as key and DOIs returned
             by search as values.
         """
         start_date = (
             datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
         dois = biorxiv_client.get_collection_dois(collection_id, start_date)
         logger.info(f'{len(dois)} DOIs found')
-        terms_to_dois = {f'bioarxiv: {collection_id}': dois}
+        terms_to_dois = {f'biorxiv: {collection_id}': dois}
         return terms_to_dois
 
     def get_new_readings(self, date_limit=10):
