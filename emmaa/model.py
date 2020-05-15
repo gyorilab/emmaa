@@ -4,7 +4,7 @@ import pickle
 import logging
 import datetime
 from indra.databases import ndex_client
-from indra.literature import pubmed_client, elsevier_client
+from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
 from indra.assemblers.pybel import PybelAssembler
@@ -15,7 +15,8 @@ from indra.tools.assemble_corpus import filter_grounded_only
 from indra_db.client.principal.curation import get_curations
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
-from emmaa.readers.db_client_reader import read_db_pmid_search_terms
+from emmaa.readers.db_client_reader import read_db_pmid_search_terms, \
+    read_db_doi_search_terms
 from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
@@ -105,7 +106,7 @@ class EmmaaModel(object):
         if 'query' in config:
             self.query_config = config['query']
 
-    def search_literature(self, date_limit=None):
+    def search_literature(self, lit_source, date_limit=None):
         """Search for the model's search terms in the literature.
 
         Parameters
@@ -121,9 +122,11 @@ class EmmaaModel(object):
             and the search terms for which the given ID was produced as
             values.
         """
-        lit_source = self.reading_config.get('literature_source', 'pubmed')
         if lit_source == 'pubmed':
             terms_to_ids = self.search_pubmed(self.search_terms, date_limit)
+        elif lit_source == 'biorxiv':
+            collection_id = self.reading_config.get('collection_id', '181')
+            terms_to_ids = self.search_biorxiv(collection_id, date_limit)
         elif lit_source == 'elsevier':
             terms_to_ids = self.search_elsevier(self.search_terms, date_limit)
         else:
@@ -192,18 +195,50 @@ class EmmaaModel(object):
             time.sleep(1)
         return terms_to_piis
 
+    @staticmethod
+    def search_biorxiv(collection_id, date_limit):
+        """Search BioRxiv within date_limit.
+
+        Parameters
+        ----------
+        date_limit : int
+            The number of days to search back from today.
+        collection_id : str
+            ID of a collection to search BioArxiv for.
+        Returns
+        -------
+        terms_to_dois : dict
+            A dict representing biorxiv collection ID as key and DOIs returned
+            by search as values.
+        """
+        start_date = (
+            datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
+        dois = biorxiv_client.get_collection_dois(collection_id, start_date)
+        logger.info(f'{len(dois)} DOIs found')
+        terms_to_dois = {f'biorxiv: {collection_id}': dois}
+        return terms_to_dois
+
     def get_new_readings(self, date_limit=10):
         """Search new literature, read, and add to model statements"""
-        reader = self.reading_config.get('reader', 'indra_db')
-        ids_to_terms = self.search_literature(date_limit=date_limit)
-        if reader == 'aws':
-            estmts = read_pmid_search_terms(ids_to_terms)
-        elif reader == 'indra_db':
-            estmts = read_db_pmid_search_terms(ids_to_terms)
-        elif reader == 'elsevier_eidos':
-            estmts = read_elsevier_eidos_search_terms(ids_to_terms)
-        else:
-            raise ValueError('Unknown reader: %s' % reader)
+        readers = self.reading_config.get('reader', ['indra_db_pmid'])
+        lit_sources = self.reading_config.get('literature_source', ['pubmed'])
+        if isinstance(lit_sources, str):
+            lit_sources = [lit_sources]
+        if isinstance(readers, str):
+            readers = [readers]
+        estmts = []
+        for lit_source, reader in zip(lit_sources, readers):
+            ids_to_terms = self.search_literature(lit_source, date_limit)
+            if reader == 'aws':
+                estmts += read_pmid_search_terms(ids_to_terms)
+            elif reader == 'indra_db_pmid':
+                estmts += read_db_pmid_search_terms(ids_to_terms)
+            elif reader == 'indra_db_doi':
+                estmts += read_db_doi_search_terms(ids_to_terms)
+            elif reader == 'elsevier_eidos':
+                estmts += read_elsevier_eidos_search_terms(ids_to_terms)
+            else:
+                raise ValueError('Unknown reader: %s' % reader)
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
