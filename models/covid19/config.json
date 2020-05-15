@@ -102,5 +102,15 @@
    "policy": "extend"
   },
   "skip_filter_human": true
+ },
+ "reading": {
+  "literature_source": [
+   "pubmed",
+   "bioarxiv"
+  ],
+  "reader": [
+   "indra_db_pmid",
+   "indra_db_doi"
+  ]
  }
 }
