@@ -192,6 +192,29 @@ class EmmaaModel(object):
             time.sleep(1)
         return terms_to_piis
 
+    @staticmethod
+    def search_bioarxiv(collection_id, date_limit):
+        """Search Bioarxiv within date_limit.
+
+        Parameters
+        ----------
+        date_limit : int
+            The number of days to search back from today.
+        collection_id : str
+            ID of a collection to search BioArxiv for.
+        Returns
+        -------
+        terms_to_dois : dict
+            A dict representing bioarxiv collection ID as key and DOIs returned
+            by search as values.
+        """
+        start_date = (
+            datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
+        dois = biorxiv_client.get_collection_dois(collection_id, start_date)
+        logger.info(f'{len(dois)} DOIs found')
+        terms_to_dois = {f'bioarxiv: {collection_id}': dois}
+        return terms_to_dois
+
     def get_new_readings(self, date_limit=10):
         """Search new literature, read, and add to model statements"""
         reader = self.reading_config.get('reader', 'indra_db')
