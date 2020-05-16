@@ -215,7 +215,8 @@ class EmmaaModel(object):
             datetime.datetime.utcnow() - datetime.timedelta(days=date_limit))
         dois = biorxiv_client.get_collection_dois(collection_id, start_date)
         logger.info(f'{len(dois)} DOIs found')
-        terms_to_dois = {f'biorxiv: {collection_id}': dois}
+        term = SearchTerm('other', f'biorxiv: {collection_id}', {}, None)
+        terms_to_dois = {term: dois}
         return terms_to_dois
 
     def get_new_readings(self, date_limit=10):
