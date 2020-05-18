@@ -46,6 +46,9 @@
    "function": "map_sequence"
   },
   {
+   "function": "filter_eidos_ungrounded"
+  },
+  {
    "function": "run_preassembly",
    "kwargs": {
     "return_toplevel": false
@@ -83,12 +86,13 @@
   ],
   "make_links": true,
   "test_corpus": [
-   "covid19_curated_tests"
+   "covid19_curated_tests",
+   "covid19_mitre_tests"
   ],
   "default_test_corpus": "covid19_curated_tests"
  },
  "description": "Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
- "make_tests": true,
+ "make_tests": false,
  "ndex": {
   "network": "959c94cc-7503-11ea-aaef-0ac135e8bacf"
  },
@@ -99,5 +103,15 @@
    "policy": "extend"
   },
   "skip_filter_human": true
+ },
+ "reading": {
+  "literature_source": [
+   "pubmed",
+   "biorxiv"
+  ],
+  "reader": [
+   "indra_db_pmid",
+   "indra_db_doi"
+  ]
  }
 }
