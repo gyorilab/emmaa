@@ -106,7 +106,7 @@
  "reading": {
   "literature_source": [
    "pubmed",
-   "bioarxiv"
+   "biorxiv"
   ],
   "reader": [
    "indra_db_pmid",
