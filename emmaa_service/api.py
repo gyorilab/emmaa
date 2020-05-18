@@ -724,7 +724,8 @@ def get_statement_evidence_page():
         curations = get_curations(pa_hash=stmt_hashes)
         cur_dict = defaultdict(list)
         for cur in curations:
-            cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+            cur_dict[(cur.pa_hash, cur.source_hash)].append(
+                {'error_type': cur.tag})
         cur_counts = _count_curations(curations, stmts_by_hash)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
@@ -1037,7 +1038,8 @@ def get_statement_by_hash_model(model, hash_val):
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(
+            {'error_type': cur.tag})
     for st in mm.model.assembled_stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
@@ -1053,7 +1055,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(cur)
+        cur_dict[(cur.pa_hash, cur.source_hash)].append(
+            {'error_type': cur.tag})
     st_json = {}
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
