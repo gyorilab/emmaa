@@ -418,8 +418,8 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
         {'label': 'evidence', 'num': evid_count, 'color': 'grey',
          'symbol': None, 'title': 'Evidence count for this statement',
          'loc': 'right'},
-        {'label': 'paths', 'num': path_count, 'symbol': '\u2713',
-         'color': '#28a745', 'title': 'Number of paths with this statement'}]
+        {'label': 'paths', 'num': path_count, 'symbol': '\u2691',
+         'color': '#0099ff', 'title': 'Number of paths with this statement'}]
     if cur_counts:
         badges += [
             {'label': 'correct_this', 'num': cur_counts['this']['correct'],
