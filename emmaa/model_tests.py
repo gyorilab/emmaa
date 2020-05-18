@@ -211,6 +211,11 @@ class ModelManager(object):
                     stmt = get_class_from_name(stmt_type, Statement)(
                         Event(Concept(agent_names[0])),
                         Event(Concept(agent_names[1])))
+                elif stmt_type == 'Conversion':
+                    stmt = get_class_from_name(stmt_type, Statement)(
+                        Agent(agent_names[0]),
+                        [Agent(ag) for ag in agent_names[1]],
+                        [Agent(ag) for ag in agent_names[2]])
                 else:
                     try:
                         stmt = get_class_from_name(stmt_type, Statement)(
