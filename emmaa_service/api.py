@@ -479,14 +479,17 @@ def get_model_dashboard(model):
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
     ndex_id = 'None available'
+    description = 'None available'
     for mid, mmd in model_meta_data:
         if mid == model:
             ndex_id = mmd['ndex']['network']
+            description = mmd['description']
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
     latest_date = get_latest_available_date(model, test_corpus)
     model_info_contents = [
+        [('', 'Model Description', ''), ('', description, '')],
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
          ('', date, 'Click on the point on time graph to see earlier results')],
