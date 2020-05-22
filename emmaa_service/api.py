@@ -803,7 +803,11 @@ def get_all_statements_page(model):
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
-    if does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+    if does_exist(EMMAA_BUCKET_NAME,
+                  f'assembled/{model}/latest_statements_{model}'):
+        fkey = f'assembled/{model}/latest_statements_{model}.json'
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
         fkey = find_latest_s3_file(
             EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
         link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
