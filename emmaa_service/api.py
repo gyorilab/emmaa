@@ -1119,6 +1119,42 @@ def list_curations(stmt_hash, src_hash):
     return jsonify(curation_json)
 
 
+@app.route('/latest_statements/<model>', methods=['GET'])
+def load_latest_statements(model):
+    if does_exist(EMMAA_BUCKET_NAME,
+                  f'assembled/{model}/latest_statements_{model}'):
+        fkey = f'assembled/{model}/latest_statements_{model}.json'      
+    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+        fkey = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+    else:
+        fkey = None
+    if fkey:
+        client = get_s3_client()
+        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=fkey)
+        stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    else:
+        stmt_jsons = []
+        link = ''
+    return {'statements': stmt_jsons, 'link': link}
+
+
+@app.route('/latest_statements_url/<model>', methods=['GET'])
+def get_latest_statements_url(model):
+    if does_exist(EMMAA_BUCKET_NAME,
+                  f'assembled/{model}/latest_statements_{model}'):
+        fkey = f'assembled/{model}/latest_statements_{model}.json'
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+        fkey = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+    else:
+        link = None
+    return {'link': link}
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
     parser.add_argument('--host', default='0.0.0.0')
