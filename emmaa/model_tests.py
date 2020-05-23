@@ -449,11 +449,17 @@ class ModelManager(object):
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
         stmt_jsons = self.assembled_stmts_to_json()
-        key = f'assembled/{self.model.name}/statements_{self.date_str}.json'
+        # Save a timestapmed version and a generic latest version of files
+        key1 = f'assembled/{self.model.name}/statements_{self.date_str}.json'
+        key2 = f'assembled/{self.model.name}/' \
+               f'latest_statements_{self.model.name}.json'
         json_str = json.dumps(stmt_jsons, indent=1)
         client = get_s3_client(unsigned=False)
-        logger.info(f'Uploading assembled statements to {key}')
-        client.put_object(Bucket=bucket, Key=key,
+        logger.info(f'Uploading assembled statements to {key1}')
+        client.put_object(Bucket=bucket, Key=key1,
+                          Body=json_str.encode('utf8'))
+        logger.info(f'Uploading assembled statements to {key2}')
+        client.put_object(Bucket=bucket, Key=key2,
                           Body=json_str.encode('utf8'))
 
 
