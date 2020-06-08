@@ -66,6 +66,7 @@ class EmmaaModel(object):
         self.query_config = {}
         self.search_terms = []
         self.ndex_network = None
+        self.human_readable_name = None
         self._load_config(config)
         self.assembled_stmts = []
 
@@ -105,6 +106,8 @@ class EmmaaModel(object):
             self.test_config = config['test']
         if 'query' in config:
             self.query_config = config['query']
+        if 'human_readable_name' in config:
+            self.human_readable_name = config['human_readable_name']
 
     def search_literature(self, lit_source, date_limit=None):
         """Search for the model's search terms in the literature.
