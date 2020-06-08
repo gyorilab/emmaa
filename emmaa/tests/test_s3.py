@@ -76,7 +76,10 @@ def setup_bucket(
     if add_tests:
         tests = [StatementCheckingTest(
             Activation(Agent('BRAF'), Agent('MAPK1')))]
-        client.put_object(Body=pickle.dumps(tests), Bucket=TEST_BUCKET_NAME,
+        test_dict = {'description': 'Tests for functionality testing',
+                     'tests': tests}
+        client.put_object(Body=pickle.dumps(test_dict),
+                          Bucket=TEST_BUCKET_NAME,
                           Key=f'tests/simple_tests.pkl')
     if add_results:
         client.put_object(
@@ -204,11 +207,14 @@ def test_load_tests_from_s3():
     # Local imports are recommended when using moto
     from emmaa.model_tests import load_tests_from_s3, StatementCheckingTest
     client = setup_bucket(add_tests=True)
-    tests, _ = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
+    test_dict, _ = load_tests_from_s3('simple_tests', bucket=TEST_BUCKET_NAME)
+    assert isinstance(test_dict, dict)
+    tests = test_dict['tests']
     assert isinstance(tests, list)
     assert len(tests) == 1
     test = tests[0]
     assert isinstance(test, StatementCheckingTest)
+    assert isinstance(test_dict['description'], str)
 
 
 @mock_s3
@@ -268,6 +274,9 @@ def test_model_to_tests():
     assert isinstance(tests[0], StatementCheckingTest)
     loaded_tests, _ = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
     assert loaded_tests
+    assert isinstance(loaded_tests, dict)
+    assert 'description' in loaded_tests
+    assert 'tests' in loaded_tests
 
 
 @attr('nonpublic')
