@@ -582,8 +582,7 @@ class TestStatsGenerator(StatsGenerator):
         """Add latest test round summary to json_stats."""
         logger.info(f'Generating test summary for {self.model_name}.')
         self.json_stats['test_round_summary'] = {
-            'test_description': self.latest_round.json_results[0].get(
-                'test_description'),
+            'test_data': self.latest_round.json_results[0].get('test_data'),
             'number_applied_tests': self.latest_round.get_total_applied_tests(),
             'all_test_results': self.latest_round.english_test_results,
             'path_stmt_counts': self.latest_round.get_path_stmt_counts()}

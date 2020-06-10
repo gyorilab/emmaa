@@ -413,7 +413,7 @@ class ModelManager(object):
             stmts.append(stmt.to_json())
         return stmts
 
-    def results_to_json(self, test_description=None):
+    def results_to_json(self, test_data=None):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
         results_json = []
@@ -422,7 +422,7 @@ class ModelManager(object):
             'mc_types': [mc_type for mc_type in self.mc_types.keys()],
             'path_stmt_counts': self.path_stmt_counts,
             'date_str': self.date_str,
-            'test_description': test_description})
+            'test_data': test_data})
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
@@ -436,9 +436,9 @@ class ModelManager(object):
         return results_json
 
     def upload_results(self, test_corpus='large_corpus_tests',
-                       test_description=None, bucket=EMMAA_BUCKET_NAME):
+                       test_data=None, bucket=EMMAA_BUCKET_NAME):
         """Upload results to s3 bucket."""
-        json_dict = self.results_to_json(test_description)
+        json_dict = self.results_to_json(test_data)
         result_key = (f'results/{self.model.name}/results_'
                       f'{test_corpus}_{self.date_str}.json')
         json_str = json.dumps(json_dict, indent=1)
@@ -655,17 +655,17 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     em.run_assembly()
     tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
              all(stmt.agent_list())]
+    date_str = make_date_str()
+    test_description = (
+        f'These tests were generated from the {em.human_readable_name} '
+        f'on {date_str[:10]}')
+    test_dict = {'test_data': {'description': test_description},
+                 'tests': tests}
     if upload:
-        date_str = make_date_str()
-        test_description = (
-            f'These tests were generated from the {em.human_readable_name} '
-            f'on {date_str[:10]}')
-        test_dict = {'description': test_description,
-                     'tests': tests}
         client = get_s3_client(unsigned=False)
         client.put_object(Body=pickle.dumps(test_dict), Bucket=bucket,
                           Key=f'tests/{model_name}_tests_{date_str}.pkl')
-    return tests
+    return test_dict
 
 
 def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
@@ -696,14 +696,14 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     test_dict, _ = load_tests_from_s3(test_corpus, bucket=bucket)
     if isinstance(test_dict, dict):
         tests = test_dict['tests']
-        descr = test_dict['description']
+        test_data = test_dict['test_data']
     elif isinstance(test_dict, list):
         tests = test_dict
-        descr = None
+        test_data = None
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus, descr, bucket=bucket)
+        mm.upload_results(test_corpus, test_data, bucket=bucket)
     return mm

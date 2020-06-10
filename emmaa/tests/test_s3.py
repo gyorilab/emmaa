@@ -76,8 +76,9 @@ def setup_bucket(
     if add_tests:
         tests = [StatementCheckingTest(
             Activation(Agent('BRAF'), Agent('MAPK1')))]
-        test_dict = {'description': 'Tests for functionality testing',
-                     'tests': tests}
+        test_dict = {
+            'test_data': {'description': 'Tests for functionality testing'},
+            'tests': tests}
         client.put_object(Body=pickle.dumps(test_dict),
                           Bucket=TEST_BUCKET_NAME,
                           Key=f'tests/simple_tests.pkl')
@@ -214,7 +215,8 @@ def test_load_tests_from_s3():
     assert len(tests) == 1
     test = tests[0]
     assert isinstance(test, StatementCheckingTest)
-    assert isinstance(test_dict['description'], str)
+    assert isinstance(test_dict['test_data'], dict)
+    assert isinstance(test_dict['test_data']['description'], str)
 
 
 @mock_s3
@@ -269,13 +271,17 @@ def test_model_to_tests():
     from emmaa.model_tests import model_to_tests, load_tests_from_s3, \
         StatementCheckingTest
     client = setup_bucket(add_model=True)
-    tests = model_to_tests('test', bucket=TEST_BUCKET_NAME)
+    test_dict = model_to_tests('test', bucket=TEST_BUCKET_NAME)
+    assert isinstance(test_dict, dict)
+    assert 'test_data' in test_dict
+    assert 'tests' in test_dict
+    tests = test_dict['tests']
     assert len(tests) == 2
     assert isinstance(tests[0], StatementCheckingTest)
     loaded_tests, _ = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
     assert loaded_tests
     assert isinstance(loaded_tests, dict)
-    assert 'description' in loaded_tests
+    assert 'test_data' in loaded_tests
     assert 'tests' in loaded_tests
 
 
