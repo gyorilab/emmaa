@@ -498,7 +498,7 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
-    test_description = test_stats['test_round_summary'].get('test_description')          
+    test_description = test_stats['test_round_summary'].get('test_description')
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt

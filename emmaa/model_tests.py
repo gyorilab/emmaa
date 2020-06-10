@@ -694,11 +694,16 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     """
     mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
     test_dict, _ = load_tests_from_s3(test_corpus, bucket=bucket)
-    tests = test_dict['tests']
+    if isinstance(test_dict, dict):
+        tests = test_dict['tests']
+        descr = test_dict['description']
+    elif isinstance(test_dict, list):
+        tests = test_dict
+        descr = None
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
     tm.run_tests()
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus, test_dict['description'], bucket=bucket)
+        mm.upload_results(test_corpus, descr, bucket=bucket)
     return mm
