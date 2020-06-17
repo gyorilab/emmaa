@@ -113,6 +113,7 @@ def rx_id_from_up_id(up_id):
     headers = {'Accept': 'application/json'}
     res = requests.get(react_search_url, headers=headers, params=params)
     if not res.status_code == 200:
+        logger.debug(f'Reactome request to {react_search_url} failed')
         return None
     json = res.json()
     results = json.get('results')

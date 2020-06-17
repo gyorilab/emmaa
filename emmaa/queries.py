@@ -3,7 +3,7 @@ from inflection import underscore
 from collections import OrderedDict as _o
 import gilda
 from indra.sources import trips
-from indra.preassembler.grounding_mapper.standardize import \
+from indra.ontology.standardize import \
     standardize_agent_name
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash

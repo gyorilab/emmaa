@@ -112,14 +112,15 @@ def test_grounding():
     agent = get_agent_from_text('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'TEXT': 'MAPK1',
-                             'HGNC': '6871', 'UP': 'P28482'}, agent.db_refs
+    assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
+                             'MESH': 'D019950'}, agent.db_refs
+
     # test with lower case
     agent = get_agent_from_text('mapk1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'TEXT': 'mapk1',
-                             'HGNC': '6871', 'UP': 'P28482'}, agent.db_refs
+    assert agent.db_refs == {'TEXT': 'mapk1', 'HGNC': '6871', 'UP': 'P28482',
+                             'MESH': 'D019950'}, agent.db_refs
     # other agent
     agent = get_agent_from_text('BRAF')
     assert isinstance(agent, Agent)

@@ -13,7 +13,7 @@ def test_rx_id_from_up_id():
     """
     test_cases = [('P01116', 'R-HSA-9653079'),   # KRAS
                   ('P04637', 'R-HSA-69507'),   # TP53
-                  ('Q13485', 'R-HSA-3310994')]  # SMAD4
+                  ('Q13485', 'R-HSA-2187323')]  # SMAD4
     for up_id, rx_id in test_cases:
         all_rx_ids = rx_id_from_up_id(up_id)
         assert rx_id in all_rx_ids
@@ -22,14 +22,14 @@ def test_rx_id_from_up_id():
 def test_get_pathways_containing_genes():
     # get pathways containing KRAS
     KRAS_pathways = get_pathways_containing_gene('R-HSA-62719')
-    pattern = r'R-HSA-[0-9]{7}\.1$'
+    pattern = r'R-HSA-[0-9]{7}\.[0-9]{1}$'
     # Check if function returns a list of valid pathway ids
     assert all([re.match(pattern, pathway_id) for pathway_id in KRAS_pathways])
     # Check if function returns a reasonable number of pathways
     assert len(KRAS_pathways) > 3
     # Signaling Downstream of RAS mutants
     assert 'R-HSA-9649948.1' in KRAS_pathways
-    
+
 
 def test_get_genes_contained_in_pathway():
     # Get genes in Signaling by RAS mutants pathway
