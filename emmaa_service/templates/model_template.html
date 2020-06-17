@@ -130,7 +130,9 @@
           </div>
         </div>
       </div>
-      
+      {% if test_info_contents %}
+        {{ path_card(test_info_contents, "Test Corpus Info", "testInfoTable", ["Item", "Details"], "testInfoTableBody") }}
+      {% endif %}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>

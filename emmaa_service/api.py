@@ -135,6 +135,8 @@ def _load_tests_from_cache(test_corpus):
         EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
     if file_key != latest_on_s3:
         tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
+        if isinstance(tests, dict):
+            tests = tests['tests']
         tests_cache[test_corpus] = (tests, file_key)
     return tests
 
@@ -496,6 +498,11 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
+    test_data = test_stats['test_round_summary'].get('test_data')
+    test_info_contents = None
+    if test_data:
+        test_info_contents = [[('', k.capitalize(), ''), ('', v, '')]
+                              for k, v in test_data.items()]
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
@@ -539,6 +546,7 @@ def get_model_dashboard(model):
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
+                           test_info_contents=test_info_contents,
                            model_types=["Test", *[FORMATTED_TYPE_NAMES[mt]
                                                   for mt in
                                                   current_model_types]],
