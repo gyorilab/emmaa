@@ -5,6 +5,7 @@ import logging
 import itertools
 import jsonpickle
 import os
+import sys
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
@@ -26,6 +27,7 @@ from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
 
 
 logger = logging.getLogger(__name__)
+sys.setrecursionlimit(50000)
 
 
 result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
