@@ -1,6 +1,8 @@
 import datetime
-from indra_db.client.statements import get_statements_by_paper
+from indra_db.client.principal.raw_statements import \
+    get_raw_stmt_jsons_from_papers
 from indra_db.util import get_primary_db
+from indra.statements import stmts_from_json
 from emmaa.statements import EmmaaStatement
 
 
@@ -22,10 +24,10 @@ def read_db_ids_search_terms(id_search_terms, id_type):
     ids = list(id_search_terms.keys())
     date = datetime.datetime.utcnow()
     db = get_primary_db()
-    id_stmts = get_statements_by_paper(ids, id_type=id_type, db=db,
-                                       preassembled=False)
+    id_stmts = get_raw_stmt_jsons_from_papers(ids, id_type=id_type, db=db)
     estmts = []
-    for _id, stmts in id_stmts.items():
+    for _id, stmt_jsons in id_stmts.items():
+        stmts = stmts_from_json(stmt_jsons)
         for stmt in stmts:
             es = EmmaaStatement(stmt, date, id_search_terms[_id])
             estmts.append(es)
