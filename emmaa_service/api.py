@@ -88,6 +88,9 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
 
 
 def get_latest_available_date(model, test_corpus, bucket=EMMAA_BUCKET_NAME):
+    if not test_corpus:
+        logger.error('Test corpus is missing, cannot find latest date')
+        return
     model_date = last_updated_date(model, 'model_stats', extension='.json',
                                    bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
@@ -469,6 +472,8 @@ def get_home():
 def get_model_dashboard(model):
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
+    if not test_corpus:
+        abort(Response('Could not identify test corpus', 404))
     date = request.args.get('date', get_latest_available_date(
         model, test_corpus))
     tab = request.args.get('tab', 'model')
@@ -569,6 +574,8 @@ def get_model_tests_page(model):
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
     test_corpus = request.args.get('test_corpus')
+    if not test_corpus:
+        abort(Response('Test corpus has to be provided', 404))
     date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
