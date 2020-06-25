@@ -20,6 +20,7 @@ install:
   - pip install git+https://github.com/indralab/indra_db.git
   - pip install git+https://github.com/indralab/indra_reading.git
   - pip install git+https://github.com/sorgerlab/bioagents.git
+  - pip install git+https://github.com/indralab/covid-19.git
   - git clone https://github.com/indralab/ui_util.git
   - cd ui_util/indralab_auth_tools
   - pip install .
