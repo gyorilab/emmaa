@@ -20,6 +20,9 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
     cd pgcopy && \
     python setup.py install
 
+# Install covid-19
+RUN git clone https://github.com/indralab/covid-19.git
+
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git && \
     pip install git+https://github.com/sorgerlab/bioagents.git && \
