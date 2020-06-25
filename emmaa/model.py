@@ -1,6 +1,7 @@
 import time
 import logging
 import datetime
+from covid_19.emmaa_update import make_model_stmts
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
@@ -20,6 +21,7 @@ from emmaa.readers.elsevier_eidos_reader import \
 from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
     EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3
+from emmaa.statements import to_emmaa_stmts
 
 
 logger = logging.getLogger(__name__)
@@ -245,6 +247,8 @@ class EmmaaModel(object):
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
+        if self.reading_config.get('cord19_update'):
+            self.update_with_cord19()
 
     def extend_unique(self, estmts):
         """Extend model statements only if it is not already there."""
@@ -258,6 +262,16 @@ class EmmaaModel(object):
         len_after = len(self.stmts)
         logger.info('Extended EMMAA Statements by %d new Statements' %
                     (len_after - len_before))
+
+    def update_with_cord19(self):
+        """Update model with new CORD19 dataset statements."""
+        current_stmts = self.get_indra_stmts()
+        drug_stmts = load_pickle_from_s3('indra-covid19', 'drug_stmts.pkl')
+        gordon_stmts = load_pickle_from_s3(
+            'indra-covid19', 'gordon_ndex_stmts.pkl')
+        new_stmts = make_model_stmts(
+            current_stmts, drug_stmts, gordon_stmts)
+        self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
