@@ -1,12 +1,10 @@
-import json
 import logging
 import jsonpickle
 from collections import defaultdict
 from emmaa.model import _default_test
 from emmaa.model_tests import load_model_manager_from_s3
-from emmaa.util import (find_latest_s3_file, find_nth_latest_s3_file,
-                        strip_out_date, get_s3_client, EMMAA_BUCKET_NAME,
-                        FORMAT)
+from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
+    strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -110,15 +108,7 @@ class ModelRound(Round):
         if not mm:
             return
         statements = mm.model.assembled_stmts
-        try:
-            date_str = mm.date_str
-        except AttributeError:
-            client = get_s3_client()
-            keys = client.list_objects(
-                Bucket=bucket,
-                Prefix='results/rasmodel/latest_model_manager.pkl')
-            date = keys['Contents'][0]['LastModified']
-            date_str = date.strftime(FORMAT)
+        date_str = mm.date_str
         return cls(statements, date_str)
 
     def get_total_statements(self):
@@ -205,10 +195,8 @@ class TestRound(Round):
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
-        client = get_s3_client()
         logger.info(f'Loading json from {key}')
-        obj = client.get_object(Bucket=bucket, Key=key)
-        json_results = json.loads(obj['Body'].read().decode('utf8'))
+        json_results = load_json_from_s3(bucket, key)
         date_str = json_results[0].get('date_str', strip_out_date(key))
         return cls(json_results, date_str)
 
@@ -368,11 +356,8 @@ class StatsGenerator(object):
 
     def save_to_s3_key(self, stats_key):
         if self.json_stats:
-            json_stats_str = json.dumps(self.json_stats, indent=1)
-            client = get_s3_client(unsigned=False)
             logger.info(f'Uploading statistics to {stats_key}')
-            client.put_object(Bucket=self.bucket, Key=stats_key,
-                              Body=json_stats_str.encode('utf8'))
+            save_json_to_s3(self.json_stats, self.bucket, stats_key)
 
     def save_to_s3(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -508,7 +493,6 @@ class ModelStatsGenerator(StatsGenerator):
         return mr
 
     def _get_previous_json_stats(self):
-        client = get_s3_client()
         key = find_latest_s3_file(
             self.bucket, f'model_stats/{self.model_name}/model_stats_', '.json')
         # This is the first time statistics is generated for this model
@@ -524,8 +508,7 @@ class ModelStatsGenerator(StatsGenerator):
         # Store the date string to find previous round with it
         self.previous_date_str = strip_out_date(key)
         logger.info(f'Loading earlier statistics from {key}')
-        obj = client.get_object(Bucket=self.bucket, Key=key)
-        previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
+        previous_json_stats = load_json_from_s3(self.bucket, key)
         return previous_json_stats
 
 
@@ -691,7 +674,6 @@ class TestStatsGenerator(StatsGenerator):
         return tr
 
     def _get_previous_json_stats(self):
-        client = get_s3_client()
         key = find_latest_s3_file(
             self.bucket,
             f'stats/{self.model_name}/test_stats_{self.test_corpus}_', '.json')
@@ -709,8 +691,7 @@ class TestStatsGenerator(StatsGenerator):
         # Store the date string to find previous round with it
         self.previous_date_str = strip_out_date(key)
         logger.info(f'Loading earlier statistics from {key}')
-        obj = client.get_object(Bucket=self.bucket, Key=key)
-        previous_json_stats = json.loads(obj['Body'].read().decode('utf8'))
+        previous_json_stats = load_json_from_s3(self.bucket, key)
         return previous_json_stats
 
 

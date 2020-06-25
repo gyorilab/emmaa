@@ -18,9 +18,9 @@ from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
 
-from emmaa.util import find_latest_s3_file, strip_out_date, get_s3_client, \
-    does_exist, EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
-    find_number_of_files_on_s3
+from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
+    EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
+    find_number_of_files_on_s3, load_json_from_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test
 from emmaa.model_tests import load_tests_from_s3
@@ -1145,9 +1145,7 @@ def load_latest_statements(model):
     else:
         fkey = None
     if fkey:
-        client = get_s3_client()
-        obj = client.get_object(Bucket=EMMAA_BUCKET_NAME, Key=fkey)
-        stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
+        stmt_jsons = load_json_from_s3(EMMAA_BUCKET_NAME, fkey)
         link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
     else:
         stmt_jsons = []

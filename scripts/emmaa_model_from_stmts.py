@@ -5,7 +5,7 @@ import datetime
 from indra.databases import ndex_client
 from indra.assemblers.cx import CxAssembler
 from indra.tools import assemble_corpus as ac
-from emmaa.model import EmmaaModel
+from emmaa.model import EmmaaModel, save_config_to_s3
 from emmaa.statements import to_emmaa_stmts
 
 
@@ -46,14 +46,7 @@ def create_upload_model(model_name, full_name, indra_stmts, ndex_id=None):
     # Upload model to S3 with config as YAML and JSON
     emmaa_model.save_to_s3()
     s3_client = boto3.client('s3')
-    config_json = json.dumps(config_dict)
-    s3_client.put_object(Body=config_json.encode('utf8'),
-                         Key='models/%s/config.json' % model_name,
-                         Bucket='emmaa')
-    config_json = json.dumps(config_dict)
-    s3_client.put_object(Body=config_json.encode('utf8'),
-                         Key='models/%s/config.json' % model_name,
-                         Bucket='emmaa')
+    save_config_to_s3(model_name, config_dict)
 
 
 if __name__ == '__main__':
