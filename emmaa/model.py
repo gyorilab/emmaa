@@ -269,8 +269,14 @@ class EmmaaModel(object):
         drug_stmts = load_pickle_from_s3('indra-covid19', 'drug_stmts.pkl')
         gordon_stmts = load_pickle_from_s3(
             'indra-covid19', 'gordon_ndex_stmts.pkl')
-        new_stmts = make_model_stmts(
-            current_stmts, drug_stmts, gordon_stmts)
+        virhostnet_stmts = load_pickle_from_s3(
+            'indra-covid19', 'virhostnet_stmts.pkl')
+        logger.info(f'Loaded {len(current_stmts)} current model statements, '
+                    f'{len(drug_stmts)} drug statements, {len(gordon_stmts)} '
+                    f'Gordon statements, {len(virhostnet_stmts)} '
+                    'VirHostNet statements.')
+        other_stmts = drug_stmts + gordon_stmts + virhostnet_stmts
+        new_stmts = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
     def eliminate_copies(self):
