@@ -2,6 +2,8 @@ import os
 import re
 import boto3
 import logging
+import json
+import pickle
 from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -247,6 +249,31 @@ def _get_flask_app():
         'emmaa_service', 'templates')
     app = Flask('Static app', template_folder=emmaa_service_dir.as_posix())
     return app
+
+
+def load_pickle_from_s3(bucket, key):
+    client = get_s3_client()
+    obj = client.get_object(Bucket=bucket, Key=key)
+    content = pickle.loads(obj['Body'].read())
+    return content
+
+
+def save_pickle_to_s3(obj, bucket, key):
+    client = get_s3_client(unsigned=False)
+    client.put_object(Body=pickle.dumps(obj), Bucket=bucket, Key=key)
+
+
+def load_json_from_s3(bucket, key):
+    client = get_s3_client()
+    obj = client.get_object(Bucket=bucket, Key=key)
+    content = json.loads(obj['Body'].read().decode('utf8'))
+    return content
+
+
+def save_json_to_s3(obj, bucket, key):
+    client = get_s3_client(unsigned=False)
+    client.put_object(Body=json.dumps(obj, indent=1).encode('utf8'),
+                      Bucket=bucket, Key=key)
 
 
 class EmailHtmlBody(object):

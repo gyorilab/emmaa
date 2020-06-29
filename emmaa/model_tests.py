@@ -1,6 +1,4 @@
 """This module implements the object model for EMMAA model testing."""
-import json
-import pickle
 import logging
 import itertools
 import jsonpickle
@@ -23,7 +21,8 @@ from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel
 from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
-    EMMAA_BUCKET_NAME, find_latest_s3_file
+    EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3
 
 
 logger = logging.getLogger(__name__)
@@ -443,11 +442,8 @@ class ModelManager(object):
         json_dict = self.results_to_json(test_data)
         result_key = (f'results/{self.model.name}/results_'
                       f'{test_corpus}_{self.date_str}.json')
-        json_str = json.dumps(json_dict, indent=1)
-        client = get_s3_client(unsigned=False)
         logger.info(f'Uploading test results to {result_key}')
-        client.put_object(Bucket=bucket, Key=result_key,
-                          Body=json_str.encode('utf8'))
+        save_json_to_s3(json_dict, bucket, result_key)
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
@@ -456,14 +452,10 @@ class ModelManager(object):
         key1 = f'assembled/{self.model.name}/statements_{self.date_str}.json'
         key2 = f'assembled/{self.model.name}/' \
                f'latest_statements_{self.model.name}.json'
-        json_str = json.dumps(stmt_jsons, indent=1)
-        client = get_s3_client(unsigned=False)
         logger.info(f'Uploading assembled statements to {key1}')
-        client.put_object(Bucket=bucket, Key=key1,
-                          Body=json_str.encode('utf8'))
+        save_json_to_s3(stmt_jsons, bucket, key1)
         logger.info(f'Uploading assembled statements to {key2}')
-        client.put_object(Bucket=bucket, Key=key2,
-                          Body=json_str.encode('utf8'))
+        save_json_to_s3(stmt_jsons, bucket, key2)
 
 
 class TestManager(object):
@@ -596,37 +588,30 @@ def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     list of EmmaaTest
         List of EmmaaTest objects loaded from S3.
     """
-    client = get_s3_client()
     prefix = f'tests/{test_name}'
     try:
         test_key = find_latest_s3_file(bucket, prefix)
     except ValueError:
         test_key = f'tests/{test_name}.pkl'
     logger.info(f'Loading tests from {test_key}')
-    obj = client.get_object(Bucket=bucket, Key=test_key)
-    tests = pickle.loads(obj['Body'].read())
+    tests = load_pickle_from_s3(bucket, test_key)
     return tests, test_key
 
 
 def save_model_manager_to_s3(model_name, model_manager,
                              bucket=EMMAA_BUCKET_NAME):
-    client = get_s3_client(unsigned=False)
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     date_str = model_manager.date_str
-    client.put_object(
-        Body=pickle.dumps(model_manager), Bucket=bucket,
-        Key=f'results/{model_name}/model_manager_{date_str}.pkl')
+    save_pickle_to_s3(model_manager, bucket,
+                      f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
 def load_model_manager_from_s3(model_name=None, key=None,
                                bucket=EMMAA_BUCKET_NAME):
-    client = get_s3_client()
     # First try find the file from specified key
     if key:
         try:
-            obj = client.get_object(Bucket=bucket, Key=key)
-            body = obj['Body'].read()
-            model_manager = pickle.loads(body)
+            model_manager = load_pickle_from_s3(bucket, key)
             return model_manager
         except Exception as e:
             logger.info('Could not load the model manager')
@@ -664,9 +649,8 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     test_dict = {'test_data': {'description': test_description},
                  'tests': tests}
     if upload:
-        client = get_s3_client(unsigned=False)
-        client.put_object(Body=pickle.dumps(test_dict), Bucket=bucket,
-                          Key=f'tests/{model_name}_tests_{date_str}.pkl')
+        save_pickle_to_s3(test_dict, bucket,
+                          f'tests/{model_name}_tests_{date_str}.pkl')
     return test_dict
 
 

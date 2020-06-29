@@ -1,8 +1,7 @@
-import json
 import time
-import pickle
 import logging
 import datetime
+from covid_19.emmaa_update import make_model_stmts
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
@@ -19,8 +18,10 @@ from emmaa.readers.db_client_reader import read_db_pmid_search_terms, \
     read_db_doi_search_terms
 from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
-from emmaa.util import make_date_str, find_latest_s3_file, get_s3_client, \
-    strip_out_date, EMMAA_BUCKET_NAME, find_nth_latest_s3_file
+from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
+    EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3
+from emmaa.statements import to_emmaa_stmts
 
 
 logger = logging.getLogger(__name__)
@@ -246,6 +247,8 @@ class EmmaaModel(object):
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
+        if self.reading_config.get('cord19_update'):
+            self.update_with_cord19()
 
     def extend_unique(self, estmts):
         """Extend model statements only if it is not already there."""
@@ -259,6 +262,23 @@ class EmmaaModel(object):
         len_after = len(self.stmts)
         logger.info('Extended EMMAA Statements by %d new Statements' %
                     (len_after - len_before))
+
+    def update_with_cord19(self):
+        """Update model with new CORD19 dataset statements."""
+        current_stmts = self.get_indra_stmts()
+        drug_stmts = load_pickle_from_s3('indra-covid19', 'drug_stmts.pkl')
+        gordon_stmts = load_pickle_from_s3(
+            'indra-covid19', 'gordon_ndex_stmts.pkl')
+        virhostnet_stmts = load_pickle_from_s3(
+            'indra-covid19', 'virhostnet_stmts.pkl')
+        ctd_stmts = load_pickle_from_s3('indra-covid19', 'ctd_stmts.pkl')
+        logger.info(f'Loaded {len(current_stmts)} current model statements, '
+                    f'{len(drug_stmts)} drug statements, {len(gordon_stmts)} '
+                    f'Gordon statements, {len(virhostnet_stmts)} '
+                    f'VirHostNet statements, {len(ctd_stmts)} CTD statements.')
+        other_stmts = drug_stmts + gordon_stmts + virhostnet_stmts + ctd_stmts
+        new_stmts = make_model_stmts(current_stmts, other_stmts)
+        self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
@@ -299,15 +319,10 @@ class EmmaaModel(object):
         """Dump the model state to S3."""
         date_str = make_date_str()
         fname = f'models/{self.name}/model_{date_str}'
-        client = get_s3_client(unsigned=False)
         # Dump as pickle
-        client.put_object(Body=pickle.dumps(self.stmts),
-                          Bucket=bucket,
-                          Key=fname+'.pkl')
+        save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
         # Dump as json
-        client.put_object(Body=str.encode(json.dumps(self.to_json()),
-                                          encoding='utf8'),
-                          Bucket=bucket, Key=fname+'.json')
+        save_json_to_s3(self.stmts, bucket, key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
@@ -445,12 +460,10 @@ def load_config_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     config : dict
         A JSON dictionary of the model configuration loaded from S3.
     """
-    client = get_s3_client()
     base_key = f'models/{model_name}'
     config_key = f'{base_key}/config.json'
     logger.info(f'Loading model config from {config_key}')
-    obj = client.get_object(Bucket=bucket, Key=config_key)
-    config = json.loads(obj['Body'].read().decode('utf8'))
+    config = load_json_from_s3(bucket, config_key)
     return config
 
 
@@ -464,13 +477,10 @@ def save_config_to_s3(model_name, config, bucket=EMMAA_BUCKET_NAME):
     config : dict
         A JSON dict of configurations for the model.
     """
-    client = get_s3_client(unsigned=False)
     base_key = f'models/{model_name}'
     config_key = f'{base_key}/config.json'
     logger.info(f'Saving model config to {config_key}')
-    client.put_object(Body=str.encode(json.dumps(config, indent=1),
-                                      encoding='utf8'),
-                      Bucket=bucket, Key=config_key)
+    save_json_to_s3(config, bucket, config_key)
 
 
 def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
@@ -486,13 +496,11 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
     stmts : list of emmaa.statements.EmmaaStatement
         The list of EMMAA Statements in the latest model version.
     """
-    client = get_s3_client()
     base_key = f'models/{model_name}'
     latest_model_key = find_latest_s3_file(bucket, f'{base_key}/model_',
                                            extension='.pkl')
     logger.info(f'Loading model state from {latest_model_key}')
-    obj = client.get_object(Bucket=bucket, Key=latest_model_key)
-    stmts = pickle.loads(obj['Body'].read())
+    stmts = load_pickle_from_s3(bucket, latest_model_key)
     return stmts
 
 
@@ -609,7 +617,6 @@ def get_model_stats(model, mode, tests=None, date=None,
                                      extension=extension, n=n, bucket=bucket)
         else:
             raise TypeError('Mode must be either model or tests')
-    s3 = get_s3_client()
 
     # Try find new formatted stats (separate for model and tests)
     if mode == 'model':
@@ -640,9 +647,7 @@ def get_model_stats(model, mode, tests=None, date=None,
     # If we still didn't filnd the file it probably does not exist
     if not latest_file_key:
         return None, None
-    model_data_object = s3.get_object(Bucket=bucket,
-                                      Key=latest_file_key)
-    return (json.loads(model_data_object['Body'].read().decode('utf8')),
+    return (load_json_from_s3(bucket, latest_file_key),
             latest_file_key)
 
 
@@ -652,9 +657,7 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
     if not latest_file_key:
         logger.info(f'No assembled statements found for {model}.')
         return
-    client = get_s3_client()
-    obj = client.get_object(Bucket=bucket, Key=latest_file_key)
-    stmt_jsons = json.loads(obj['Body'].read().decode('utf8'))
+    stmt_jsons = load_json_from_s3(bucket, latest_file_key)
     stmts = stmts_from_json(stmt_jsons)
     return stmts
 
@@ -662,7 +665,5 @@ def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
 @register_pipeline
 def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
-    client = get_s3_client()
-    obj = client.get_object(Bucket=bucket, Key=key)
-    gr_map = json.loads(obj['Body'].read().decode('utf-8'))
+    gr_map = load_json_from_s3(bucket, key)
     return gr_map
