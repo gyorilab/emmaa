@@ -5,6 +5,7 @@ import logging
 import json
 import pickle
 import zlib
+import tweepy
 from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -373,3 +374,19 @@ class EmailHtmlBody(object):
 
 class NotAClassName(Exception):
     pass
+
+
+def get_oauth_dict(auth_dict):
+    oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
+                                auth_dict.get('consumer_secret'))
+    oauth.set_access_token(auth_dict.get('access_token'),
+                           auth_dict.get('access_secret'))
+    return oauth
+
+
+def update_status(msg, twitter_cred):
+    twitter_auth = get_oauth_dict(twitter_cred)
+    if twitter_auth is None:
+        return
+    twitter_api = tweepy.API(twitter_auth)
+    twitter_api.update_status(msg)
