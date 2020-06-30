@@ -20,6 +20,12 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'paths': 'get_passed_test_hashes'}
 
 
+FORMATTED_TYPE_NAMES = {'pysb': 'PySB model',
+                        'pybel': 'PyBEL model',
+                        'signed_graph': 'Signed Graph',
+                        'unsigned_graph': 'Unsigned Graph'}
+
+
 class Round(object):
     """Parent class for classes analyzing one round of something (model or
     tests).
@@ -446,9 +452,16 @@ class ModelStatsGenerator(StatsGenerator):
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': {'added': [], 'removed': []}}
         else:
+            stmts_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'statements')
             self.json_stats['model_delta'] = {
-                'statements_hashes_delta': self.latest_round.find_delta_hashes(
-                    self.previous_round, 'statements')}
+                'statements_hashes_delta': stmts_delta}
+            if len(stmts_delta['added']) > 0:
+                logger.info(
+                    f'{self.model_name.upper()} model found '
+                    f'{len(stmts_delta['added'])} new mechanisms today.\n'
+                    f'See https://emmaa.indra.bio/dashboard/{self.model_name} '
+                    f'for more details.')
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -592,9 +605,16 @@ class TestStatsGenerator(StatsGenerator):
             tests_delta = {
                 'applied_hashes_delta': {'added': [], 'removed': []}}
         else:
+            applied_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'applied_tests')
             tests_delta = {
-                'applied_hashes_delta': self.latest_round.find_delta_hashes(
-                    self.previous_round, 'applied_tests')}
+                'applied_hashes_delta': applied_delta}
+            if len(applied_delta['added']) > 0:
+                logger.info(
+                    f'{self.model_name.upper()} model has '
+                    f'{len(applied_delta['added'])} new applied tests today. '
+                    f'See https://emmaa.indra.bio/dashboard/{self.model_name}'
+                    f'?tab=tests for more details.')
 
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
@@ -602,9 +622,17 @@ class TestStatsGenerator(StatsGenerator):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': {'added': [], 'removed': []}}
             else:
+                passed_delta = self.latest_round.find_delta_hashes(
+                    self.previous_round, 'passed_tests', mc_type=mc_type)
                 tests_delta[mc_type] = {
-                    'passed_hashes_delta': self.latest_round.find_delta_hashes(
-                        self.previous_round, 'passed_tests', mc_type=mc_type)}
+                    'passed_hashes_delta': passed_delta}
+                if len(passed_delta['added']) > 0:
+                    logger.info(
+                        f'{self.model_name.upper()} '
+                        f'{FORMATTED_TYPE_NAMES[mc_type]} has '
+                        f'{len(passed_delta['added'])} new passed tests today.'
+                        f' See https://emmaa.indra.bio/dashboard/'
+                        f'{self.model_name}?tab=tests for more details.')
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
