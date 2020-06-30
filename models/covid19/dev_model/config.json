@@ -112,6 +112,7 @@
   "reader": [
    "indra_db_pmid",
    "indra_db_doi"
-  ]
+  ],
+  "cord19_update": true
  }
 }
