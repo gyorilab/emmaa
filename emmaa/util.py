@@ -25,6 +25,12 @@ EMMAA_BUCKET_NAME = 'emmaa'
 logger = logging.getLogger(__name__)
 
 
+FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
+                        'pybel': 'PyBEL',
+                        'signed_graph': 'Signed Graph',
+                        'unsigned_graph': 'Unsigned Graph'}
+
+
 def strip_out_date(keystring, date_format='datetime'):
     """Strips out datestring of selected date_format from a keystring"""
     if date_format == 'datetime':

@@ -4,7 +4,8 @@ from collections import defaultdict
 from emmaa.model import _default_test
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
-    strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3
+    strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
+    FORMATTED_TYPE_NAMES
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -18,12 +19,6 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
     'paths': 'get_passed_test_hashes'}
-
-
-FORMATTED_TYPE_NAMES = {'pysb': 'PySB model',
-                        'pybel': 'PyBEL model',
-                        'signed_graph': 'Signed Graph',
-                        'unsigned_graph': 'Unsigned Graph'}
 
 
 class Round(object):

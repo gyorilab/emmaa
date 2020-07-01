@@ -20,12 +20,11 @@ from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
-    find_number_of_files_on_s3, load_json_from_s3
+    find_number_of_files_on_s3, load_json_from_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test, get_assembled_statements
 from emmaa.model_tests import load_tests_from_s3
-from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
-    FORMATTED_TYPE_NAMES
+from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
