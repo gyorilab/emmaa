@@ -454,14 +454,16 @@ class ModelStatsGenerator(StatsGenerator):
                 self.previous_round, 'statements')
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': stmts_delta}
-            if self.config.get('twitter') and len(stmts_delta['added']) > 0:
+            if len(stmts_delta['added']) > 0:
                 msg = (
-                    f'{self.config['human_readable_name']} model found '
+                    f'{self.config["human_readable_name"]} model found '
                     f'{len(stmts_delta["added"])} new mechanisms today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name} '
                     f'for more details.')
-                twitter_cred = get_credentials(self.config['twitter'])
-                update_status(msg, twitter_cred)
+                logger.info(msg)
+                if self.config.get('twitter'):
+                    twitter_cred = get_credentials(self.config['twitter'])
+                    update_status(msg, twitter_cred)
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -610,14 +612,16 @@ class TestStatsGenerator(StatsGenerator):
                 self.previous_round, 'applied_tests')
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
-            if self.config.get('twitter') and len(applied_delta['added']) > 0:
+            if len(applied_delta['added']) > 0:
                 msg = (
-                    f'{self.config['human_readable_name']} model has '
+                    f'{self.config["human_readable_name"]} model has '
                     f'{len(applied_delta["added"])} new applied tests today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name}'
                     f'?tab=tests for more details.')
-                twitter_cred = get_credentials(self.config['twitter'])
-                update_status(msg, twitter_cred)
+                logger.info(msg)
+                if self.config.get('twitter'):
+                    twitter_cred = get_credentials(self.config['twitter'])
+                    update_status(msg, twitter_cred)
 
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
@@ -629,19 +633,21 @@ class TestStatsGenerator(StatsGenerator):
                     self.previous_round, 'passed_tests', mc_type=mc_type)
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': passed_delta}
-                if self.config.get('twitter') and \
-                        len(passed_delta['added']) > 0:
+                if len(passed_delta['added']) > 0:
                     msg = (
-                        f'{self.config['human_readable_name']} '
+                        f'{self.config["human_readable_name"]} '
                         f'{FORMATTED_TYPE_NAMES[mc_type]} has '
                         f'{len(passed_delta["added"])} new passed tests today.'
                         f' See https://emmaa.indra.bio/dashboard/'
                         f'{self.model_name}?tab=tests for more details.')
-                    # We can have the credentials already if there were new
-                    # applied or passed tests with other model type
-                    if not twitter_cred:
-                        twitter_cred = get_credentials(self.config['twitter'])
-                    update_status(msg, twitter_cred)
+                    logger.info(msg)
+                    if self.config.get('twitter'):
+                        # We can have the credentials already if there were new
+                        # applied or passed tests with other model type
+                        if not twitter_cred:
+                            twitter_cred = get_credentials(
+                                self.config['twitter'])
+                        update_status(msg, twitter_cred)
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
