@@ -382,6 +382,18 @@ class NotAClassName(Exception):
     pass
 
 
+def get_credentials(key):
+    client = boto3.client('ssm')
+    auth_dict = {}
+    for par in ['consumer_token', 'consumer_secret', 'access_token',
+                'access_secret']:
+        name = f'/twitter/{key}/{par}'
+        response = client.get_parameter(Name=name, WithDecryption=True)
+        val = response['Parameter']['Value']
+        auth_dict[par] = val
+    return auth_dict
+
+
 def get_oauth_dict(auth_dict):
     oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
                                 auth_dict.get('consumer_secret'))
