@@ -459,7 +459,7 @@ class ModelStatsGenerator(StatsGenerator):
             if len(stmts_delta['added']) > 0:
                 logger.info(
                     f'{self.model_name.upper()} model found '
-                    f'{len(stmts_delta['added'])} new mechanisms today.\n'
+                    f'{len(stmts_delta["added"])} new mechanisms today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name} '
                     f'for more details.')
 
@@ -612,7 +612,7 @@ class TestStatsGenerator(StatsGenerator):
             if len(applied_delta['added']) > 0:
                 logger.info(
                     f'{self.model_name.upper()} model has '
-                    f'{len(applied_delta['added'])} new applied tests today. '
+                    f'{len(applied_delta["added"])} new applied tests today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name}'
                     f'?tab=tests for more details.')
 
@@ -630,7 +630,7 @@ class TestStatsGenerator(StatsGenerator):
                     logger.info(
                         f'{self.model_name.upper()} '
                         f'{FORMATTED_TYPE_NAMES[mc_type]} has '
-                        f'{len(passed_delta['added'])} new passed tests today.'
+                        f'{len(passed_delta["added"])} new passed tests today.'
                         f' See https://emmaa.indra.bio/dashboard/'
                         f'{self.model_name}?tab=tests for more details.')
         self.json_stats['tests_delta'] = tests_delta
