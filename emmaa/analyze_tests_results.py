@@ -1,7 +1,7 @@
 import logging
 import jsonpickle
 from collections import defaultdict
-from emmaa.model import _default_test
+from emmaa.model import _default_test, load_config_from_s3
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
@@ -327,6 +327,8 @@ class StatsGenerator(object):
     ----------
     json_stats : dict
         A JSON-formatted dictionary containing model or test statistics.
+    config : dict
+        Model specific configurations.
     """
 
     def __init__(self, model_name, latest_round=None, previous_round=None,
@@ -347,6 +349,7 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
+        self.config = load_config_from_s3(model_name, bucket)
 
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
@@ -453,7 +456,7 @@ class ModelStatsGenerator(StatsGenerator):
                 'statements_hashes_delta': stmts_delta}
             if len(stmts_delta['added']) > 0:
                 logger.info(
-                    f'{self.model_name.upper()} model found '
+                    f'{self.config['human_readable_name']} model found '
                     f'{len(stmts_delta["added"])} new mechanisms today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name} '
                     f'for more details.')
@@ -606,7 +609,7 @@ class TestStatsGenerator(StatsGenerator):
                 'applied_hashes_delta': applied_delta}
             if len(applied_delta['added']) > 0:
                 logger.info(
-                    f'{self.model_name.upper()} model has '
+                    f'{self.config['human_readable_name']} model has '
                     f'{len(applied_delta["added"])} new applied tests today. '
                     f'See https://emmaa.indra.bio/dashboard/{self.model_name}'
                     f'?tab=tests for more details.')
@@ -623,7 +626,7 @@ class TestStatsGenerator(StatsGenerator):
                     'passed_hashes_delta': passed_delta}
                 if len(passed_delta['added']) > 0:
                     logger.info(
-                        f'{self.model_name.upper()} '
+                        f'{self.config['human_readable_name']} '
                         f'{FORMATTED_TYPE_NAMES[mc_type]} has '
                         f'{len(passed_delta["added"])} new passed tests today.'
                         f' See https://emmaa.indra.bio/dashboard/'
