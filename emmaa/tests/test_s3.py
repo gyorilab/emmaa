@@ -198,7 +198,7 @@ def test_get_assembled_stmts():
     # Local imports are recommended when using moto
     from emmaa.model import get_assembled_statements
     client = setup_bucket(add_mm=True)
-    stmts = get_assembled_statements('test', bucket=TEST_BUCKET_NAME)
+    stmts, fkey = get_assembled_statements('test', bucket=TEST_BUCKET_NAME)
     assert len(stmts) == 2
     assert all([isinstance(stmt, Activation) for stmt in stmts])
 
