@@ -729,8 +729,8 @@ def get_statement_evidence_page():
         test_stats, _ = get_model_stats(model, 'test')
         stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
         stmt_counts_dict = dict(stmt_counts)
-        mm = load_model_manager_from_cache(model)
-        for stmt in mm.model.assembled_stmts:
+        all_stmts = _load_stmts_from_cache(model)
+        for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
                     stmts.append(stmt)
@@ -776,13 +776,12 @@ def get_statement_evidence_page():
 
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
-    mm = load_model_manager_from_cache(model)
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
-    stmts = mm.model.assembled_stmts
+    stmts = _load_stmts_from_cache(model)
     stmts_by_hash = {}
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
@@ -1066,14 +1065,14 @@ def email_unsubscribe_post():
 
 @app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, hash_val):
-    mm = load_model_manager_from_cache(model)
+    stmts = _load_stmts_from_cache(model)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(
             {'error_type': cur.tag})
-    for st in mm.model.assembled_stmts:
+    for st in stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
             ev_list = _format_evidence_text(
