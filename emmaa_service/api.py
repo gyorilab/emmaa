@@ -141,6 +141,8 @@ def _load_tests_from_cache(test_corpus):
         if isinstance(tests, dict):
             tests = tests['tests']
         tests_cache[test_corpus] = (tests, file_key)
+    else:
+        logger.info(f'Loaded {test_corpus} from cache.')
     return tests
 
 
@@ -151,6 +153,8 @@ def _load_stmts_from_cache(model):
     if file_key != latest_on_s3:
         stmts, file_key = get_assembled_statements(model, EMMAA_BUCKET_NAME)
         stmts_cache[model] = (stmts, file_key)
+    else:
+        logger.info(f'Loaded assembled stmts for {model} from cache.')
     return stmts
 
 
