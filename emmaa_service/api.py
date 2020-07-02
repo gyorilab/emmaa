@@ -22,7 +22,7 @@ from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, load_json_from_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
-    get_model_stats, _default_test
+    get_model_stats, _default_test, get_assembled_statements
 from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
     FORMATTED_TYPE_NAMES
@@ -144,6 +144,16 @@ def _load_tests_from_cache(test_corpus):
     return tests
 
 
+def _load_stmts_from_cache(model):
+    stmts, file_key = stmts_cache.get(model, (None, None))
+    latest_on_s3 = find_latest_s3_file(
+        EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+    if file_key != latest_on_s3:
+        stmts, file_key = get_assembled_statements(model, EMMAA_BUCKET_NAME)
+        stmts_cache[model] = (stmts, file_key)
+    return stmts
+
+
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
@@ -182,6 +192,7 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 
 model_cache = {}
 tests_cache = {}
+stmts_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
