@@ -22,7 +22,7 @@ from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, load_json_from_s3
 from emmaa.model import load_config_from_s3, last_updated_date, \
-    get_model_stats, _default_test
+    get_model_stats, _default_test, get_assembled_statements
 from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
     FORMATTED_TYPE_NAMES
@@ -141,7 +141,21 @@ def _load_tests_from_cache(test_corpus):
         if isinstance(tests, dict):
             tests = tests['tests']
         tests_cache[test_corpus] = (tests, file_key)
+    else:
+        logger.info(f'Loaded {test_corpus} from cache.')
     return tests
+
+
+def _load_stmts_from_cache(model):
+    stmts, file_key = stmts_cache.get(model, (None, None))
+    latest_on_s3 = find_latest_s3_file(
+        EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+    if file_key != latest_on_s3:
+        stmts, file_key = get_assembled_statements(model, EMMAA_BUCKET_NAME)
+        stmts_cache[model] = (stmts, file_key)
+    else:
+        logger.info(f'Loaded assembled stmts for {model} from cache.')
+    return stmts
 
 
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
@@ -182,6 +196,7 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 
 model_cache = {}
 tests_cache = {}
+stmts_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -718,8 +733,8 @@ def get_statement_evidence_page():
         test_stats, _ = get_model_stats(model, 'test')
         stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
         stmt_counts_dict = dict(stmt_counts)
-        mm = load_model_manager_from_cache(model)
-        for stmt in mm.model.assembled_stmts:
+        all_stmts = _load_stmts_from_cache(model)
+        for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
                     stmts.append(stmt)
@@ -765,13 +780,12 @@ def get_statement_evidence_page():
 
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
-    mm = load_model_manager_from_cache(model)
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
-    stmts = mm.model.assembled_stmts
+    stmts = _load_stmts_from_cache(model)
     stmts_by_hash = {}
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
@@ -1055,14 +1069,14 @@ def email_unsubscribe_post():
 
 @app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, hash_val):
-    mm = load_model_manager_from_cache(model)
+    stmts = _load_stmts_from_cache(model)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur.pa_hash, cur.source_hash)].append(
             {'error_type': cur.tag})
-    for st in mm.model.assembled_stmts:
+    for st in stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
             ev_list = _format_evidence_text(

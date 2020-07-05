@@ -253,9 +253,13 @@ def _get_flask_app():
 
 def load_pickle_from_s3(bucket, key):
     client = get_s3_client()
-    obj = client.get_object(Bucket=bucket, Key=key)
-    content = pickle.loads(obj['Body'].read())
-    return content
+    try:
+        obj = client.get_object(Bucket=bucket, Key=key)
+        content = pickle.loads(obj['Body'].read())
+        return content
+    except Exception as e:
+        logger.info('Could not load the pickle from s3')
+        logger.info(e)
 
 
 def save_pickle_to_s3(obj, bucket, key):
