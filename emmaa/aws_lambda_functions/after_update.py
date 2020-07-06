@@ -11,6 +11,7 @@ in this directory.
 
 import boto3
 import json
+from datetime import datetime
 
 
 batch = boto3.client('batch')
@@ -18,7 +19,7 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 BRANCH = 'origin/master'
-now_str = datetime.now().strftime('%Y%m%d')
+now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 
 
 def submit_batch_job(script_command, purpose, job_name, wait_for=None):
@@ -103,7 +104,7 @@ def lambda_handler(event, context):
             tests = [tests]
 
         # For each test run the test and test stats
-        for test in tests:
+        for test_corpus in tests:
             test_command = (' python scripts/run_model_tests_from_s3.py'
                             f' --model {model_name} --tests {test_corpus}')
             test_id = submit_batch_job(
