@@ -344,8 +344,6 @@ class StatsGenerator(object):
     ----------
     json_stats : dict
         A JSON-formatted dictionary containing model or test statistics.
-    config : dict
-        Model specific configurations.
     """
 
     def __init__(self, model_name, latest_round=None, previous_round=None,
@@ -366,7 +364,6 @@ class StatsGenerator(object):
         else:
             self.previous_round = previous_round
         self.json_stats = {}
-        self.config = load_config_from_s3(model_name, bucket)
 
     def make_changes_over_time(self):
         """Add changes to model and tests over time to json_stats."""
@@ -472,15 +469,11 @@ class ModelStatsGenerator(StatsGenerator):
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': stmts_delta}
             if len(stmts_delta['added']) > 0:
-                msg = (
-                    f'{self.config["human_readable_name"]} model found '
-                    f'{len(stmts_delta["added"])} new mechanisms today. '
-                    f'See https://emmaa.indra.bio/dashboard/{self.model_name} '
-                    f'for more details.')
+                msg = _make_twitter_msg(self.model_name,
+                                        self.latest_round.human_readable_name,
+                                        'stmts', stmts_delta)
                 logger.info(msg)
-                if self.config.get('twitter'):
-                    twitter_cred = get_credentials(self.config['twitter'])
-                    update_status(msg, twitter_cred)
+
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -630,15 +623,10 @@ class TestStatsGenerator(StatsGenerator):
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
             if len(applied_delta['added']) > 0:
-                msg = (
-                    f'{self.config["human_readable_name"]} model has '
-                    f'{len(applied_delta["added"])} new applied tests today. '
-                    f'See https://emmaa.indra.bio/dashboard/{self.model_name}'
-                    f'?tab=tests for more details.')
+                msg = _make_twitter_msg(self.model_name,
+                                        self.latest_round.human_readable_name,
+                                        'applied_tests', applied_delta)
                 logger.info(msg)
-                if self.config.get('twitter'):
-                    twitter_cred = get_credentials(self.config['twitter'])
-                    update_status(msg, twitter_cred)
 
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
@@ -651,20 +639,10 @@ class TestStatsGenerator(StatsGenerator):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': passed_delta}
                 if len(passed_delta['added']) > 0:
-                    msg = (
-                        f'{self.config["human_readable_name"]} '
-                        f'{FORMATTED_TYPE_NAMES[mc_type]} has '
-                        f'{len(passed_delta["added"])} new passed tests today.'
-                        f' See https://emmaa.indra.bio/dashboard/'
-                        f'{self.model_name}?tab=tests for more details.')
+                    msg = _make_twitter_msg(
+                        self.model_name, self.latest_round.human_readable_name,
+                        'passed_tests', passed_delta, mc_type=mc_type)
                     logger.info(msg)
-                    if self.config.get('twitter'):
-                        # We can have the credentials already if there were new
-                        # applied or passed tests with other model type
-                        if not twitter_cred:
-                            twitter_cred = get_credentials(
-                                self.config['twitter'])
-                        update_status(msg, twitter_cred)
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
@@ -815,3 +793,7 @@ def _make_twitter_msg(model_name, human_readable_name, msg_type, delta,
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
     return msg
+
+                if self.config.get('twitter'):
+                    twitter_cred = get_credentials(self.config['twitter'])
+                    update_status(msg, twitter_cred)
