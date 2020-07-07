@@ -597,7 +597,7 @@ class TestStatsGenerator(StatsGenerator):
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
-        config = load_config_from_s3(self.model_name)
+        config = load_config_from_s3(self.model_name, self.bucket)
         human_readable_name = config['human_readable_name']
         if not self.previous_round:
             tests_delta = {
@@ -759,12 +759,12 @@ def generate_stats_on_s3(
 
 
 def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
-                      mc_type=None, test_corpus=None):
+                      mc_type=None, test_corpus=None, bucket=EMMAA_BUCKET_NAME):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
     if not human_readable_name:
-        config = load_config_from_s3(model_name)
+        config = load_config_from_s3(model_name, bucket)
         human_readable_name = config['human_readable_name']
     if msg_type == 'stmts':
         msg = (f'{human_readable_name} model found {len(delta["added"])} new '
@@ -786,7 +786,7 @@ def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
     return msg
 
 
-def tweet_deltas(model_name, test_corpora, date):
+def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
     model_stats, _ = get_model_stats(model_name, 'model', date=date)
     test_stats_by_corpus = {}
     for test_corpus in test_corpora:
@@ -798,7 +798,7 @@ def tweet_deltas(model_name, test_corpora, date):
     if not model_stats or not test_stats_by_corpus:
         logger.warning('Stats are not found, not tweeting')
         return
-    config = load_config_from_s3(model_name)
+    config = load_config_from_s3(model_name, bucket)
     human_readable_name = config['human_readable_name']
     twitter_key = config.get('twitter')
     twitter_cred = get_credentials(twitter_key)
