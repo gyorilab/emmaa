@@ -776,3 +776,25 @@ def generate_stats_on_s3(
     if upload_stats:
         sg.save_to_s3()
     return sg
+
+
+def _make_twitter_msg(model_name, human_readable_name, msg_type, delta,
+                      mc_type=None):
+    if msg_type == 'stmts':
+        msg = (f'{human_readable_name} model found {len(delta["added"])} new '
+               'mechanisms today. '
+               f'See https://emmaa.indra.bio/dashboard/{model_name} '
+               'for more details.')
+    elif msg_type == 'applied_tests':
+        msg = (f'{human_readable_name} model has {len(delta["added"])} new '
+               'applied tests today. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests '
+               'for more details.')
+    elif msg_type == 'passed_tests' and mc_type:
+        msg = (f'{human_readable_name} {FORMATTED_TYPE_NAMES[mc_type]} has '
+               f'{len(delta["added"])} new passed tests today.'
+               f' See https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               ' for more details.')
+    else:
+        raise TypeError(f'Invalid message type: {msg_type}.')
+    return msg
