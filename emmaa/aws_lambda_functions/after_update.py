@@ -20,6 +20,7 @@ QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 BRANCH = 'origin/master'
 now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+date = datetime.utcnow().strftime('%Y-%m-%d')
 
 
 def submit_batch_job(script_command, purpose, job_name, wait_for=None):
@@ -85,7 +86,7 @@ def lambda_handler(event, context):
         model_name = model_key.split('/')[1]
 
         # Store all stats jobs IDs
-        job_ids = []
+        stats_job_ids = []
 
         # Submit model stats job
         model_stats_command = (' python scripts/run_model_stats_from_s3.py'
@@ -93,7 +94,7 @@ def lambda_handler(event, context):
         model_stats_id = submit_batch_job(
             model_stats_command, 'update-emmaa-model-stats',
             f'{model_name}_model_stats_{now_str}')
-        job_ids.append(model_stats_id)
+        stats_job_ids.append(model_stats_id)
 
         # Find all test corpora for daily runi
         config_key = f'models/{model_name}/config.json'
@@ -116,8 +117,15 @@ def lambda_handler(event, context):
             test_stats_id = submit_batch_job(
                 test_stats_command, 'update-emmaa-test-stats',
                 f'{model_name}_{test_corpus}_stats_{now_str}', [test_id])
-            job_ids.append(test_stats_id)
+            stats_job_ids.append(test_stats_id)
 
+        # Submit twitter job
+        if config.get('twitter'):
+            twitter_command = (
+                f'python scripts/tweet_deltas.py --model {model_name} '
+                f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
+            submit_batch_job(twitter_command, 'update-twitter-status',
+                             f'{model_name}_twitter_{now_str}', stats_job_ids)
         # Run queries
         query_command = (' python scripts/answer_queries_from_s3.py'
                          f' --model {model_name}')
