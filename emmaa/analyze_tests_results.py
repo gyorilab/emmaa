@@ -608,7 +608,8 @@ class TestStatsGenerator(StatsGenerator):
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
             msg = _make_twitter_msg(self.model_name, 'applied_tests',
-                                    applied_delta, human_readable_name)
+                                    applied_delta, human_readable_name,
+                                    test_corpus=self.test_corpus)
             if msg:
                 logger.info(msg)
 
@@ -624,7 +625,7 @@ class TestStatsGenerator(StatsGenerator):
                     'passed_hashes_delta': passed_delta}
                 msg = _make_twitter_msg(
                     self.model_name, 'passed_tests', passed_delta,
-                    human_readable_name, mc_type)
+                    human_readable_name, mc_type, test_corpus=self.test_corpus)
                 if msg:
                     logger.info(msg)
         self.json_stats['tests_delta'] = tests_delta
@@ -758,7 +759,7 @@ def generate_stats_on_s3(
 
 
 def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
-                      mc_type=None):
+                      mc_type=None, test_corpus=None):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
@@ -773,13 +774,13 @@ def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
     elif msg_type == 'applied_tests':
         msg = (f'{human_readable_name} model has {len(delta["added"])} new '
                'applied tests today. See '
-               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests '
-               'for more details.')
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus} for more details.')
     elif msg_type == 'passed_tests' and mc_type:
         msg = (f'{human_readable_name} {FORMATTED_TYPE_NAMES[mc_type]} has '
                f'{len(delta["added"])} new passed tests today.'
                f' See https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               ' for more details.')
+               f'&test_corpus={test_corpus} for more details.')
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
     return msg
@@ -818,7 +819,7 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
                 applied_delta = v
                 applied_msg = _make_twitter_msg(
                     model_name, 'applied_tests', applied_delta,
-                    human_readable_name)
+                    human_readable_name, test_corpus=test_corpus)
                 if applied_msg:
                     logger.info(applied_msg)
                     if twitter_cred:
@@ -828,7 +829,7 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
                 passed_delta = v['passed_hashes_delta']
                 passed_msg = _make_twitter_msg(
                     model_name, 'passed_tests', passed_delta,
-                    human_readable_name, mc_type)
+                    human_readable_name, mc_type, test_corpus=test_corpus)
                 if passed_msg:
                     logger.info(passed_msg)
                     if twitter_cred:
