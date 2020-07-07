@@ -388,9 +388,13 @@ def get_credentials(key):
     for par in ['consumer_token', 'consumer_secret', 'access_token',
                 'access_secret']:
         name = f'/twitter/{key}/{par}'
-        response = client.get_parameter(Name=name, WithDecryption=True)
-        val = response['Parameter']['Value']
-        auth_dict[par] = val
+        try:
+            response = client.get_parameter(Name=name, WithDecryption=True)
+            val = response['Parameter']['Value']
+            auth_dict[par] = val
+        except Exception as e:
+            print(e)
+            break
     return auth_dict
 
 
