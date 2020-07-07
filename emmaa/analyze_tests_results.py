@@ -29,8 +29,6 @@ class Round(object):
     ----------
     date_str : str
         Time when ModelManager responsible for this round was created.
-    human_readable_name : str
-        Human readable name of a model.
 
     Attributes
     ----------
@@ -42,9 +40,8 @@ class Round(object):
         while the second returns an English description of a given content type
         for a single hash.
     """
-    def __init__(self, date_str, human_readable_name):
+    def __init__(self, date_str):
         self.date_str = date_str
-        self.human_readable_name = human_readable_name
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
     @classmethod
@@ -103,11 +100,9 @@ class ModelRound(Round):
         A list of INDRA Statements used to assemble a model.
     date_str : str
         Time when ModelManager responsible for this round was created.
-    human_readable_name : str
-        Human readable name of a model.
     """
-    def __init__(self, statements, date_str, human_readable_name):
-        super().__init__(date_str, human_readable_name)
+    def __init__(self, statements, date_str):
+        super().__init__(date_str)
         self.statements = statements
 
     @classmethod
@@ -117,8 +112,7 @@ class ModelRound(Round):
             return
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
-        human_readable_name = mm.model.human_readable_name
-        return cls(statements, date_str, human_readable_name)
+        return cls(statements, date_str)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -190,8 +184,6 @@ class TestRound(Round):
         test applied to the model and test results.
     date_str : str
         Time when ModelManager responsible for this round was created.
-    human_readable_name : str
-        Human readable name of a model.
 
     Attributes
     ----------
@@ -205,8 +197,8 @@ class TestRound(Round):
         description, result in Pass/Fail/n_a form and either a path if it
         was found or a result code if it was not.
     """
-    def __init__(self, json_results, date_str, human_readable_name):
-        super().__init__(date_str, human_readable_name)
+    def __init__(self, json_results, date_str):
+        super().__init__(date_str)
         self.json_results = json_results
         mc_types = self.json_results[0].get('mc_types', ['pysb'])
         self.mc_types_results = {}
@@ -220,11 +212,6 @@ class TestRound(Round):
         logger.info(f'Loading json from {key}')
         json_results = load_json_from_s3(bucket, key)
         date_str = json_results[0].get('date_str', strip_out_date(key))
-        human_readable_name = json_results[0].get('human_readable_name')
-        if not human_readable_name:
-            model_name = key.split('/')[1]
-            config = load_config_from_s3(model_name)
-            human_readable_name = config['human_readable_name']
         return cls(json_results, date_str)
 
     def get_applied_test_hashes(self):
@@ -468,12 +455,9 @@ class ModelStatsGenerator(StatsGenerator):
                 self.previous_round, 'statements')
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': stmts_delta}
-            if len(stmts_delta['added']) > 0:
-                msg = _make_twitter_msg(self.model_name,
-                                        self.latest_round.human_readable_name,
-                                        'stmts', stmts_delta)
+            msg = _make_twitter_msg(self.model_name, 'stmts', stmts_delta)
+            if msg:
                 logger.info(msg)
-
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -622,10 +606,9 @@ class TestStatsGenerator(StatsGenerator):
                 self.previous_round, 'applied_tests')
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
-            if len(applied_delta['added']) > 0:
-                msg = _make_twitter_msg(self.model_name,
-                                        self.latest_round.human_readable_name,
-                                        'applied_tests', applied_delta)
+            msg = _make_twitter_msg(self.model_name, 'applied_tests',
+                                    applied_delta)
+            if msg:
                 logger.info(msg)
 
         for mc_type in self.latest_round.mc_types_results:
@@ -638,10 +621,9 @@ class TestStatsGenerator(StatsGenerator):
                     self.previous_round, 'passed_tests', mc_type=mc_type)
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': passed_delta}
-                if len(passed_delta['added']) > 0:
                     msg = _make_twitter_msg(
-                        self.model_name, self.latest_round.human_readable_name,
-                        'passed_tests', passed_delta, mc_type=mc_type)
+                    self.model_name, 'passed_tests', passed_delta, mc_type)
+                if msg:
                     logger.info(msg)
         self.json_stats['tests_delta'] = tests_delta
 
@@ -773,8 +755,12 @@ def generate_stats_on_s3(
     return sg
 
 
-def _make_twitter_msg(model_name, human_readable_name, msg_type, delta,
-                      mc_type=None):
+def _make_twitter_msg(model_name, msg_type, delta, mc_type=None):
+    if len(delta['added']) == 0:
+        logger.info(f'No {msg_type} delta found')
+        return
+    config = load_config_from_s3(model_name)
+    human_readable_name = config['human_readable_name']
     if msg_type == 'stmts':
         msg = (f'{human_readable_name} model found {len(delta["added"])} new '
                'mechanisms today. '
