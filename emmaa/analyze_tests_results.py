@@ -597,7 +597,7 @@ class TestStatsGenerator(StatsGenerator):
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
-        config = load_config_from_s3(model_name)
+        config = load_config_from_s3(self.model_name)
         human_readable_name = config['human_readable_name']
         if not self.previous_round:
             tests_delta = {

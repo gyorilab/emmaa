@@ -95,7 +95,6 @@ def test_model_stats_generator():
     sg = ModelStatsGenerator('test', latest_round=latest_round,
                              previous_round=previous_round,
                              previous_json_stats=previous_model_stats)
-    sg.config = {'human_readable_name': 'test'}
     sg.make_stats()
     assert sg.json_stats
     model_summary = sg.json_stats['model_summary']
@@ -122,7 +121,6 @@ def test_test_stats_generator():
     sg = TestStatsGenerator('test', latest_round=latest_round,
                             previous_round=previous_round,
                             previous_json_stats=previous_test_stats)
-    sg.config = {'human_readable_name': 'test'}
     sg.make_stats()
     assert sg.json_stats
     test_round_summary = sg.json_stats['test_round_summary']
