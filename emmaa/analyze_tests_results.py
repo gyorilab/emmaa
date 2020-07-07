@@ -597,7 +597,8 @@ class TestStatsGenerator(StatsGenerator):
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
-        twitter_cred = None
+        config = load_config_from_s3(model_name)
+        human_readable_name = config['human_readable_name']
         if not self.previous_round:
             tests_delta = {
                 'applied_hashes_delta': {'added': [], 'removed': []}}
@@ -607,7 +608,7 @@ class TestStatsGenerator(StatsGenerator):
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
             msg = _make_twitter_msg(self.model_name, 'applied_tests',
-                                    applied_delta)
+                                    applied_delta, human_readable_name)
             if msg:
                 logger.info(msg)
 
@@ -622,7 +623,8 @@ class TestStatsGenerator(StatsGenerator):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': passed_delta}
                 msg = _make_twitter_msg(
-                    self.model_name, 'passed_tests', passed_delta, mc_type)
+                    self.model_name, 'passed_tests', passed_delta,
+                    human_readable_name, mc_type)
                 if msg:
                     logger.info(msg)
         self.json_stats['tests_delta'] = tests_delta
@@ -755,12 +757,14 @@ def generate_stats_on_s3(
     return sg
 
 
-def _make_twitter_msg(model_name, msg_type, delta, mc_type=None):
+def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
+                      mc_type=None):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
-    config = load_config_from_s3(model_name)
-    human_readable_name = config['human_readable_name']
+    if not human_readable_name:
+        config = load_config_from_s3(model_name)
+        human_readable_name = config['human_readable_name']
     if msg_type == 'stmts':
         msg = (f'{human_readable_name} model found {len(delta["added"])} new '
                'mechanisms today. '
@@ -793,12 +797,15 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
     if not model_stats or not test_stats_by_corpus:
         logger.warning('Stats are not found, not tweeting')
         return
+    config = load_config_from_s3(model_name)
+    human_readable_name = config['human_readable_name']
     twitter_cred = get_credentials(twitter_key)
     if not twitter_cred:
         logger.warning('Twitter credentials are not found, not tweeting')
     # Model message
     stmts_delta = model_stats['model_delta']['statements_hashes_delta']
-    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta)
+    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta,
+                                  human_readable_name)
     if stmts_msg:
         logger.info(stmts_msg)
         if twitter_cred:
@@ -809,8 +816,9 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
         for k, v in test_stats['tests_delta'].items():
             if k == 'applied_hashes_delta':
                 applied_delta = v
-                applied_msg = _make_twitter_msg(model_name, 'applied_tests',
-                                                applied_delta)
+                applied_msg = _make_twitter_msg(
+                    model_name, 'applied_tests', applied_delta,
+                    human_readable_name)
                 if applied_msg:
                     logger.info(applied_msg)
                     if twitter_cred:
@@ -819,7 +827,8 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
                 mc_type = k
                 passed_delta = v['passed_hashes_delta']
                 passed_msg = _make_twitter_msg(
-                    model_name, 'passed_tests', passed_delta, mc_type)
+                    model_name, 'passed_tests', passed_delta,
+                    human_readable_name, mc_type)
                 if passed_msg:
                     logger.info(passed_msg)
                     if twitter_cred:
