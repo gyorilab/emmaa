@@ -29,6 +29,8 @@ class Round(object):
     ----------
     date_str : str
         Time when ModelManager responsible for this round was created.
+    human_readable_name : str
+        Human readable name of a model.
 
     Attributes
     ----------
@@ -40,8 +42,9 @@ class Round(object):
         while the second returns an English description of a given content type
         for a single hash.
     """
-    def __init__(self, date_str):
+    def __init__(self, date_str, human_readable_name):
         self.date_str = date_str
+        self.human_readable_name = human_readable_name
         self.function_mapping = CONTENT_TYPE_FUNCTION_MAPPING
 
     @classmethod
@@ -98,9 +101,13 @@ class ModelRound(Round):
     ----------
     statements : list[indra.statements.Statement]
         A list of INDRA Statements used to assemble a model.
+    date_str : str
+        Time when ModelManager responsible for this round was created.
+    human_readable_name : str
+        Human readable name of a model.
     """
-    def __init__(self, statements, date_str):
-        super().__init__(date_str)
+    def __init__(self, statements, date_str, human_readable_name):
+        super().__init__(date_str, human_readable_name)
         self.statements = statements
 
     @classmethod
@@ -110,7 +117,8 @@ class ModelRound(Round):
             return
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
-        return cls(statements, date_str)
+        human_readable_name = mm.model.human_readable_name
+        return cls(statements, date_str, human_readable_name)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -180,6 +188,10 @@ class TestRound(Round):
         test results. The first dictionary contains information about the
         model. Each consecutive dictionary contains information about a single
         test applied to the model and test results.
+    date_str : str
+        Time when ModelManager responsible for this round was created.
+    human_readable_name : str
+        Human readable name of a model.
 
     Attributes
     ----------
@@ -193,8 +205,8 @@ class TestRound(Round):
         description, result in Pass/Fail/n_a form and either a path if it
         was found or a result code if it was not.
     """
-    def __init__(self, json_results, date_str):
-        super().__init__(date_str)
+    def __init__(self, json_results, date_str, human_readable_name):
+        super().__init__(date_str, human_readable_name)
         self.json_results = json_results
         mc_types = self.json_results[0].get('mc_types', ['pysb'])
         self.mc_types_results = {}
@@ -208,6 +220,11 @@ class TestRound(Round):
         logger.info(f'Loading json from {key}')
         json_results = load_json_from_s3(bucket, key)
         date_str = json_results[0].get('date_str', strip_out_date(key))
+        human_readable_name = json_results[0].get('human_readable_name')
+        if not human_readable_name:
+            model_name = key.split('/')[1]
+            config = load_config_from_s3(model_name)
+            human_readable_name = config['human_readable_name']
         return cls(json_results, date_str)
 
     def get_applied_test_hashes(self):
