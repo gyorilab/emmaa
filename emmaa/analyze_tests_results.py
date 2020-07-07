@@ -786,7 +786,7 @@ def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
     return msg
 
 
-def tweet_deltas(model_name, test_corpora, date, twitter_key):
+def tweet_deltas(model_name, test_corpora, date):
     model_stats, _ = get_model_stats(model_name, 'model', date=date)
     test_stats_by_corpus = {}
     for test_corpus in test_corpora:
@@ -800,6 +800,7 @@ def tweet_deltas(model_name, test_corpora, date, twitter_key):
         return
     config = load_config_from_s3(model_name)
     human_readable_name = config['human_readable_name']
+    twitter_key = config.get('twitter')
     twitter_cred = get_credentials(twitter_key)
     if not twitter_cred:
         logger.warning('Twitter credentials are not found, not tweeting')
