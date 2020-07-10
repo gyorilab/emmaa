@@ -759,7 +759,7 @@ def generate_stats_on_s3(
 
 
 def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
-                      test_corpus=None, bucket=EMMAA_BUCKET_NAME):
+                      test_corpus=None):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
