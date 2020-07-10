@@ -455,7 +455,8 @@ class ModelStatsGenerator(StatsGenerator):
                 self.previous_round, 'statements')
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': stmts_delta}
-            msg = _make_twitter_msg(self.model_name, 'stmts', stmts_delta)
+            msg = _make_twitter_msg(self.model_name, 'stmts', stmts_delta,
+                                    self.latest_round.date_str[:10])
             if msg:
                 logger.info(msg)
 
@@ -597,8 +598,7 @@ class TestStatsGenerator(StatsGenerator):
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
-        config = load_config_from_s3(self.model_name, self.bucket)
-        human_readable_name = config['human_readable_name']
+        date = self.latest_round.date_str[:10]
         if not self.previous_round:
             tests_delta = {
                 'applied_hashes_delta': {'added': [], 'removed': []}}
@@ -607,9 +607,9 @@ class TestStatsGenerator(StatsGenerator):
                 self.previous_round, 'applied_tests')
             tests_delta = {
                 'applied_hashes_delta': applied_delta}
-            msg = _make_twitter_msg(self.model_name, 'applied_tests',
-                                    applied_delta, human_readable_name,
-                                    test_corpus=self.test_corpus)
+            msg = _make_twitter_msg(
+                self.model_name, 'applied_tests', applied_delta, date,
+                test_corpus=self.test_corpus)
             if msg:
                 logger.info(msg)
 
@@ -624,8 +624,8 @@ class TestStatsGenerator(StatsGenerator):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': passed_delta}
                 msg = _make_twitter_msg(
-                    self.model_name, 'passed_tests', passed_delta,
-                    human_readable_name, mc_type, test_corpus=self.test_corpus)
+                    self.model_name, 'passed_tests', passed_delta, date,
+                    mc_type, test_corpus=self.test_corpus)
                 if msg:
                     logger.info(msg)
         self.json_stats['tests_delta'] = tests_delta
@@ -758,30 +758,26 @@ def generate_stats_on_s3(
     return sg
 
 
-def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
-                      mc_type=None, test_corpus=None, bucket=EMMAA_BUCKET_NAME):
+def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
+                      test_corpus=None, bucket=EMMAA_BUCKET_NAME):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
-    if not human_readable_name:
-        config = load_config_from_s3(model_name, bucket)
-        human_readable_name = config['human_readable_name']
     if msg_type == 'stmts':
-        msg = (f'{human_readable_name} model found {len(delta["added"])} new '
-               'mechanisms today. '
-               f'See https://emmaa.indra.bio/dashboard/{model_name} '
-               'for more details.')
+        msg = (f'Today I learned {len(delta["added"])} new mechanisms. '
+               f'See https://emmaa.indra.bio/dashboard/{model_name}'
+               f'?tab=model&date={date} for more details.')
     elif msg_type == 'applied_tests':
-        msg = (f'{human_readable_name} model has {len(delta["added"])} new '
-               f'applied tests in {test_corpus} test corpus today. See '
+        msg = (f'Today I applied {len(delta["added"])} new tests in '
+               f'{test_corpus} test corpus. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus} for more details.')
+               f'&test_corpus={test_corpus}&date={date} for more details.')
     elif msg_type == 'passed_tests' and mc_type:
-        msg = (f'{human_readable_name} {FORMATTED_TYPE_NAMES[mc_type]} has '
-               f'{len(delta["added"])} new passed tests in {test_corpus} test '
-               'corpus today. See '
+        msg = (f'Today I explained {len(delta["added"])} new observations in '
+               f'{test_corpus} test corpus with my '
+               f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus} for more details.')
+               f'&test_corpus={test_corpus}&date={date} for more details.')
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
     return msg
@@ -800,15 +796,13 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
         logger.warning('Stats are not found, not tweeting')
         return
     config = load_config_from_s3(model_name, bucket)
-    human_readable_name = config['human_readable_name']
     twitter_key = config.get('twitter')
     twitter_cred = get_credentials(twitter_key)
     if not twitter_cred:
         logger.warning('Twitter credentials are not found, not tweeting')
     # Model message
     stmts_delta = model_stats['model_delta']['statements_hashes_delta']
-    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta,
-                                  human_readable_name)
+    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta, date)
     if stmts_msg:
         logger.info(stmts_msg)
         if twitter_cred:
@@ -820,8 +814,8 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
             if k == 'applied_hashes_delta':
                 applied_delta = v
                 applied_msg = _make_twitter_msg(
-                    model_name, 'applied_tests', applied_delta,
-                    human_readable_name, test_corpus=test_corpus)
+                    model_name, 'applied_tests', applied_delta, date,
+                    test_corpus=test_corpus)
                 if applied_msg:
                     logger.info(applied_msg)
                     if twitter_cred:
@@ -831,7 +825,7 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
                 passed_delta = v['passed_hashes_delta']
                 passed_msg = _make_twitter_msg(
                     model_name, 'passed_tests', passed_delta,
-                    human_readable_name, mc_type, test_corpus=test_corpus)
+                    date, mc_type, test_corpus=test_corpus)
                 if passed_msg:
                     logger.info(passed_msg)
                     if twitter_cred:
