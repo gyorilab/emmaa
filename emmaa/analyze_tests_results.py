@@ -773,13 +773,14 @@ def _make_twitter_msg(model_name, msg_type, delta, human_readable_name=None,
                'for more details.')
     elif msg_type == 'applied_tests':
         msg = (f'{human_readable_name} model has {len(delta["added"])} new '
-               'applied tests today. See '
+               f'applied tests in {test_corpus} test corpus today. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus} for more details.')
     elif msg_type == 'passed_tests' and mc_type:
         msg = (f'{human_readable_name} {FORMATTED_TYPE_NAMES[mc_type]} has '
-               f'{len(delta["added"])} new passed tests today.'
-               f' See https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'{len(delta["added"])} new passed tests in {test_corpus} test '
+               'corpus today. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus} for more details.')
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
