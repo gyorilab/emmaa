@@ -38,11 +38,13 @@ previous_stmts = [
 new_stmts = previous_stmts + [
     Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
                Agent('AKT', db_refs={'FPLX': 'AKT'}),
-               evidence=[Evidence(text='BRAF activates AKT')]),
+               evidence=[Evidence(text='BRAF activates AKT',
+                                  source_api='test_source1')]),
     Activation(Agent('AKT', db_refs={'FPLX': 'AKT'},
                      activity=ActivityCondition('activity', True)),
                Agent('MTOR', db_refs={"HGNC": "3942"}),
-               evidence=[Evidence(text='AKT activate MTOR')])]
+               evidence=[Evidence(text='AKT activate MTOR',
+                                  source_api='test_source2')])]
 
 
 def test_model_round():
@@ -55,6 +57,7 @@ def test_model_round():
                [('BRAF', 1), ('MAP2K1', 2), ('MAPK1', 1)])
     assert all((stmt_hash, 1) in mr.get_statements_by_evidence() for stmt_hash
                in mr.get_stmt_hashes())
+    assert mr.get_sources_distribution() == [('assertion', 2)]
     mr2 = ModelRound(new_stmts, '2020-01-02-00-00-00')
     assert mr2
     assert mr2.get_total_statements() == 4
@@ -64,6 +67,8 @@ def test_model_round():
                [('BRAF', 2), ('MAP2K1', 2), ('MAPK1', 1), ('MTOR', 1),
                 ('AKT', 2)])
     assert len(mr2.find_delta_hashes(mr, 'statements')['added']) == 2
+    assert all(source_tuple in mr2.get_sources_distribution() for source_tuple
+               in [('assertion', 2), ('test_source1', 1), ('test_source2', 1)])
 
 
 def test_test_round():
@@ -99,6 +104,8 @@ def test_model_stats_generator():
     assert all(agent_tuple in model_summary['agent_distr'] for
                agent_tuple in [('AKT', 2), ('BRAF', 2), ('MAP2K1', 2),
                                ('MTOR', 1), ('MAPK1', 1)])
+    assert all(source_tuple in model_summary['sources'] for source_tuple
+               in [('assertion', 2), ('test_source1', 1), ('test_source2', 1)])
     assert len(model_summary['stmts_by_evidence']) == 4
     assert len(model_summary['all_stmts']) == 4
     model_delta = sg.json_stats['model_delta']
