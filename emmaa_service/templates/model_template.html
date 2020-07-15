@@ -89,6 +89,7 @@
           <div class="container" id="agentDistr"></div>
         </div>
       </div>
+      {% if 'sources' in model_stats_json['model_summary'] %}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Knowledge Sources</h4>
@@ -97,6 +98,7 @@
           <div class="container" id="sourceDistr"></div>
         </div>
       </div>
+      {% endif %}
       {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence", show_all=True) }}
       <div class="card">
         <div class="card-header">

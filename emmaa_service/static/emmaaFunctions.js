@@ -331,24 +331,25 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
-  // Source APIs bar graph
-  let sources_array = [];
-  let source_freq_array = ['Evidence count']
+  if (model_json.model_summary.sources) {
+    // Source APIs bar graph
+    let sources_array = [];
+    let source_freq_array = ['Evidence count']
 
-  for (let pair of model_json.model_summary.sources) {
-    sources_array.push(pair[0]);
-    source_freq_array.push(pair[1]);
+    for (let pair of model_json.model_summary.sources) {
+      sources_array.push(pair[0]);
+      source_freq_array.push(pair[1]);
+    }
+
+    let sourceDataParams = {
+      columns: [
+        source_freq_array
+      ],
+      type: 'bar'
+    };
+
+    let sourceChart = generateBar(sources, sourceDataParams, sources_array, '');
   }
-
-  let sourceDataParams = {
-    columns: [
-      source_freq_array
-    ],
-    type: 'bar'
-  };
-
-  let sourceChart = generateBar(sources, sourceDataParams, sources_array, '');
-
   // Statements over Time line graph
   let stmtsOverTime = model_json.changes_over_time.number_of_statements;
   stmtsOverTime.unshift('Statements');
