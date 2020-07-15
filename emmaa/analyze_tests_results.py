@@ -159,6 +159,15 @@ class ModelRound(Round):
                 self.get_english_statement(stmt))
         return stmts_by_hash
 
+    def get_sources_distribution(self):
+        logger.info('Finding distribution of sources of statement evidences.')
+        sources_count = defaultdict(int)
+        for stmt in self.statements:
+            for evid in stmt.evidence:
+                if evid.source_api:
+                    sources_count[evid.source_api] += 1
+        return sorted(sources_count.items(), key=lambda x: x[1], reverse=True)
+
 
 class TestRound(Round):
     """Analyzes the results of one test round.
@@ -426,6 +435,7 @@ class ModelStatsGenerator(StatsGenerator):
             'stmts_type_distr': self.latest_round.get_statement_types(),
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
+            'sources': self.latest_round.get_sources_distribution(),
             'all_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
