@@ -275,6 +275,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let pasAppId = '#passedApplied';
   let agDist = '#agentDistr';
   let stmtTime = '#stmtsOverTime';
+  let sources = '#sourceDistr';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -295,7 +296,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   // Stmt type distribution bar graph 
   let stmt_type_array = [];
-  let stmt_freq_array = ['count'];
+  let stmt_freq_array = ['Statements count'];
 
   for (let pair of model_json.model_summary.stmts_type_distr) {
     stmt_type_array.push(pair[0]);
@@ -314,7 +315,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   // Top agents bar graph
   let top_agents_array = [];
-  let agent_freq_array = ['count'];
+  let agent_freq_array = ['Agent count'];
 
   for (let pair of model_json.model_summary.agent_distr.slice(0, 10)) {
     top_agents_array.push(pair[0]);
@@ -329,6 +330,24 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   };
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
+
+  // Source APIs bar graph
+  let sources_array = [];
+  let source_freq_array = ['Evidence count']
+
+  for (let pair of model_json.model_summary.sources) {
+    sources_array.push(pair[0]);
+    source_freq_array.push(pair[1]);
+  }
+
+  let sourceDataParams = {
+    columns: [
+      source_freq_array
+    ],
+    type: 'bar'
+  };
+
+  let sourceChart = generateBar(sources, sourceDataParams, sources_array, '');
 
   // Statements over Time line graph
   let stmtsOverTime = model_json.changes_over_time.number_of_statements;
@@ -406,6 +425,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
     stmtTypeChart.flush();
     agentChart.flush();
+    sourceChart.flush();
     stmtsCountChart.flush();
     lineChart.flush();
     areaChart.flush();
