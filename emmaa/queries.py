@@ -268,8 +268,8 @@ class OpenSearchQuery(Query):
     ----------
     entity : indra.statements.Agent
         An entity to start the search from.
-    role : str
-        A role of the entity in the search (subject/source or object/target).
+    direction : str
+        Direction of the search (upstream or downstream).
     terminal_ns : list[str]
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
@@ -277,22 +277,22 @@ class OpenSearchQuery(Query):
     sign : int
         If set, defines the search to be a signed search. Default: None.
     """
-    def __init__(self, entity, role, terminal_ns, sign=None):
+    def __init__(self, entity, direction, terminal_ns, sign=None):
         self.entity = entity
-        self.role = role
+        self.direction = direction
         self.terminal_ns = terminal_ns
         self.sign = sign
 
     def matches_key(self):
         ent_matches_key = self.entity.matches_key()
-        key = (ent_matches_key, self.role, self.terminal_ns, self.sign)
+        key = (ent_matches_key, self.direction, self.terminal_ns, self.sign)
         return str(key)
 
     def to_json(self):
         query_type = self.get_type()
         json_dict = _o(type=query_type)
         json_dict['entity'] = self.entity.to_json()
-        json_dict['role'] = self.role
+        json_dict['direction'] = self.direction
         json_dict['terminal_ns'] = self.terminal_ns
         json_dict['sign'] = self.sign
         return json_dict
@@ -301,15 +301,16 @@ class OpenSearchQuery(Query):
     def _from_json(cls, json_dict):
         ent_json = json_dict.get('entity')
         entity = Agent._from_json(ent_json)
-        role = json_dict.get('role')
+        direction = json_dict.get('direction')
         terminal_ns = json_dict.get('terminal_ns')
         sign = json_dict.get('sign')
-        query = cls(entity, role, terminal_ns, sign)
+        query = cls(entity, direction, terminal_ns, sign)
         return query
 
     def __str__(self):
-        descr = (f'OpenSearchQuery({self.role}={self.entity}, terminal '
-                 f'namespace={self.terminal_ns}, sign={self.sign})')
+        descr = (f'OpenSearchQuery(entity={self.entity}, direction='
+                 f'{self.direction}, terminal namespace={self.terminal_ns}, '
+                 f'sign={self.sign})')
         return descr
 
     def __repr__(self):
