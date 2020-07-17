@@ -260,6 +260,68 @@ class DynamicProperty(Query):
         return f'{agent} is {pattern}.'
 
 
+class OpenSearchQuery(Query):
+    """This type of query requires doing an open ended breadth-first search
+    to find paths satisfying the query.
+
+    Parameters
+    ----------
+    entity : indra.statements.Agent
+        An entity to start the search from.
+    role : str
+        A role of the entity in the search (subject/source or object/target).
+    terminal_ns : list[str]
+        Force a path to terminate when any of the namespaces in this list
+        are encountered and only yield paths that terminate at these
+        namepsaces
+    sign : int
+        If set, defines the search to be a signed search. Default: None.
+    """
+    def __init__(self, entity, role, terminal_ns, sign=None):
+        self.entity = entity
+        self.role = role
+        self.terminal_ns = terminal_ns
+        self.sign = sign
+
+    def matches_key(self):
+        ent_matches_key = self.entity.matches_key()
+        key = (ent_matches_key, self.role, self.terminal_ns, self.sign)
+        return str(key)
+
+    def to_json(self):
+        query_type = self.get_type()
+        json_dict = _o(type=query_type)
+        json_dict['entity'] = self.entity.to_json()
+        json_dict['role'] = self.role
+        json_dict['terminal_ns'] = self.terminal_ns
+        json_dict['sign'] = self.sign
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        ent_json = json_dict.get('entity')
+        entity = Agent._from_json(ent_json)
+        role = json_dict.get('role')
+        terminal_ns = json_dict.get('terminal_ns')
+        sign = json_dict.get('sign')
+        query = cls(entity, role, terminal_ns, sign)
+        return query
+
+    def __str__(self):
+        descr = (f'OpenSearchQuery({self.role}={self.entity}, terminal '
+                 f'namespace={self.terminal_ns}, sign={self.sign})')
+        return descr
+
+    def __repr__(self):
+        return str(self)
+
+    def to_english(self):
+        # agent = _assemble_agent_str(self.entity).agent_str
+        # agent = agent[0].upper() + agent[1:]
+        # TODO find a better way to represent this query as English sentence
+        return str(self)
+
+
 # This is the general method to get a grounding agent from text but it doesn't
 # handle agent state which is required for dynamic queries
 def get_agent_from_text(ag_name):
@@ -282,6 +344,7 @@ def get_agent_from_trips(ag_text):
     if agent_list:
         return agent_list[0]
     return None
+
 
 class GroundingError(Exception):
     pass
