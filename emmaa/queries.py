@@ -283,6 +283,16 @@ class OpenSearchQuery(Query):
         self.terminal_ns = terminal_ns
         self.sign = sign
 
+    def get_node(self, model_type):
+        # TODO get node for pysb and pybel
+        if model_type in ['signed_graph', 'unsigned_graph']:
+            node_name = self.entity.name
+        if self.direction == 'downstream' or model_type == 'unsigned_graph':
+            node = (node_name, 0)
+        else:
+            node = (node_name, self.sign)
+        return node
+
     def matches_key(self):
         ent_matches_key = self.entity.matches_key()
         key = (ent_matches_key, self.direction, self.terminal_ns, self.sign)
