@@ -332,6 +332,9 @@ class OpenSearchQuery(Query):
         # TODO find a better way to represent this query as English sentence
         return str(self)
 
+    def get_entities(self):
+        return [self.entity]
+
 
 # This is the general method to get a grounding agent from text but it doesn't
 # handle agent state which is required for dynamic queries
