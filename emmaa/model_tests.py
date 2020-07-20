@@ -170,7 +170,7 @@ class ModelManager(object):
                     for stmt in step:
                         self.path_stmt_counts[stmt.get_hash()] += 1
                     agents = [ag.name if ag is not None else None
-                                for ag in step[0].agent_list()]
+                              for ag in step[0].agent_list()]
                     # For complexes make sure that the agent from the
                     # previous edge goes first
                     if stmt_type == 'Complex' and len(path_nodes) > 0:
@@ -320,7 +320,10 @@ class ModelManager(object):
                     path_limit=5, sign=sign)
                 paths = []
                 for p in paths_gen:
-                    paths.append(p)
+                    if reverse:
+                        paths.append(p[::-1])
+                    else:
+                        paths.append(p)
                 results.append((mc_type, self.process_open_query_response(
                     mc_type, paths)))
             return results
