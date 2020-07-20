@@ -15,6 +15,7 @@ from indra.explanation.model_checker import PysbModelChecker, \
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
     pybel_edge_to_english
+from indra.explanation.pathfinding import bfs_search
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
@@ -134,71 +135,70 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
-    def make_path_json(self, mc_type, result):
+    def make_path_json(self, mc_type, result_paths):
         paths = []
-        if result.paths:
-            for path in result.paths:
-                path_nodes = []
-                edge_list = []
-                report_function = self.mc_mapping[mc_type][2]
-                model = self.mc_types[mc_type]['model']
-                stmts = self.model.assembled_stmts
-                if mc_type == 'pysb':
-                    report_stmts = report_function(path, model, stmts)
-                    path_stmts = [[st] for st in report_stmts]
-                    merge = False
-                elif mc_type == 'pybel':
-                    path_stmts = report_function(path, model, False, stmts)
-                    merge = False
-                elif mc_type == 'signed_graph':
-                    path_stmts = report_function(path, model, True, False, stmts)
-                    merge = True
-                elif mc_type == 'unsigned_graph':
-                    path_stmts = report_function(path, model, False, False, stmts)
-                    merge = True
-                for i, step in enumerate(path_stmts):
-                    edge_nodes = []
-                    if len(step) < 1:
-                        continue
-                    stmt_type = type(step[0]).__name__
-                    if stmt_type == 'PybelEdge':
-                        source, target = step[0].source, step[0].target
-                        edge_nodes.append(source.name)
-                        edge_nodes.append(u"\u2192")
-                        edge_nodes.append(target.name)
-                    else:
-                        for stmt in step:
-                            self.path_stmt_counts[stmt.get_hash()] += 1
-                        agents = [ag.name if ag is not None else None
-                                  for ag in step[0].agent_list()]
-                        # For complexes make sure that the agent from the
-                        # previous edge goes first
-                        if stmt_type == 'Complex' and len(path_nodes) > 0:
-                            agents = sorted(
-                                [ag for ag in agents if ag is not None],
-                                key=lambda x: x != path_nodes[-1])
-                        for j, ag in enumerate(agents):
-                            if ag is not None:
-                                edge_nodes.append(ag)
-                            if j == (len(agents) - 1):
-                                break
-                            if stmt_type in ARROW_DICT:
-                                edge_nodes.append(ARROW_DICT[stmt_type])
-                            else:
-                                edge_nodes.append(u"\u2192")
-                    if i == 0:
-                        for n in edge_nodes:
-                            path_nodes.append(n)
-                    else:
-                        for n in edge_nodes[1:]:
-                            path_nodes.append(n)
-                    step_sentences = self._make_path_stmts(step, merge=merge)
-                    edge_dict = {'edge': ' '.join(edge_nodes),
-                                 'stmts': step_sentences}
-                    edge_list.append(edge_dict)
-                path_json = {'path': ' '.join(path_nodes),
-                             'edge_list': edge_list}
-                paths.append(path_json)
+        for path in result_paths:
+            path_nodes = []
+            edge_list = []
+            report_function = self.mc_mapping[mc_type][2]
+            model = self.mc_types[mc_type]['model']
+            stmts = self.model.assembled_stmts
+            if mc_type == 'pysb':
+                report_stmts = report_function(path, model, stmts)
+                path_stmts = [[st] for st in report_stmts]
+                merge = False
+            elif mc_type == 'pybel':
+                path_stmts = report_function(path, model, False, stmts)
+                merge = False
+            elif mc_type == 'signed_graph':
+                path_stmts = report_function(path, model, True, False, stmts)
+                merge = True
+            elif mc_type == 'unsigned_graph':
+                path_stmts = report_function(path, model, False, False, stmts)
+                merge = True
+            for i, step in enumerate(path_stmts):
+                edge_nodes = []
+                if len(step) < 1:
+                    continue
+                stmt_type = type(step[0]).__name__
+                if stmt_type == 'PybelEdge':
+                    source, target = step[0].source, step[0].target
+                    edge_nodes.append(source.name)
+                    edge_nodes.append(u"\u2192")
+                    edge_nodes.append(target.name)
+                else:
+                    for stmt in step:
+                        self.path_stmt_counts[stmt.get_hash()] += 1
+                    agents = [ag.name if ag is not None else None
+                                for ag in step[0].agent_list()]
+                    # For complexes make sure that the agent from the
+                    # previous edge goes first
+                    if stmt_type == 'Complex' and len(path_nodes) > 0:
+                        agents = sorted(
+                            [ag for ag in agents if ag is not None],
+                            key=lambda x: x != path_nodes[-1])
+                    for j, ag in enumerate(agents):
+                        if ag is not None:
+                            edge_nodes.append(ag)
+                        if j == (len(agents) - 1):
+                            break
+                        if stmt_type in ARROW_DICT:
+                            edge_nodes.append(ARROW_DICT[stmt_type])
+                        else:
+                            edge_nodes.append(u"\u2192")
+                if i == 0:
+                    for n in edge_nodes:
+                        path_nodes.append(n)
+                else:
+                    for n in edge_nodes[1:]:
+                        path_nodes.append(n)
+                step_sentences = self._make_path_stmts(step, merge=merge)
+                edge_dict = {'edge': ' '.join(edge_nodes),
+                                'stmts': step_sentences}
+                edge_list.append(edge_dict)
+            path_json = {'path': ' '.join(path_nodes),
+                            'edge_list': edge_list}
+            paths.append(path_json)
         return paths
 
     def _make_path_stmts(self, stmts, merge=False):
@@ -300,6 +300,34 @@ class ModelManager(object):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json))]
 
+    def answer_open_query(self, query):
+        """Answer user open search query with found paths."""
+        if ScopeTestConnector.applicable(self, query):
+            results = []
+            for mc_type in ['signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
+                g = self.mc_types[mc_type]['model_checker'].get_graph()
+                node = query.get_node(mc_type)
+                if mc_type == 'unsigned_graph':
+                    sign = 0
+                else:
+                    sign = query.sign
+                if query.direction == 'downstream':
+                    reverse = False
+                else:
+                    reverse = True
+                paths_gen = bfs_search(
+                    g, node, reverse=reverse, terminal_ns=query.terminal_ns,
+                    path_limit=5, sign=sign)
+                paths = []
+                for p in paths_gen:
+                    paths.append(p)
+                results.append((mc_type, self.process_open_query_response(
+                    mc_type, paths)))
+            return results
+        else:
+            return [('', self.hash_response_list(
+                RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+
     def answer_queries(self, queries, **kwargs):
         """Answer all queries registered for this model.
 
@@ -379,9 +407,16 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response = self.make_path_json(mc_type, result)
+            response = self.make_path_json(mc_type, result.paths)
         else:
             response = self.make_result_code(result)
+        return self.hash_response_list(response)
+
+    def process_open_query_response(self, mc_type, paths):
+        if paths:
+            response = self.make_path_json(mc_type, paths)
+        else:
+            response = 'No paths found that satisfy this query'
         return self.hash_response_list(response)
 
     def hash_response_list(self, response):
@@ -428,7 +463,7 @@ class ModelManager(object):
                 result = self.mc_types[mc_type]['test_results'][ix]
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
-                    'path_json': self.make_path_json(mc_type, result),
+                    'path_json': self.make_path_json(mc_type, result.paths),
                     'result_code': self.make_result_code(result)}
             results_json.append(test_ix_results)
         return results_json
