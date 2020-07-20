@@ -23,7 +23,7 @@ from indra.statements import Statement, Agent, Concept, Event, \
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
-from emmaa.queries import PathProperty, DynamicProperty
+from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date
@@ -261,6 +261,8 @@ class ModelManager(object):
             return self.answer_dynamic_query(query, **kwargs)
         if isinstance(query, PathProperty):
             return self.answer_path_query(query)
+        if isinstance(query, OpenSearchQuery):
+            return self.answer_open_query(query)
 
     def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
@@ -351,6 +353,9 @@ class ModelManager(object):
             if isinstance(query, DynamicProperty):
                 mc_type, response = self.answer_dynamic_query(
                     query, **kwargs)[0]
+                responses.append((query, mc_type, response))
+            elif isinstance(query, OpenSearchQuery):
+                mc_type, response = self.answer_open_query(query)
                 responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
