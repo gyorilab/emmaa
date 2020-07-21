@@ -10,6 +10,12 @@
     $(document).ready(function() {
       let modelSelect = new Choices('#dynamic-select');
     })
+    $(document).ready(function() {
+      let modelSelect = new Choices('#open-select');
+    })
+    $(document).ready(function() {
+      let ns = new Choices('#ns-select');
+    })
   </script>
 {% endblock %}
 
@@ -25,9 +31,15 @@
       {% if tab == 'static' %}
       <a class="nav-item nav-link active" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="true">Static</a>
       <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Dynamic</a>
+      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Open Search</a>
+      {% elif tab == 'open' %}
+      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Static</a>
+      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Dynamic</a>
+      <a class="nav-item nav-link active" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="true">Open Search</a>
       {% else %}
       <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Static</a>
       <a class="nav-item nav-link active" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="true">Dynamic</a>
+      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Open Search</a>
       {% endif %}     
     </div>
   </nav>
@@ -126,10 +138,10 @@
     </div>
 
   </div>
-  {% if tab == 'static' %}
-  <div class="tab-pane fade" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
-  {% else %}
+  {% if tab == 'dynamic' %}
   <div class="tab-pane fade show active" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
   {% endif %}
 
     <!-- Dynamic queries -->
@@ -216,7 +228,114 @@
     <div class="container">
       {{ path_card(subscribed_dynamic_results, 'Subscribed Queries', 'dyn-user-queries', subscribed_dynamic_headers, 'dyn-old-results') }}
     </div>
+  
+  </div>
+  {% if tab == 'open' %}
+  <div class="tab-pane fade show active" id="nav-open" role="tabpanel" aria-labelledby="nav-open-tab">
+  {% else %}
+  <div class="tab-pane" id="nav-open" role="tabpanel" aria-labelledby="nav-open-tab">
+  {% endif %}
+    <!-- Open Search Queries -->
+    <div class="container" id="open-container">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        </div>
+        <div class="card-body">
+
+          <!-- model selection -->
+          <h6><b>Model selection</b></h6>
+          <div class="checkbox-container">
+            <div class="form-select">
+              <select name="open-select" id="open-select" placeholder="Select models" multiple>
+              {% for model_id, config_json in model_data %}
+                <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+          <div class="form-container" style="display: inline-block; vertical-align: top;">
+            <div class="text" style="display: table;">
+              <form onsubmit="postQuery(document.getElementById('open-container')); return false;">
+                <div class="row" style="align-items: center">
+                  <!-- agent -->
+                  <div class="col" style="padding-right: 2px">
+                    <input class="form-control" id="openAgentInput" type="text" name="openAgentText" style="width: 400px;" placeholder="Enter agent description">
+                  </div>
+                  <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
+                    <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                      changed in the rest API and query handling -->
+                    <select class="custom-select" id="directionSelection" style="width: 210px">
+                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select search direction</option>
+                      {% for dir in ['upstream', 'downstream'] %}
+                      <option value="{{ dir }}">{{ dir }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                    <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                      changed in the rest API and query handling -->
+                    <select class="custom-select" id="signSelection" style="width: 200px">
+                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select overall polarity</option>
+                      {% for sign in ['positive', 'negative'] %}
+                      <option value="{{ sign }}">{{ sign }}</option>
+                      {% endfor %}
+                    </select>
+                  </div> 
+                  <!-- register -->
+                  <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
+                    <div class="checkbox">
+                      <input type="checkbox" name="register" id="register-open-query"><label
+                        for="register-query">Subscribe To Query</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="checkbox-container"  style="width: 400px; align-items: center">
+                  <div class="form-select">
+                    <select name="custom-select" id="ns-select" placeholder="Select namespaces" multiple>
+                      <option value="" disabled="disabled" hidden="hidden">Select namespaces</option>
+                    {% for ns in ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'MIRBASE', 'DOID', 'HP', 'EFO'] %}
+                      <option value="{{ ns.lower() }}">{{ ns }}</option>
+                    {% endfor %}
+                    </select>
+                  </div>
+                </div>               
+
+
+                <!-- formsubmit -->
+                <div class="row">
+                  <div class="container">
+                    <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="container">
+            <div class="container">
+              <div id="open-query-status-gif" style="display: none;">
+                <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
+              </div>
+              <span><i id="open-query-status"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query results -->
+    <div class="container">
+      {{ path_card(open_immediate_results, 'Query Results', 'open-query-results', open_immediate_headers, 'openQueryResults') }}
+    </div>
+    <!-- List user queries -->
+    <div class="container">
+      {{ path_card(subscribed_open_results, 'Subscribed Queries', 'open-user-queries', subscribed_open_headers, 'open-old-results') }}
+    </div>
   </div>
 </div>
+
 {% endblock %}
 
