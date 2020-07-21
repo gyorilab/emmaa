@@ -29,7 +29,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, get_agent_from_trips
+    DynamicProperty, get_agent_from_trips, OpenSearchQuery
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -234,7 +234,7 @@ def _make_query(query_dict):
         stmt = stmt_class(subj, obj)
         query = PathProperty(path_stmt=stmt)
         tab = 'static'
-    elif 'agentSelection' in query_dict.keys():
+    elif 'patternSelection' in query_dict.keys():
         agent = get_agent_from_trips(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         if not value:
@@ -242,6 +242,14 @@ def _make_query(query_dict):
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'
+    elif 'directionSelection' in query_dict.keys():
+        agent = get_agent_from_trips(query_dict['agentSelection'])
+        direction = query_dict['directionSelection']
+        terminal_ns = query_dict['nsSelection']
+        if not terminal_ns:
+            terminal_ns = None
+        sign = query_dict['signSelection']
+        tab = 'open'
     return query, tab
 
 
@@ -654,6 +662,45 @@ def get_model_tests_page(model):
                            next=next_date)
 
 
+def get_immediate_queries(query_type):
+    headers = None
+    results = 'Results for submitted queries'
+    if session.get('query_hashes') and session['query_hashes'].get(query_type):
+        query_hashes = session['query_hashes'][query_type]
+        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
+        if query_type in ['path_property', 'open_search_query']:
+            headers = ['Query', 'Model'] + [
+                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+                list(qr.values())[0]] if qr else []
+            results = _format_query_results(qr) if qr else\
+                'No stashed results for subscribed queries. Please re-run ' \
+                'query to see latest result.'
+        elif query_type == 'dynamic_property':
+            headers = ['Query', 'Model', 'Result', 'Image']
+            results = _format_dynamic_query_results(qr)
+    return headers, results
+
+
+def get_subscribed_queries(query_type, user_email=None):
+    headers = []
+    if user_email:
+        res = qm.get_registered_queries(user_email, query_type)
+        if res:
+            if query_type in ['path_property', 'open_search_query']:
+                sub_results = _format_query_results(res)
+                headers = ['Query', 'Model'] + \
+                    [FORMATTED_TYPE_NAMES[mt] for mt in list(
+                        sub_path_res.values())[0] if mt in ALL_MODEL_TYPES]
+            elif query_type == 'dynamic_property':
+                sub_results = _format_dynamic_query_results(res)
+                headers = ['Query', 'Model', 'Result', 'Image']
+        else:
+            sub_results = 'You have no subscribed queries'
+    else:
+        sub_results = 'Please log in to see your subscribed queries'
+    return headers, results
+
+
 @app.route('/query')
 @jwt_optional
 def get_query_page():
@@ -664,59 +711,35 @@ def get_query_page():
     stmt_types = get_queryable_stmt_types()
 
     # Queried results
-    queried_results = 'Results for submitted queries'
-    immediate_table_headers = None
-    dynamic_results = 'Results for submitted queries'
-    dynamic_immediate_headers = None
-    if session.get('query_hashes'):
-        for query_type, query_hashes in session['query_hashes'].items():
-            qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
-            if query_type == 'path_property':
-                immediate_table_headers = ['Query', 'Model'] + [
-                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-                    list(qr.values())[0]] if qr else []
-                queried_results = _format_query_results(qr) if qr else\
-                    'No stashed results for subscribed queries. Please ' \
-                    're-run query to see latest result.'
-            elif query_type == 'dynamic_property':
-                dynamic_immediate_headers = [
-                    'Query', 'Model', 'Result', 'Image']
-                dynamic_results = _format_dynamic_query_results(qr)
+    immediate_table_headers, queried_results = get_immediate_queries(
+        'path_property')
+    open_headers, open_results = get_immediate_queries('open_search_query')
+    dynamic_immediate_headers, dynamic_results = get_immediate_queries(
+        'dynamic_property')
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    subscribed_path_headers = []
-    subscribed_dyn_headers = []
-    if user_email:
-        sub_path_res = qm.get_registered_queries(user_email, 'path_property')
-        if sub_path_res:
-            subscribed_path_results = _format_query_results(sub_path_res)
-            subscribed_path_headers = \
-                ['Query', 'Model'] + \
-                [FORMATTED_TYPE_NAMES[mt] for mt in list(
-                    sub_path_res.values())[0] if mt in ALL_MODEL_TYPES]
-        else:
-            subscribed_path_results = 'You have no subscribed queries'
-        sub_dyn_res = qm.get_registered_queries(user_email, 'dynamic_property')
-        if sub_dyn_res:
-            subscribed_dyn_results = _format_dynamic_query_results(sub_dyn_res)
-            subscribed_dyn_headers = ['Query', 'Model', 'Result', 'Image']
-        else:
-            subscribed_dyn_results = 'You have no subscribed queries'
-    else:
-        subscribed_path_results = 'Please log in to see your subscribed queries'
-        subscribed_dyn_results = 'Please log in to see your subscribed queries'
+    subscribed_path_headers, subscribed_path_results = get_subscribed_queries(
+        'path_property', user_email)
+    subscribed_dyn_headers, subscribed_dyn_results = get_subscribed_queries(
+        'dynamic_property', user_email)
+    subscribed_open_headers, subscribed_open_results = get_subscribed_queries(
+        'open_search_query', user_email)
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            immediate_query_result=queried_results,
                            immediate_dynamic_results=dynamic_results,
                            dynamic_immediate_headers=dynamic_immediate_headers,
+                           open_immediate_headers=open_headers,
+                           open_immediate_results=open_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
                            subscribed_results=subscribed_path_results,
                            subscribed_headers=subscribed_path_headers,
                            subscribed_dynamic_headers=subscribed_dyn_headers,
                            subscribed_dynamic_results=subscribed_dyn_results,
+                           subscribed_open_headers=subscribed_open_headers,
+                           subscribed_open_results=subscribed_open_results,
                            link_list=link_list,
                            user_email=user_email,
                            tab=tab)
