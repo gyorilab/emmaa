@@ -243,13 +243,14 @@ def _make_query(query_dict):
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'
     elif 'directionSelection' in query_dict.keys():
-        agent = get_agent_from_trips(query_dict['agentSelection'])
+        agent = get_agent_from_trips(query_dict['openAgentSelection'])
         direction = query_dict['directionSelection']
         terminal_ns = query_dict['nsSelection']
         if not terminal_ns:
             terminal_ns = None
         sign = query_dict['signSelection']
         tab = 'open'
+        query = OpenSearchQuery(agent, direction, terminal_ns, sign)
     return query, tab
 
 
@@ -698,7 +699,7 @@ def get_subscribed_queries(query_type, user_email=None):
             sub_results = 'You have no subscribed queries'
     else:
         sub_results = 'Please log in to see your subscribed queries'
-    return headers, results
+    return headers, sub_results
 
 
 @app.route('/query')
