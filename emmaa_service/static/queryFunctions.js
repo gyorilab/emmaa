@@ -11,10 +11,14 @@ function postQuery(queryContainer) {
     var statusId = 'query-status';
     var tab = 'static';
     var reg = document.getElementById('register-query').checked;
-  } else {
+  } else if (queryContainer.id == 'dynamic-container') {
     var statusId = 'dyn-query-status';
     var tab = 'dynamic';
     var reg = document.getElementById('register-dyn-query').checked;
+  } else {
+    var statusId = 'open-query-status';
+    var tab = 'open';
+    var reg = document.getElementById('register-open-query').checked;
   }
   if (querySel.length < 2) {
     queryNotify('Did not send query', statusId);
@@ -46,8 +50,13 @@ function collectQuery(queryContainer) {
       console.log(op.value);
       models.push(op.value);
     }
-  } else {
+  } else  if (queryContainer.id == 'dynamic-container') {
     for (op of document.getElementById('dynamic-select').children) {
+      console.log(op.value);
+      models.push(op.value);
+    };
+  } else {
+    for (op of document.getElementById('open-select').children) {
       console.log(op.value);
       models.push(op.value);
     };
@@ -78,13 +87,29 @@ function collectQuery(queryContainer) {
       alert('Must provide an object!');
       return;      
     }
-  } else {
+  } else if (queryContainer.id == 'dynamic-container') {
     query['agentSelection'] = document.getElementById('agentInput').value;
     if (query['agentSelection'] === '') {
       alert('Must provide an agent description!');
       return;
     } 
-  };
+  } else {
+    query['openAgentSelection'] = document.getElementById('openAgentInput').value;
+    if (query['openAgentSelection'] === '') {
+      alert('Must provide an agent description!');
+      return;
+    }
+    if (query['signSelection'] === 'positive') {
+      query['signSelection'] = 0;
+    } else {
+      query['signSelection'] = 1;
+    }
+    query['nsSelection'] = []
+    for (op of document.getElementById('ns-select').children) {
+      console.log(op.value);
+      query['nsSelection'].push(op.value);
+    }
+  }
   result.push(query);
   return result;
 }
@@ -100,9 +125,12 @@ function submitQuery(queryDict, tab, test) {
   if (tab == 'static') {
     $('#query-status-gif').show();
     var statusId = 'query-status';
-  } else {
+  } else if (tab == 'dynamic') {
     $('#dyn-query-status-gif').show();
     var statusId = 'dyn-query-status';
+  } else {
+    $('#open-query-status-gif').show();
+    var statusId = 'open-query-status';
   }
   queryNotify('Waiting for server response', statusId);
   return $.ajax({
