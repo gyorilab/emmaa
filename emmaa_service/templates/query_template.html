@@ -294,7 +294,7 @@
                 </div>
                 <div class="checkbox-container"  style="width: 400px; align-items: center">
                   <div class="form-select">
-                    <select name="custom-select" id="ns-select" placeholder="Select namespaces" multiple>
+                    <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
                       <option value="" disabled="disabled" hidden="hidden">Select namespaces</option>
                     {% for ns in ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'MIRBASE', 'DOID', 'HP', 'EFO'] %}
                       <option value="{{ ns.lower() }}">{{ ns }}</option>
