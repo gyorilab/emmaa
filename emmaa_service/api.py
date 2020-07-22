@@ -691,7 +691,7 @@ def get_subscribed_queries(query_type, user_email=None):
                 sub_results = _format_query_results(res)
                 headers = ['Query', 'Model'] + \
                     [FORMATTED_TYPE_NAMES[mt] for mt in list(
-                        sub_path_res.values())[0] if mt in ALL_MODEL_TYPES]
+                        res.values())[0] if mt in ALL_MODEL_TYPES]
             elif query_type == 'dynamic_property':
                 sub_results = _format_dynamic_query_results(res)
                 headers = ['Query', 'Model', 'Result', 'Image']
