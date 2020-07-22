@@ -438,7 +438,7 @@ def format_results(results, query_type='path_property'):
                 response = v
             elif isinstance(v, dict):
                 response.append(v)
-        if query_type == 'path_property':
+        if query_type in ['path_property', 'open_search_query']:
             if mc_type == '' and \
                     response == 'Query is not applicable for this model':
                 for mt in model_types:
@@ -463,7 +463,7 @@ def format_results(results, query_type='path_property'):
                 else:
                     formatted_results[query_hash]['result'] = ['Fail', expl]
                 formatted_results[query_hash]['image'] = response[0]['fig_path']
-    if query_type == 'path_property':
+    if query_type in ['path_property', 'open_search_query']:
         # Loop through the results again to make sure all model types are there
         for qh in formatted_results:
             for mt in model_types:
