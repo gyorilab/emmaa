@@ -2,7 +2,7 @@ import json
 from os.path import abspath, dirname, join
 from indra.statements import Phosphorylation, Agent, ModCondition
 from emmaa.queries import Query, PathProperty, DynamicProperty, \
-    get_agent_from_text, get_agent_from_trips
+    get_agent_from_text, get_agent_from_trips, get_agent_from_gilda
 
 
 def test_path_property_from_json():
@@ -108,21 +108,21 @@ def test_dynamic_property_to_english():
     assert query.to_english() == 'Phosphorylated EGFR is eventually low.'
 
 
-def test_grounding():
-    agent = get_agent_from_text('MAPK1')
+def test_grounding_from_gilda():
+    agent = get_agent_from_gilda('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
                              'MESH': 'D019950'}, agent.db_refs
 
     # test with lower case
-    agent = get_agent_from_text('mapk1')
+    agent = get_agent_from_gilda('mapk1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.db_refs == {'TEXT': 'mapk1', 'HGNC': '6871', 'UP': 'P28482',
                              'MESH': 'D019950'}, agent.db_refs
     # other agent
-    agent = get_agent_from_text('BRAF')
+    agent = get_agent_from_gilda('BRAF')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
     assert agent.db_refs == {'TEXT': 'BRAF',
@@ -135,4 +135,17 @@ def test_agent_from_trips():
     assert ag.name == 'MAP2K1'
     assert not ag.mods
     ag_phos = get_agent_from_trips('phosphorylated MAP2K1')
+    assert ag_phos.mods
+
+
+def test_generic_agent_from_text():
+    agent = get_agent_from_gilda('MAPK1')
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAPK1'
+    assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
+                             'MESH': 'D019950'}, agent.db_refs
+    assert not agent.mods
+    ag_phos = get_agent_from_trips('phosphorylated MAP2K1')
+    assert ag_phos.db_refs == {'TEXT': 'MAP2K1', 'HGNC': '6840',
+                               'UP': 'Q02750', 'NCIT': 'C17808'}
     assert ag_phos.mods

@@ -29,7 +29,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, get_agent_from_trips, OpenSearchQuery
+    DynamicProperty, OpenSearchQuery
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -235,7 +235,7 @@ def _make_query(query_dict):
         query = PathProperty(path_stmt=stmt)
         tab = 'static'
     elif 'patternSelection' in query_dict.keys():
-        agent = get_agent_from_trips(query_dict['agentSelection'])
+        agent = get_agent_from_text(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         if not value:
             value = None
@@ -243,7 +243,7 @@ def _make_query(query_dict):
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'
     elif 'directionSelection' in query_dict.keys():
-        agent = get_agent_from_trips(query_dict['openAgentSelection'])
+        agent = get_agent_from_text(query_dict['openAgentSelection'])
         direction = query_dict['directionSelection']
         terminal_ns = query_dict['nsSelection']
         if not terminal_ns:

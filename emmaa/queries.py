@@ -338,11 +338,12 @@ class OpenSearchQuery(Query):
 
 # This is the general method to get a grounding agent from text but it doesn't
 # handle agent state which is required for dynamic queries
-def get_agent_from_text(ag_name):
+def get_agent_from_gilda(ag_name):
     """Return an INDRA Agent object by grounding its entity text with Gilda."""
     matches = gilda.ground(ag_name)
     if not matches:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
+        raise GroundingError(
+            f"Could not find grounding for {ag_name} with Gilda.")
     agent = Agent(ag_name,
                   db_refs={'TEXT': ag_name,
                            matches[0].term.db: matches[0].term.id})
@@ -353,11 +354,30 @@ def get_agent_from_text(ag_name):
 # This is the method that dynamical queries use to represent agents with
 # state
 def get_agent_from_trips(ag_text):
+    """Return an INDRA Agent object by grounding its entity text with TRIPS."""
     tp = trips.process_text(ag_text)
     agent_list = tp.get_agents()
-    if agent_list:
-        return agent_list[0]
-    return None
+    if not agent_list:
+        raise GroundingError(
+            f"Could not find grounding for {ag_text} with TRIPS.")
+    return agent_list[0]
+
+
+def get_agent_from_text(ag_text):
+    """
+    Return an INDRA Agent object by grounding its entity text with either
+    Gilda or TRIPS.
+    """
+    try:
+        agent = get_agent_from_gilda(ag_text)
+        logger.info('Got agent from Gilda')
+    except GroundingError:
+        try:
+            agent = get_agent_from_trips(ag_text)
+            logger.info('Got agent from TRIPS')
+        except GroundingError:
+            raise GroundingError(f'Could not find grounding for {ag_text}.')
+    return agent
 
 
 class GroundingError(Exception):
