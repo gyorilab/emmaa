@@ -53,7 +53,10 @@ link_list = [('/home', 'EMMAA Dashboard'),
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
-qm = QueryManager()
+
+ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
+              'small molecules': ['chebi', 'drugbank', 'chembl', 'pubchem'],
+              'biological processes': ['go']}
 
 
 def _sort_pass_fail(row):
@@ -245,9 +248,13 @@ def _make_query(query_dict):
     elif 'directionSelection' in query_dict.keys():
         agent = get_agent_from_text(query_dict['openAgentSelection'])
         direction = query_dict['directionSelection']
-        terminal_ns = query_dict['nsSelection']
-        if not terminal_ns:
+        ns_groups = query_dict['nsSelection']
+        if not ns_groups:
             terminal_ns = None
+        else:
+            terminal_ns = []
+            for gr in ns_groups:
+                terminal_ns += ns_mapping[gr]
         sign = query_dict['signSelection']
         tab = 'open'
         query = OpenSearchQuery(agent, direction, terminal_ns, sign)
@@ -741,6 +748,7 @@ def get_query_page():
                            subscribed_dynamic_results=subscribed_dyn_results,
                            subscribed_open_headers=subscribed_open_headers,
                            subscribed_open_results=subscribed_open_results,
+                           ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
                            tab=tab)

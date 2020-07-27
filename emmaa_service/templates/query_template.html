@@ -296,8 +296,8 @@
                   <div class="form-select">
                     <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
                       <option value="" disabled="disabled" hidden="hidden">Select namespaces</option>
-                    {% for ns in ['FPLX', 'UPPRO', 'HGNC', 'UP', 'CHEBI', 'GO', 'MESH', 'MIRBASE', 'DOID', 'HP', 'EFO'] %}
-                      <option value="{{ ns.lower() }}">{{ ns }}</option>
+                    {% for group in ns_groups %}
+                      <option value="{{ group }}">{{ group }}</option>
                     {% endfor %}
                     </select>
                   </div>
