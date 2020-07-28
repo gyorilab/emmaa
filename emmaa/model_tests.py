@@ -15,7 +15,7 @@ from indra.explanation.model_checker import PysbModelChecker, \
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
     pybel_edge_to_english
-from indra.explanation.pathfinding import bfs_search
+from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
@@ -133,7 +133,7 @@ class ModelManager(object):
                     queries_to_nodes[q.get_hash()] = None
             elif mc_type == 'pybel':
                 queries_to_nodes[q.get_hash()] = mc.get_nodes(q.entity, g, pol)
-        return queries_to_nodes
+        return g, queries_to_nodes
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
@@ -331,22 +331,21 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in ['pybel', 'signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
-                g = self.mc_types[mc_type]['model_checker'].get_graph()
-                node = query.get_node(mc_type)
-                if node not in g.nodes:
+                g, queries_to_nodes = \
+                    self.get_graph_and_nodes_for_open_queries(
+                        mc_type, [query])
+                nodes = queries_to_nodes[query.get_hash()]
+                if not nodes:
                     results.append((
-                        mc_type, self.hash_response_list(RESULT_CODES['NODE_NOT_FOUND'])))
+                        mc_type, self.hash_response_list(
+                            RESULT_CODES['NODE_NOT_FOUND'])))
                 else:
-                    if mc_type == 'unsigned_graph':
-                        sign = 0
-                    else:
-                        sign = query.sign
                     if query.direction == 'downstream':
                         reverse = False
                     else:
                         reverse = True
-                    paths_gen = bfs_search(
-                        g, node, reverse=reverse,
+                    paths_gen = bfs_search_multiple_nodes(
+                        g, nodes, reverse=reverse,
                         terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
                     paths = []
                     for p in paths_gen:
