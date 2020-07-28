@@ -306,7 +306,7 @@ class ModelManager(object):
         """Answer user open search query with found paths."""
         if ScopeTestConnector.applicable(self, query):
             results = []
-            for mc_type in ['signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
+            for mc_type in ['pybel', 'signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
                 g = self.mc_types[mc_type]['model_checker'].get_graph()
                 node = query.get_node(mc_type)
                 if mc_type == 'unsigned_graph':

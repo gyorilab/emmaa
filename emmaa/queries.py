@@ -9,6 +9,7 @@ from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler
+from indra.assemblers.pybel.assembler import _get_agent_node
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 from .util import get_class_from_name
 
@@ -287,6 +288,8 @@ class OpenSearchQuery(Query):
         # TODO get node for pysb and pybel
         if model_type in ['signed_graph', 'unsigned_graph']:
             node_name = self.entity.name
+        elif model_type == 'pybel':
+            node_name = _get_agent_node(self.entity)
         if self.direction == 'downstream' or model_type == 'unsigned_graph':
             node = (node_name, 0)
         else:
