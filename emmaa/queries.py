@@ -330,10 +330,17 @@ class OpenSearchQuery(Query):
         return str(self)
 
     def to_english(self):
-        # agent = _assemble_agent_str(self.entity).agent_str
-        # agent = agent[0].upper() + agent[1:]
-        # TODO find a better way to represent this query as English sentence
-        return str(self)
+        agent = _assemble_agent_str(self.entity).agent_str
+        agent = agent[0].upper() + agent[1:]
+        if self.sign == 0:
+            arrow = u"\u2192"
+        else:
+            arrow = u"\u22A3"
+        if self.direction == 'upstream':
+            descr = '? ' + arrow + ' ' + agent
+        else:
+            descr = agent + ' ' + arrow + ' ?'
+        return descr
 
     def get_entities(self):
         return [self.entity]
