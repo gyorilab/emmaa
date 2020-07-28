@@ -45,7 +45,8 @@ RESULT_CODES = {
     'PATHS_FOUND': 'Path found which satisfies the test statement',
     'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
     'MAX_PATHS_ZERO': 'Path found but not reconstructed',
-    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
+    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model',
+    'NODE_NOT_FOUND': 'Node not in model'
 }
 ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
@@ -110,6 +111,29 @@ class ModelManager(object):
             mc.graph = None
             mc.get_graph(prune_im=True, prune_im_degrade=True)
         return mc
+
+    def get_graph_and_nodes_for_open_queries(self, mc_type, queries):
+        mc = self.mc_types[mc_type]['model_checker']
+        queries_to_nodes = {}
+        if mc_type == 'pysb':
+            mc.graph = None
+            # TODO Add new observables to model
+            g = get_graph(prune_im=True, prune_im_degrade=True)
+            # TODO get the nodes
+        else:
+            g = mc.get_graph()
+        for q in queries:
+            pol = q.get_node_polarity(mc_type)
+            if mc_type in ['signed_graph', 'unsigned_graph']:
+                node_name = q.entity.name
+                node = (node_name, pol)
+                if node in g.nodes:
+                    queries_to_nodes[q.get_hash()] = [node]
+                else:
+                    queries_to_nodes[q.get_hash()] = None
+            elif mc_type == 'pybel':
+                queries_to_nodes[q.get_hash()] = mc.get_nodes(q.entity, g, pol)
+        return queries_to_nodes
 
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
@@ -311,7 +335,7 @@ class ModelManager(object):
                 node = query.get_node(mc_type)
                 if node not in g.nodes:
                     results.append((
-                        mc_type, self.hash_response_list('Node is not found')))
+                        mc_type, self.hash_response_list(RESULT_CODES['NODE_NOT_FOUND'])))
                 else:
                     if mc_type == 'unsigned_graph':
                         sign = 0
