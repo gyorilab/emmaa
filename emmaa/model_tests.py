@@ -309,25 +309,29 @@ class ModelManager(object):
             for mc_type in ['pybel', 'signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
                 g = self.mc_types[mc_type]['model_checker'].get_graph()
                 node = query.get_node(mc_type)
-                if mc_type == 'unsigned_graph':
-                    sign = 0
+                if node not in g.nodes:
+                    results.append((
+                        mc_type, self.hash_response_list('Node is not found')))
                 else:
-                    sign = query.sign
-                if query.direction == 'downstream':
-                    reverse = False
-                else:
-                    reverse = True
-                paths_gen = bfs_search(
-                    g, node, reverse=reverse, terminal_ns=query.terminal_ns,
-                    path_limit=5, sign=sign)
-                paths = []
-                for p in paths_gen:
-                    if reverse:
-                        paths.append(p[::-1])
+                    if mc_type == 'unsigned_graph':
+                        sign = 0
                     else:
-                        paths.append(p)
-                results.append((mc_type, self.process_open_query_response(
-                    mc_type, paths)))
+                        sign = query.sign
+                    if query.direction == 'downstream':
+                        reverse = False
+                    else:
+                        reverse = True
+                    paths_gen = bfs_search(
+                        g, node, reverse=reverse,
+                        terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
+                    paths = []
+                    for p in paths_gen:
+                        if reverse:
+                            paths.append(p[::-1])
+                        else:
+                            paths.append(p)
+                    results.append((mc_type, self.process_open_query_response(
+                        mc_type, paths)))
             return results
         else:
             return [('', self.hash_response_list(
