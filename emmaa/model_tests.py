@@ -340,6 +340,10 @@ class ModelManager(object):
                         mc_type, self.hash_response_list(
                             RESULT_CODES['NODE_NOT_FOUND'])))
                 else:
+                    if mc_type == 'unsigned_graph':
+                        sign = 0
+                    else:
+                        sign = query.sign
                     if query.direction == 'downstream':
                         reverse = False
                     else:

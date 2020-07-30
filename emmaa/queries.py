@@ -289,6 +289,7 @@ class OpenSearchQuery(Query):
             pol = 0
         else:
             pol = self.sign
+        return pol
 
     def matches_key(self):
         ent_matches_key = self.entity.matches_key()
