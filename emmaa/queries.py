@@ -8,7 +8,7 @@ from indra.ontology.standardize import \
 from indra.statements.statements import Statement, Agent, get_all_descendants,\
     mk_str, make_hash
 from indra.assemblers.english.assembler import _assemble_agent_str, \
-    EnglishAssembler
+    EnglishAssembler, statement_base_verb, statement_present_verb
 from indra.assemblers.pybel.assembler import _get_agent_node
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 from .util import get_class_from_name
@@ -267,75 +267,66 @@ class OpenSearchQuery(Query):
 
     Parameters
     ----------
-    entity : indra.statements.Agent
-        An entity to start the search from.
-    direction : str
-        Direction of the search (upstream or downstream).
+    stmt : indra.statements.Statement
+        An INDRA statement having its subject or object set to None to
+        represent open search query.
     terminal_ns : list[str]
         Force a path to terminate when any of the namespaces in this list
         are encountered and only yield paths that terminate at these
         namepsaces
-    sign : int
-        If set, defines the search to be a signed search. Default: None.
     """
-    def __init__(self, entity, direction, terminal_ns, sign=None):
-        self.entity = entity
-        self.direction = direction
+    def __init__(self, stmt, terminal_ns=None):
+        self.stmt = stmt
         self.terminal_ns = terminal_ns
-        self.sign = sign
-
-    def get_node_polarity(self, model_type):
-        if self.direction == 'downstream' or model_type == 'unsigned_graph':
-            pol = 0
-        else:
-            pol = self.sign
-        return pol
 
     def matches_key(self):
-        ent_matches_key = self.entity.matches_key()
-        key = (ent_matches_key, self.direction, self.terminal_ns, self.sign)
-        return str(key)
+        key = self.path_stmt.matches_key()
+        if self.terminal_ns:
+            for ns in self.terminal_ns:
+                key += ns
+        return mk_str
 
     def to_json(self):
         query_type = self.get_type()
         json_dict = _o(type=query_type)
-        json_dict['entity'] = self.entity.to_json()
-        json_dict['direction'] = self.direction
+        json_dict['stmt'] = self.stmt.to_json()
         json_dict['terminal_ns'] = self.terminal_ns
-        json_dict['sign'] = self.sign
         return json_dict
 
     @classmethod
     def _from_json(cls, json_dict):
-        ent_json = json_dict.get('entity')
-        entity = Agent._from_json(ent_json)
-        direction = json_dict.get('direction')
+        stmt_json = json_dict.get('stmt')
+        stmt = Statement._from_json(stmt_json)
         terminal_ns = json_dict.get('terminal_ns')
-        sign = json_dict.get('sign')
-        query = cls(entity, direction, terminal_ns, sign)
+        query = cls(stmt, terminal_ns)
         return query
 
     def __str__(self):
-        descr = (f'OpenSearchQuery(entity={self.entity}, direction='
-                 f'{self.direction}, terminal namespace={self.terminal_ns}, '
-                 f'sign={self.sign})')
-        return descr
+        parts = [f'OpenSearchQuery(stmt={self.stmt}.']
+        if self.terminal_ns:
+            parts.append(f' Terminal namespace={self.terminal_ns}')
+        return ''.join(parts)
 
     def __repr__(self):
         return str(self)
 
     def to_english(self):
-        agent = _assemble_agent_str(self.entity).agent_str
-        agent = agent[0].upper() + agent[1:]
-        if self.sign == 0:
-            arrow = u"\u2192"
-        else:
-            arrow = u"\u22A3"
-        if self.direction == 'upstream':
-            descr = '? ' + arrow + ' ' + agent
-        else:
-            descr = agent + ' ' + arrow + ' ?'
-        return descr
+        stmt_type = type(self.stmt).__name__
+        agents = self.stmt.agent_list()
+        if agents[0] and not agents[1]:
+            agent = _assemble_agent_str(agents[0]).agent_str
+            verb = statement_base_verb(stmt_type)
+            verb = verb[0].lower() + verb[1:]
+            sentence = f'What does {agent} {verb}?'
+        elif agents[1] and not agents[0]:
+            agent = _assemble_agent_str(agents[1]).agent_str
+            verb = statement_present_verb(stmt_type)
+            verb = verb[0].lower() + verb[1:]
+            sentence = f'What {verb} {agent}?'
+        sentence = sentence[0].upper() + sentence[1:]
+        if self.terminal_ns:
+            sentence += f' {self.terminal_ns}
+        return sentence
 
     def get_entities(self):
         return [self.entity]
