@@ -311,7 +311,7 @@ class OpenSearchQuery(Query):
         else:
             raise ValueError('Could not determine sign')
         return sign
-       
+
     def matches_key(self):
         key = self.entity.matches_key()
         key += self.stmt_type

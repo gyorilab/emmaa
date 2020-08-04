@@ -309,37 +309,39 @@ class ModelManager(object):
             results = []
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, [query.stmt])
-                g = mc.get_graph()
-                subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
-                    query.stmt)
-                if res_code:
-                    results.append((mc_type, self.hash_response_list(
-                        RESULT_CODES[res_code])))
-                else:
-                    if query.entity_role == 'subject':
-                        reverse = False
-                        assert subj_nodes is not None
-                        nodes = subj_nodes
-                    else:
-                        reverse = True
-                        assert obj_nodes is not None
-                        nodes = obj_nodes
-                    sign = query.get_sign(mc_type)
-                    paths_gen = bfs_search_multiple_nodes(
-                        g, nodes, reverse=reverse,
-                        terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
-                    paths = []
-                    for p in paths_gen:
-                        if reverse:
-                            paths.append(p[::-1])
-                        else:
-                            paths.append(p)
-                    results.append((mc_type, self.process_open_query_response(
-                        mc_type, paths)))
+                res = self.open_query_per_mc(mc_type, mc, query)
+                results.append((mc_type, res))
             return results
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+
+    def open_query_per_mc(self, mc_type, mc, query):
+        g = mc.get_graph()
+        subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
+            query.stmt)
+        if res_code:
+            return self.hash_response_list(RESULT_CODES[res_code])
+        else:
+            if query.entity_role == 'subject':
+                reverse = False
+                assert subj_nodes is not None
+                nodes = subj_nodes
+            else:
+                reverse = True
+                assert obj_nodes is not None
+                nodes = obj_nodes
+            sign = query.get_sign(mc_type)
+            paths_gen = bfs_search_multiple_nodes(
+                g, nodes, reverse=reverse,
+                terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
+            paths = []
+            for p in paths_gen:
+                if reverse:
+                    paths.append(p[::-1])
+                else:
+                    paths.append(p)
+            return self.process_open_query_response(mc_type, paths)
 
     def answer_queries(self, queries, **kwargs):
         """Answer all queries registered for this model.
@@ -357,23 +359,34 @@ class ModelManager(object):
         responses = []
         applicable_queries = []
         applicable_stmts = []
+        applicable_open_queries = []
+        applicable_open_stmts = []
         for query in queries:
+            # Dynamic queries need to be answered individually, while for
+            # path and open queries some parts can be shared
             if isinstance(query, DynamicProperty):
                 mc_type, response = self.answer_dynamic_query(
                     query, **kwargs)[0]
                 responses.append((query, mc_type, response))
             elif isinstance(query, OpenSearchQuery):
-                mc_type, response = self.answer_open_query(query)
-                responses.append((query, mc_type, response))
-            elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
                     applicable_queries.append(query)
-                    applicable_stmts.append(query.path_stmt)
+                    applicable_stmts.append(query.stmt)
                 else:
                     responses.append(
                         (query, '', self.hash_response_list(
                             RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+            elif isinstance(query, PathProperty):
+                if ScopeTestConnector.applicable(self, query):
+                    applicable_open_queries.append(query)
+                    applicable_open_stmts.append(query.path_stmt)
+                else:
+                    responses.append(
+                        (query, '', self.hash_response_list(
+                            RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+
         # Only do the following steps if there are applicable queries
+        # Path queries
         if applicable_queries:
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
@@ -385,6 +398,15 @@ class ModelManager(object):
                     responses.append(
                         (applicable_queries[ix], mc_type,
                          self.process_response(mc_type, result)))
+
+        # Open queries
+        if applicable_open_queries:
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, applicable_open_stmts)
+                for query in applicable_open_queries:
+                    res = self.open_query_per_mc(mc_type, mc, query)
+                    responses.append((query, mc_type, res))
+
         return sorted(responses, key=lambda x: x[0].matches_key())
 
     def _get_test_configs(self, mode='test', mc_type=None, default_length=5,
