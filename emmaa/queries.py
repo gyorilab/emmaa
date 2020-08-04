@@ -5,8 +5,7 @@ import gilda
 from indra.sources import trips
 from indra.ontology.standardize import \
     standardize_agent_name
-from indra.statements.statements import Statement, Agent, get_all_descendants,\
-    mk_str, make_hash, get_statement_by_name
+from indra.statements.statements import *
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler, statement_base_verb, statement_present_verb
 from indra.assemblers.pybel.assembler import _get_agent_node
@@ -302,6 +301,17 @@ class OpenSearchQuery(Query):
         stmt = stmt_class(subj, obj)
         return stmt
 
+    def get_sign(self, mc_type):
+        if mc_type == 'unsigned_graph' or self.entity_role == 'object':
+            sign = 0
+        elif isinstance(self.stmt, RegulateActivity):
+            sign = 0 if self.stmt.is_activation else 1
+        elif isinstance(self.stmt, RegulateAmount):
+            sign = 1 if isinstance(self.stmt, DecreaseAmount) else 0
+        else:
+            raise ValueError('Could not determine sign')
+        return sign
+       
     def matches_key(self):
         key = self.entity.matches_key()
         key += self.stmt_type
