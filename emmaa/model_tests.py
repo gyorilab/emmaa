@@ -112,29 +112,6 @@ class ModelManager(object):
             mc.get_graph(prune_im=True, prune_im_degrade=True)
         return mc
 
-    def get_graph_and_nodes_for_open_queries(self, mc_type, queries):
-        mc = self.mc_types[mc_type]['model_checker']
-        queries_to_nodes = {}
-        if mc_type == 'pysb':
-            mc.graph = None
-            # TODO Add new observables to model
-            g = get_graph(prune_im=True, prune_im_degrade=True)
-            # TODO get the nodes
-        else:
-            g = mc.get_graph()
-        for q in queries:
-            pol = q.get_node_polarity(mc_type)
-            if mc_type in ['signed_graph', 'unsigned_graph']:
-                node_name = q.entity.name
-                node = (node_name, pol)
-                if node in g.nodes:
-                    queries_to_nodes[q.get_hash()] = [node]
-                else:
-                    queries_to_nodes[q.get_hash()] = None
-            elif mc_type == 'pybel':
-                queries_to_nodes[q.get_hash()] = mc.get_nodes(q.entity, g, pol)
-        return g, queries_to_nodes
-
     def add_test(self, test):
         """Add a test to a list of applicable tests."""
         self.applicable_tests.append(test)
@@ -330,24 +307,24 @@ class ModelManager(object):
         """Answer user open search query with found paths."""
         if ScopeTestConnector.applicable(self, query):
             results = []
-            for mc_type in ['pybel', 'signed_graph', 'unsigned_graph']:  # TODO change to all mc_types
-                g, queries_to_nodes = \
-                    self.get_graph_and_nodes_for_open_queries(
-                        mc_type, [query])
-                nodes = queries_to_nodes[query.get_hash()]
-                if not nodes:
-                    results.append((
-                        mc_type, self.hash_response_list(
-                            RESULT_CODES['NODE_NOT_FOUND'])))
+            for mc_type in self.mc_types:
+                mc = self.get_updated_mc(mc_type, [query.stmt])
+                g = mc.get_graph()
+                subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
+                    query.stmt)
+                if res_code:
+                    results.append((mc_type, self.hash_response_list(
+                        RESULT_CODES[res_code])))
                 else:
-                    if mc_type == 'unsigned_graph':
-                        sign = 0
-                    else:
-                        sign = query.sign
-                    if query.direction == 'downstream':
+                    if query.entity_role == 'subject':
                         reverse = False
+                        assert subj_nodes is not None
+                        nodes = subj_nodes
                     else:
                         reverse = True
+                        assert obj_nodes is not None
+                        nodes = obj_nodes
+                    sign = query.get_sign(mc_type)
                     paths_gen = bfs_search_multiple_nodes(
                         g, nodes, reverse=reverse,
                         terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
