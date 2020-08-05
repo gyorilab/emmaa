@@ -33,7 +33,8 @@ logger = logging.getLogger(__name__)
 sys.setrecursionlimit(50000)
 
 
-result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
+result_codes_link = ('https://emmaa.readthedocs.io/en/latest/dashboard/'
+                     'response_codes.html')
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -195,10 +196,10 @@ class ModelManager(object):
                         path_nodes.append(n)
                 step_sentences = self._make_path_stmts(step, merge=merge)
                 edge_dict = {'edge': ' '.join(edge_nodes),
-                                'stmts': step_sentences}
+                             'stmts': step_sentences}
                 edge_list.append(edge_dict)
             path_json = {'path': ' '.join(path_nodes),
-                            'edge_list': edge_list}
+                         'edge_list': edge_list}
             paths.append(path_json)
         return paths
 
@@ -275,7 +276,8 @@ class ModelManager(object):
                     mode='query', mc_type=mc_type, default_paths=5)
                 result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
-                results.append((mc_type, self.process_response(mc_type, result)))
+                results.append(
+                    (mc_type, self.process_response(mc_type, result)))
             return results
         else:
             return [('', self.hash_response_list(
@@ -292,7 +294,8 @@ class ModelManager(object):
                 pysb_model, tp)
             fig_name, ext = os.path.splitext(os.path.basename(fig_path))
             date_str = make_date_str()
-            s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
+            s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                      f'{date_str}{ext}')
             s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
             client = get_s3_client(unsigned=False)
             logger.info(f'Uploading image to {s3_path}')

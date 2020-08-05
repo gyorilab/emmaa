@@ -278,7 +278,8 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date,
                                test_corpus)
 
 
-def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
+def _format_table_array(tests_json, model_types, model_name, date,
+                        test_corpus):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
@@ -530,7 +531,8 @@ def get_model_dashboard(model):
         [('', 'Model Description', ''), ('', description, '')],
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
-         ('', date, 'Click on the point on time graph to see earlier results')],
+         ('', date,
+          'Click on the point on time graph to see earlier results')],
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
@@ -765,7 +767,8 @@ def get_statement_evidence_page():
     stmts = []
     if source == 'model_statement':
         test_stats, _ = get_model_stats(model, 'test')
-        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
         stmt_counts_dict = dict(stmt_counts)
         all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
@@ -956,6 +959,8 @@ def process_query():
                                   for pos in ['subject', 'object', 'type']}
     expected_dynamic_query_keys = {f'{pos}Selection'
                                    for pos in ['pattern', 'value', 'agent']}
+    expected_open_query_keys = {f'{pos}Selection' for pos in
+                                ['openAgent', 'stmtType', 'role', 'ns']}
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:
@@ -974,9 +979,10 @@ def process_query():
         else:
             subscribe = False
         query_json = request.json['query']
-        assert ((set(query_json.keys()) == expected_static_query_keys or
-                 set(query_json.keys()) == expected_dynamic_query_keys),
-                f'Did not get expected query keys: got {set(query_json.keys())} ')
+        assert (set(query_json.keys()) == expected_static_query_keys or
+                set(query_json.keys()) == expected_dynamic_query_keys
+                set(query_json.keys()) == expected_open_query_keys), (
+            f'Did not get expected query keys: got {set(query_json.keys())} ')
         models = set(request.json.get('models'))
         assert models < expected_models, \
             f'Got unexpected models: {models - expected_models}'
@@ -1189,7 +1195,7 @@ def list_curations(stmt_hash, src_hash):
 def load_latest_statements(model):
     if does_exist(EMMAA_BUCKET_NAME,
                   f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'      
+        fkey = f'assembled/{model}/latest_statements_{model}.json'
     elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
         fkey = find_latest_s3_file(
             EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')

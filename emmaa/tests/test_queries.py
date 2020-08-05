@@ -46,7 +46,9 @@ def test_stringify_path_property():
     relationship_contraints = {'exclude': ['IncreaseAmount', 'DecreaseAmount']}
     query = PathProperty(stmt, entity_constraints, relationship_contraints)
     query_str = str(query)
-    assert query_str == 'PathPropertyQuery(stmt=Phosphorylation(EGFR(), ERK()). Exclude entities: PI3K(). Exclude relations: IncreaseAmount, DecreaseAmount.'
+    assert query_str == (
+        'PathPropertyQuery(stmt=Phosphorylation(EGFR(), ERK()). Exclude '
+        'entities: PI3K(). Exclude relations: IncreaseAmount, DecreaseAmount.')
 
 
 def test_path_property_to_english():
@@ -58,7 +60,8 @@ def test_path_property_to_english():
 
 
 def test_dynamic_property_from_json():
-    query_file = join(dirname(abspath(__file__)), 'dynamic_property_query.json')
+    query_file = join(
+        dirname(abspath(__file__)), 'dynamic_property_query.json')
     with open(query_file, 'r') as f:
         json_dict = json.load(f)
     query = Query._from_json(json_dict)

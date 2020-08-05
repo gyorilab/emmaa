@@ -310,7 +310,7 @@ class QueryManager(object):
         results = results[:limit] if limit else results
 
         # Get the query deltas
-        static_results_delta, dynamic_results_delta = \
+        static_results_delta, open_results_delta, dynamic_results_delta = \
             self.make_reports_from_results(results, report_format='html',
                                            include_no_diff=False,
                                            domain=domain)
@@ -318,7 +318,7 @@ class QueryManager(object):
         # Generate unsubscribe link
         link = generate_unsubscribe_link(email=email, domain=domain)
 
-        if static_results_delta or dynamic_results_delta:
+        if static_results_delta or open_results_delta or dynamic_results_delta:
             return email_html.render(
                 static_query_deltas=static_results_delta,
                 dynamic_query_deltas=dynamic_results_delta,
@@ -458,7 +458,8 @@ def format_results(results, query_type='path_property'):
                     formatted_results[query_hash]['result'] = ['Pass', expl]
                 else:
                     formatted_results[query_hash]['result'] = ['Fail', expl]
-                formatted_results[query_hash]['image'] = response[0]['fig_path']
+                formatted_results[query_hash]['image'] = (
+                    response[0]['fig_path'])
     if query_type in ['path_property', 'open_search_query']:
         # Loop through the results again to make sure all model types are there
         for qh in formatted_results:
