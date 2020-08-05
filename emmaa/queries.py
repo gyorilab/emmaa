@@ -279,7 +279,7 @@ class OpenSearchQuery(Query):
 
     Attributes
     ----------
-    stmt : indra.statements.Statement
+    path_stmt : indra.statements.Statement
         An INDRA statement having its subject or object set to None to
         represent open search query.
     """
@@ -288,7 +288,7 @@ class OpenSearchQuery(Query):
         self.stmt_type = stmt_type
         self.entity_role = entity_role
         self.terminal_ns = terminal_ns
-        self.stmt = self.make_stmt()
+        self.path_stmt = self.make_stmt()
 
     def make_stmt(self):
         stmt_class = get_statement_by_name(self.stmt_type)
@@ -304,10 +304,10 @@ class OpenSearchQuery(Query):
     def get_sign(self, mc_type):
         if mc_type == 'unsigned_graph' or self.entity_role == 'object':
             sign = 0
-        elif isinstance(self.stmt, RegulateActivity):
-            sign = 0 if self.stmt.is_activation else 1
-        elif isinstance(self.stmt, RegulateAmount):
-            sign = 1 if isinstance(self.stmt, DecreaseAmount) else 0
+        elif isinstance(self.path_stmt, RegulateActivity):
+            sign = 0 if self.path_stmt.is_activation else 1
+        elif isinstance(self.path_stmt, RegulateAmount):
+            sign = 1 if isinstance(self.path_stmt, DecreaseAmount) else 0
         else:
             raise ValueError('Could not determine sign')
         return sign
@@ -319,7 +319,7 @@ class OpenSearchQuery(Query):
         if self.terminal_ns:
             for ns in self.terminal_ns:
                 key += ns
-        return mk_str
+        return mk_str(key)
 
     def to_json(self):
         query_type = self.get_type()
@@ -341,7 +341,7 @@ class OpenSearchQuery(Query):
         return query
 
     def __str__(self):
-        parts = [f'OpenSearchQuery(stmt={self.stmt}.']
+        parts = [f'OpenSearchQuery(stmt={self.path_stmt}.']
         if self.terminal_ns:
             parts.append(f' Terminal namespace={self.terminal_ns}')
         return ''.join(parts)

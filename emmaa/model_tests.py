@@ -308,7 +308,7 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
-                mc = self.get_updated_mc(mc_type, [query.stmt])
+                mc = self.get_updated_mc(mc_type, [query.path_stmt])
                 res = self.open_query_per_mc(mc_type, mc, query)
                 results.append((mc_type, res))
             return results
@@ -319,7 +319,7 @@ class ModelManager(object):
     def open_query_per_mc(self, mc_type, mc, query):
         g = mc.get_graph()
         subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
-            query.stmt)
+            query.path_stmt)
         if res_code:
             return self.hash_response_list(RESULT_CODES[res_code])
         else:
@@ -368,15 +368,15 @@ class ModelManager(object):
                 mc_type, response = self.answer_dynamic_query(
                     query, **kwargs)[0]
                 responses.append((query, mc_type, response))
-            elif isinstance(query, OpenSearchQuery):
+            elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
                     applicable_queries.append(query)
-                    applicable_stmts.append(query.stmt)
+                    applicable_stmts.append(query.path_stmt)
                 else:
                     responses.append(
                         (query, '', self.hash_response_list(
                             RESULT_CODES['QUERY_NOT_APPLICABLE'])))
-            elif isinstance(query, PathProperty):
+            elif isinstance(query, OpenSearchQuery):
                 if ScopeTestConnector.applicable(self, query):
                     applicable_open_queries.append(query)
                     applicable_open_stmts.append(query.path_stmt)
