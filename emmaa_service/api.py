@@ -245,9 +245,10 @@ def _make_query(query_dict):
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'
-    elif 'directionSelection' in query_dict.keys():
+    elif 'openAgentSelection' in query_dict.keys():
         agent = get_agent_from_text(query_dict['openAgentSelection'])
-        direction = query_dict['directionSelection']
+        stmt_type = query_dict['stmtTypeSelection']
+        role = query_dict['roleSelection']
         ns_groups = query_dict['nsSelection']
         if not ns_groups:
             terminal_ns = None
@@ -255,9 +256,8 @@ def _make_query(query_dict):
             terminal_ns = []
             for gr in ns_groups:
                 terminal_ns += ns_mapping[gr]
-        sign = query_dict['signSelection']
         tab = 'open'
-        query = OpenSearchQuery(agent, direction, terminal_ns, sign)
+        query = OpenSearchQuery(agent, stmt_type, role, terminal_ns)
     return query, tab
 
 
