@@ -150,7 +150,7 @@ class QueryManager(object):
             raise ValueError('Argument report_format must be either "html" '
                              'or "str"')
         processed_query_mc = []
-        reports = [] if report_format == 'str' else [[], []]
+        reports = [] if report_format == 'str' else [[], [], []]
         # If latest results are in db, retrieve the second latest
         if stored:
             order = 2
@@ -190,21 +190,17 @@ class QueryManager(object):
                                     model_name,
                                     model_type_name
                                 ]
-                                try:
-                                    # static
-                                    if query.get_type() == 'path_property':
-                                        reports[0].append(delta)
-                                    # dynamic
-                                    else:
-                                        # Remove link for dynamic
-                                        _ = delta.pop(1)
-                                        reports[1].append(delta)
-                                except IndexError:
-                                    # Set first entry = [static], [dynamic]
-                                    pl = ([delta], []) if \
-                                        query.get_type() == \
-                                        'path_propety' else ([delta], [])
-                                    reports = [*pl]
+                                # static
+                                if query.get_type() == 'path_property':
+                                    reports[0].append(delta)
+                                # open
+                                elif query.get_type() == 'open_search_query':
+                                    reports[1].append(delta)
+                                # dynamic
+                                else:
+                                    # Remove link for dynamic
+                                    _ = delta.pop(1)
+                                    reports[2].append(delta)
                 elif report_format == 'str':
                     logger.info('No previous result was found.')
                     report = self.make_str_report_one_query(
