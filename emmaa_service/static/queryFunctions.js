@@ -99,11 +99,6 @@ function collectQuery(queryContainer) {
       alert('Must provide an agent description!');
       return;
     }
-    if (query['signSelection'] === 'positive') {
-      query['signSelection'] = 0;
-    } else {
-      query['signSelection'] = 1;
-    }
     query['nsSelection'] = []
     for (op of document.getElementById('ns-select').children) {
       console.log(op.value);

@@ -260,30 +260,28 @@
             <div class="text" style="display: table;">
               <form onsubmit="postQuery(document.getElementById('open-container')); return false;">
                 <div class="row" style="align-items: center">
-                  <!-- agent -->
-                  <div class="col" style="padding-right: 2px">
-                    <input class="form-control" id="openAgentInput" type="text" name="openAgentText" style="width: 400px;" placeholder="Enter agent description">
-                  </div>
-                  <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
-                    <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
-                      changed in the rest API and query handling -->
-                    <select class="custom-select" id="directionSelection" style="width: 210px">
-                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select search direction</option>
-                      {% for dir in ['upstream', 'downstream'] %}
-                      <option value="{{ dir }}">{{ dir }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
                   <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                     <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                       changed in the rest API and query handling -->
-                    <select class="custom-select" id="signSelection" style="width: 200px">
-                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select overall polarity</option>
-                      {% for sign in ['positive', 'negative'] %}
-                      <option value="{{ sign }}">{{ sign }}</option>
+                    <select class="custom-select" style="width: 300px;" id="stmtTypeSelection">
+                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                      {% for stmt_type in stmt_types %}
+                      <option value="{{ stmt_type }}">{{ stmt_type }}</option>
                       {% endfor %}
                     </select>
-                  </div> 
+                  </div>
+                  <!-- agent -->
+                  <div class="col" style="padding-right: 2px">
+                    <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent">
+                  </div>
+                  <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
+                    <select class="custom-select" id="roleSelection" style="width: 210px">
+                      <option value="" selected="selected" disabled="disabled" hidden="hidden">select agent's role</option>
+                      {% for role, descr in {'subject': 'subject (downstream search)', 'object': 'object (upstream search)'}.items() %}
+                      <option value="{{ role }}">{{ descr }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
                   <!-- register -->
                   <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
                     <div class="checkbox">
@@ -292,10 +290,15 @@
                     </div>
                   </div>
                 </div>
+                <!-- indra docs text -->
+                <div class="text-container row">
+                  <i class="col">To read more about statement types, read the <a
+                      href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+                </div>
                 <div class="checkbox-container"  style="width: 400px; align-items: center">
                   <div class="form-select">
                     <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
-                      <option value="" disabled="disabled" hidden="hidden">Select namespaces</option>
+                      <option value="" disabled="disabled" hidden="hidden">Limit results to (optional)</option>
                     {% for group in ns_groups %}
                       <option value="{{ group }}">{{ group }}</option>
                     {% endfor %}

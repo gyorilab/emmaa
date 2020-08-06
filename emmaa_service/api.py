@@ -980,7 +980,7 @@ def process_query():
             subscribe = False
         query_json = request.json['query']
         assert (set(query_json.keys()) == expected_static_query_keys or
-                set(query_json.keys()) == expected_dynamic_query_keys
+                set(query_json.keys()) == expected_dynamic_query_keys or
                 set(query_json.keys()) == expected_open_query_keys), (
             f'Did not get expected query keys: got {set(query_json.keys())} ')
         models = set(request.json.get('models'))
