@@ -352,11 +352,11 @@ class OpenSearchQuery(Query):
     def to_english(self):
         agent = _assemble_agent_str(self.entity).agent_str
         if self.entity_role == 'subject':
-            verb = statement_base_verb(self.stmt_type)
+            verb = statement_base_verb(self.stmt_type.lower())
             verb = verb[0].lower() + verb[1:]
             sentence = f'What does {agent} {verb}?'
         elif self.entity_role == 'object':
-            verb = statement_present_verb(self.stmt_type)
+            verb = statement_present_verb(self.stmt_type.lower())
             verb = verb[0].lower() + verb[1:]
             sentence = f'What {verb} {agent}?'
         sentence = sentence[0].upper() + sentence[1:]
