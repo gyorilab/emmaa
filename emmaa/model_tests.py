@@ -335,9 +335,13 @@ class ModelManager(object):
                 assert obj_nodes is not None
                 nodes = obj_nodes
             sign = query.get_sign(mc_type)
+            if mc_type == 'pysb':
+                terminal_ns = None
+            else:
+                terminal_ns = query.terminal_ns
             paths_gen = bfs_search_multiple_nodes(
                 g, nodes, reverse=reverse,
-                terminal_ns=query.terminal_ns, path_limit=5, sign=sign)
+                terminal_ns=terminal_ns, path_limit=5, sign=sign)
             paths = []
             for p in paths_gen:
                 if reverse:
