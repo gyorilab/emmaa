@@ -13,6 +13,18 @@
     {% endfor %}
     </ul>
   {% endif %}
+  {% if open_query_deltas %}
+    <h3>Updates to your <a href="{{ open_tab_link }}">open
+      queries</a></h3>
+    <ul>
+    {% for english_query, detailed_query_link, model, model_type in
+    open_query_deltas %}
+      <li>"{{ english_query }}" in {{ model }} using the {{ model_type }}
+        model type. For details click
+        <a href="{{ detailed_query_link }}">here</a>.</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
   {% if dynamic_query_deltas %}
     <h3>Updates to your <a href="{{ dynamic_tab_link }}">dynamic
       queries</a></h3>

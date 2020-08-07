@@ -321,6 +321,7 @@ class QueryManager(object):
         if static_results_delta or open_results_delta or dynamic_results_delta:
             return email_html.render(
                 static_query_deltas=static_results_delta,
+                open_query_deltas=open_results_delta,
                 dynamic_query_deltas=dynamic_results_delta,
                 unsub_link=link
             )
