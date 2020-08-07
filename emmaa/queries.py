@@ -291,7 +291,13 @@ class OpenSearchQuery(Query):
         self.path_stmt = self.make_stmt()
 
     def make_stmt(self):
-        stmt_class = get_statement_by_name(self.stmt_type)
+        stmt_type = self.stmt_type
+        if self.entity_role == 'subject':
+            if self.stmt_type == 'IncreaseAmount':
+                stmt_type = 'Activation'
+            elif self.stmt_type == 'DecreaseAmount':
+                stmt_type = 'Inhibition'
+        stmt_class = get_statement_by_name(stmt_type)
         if self.entity_role == 'subject':
             subj = self.entity
             obj = None
