@@ -58,6 +58,8 @@ ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
               'small molecules': ['chebi', 'drugbank', 'chembl', 'pubchem'],
               'biological processes': ['go']}
 
+qm = QueryManager()
+
 
 def _sort_pass_fail(row):
     def _translator(status):
