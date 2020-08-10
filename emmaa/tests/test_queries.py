@@ -1,8 +1,9 @@
 import json
 from os.path import abspath, dirname, join
-from indra.statements import Phosphorylation, Agent, ModCondition
+from indra.statements import Phosphorylation, Agent, ModCondition, Inhibition
 from emmaa.queries import Query, PathProperty, DynamicProperty, \
-    get_agent_from_text, get_agent_from_trips, get_agent_from_gilda
+    OpenSearchQuery, get_agent_from_text, get_agent_from_trips, \
+    get_agent_from_gilda
 
 
 def test_path_property_from_json():
@@ -109,6 +110,73 @@ def test_dynamic_property_to_english():
     assert query.to_english() == 'Phosphorylated EGFR is always low.'
     query.pattern_type = 'eventual_value'
     assert query.to_english() == 'Phosphorylated EGFR is eventually low.'
+
+
+def test_open_query_from_json():
+    query_file = join(dirname(abspath(__file__)), 'open_query.json')
+    with open(query_file, 'r') as f:
+        json_dict = json.load(f)
+    query = Query._from_json(json_dict)
+    assert query
+    assert isinstance(query, OpenSearchQuery)
+    assert isinstance(query.entity, Agent)
+    assert query.entity.name == 'EGFR'
+    assert query.entity_role == 'object'
+    assert query.stmt_type == 'Inhibition'
+    assert isinstance(query.path_stmt, Inhibition)
+    assert query.path_stmt.subj is None
+    assert query.terminal_ns == ['chebi']
+
+
+def test_open_query_to_json():
+    ag = Agent('EGFR', db_refs={'HGNC': '3236'})
+    query = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi'])
+    assert query
+    json = query.to_json()
+    assert json.get('type') == 'open_search_query'
+    assert json.get('stmt_type') == 'Inhibition'
+    assert json.get('entity_role') == 'object'
+    assert json.get('terminal_ns') == ['chebi']
+    deserialize_query = Query._from_json(json)
+    json2 = deserialize_query.to_json()
+    assert json == json2, {'json': json, 'json2': json2}
+
+
+def test_stringify_open_query():
+    ag = Agent('EGFR', db_refs={'HGNC': '3236'})
+    query = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi'])
+    query_str = str(query)
+    assert query_str == (
+        "OpenSearchQuery(stmt=Inhibition(None, EGFR()). Terminal namespace="
+        "['chebi']")
+
+
+def test_open_query_to_english():
+    ag = Agent('EGFR', db_refs={'HGNC': '3236'})
+    q1 = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi'])
+    q2 = OpenSearchQuery(ag, 'Inhibition', 'subject', ['hgnc'])
+    q3 = OpenSearchQuery(ag, 'Activation', 'subject')
+    assert q1.to_english() == "What inhibits EGFR? ['chebi']"
+    assert q2.to_english() == "What does EGFR inhibit? ['hgnc']"
+    assert q3.to_english() == "What does EGFR activate?"
+
+
+def test_get_sign():
+    ag = Agent('EGFR', db_refs={'HGNC': '3236'})
+    # When entity role is object, sign is always 0 (sign of upstream node)
+    query = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi'])
+    for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
+        assert query.get_sign(mc_type) == 0
+    # Entity role is subject
+    # Always 0 for unsigned graph
+    query = OpenSearchQuery(ag, 'Inhibition', 'subject', ['chebi'])
+    assert query.get_sign('unsigned_graph') == 0
+    # For others, depends on statement type
+    for mc_type in ['pysb', 'pybel', 'signed_graph']:
+        assert query.get_sign(mc_type) == 1
+    query = OpenSearchQuery(ag, 'Activation', 'subject', ['chebi'])
+    for mc_type in ['pysb', 'pybel', 'signed_graph']:
+        assert query.get_sign(mc_type) == 0
 
 
 def test_grounding_from_gilda():
