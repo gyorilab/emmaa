@@ -104,13 +104,15 @@ class ModelManager(object):
         self.date_str = make_date_str()
         self.path_stmt_counts = defaultdict(int)
 
-    def get_updated_mc(self, mc_type, stmts):
+    def get_updated_mc(self, mc_type, stmts, add_ns=False):
         """Update the ModelChecker and graph with stmts for tests/queries."""
         mc = self.mc_types[mc_type]['model_checker']
         mc.statements = stmts
         if mc_type == 'pysb':
             mc.graph = None
-            mc.get_graph(prune_im=True, prune_im_degrade=True)
+            mc.model_stmts = self.model.assembled_stmts
+            mc.get_graph(prune_im=True, prune_im_degrade=True,
+                         add_namespaces=add_ns)
         return mc
 
     def add_test(self, test):
@@ -311,7 +313,10 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
-                mc = self.get_updated_mc(mc_type, [query.path_stmt])
+                add_ns = False
+                if query.terminal_ns:
+                    add_ns = True
+                mc = self.get_updated_mc(mc_type, [query.path_stmt], add_ns)
                 res = self.open_query_per_mc(mc_type, mc, query)
                 results.append((mc_type, res))
             return results
@@ -409,7 +414,7 @@ class ModelManager(object):
         # Open queries
         if applicable_open_queries:
             for mc_type in self.mc_types:
-                mc = self.get_updated_mc(mc_type, applicable_open_stmts)
+                mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
                 for query in applicable_open_queries:
                     res = self.open_query_per_mc(mc_type, mc, query)
                     responses.append((query, mc_type, res))
