@@ -153,12 +153,12 @@ def test_stringify_open_query():
 
 def test_open_query_to_english():
     ag = Agent('EGFR', db_refs={'HGNC': '3236'})
-    q1 = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi'])
+    q1 = OpenSearchQuery(ag, 'Inhibition', 'object', ['chebi', 'chembl'])
     q2 = OpenSearchQuery(ag, 'Inhibition', 'subject', ['hgnc'])
     q3 = OpenSearchQuery(ag, 'Activation', 'subject')
-    assert q1.to_english() == "What inhibits EGFR? ['chebi']"
-    assert q2.to_english() == "What does EGFR inhibit? ['hgnc']"
-    assert q3.to_english() == "What does EGFR activate?"
+    assert q1.to_english() == 'What inhibits EGFR? (CHEBI, CHEMBL)', q1.to_english()
+    assert q2.to_english() == 'What does EGFR inhibit? (HGNC)'
+    assert q3.to_english() == 'What does EGFR activate?'
 
 
 def test_get_sign():

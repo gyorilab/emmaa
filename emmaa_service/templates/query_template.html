@@ -299,8 +299,8 @@
                   <div class="form-select">
                     <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
                       <option value="" disabled="disabled" hidden="hidden">Limit results to (optional)</option>
-                    {% for group in ns_groups %}
-                      <option value="{{ group }}">{{ group }}</option>
+                    {% for group, options in ns_groups.items() %}
+                      <option value="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
                     {% endfor %}
                     </select>
                   </div>

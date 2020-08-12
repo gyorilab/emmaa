@@ -367,7 +367,7 @@ class OpenSearchQuery(Query):
             sentence = f'What {verb} {agent}?'
         sentence = sentence[0].upper() + sentence[1:]
         if self.terminal_ns:
-            sentence += f' {self.terminal_ns}'
+            sentence += f' ({", ".join(self.terminal_ns).upper()})'
         return sentence
 
     def get_entities(self):
