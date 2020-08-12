@@ -313,18 +313,22 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', mc_type=mc_type, default_paths=5)
                 add_ns = False
                 if query.terminal_ns:
                     add_ns = True
                 mc = self.get_updated_mc(mc_type, [query.path_stmt], add_ns)
-                res = self.open_query_per_mc(mc_type, mc, query)
+                res = self.open_query_per_mc(
+                    mc_type, mc, query, max_path_length, max_paths)
                 results.append((mc_type, res))
             return results
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']))]
 
-    def open_query_per_mc(self, mc_type, mc, query):
+    def open_query_per_mc(self, mc_type, mc, query, max_path_length,
+                          max_paths):
         g = mc.get_graph()
         subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
             query.path_stmt)
@@ -345,8 +349,8 @@ class ModelManager(object):
             else:
                 terminal_ns = query.terminal_ns
             paths_gen = bfs_search_multiple_nodes(
-                g, nodes, reverse=reverse,
-                terminal_ns=terminal_ns, path_limit=5, sign=sign)
+                g, nodes, reverse=reverse, terminal_ns=terminal_ns,
+                depth_limit=max_path_length, path_limit=max_paths, sign=sign)
             paths = []
             for p in paths_gen:
                 if reverse:
@@ -414,9 +418,12 @@ class ModelManager(object):
         # Open queries
         if applicable_open_queries:
             for mc_type in self.mc_types:
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', mc_type=mc_type, default_paths=5)
                 mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
                 for query in applicable_open_queries:
-                    res = self.open_query_per_mc(mc_type, mc, query)
+                    res = self.open_query_per_mc(
+                        mc_type, mc, query, max_path_length, max_paths)
                     responses.append((query, mc_type, res))
 
         return sorted(responses, key=lambda x: x[0].matches_key())
