@@ -56,7 +56,7 @@ SC, jwt = config_auth(app)
 
 ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
               'small molecules': ['chebi', 'drugbank', 'chembl', 'pubchem'],
-              'biological processes': ['go']}
+              'biological processes': ['go', 'mesh']}
 
 qm = QueryManager()
 
