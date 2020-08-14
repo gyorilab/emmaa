@@ -20,8 +20,13 @@ function postQuery(queryContainer) {
     var tab = 'open';
     var reg = document.getElementById('register-open-query').checked;
   }
-  if (querySel.length < 2) {
+  console.log(querySel)
+  if (querySel == null || querySel.length < 2) {
     queryNotify('Did not send query', statusId);
+    let loc = window.location.href;
+    let q = window.location.search;
+    let redirectURL = loc.replace(q, `?tab=${tab}`);
+    window.location.replace(redirectURL);
     return;
   }
 
@@ -85,7 +90,7 @@ function collectQuery(queryContainer) {
     }
     if (query['objectSelection'] === '') {
       alert('Must provide an object!');
-      return;      
+      return;
     }
   } else if (queryContainer.id == 'dynamic-container') {
     query['agentSelection'] = document.getElementById('agentInput').value;
