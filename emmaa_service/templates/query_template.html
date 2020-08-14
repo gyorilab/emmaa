@@ -78,7 +78,7 @@
                   <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                     <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                       changed in the rest API and query handling -->
-                    <select class="custom-select" id="typeSelection">
+                    <select class="custom-select" style="width: 400px;" id="typeSelection">
                       <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                       {% for stmt_type in stmt_types %}
                       <option value="{{ stmt_type }}">{{ stmt_type }}</option>
@@ -87,18 +87,11 @@
                   </div>
                   <!-- subject -->
                   <div class="col" style="padding-right: 2px">
-                    <input class="form-control" id="subjectInput" type="text" name="subjectText" placeholder="Enter subject">
+                    <input class="form-control" id="subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
                   </div>
                   <!-- object -->
                   <div class="col" style="padding-left: 2px; padding-right: 2px">
-                    <input class="form-control" id="objectInput" type="text" name="objectText" placeholder="Enter object">
-                  </div>
-                  <!-- register -->
-                  <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
-                    <div class="checkbox">
-                      <input type="checkbox" name="register" id="register-query"><label
-                        for="register-query">Subscribe To Query</label>
-                    </div>
+                    <input class="form-control" id="objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
                   </div>
                 </div>
                 <!-- indra docs text -->
@@ -109,7 +102,9 @@
                 <!-- formsubmit -->
                 <div class="row">
                   <div class="container">
-                    <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+                    <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+                    <input type="checkbox" name="register" style="margin-top: 15px" id="register-query" style="padding-top: 3000px;"><label
+                        for="register-query">Subscribe To Query</label>
                   </div>
                 </div>
               </form>
@@ -183,7 +178,7 @@
                       {% endfor %}
                     </select>
                   </div>
-                  <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                  <div class="dropdown col" style="display: table-cell; padding-right: 2px; width: 300px;">
                     <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                       changed in the rest API and query handling -->
                     <select class="custom-select" id="valueSelection">
@@ -193,18 +188,13 @@
                       {% endfor %}
                     </select>
                   </div>
-                  <!-- register -->
-                  <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
-                    <div class="checkbox">
-                      <input type="checkbox" name="register" id="register-dyn-query"><label
-                        for="register-query">Subscribe To Query</label>
-                    </div>
-                  </div>
                 </div>
                 <!-- formsubmit -->
                 <div class="row">
                   <div class="container">
-                    <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="dyn-query-submit" id="dyn-query-submit">
+                    <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="dyn-query-submit" id="dyn-query-submit">
+                    <input type="checkbox" name="register" style="margin-top: 20px" id="register-dyn-query" style="padding-top: 3000px;"><label
+                    for="register-dyn-query">  Subscribe To Query</label>
                   </div>
                 </div>
               </form>
@@ -263,7 +253,7 @@
                   <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                     <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                       changed in the rest API and query handling -->
-                    <select class="custom-select" style="width: 300px;" id="stmtTypeSelection">
+                    <select class="custom-select" style="width: 400px;" id="stmtTypeSelection">
                       <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                       {% for stmt_type in stmt_types %}
                       <option value="{{ stmt_type }}">{{ stmt_type }}</option>
@@ -271,34 +261,27 @@
                     </select>
                   </div>
                   <!-- agent -->
-                  <div class="col" style="padding-right: 2px">
+                  <div class="col" style="padding-right: 2px; width: 300px;">
                     <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent">
                   </div>
                   <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
-                    <select class="custom-select" id="roleSelection" style="width: 210px">
+                    <select class="custom-select" id="roleSelection" style="width: 300px">
                       <option value="" selected="selected" disabled="disabled" hidden="hidden">select agent's role</option>
                       {% for role, descr in {'subject': 'subject (downstream search)', 'object': 'object (upstream search)'}.items() %}
                       <option value="{{ role }}">{{ descr }}</option>
                       {% endfor %}
                     </select>
                   </div>
-                  <!-- register -->
-                  <div class="register-container col" style="padding-left: 2px; padding-right: 1px">
-                    <div class="checkbox">
-                      <input type="checkbox" name="register" id="register-open-query"><label
-                        for="register-query">Subscribe To Query</label>
-                    </div>
-                  </div>
                 </div>
                 <!-- indra docs text -->
                 <div class="text-container row">
-                  <i class="col">To read more about statement types, read the <a
+                  <i class="col" style="margin-top: 5px; margin-bottom: 5px;">To read more about statement types, read the <a
                       href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
                 </div>
-                <div class="checkbox-container"  style="width: 400px; align-items: center">
+                <div class="checkbox-container">
                   <div class="form-select">
                     <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
-                      <option value="" disabled="disabled" hidden="hidden">Limit results to (optional)</option>
+                      <option value="" disabled="disabled" hidden="hidden">Limit entity types to (optional)</option>
                     {% for group, options in ns_groups.items() %}
                       <option value="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
                     {% endfor %}
@@ -310,7 +293,9 @@
                 <!-- formsubmit -->
                 <div class="row">
                   <div class="container">
-                    <input class="btn" style="margin-top: 10px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
+                    <input class="btn" style="margin-top: 5px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
+                    <input type="checkbox" name="register" style="margin-top: 15px" id="register-open-query" style="padding-top: 3000px;"><label
+                      for="register-open-query">  Subscribe To Query</label>
                   </div>
                 </div>
               </form>
