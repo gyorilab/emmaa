@@ -651,9 +651,32 @@ def get_model_stats(model, mode, tests=None, date=None,
             latest_file_key)
 
 
-def get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME):
+def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
+    """Load and return a list of assembled statements.
+
+    Parameters
+    ----------
+    model : str
+        A name of a model.
+    date : str or None
+        Date in "YYYY-MM-DD" format for which to load the statements. If None,
+        loads the latest available statements.
+    bucket : str
+        Name of S3 bucket to look for a file. Defaults to 'emmaa'.
+
+    Returns
+    -------
+    stmts : list[indra.statements.Statement]
+        A list of assembled statements.
+    latest_file_key : str
+        Key of a file with statements on s3.
+    """
+    if not date:
+        prefix = f'assembled/{model}/statements_'
+    else:
+        prefix = f'assembled/{model}/statements_{date}'
     latest_file_key = find_latest_s3_file(
-        bucket, f'assembled/{model}/statements_', '.json')
+        bucket, prefix, '.json')
     if not latest_file_key:
         logger.info(f'No assembled statements found for {model}.')
         return None, None
