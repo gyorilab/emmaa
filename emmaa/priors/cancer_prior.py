@@ -201,7 +201,7 @@ class TcgaCancerPrior(object):
     @staticmethod
     def find_drugs_for_genes(node_list):
         """Return list of drugs targeting gene nodes."""
-        tas_statements = tas.process_csv().statements
+        tas_statements = tas.process_from_web().statements
         already_added = set()
         drug_terms = []
         for node in node_list:
