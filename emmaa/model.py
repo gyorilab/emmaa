@@ -675,8 +675,7 @@ def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
         prefix = f'assembled/{model}/statements_'
     else:
         prefix = f'assembled/{model}/statements_{date}'
-    latest_file_key = find_latest_s3_file(
-        bucket, prefix, '.json')
+    latest_file_key = find_latest_s3_file(bucket, prefix, '.json')
     if not latest_file_key:
         logger.info(f'No assembled statements found for {model}.')
         return None, None

@@ -15,7 +15,8 @@ from indra.explanation.reporting import stmts_from_pysb_path, \
     pybel_edge_to_english
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
-from indra.statements import Statement, Agent, Concept, Event
+from indra.statements import Statement, Agent, Concept, Event, \
+    stmts_to_json_file
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel
@@ -408,13 +409,6 @@ class ModelManager(object):
             raise TypeError('Response should be a string or a list.')
         return response_dict
 
-    def assembled_stmts_to_json(self):
-        """Put assembled statements to JSON format."""
-        stmts = []
-        for stmt in self.model.assembled_stmts:
-            stmts.append(stmt.to_json())
-        return stmts
-
     def results_to_json(self, test_data=None):
         """Put test results to json format."""
         pickler = jsonpickle.pickler.Pickler()
@@ -448,15 +442,20 @@ class ModelManager(object):
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        stmt_jsons = self.assembled_stmts_to_json()
+        client = get_s3_client(unsigned=False)
+        stmts = self.model.assembled_stmts
+        stmts_to_json_file(stmts, 'assembled_stmts.json', 'json')
+        stmts_to_json_file(stmts, 'assembled_stmts.jsonl', 'jsonl')
         # Save a timestapmed version and a generic latest version of files
-        key1 = f'assembled/{self.model.name}/statements_{self.date_str}.json'
-        key2 = f'assembled/{self.model.name}/' \
-               f'latest_statements_{self.model.name}.json'
-        logger.info(f'Uploading assembled statements to {key1}')
-        save_json_to_s3(stmt_jsons, bucket, key1)
-        logger.info(f'Uploading assembled statements to {key2}')
-        save_json_to_s3(stmt_jsons, bucket, key2)
+        dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
+        latest_key = f'assembled/{self.model.name}/' \
+                     f'latest_statements_{self.model.name}'
+        for key in (dated_key, latest_key):
+            for ext in ('.json', '.jsonl'):
+                fname = 'assembled_stmts' + ext
+                obj_key = key + ext
+                logger.info(f'Uploading assembled statements to {obj_key}')
+                client.upload_file(fname, bucket, obj_key)
 
 
 class TestManager(object):
