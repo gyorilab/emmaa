@@ -24,11 +24,13 @@ test_response = {
         'edge_list': [
             {'edge': 'BRAF → MAP2K1',
              'stmts': [
-                 ['/evidence?stmt_hash=-23078353002754841&source=model_statement&model=test',
+                 ['/evidence?stmt_hash=-23078353002754841&source='
+                  'model_statement&model=test&date=2020-01-01',
                   'BRAF activates MAP2K1.', '']]},
             {'edge': 'MAP2K1 → MAPK1',
              'stmts': [
-                 ['/evidence?stmt_hash=-34603994586320440&source=model_statement&model=test',
+                 ['/evidence?stmt_hash=-34603994586320440&source='
+                  'model_statement&model=test&date=2020-01-01',
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
 fail_response = {'521653329': 'No path found that satisfies the test statement'}
@@ -36,6 +38,7 @@ fail_response = {'521653329': 'No path found that satisfies the test statement'}
 # on S3 version
 test_model = create_model()
 test_mm = ModelManager(test_model)
+test_mm.date_str = '2020-01-01-00-00-00'
 test_email = 'tester@test.com'
 
 
