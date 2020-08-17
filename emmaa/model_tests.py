@@ -3,6 +3,7 @@ import logging
 import itertools
 import jsonpickle
 import os
+import pickle
 import sys
 from collections import defaultdict
 from fnvhash import fnv1a_32
@@ -602,8 +603,13 @@ def save_model_manager_to_s3(model_name, model_manager,
                              bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     date_str = model_manager.date_str
-    save_pickle_to_s3(model_manager, bucket,
-                      f'results/{model_name}/model_manager_{date_str}.pkl')
+    logger.info('Pickling a model manager')
+    with open('mm.pkl', 'wb') as fh:
+        pickle.dump(model_manager, fh)
+    logger.info('Uploading a model manager')
+    client = get_s3_client(unsigned=False)
+    client.upload_file(
+        'mm.pkl', bucket, f'results/{model_name}/model_manager_{date_str}.pkl')
 
 
 def load_model_manager_from_s3(model_name=None, key=None,
