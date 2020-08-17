@@ -27,9 +27,10 @@ class GeneListPrior(object):
         self.stmts = []
         self.search_terms = []
 
-    def make_search_terms(self):
+    def make_search_terms(self, drug_gene_stmts=None):
         """Generate search terms from the gene list."""
-        tas_stmts = tas.process_csv().statements
+        if not drug_gene_stmts:
+            drug_gene_stmts = tas.process_from_web().statements
         already_added = set()
         terms = []
         for gene in self.gene_list:
@@ -42,7 +43,7 @@ class GeneListPrior(object):
             terms.append(term)
 
             # Drug search term
-            drug_terms = get_drugs_for_gene(tas_stmts,
+            drug_terms = get_drugs_for_gene(drug_gene_stmts,
                                             agent.db_refs['HGNC'])
             for drug_term in drug_terms:
                 if drug_term.name not in already_added:
