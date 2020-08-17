@@ -146,15 +146,15 @@ def _load_tests_from_cache(test_corpus):
     return tests
 
 
-def _load_stmts_from_cache(model):
-    stmts, file_key = stmts_cache.get(model, (None, None))
-    latest_on_s3 = find_latest_s3_file(
-        EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-    if file_key != latest_on_s3:
-        stmts, file_key = get_assembled_statements(model, EMMAA_BUCKET_NAME)
-        stmts_cache[model] = (stmts, file_key)
-    else:
-        logger.info(f'Loaded assembled stmts for {model} from cache.')
+def _load_stmts_from_cache(model, date):
+    # Only store stmts for one date for browsing on one page, if needed load
+    # statements for different date
+    available_date, stmts = stmts_cache.get(model, (None, None))
+    if available_date == date:
+        logger.info(f'Loaded assembled stmts for {model} {date} from cache.')
+        return stmts
+    stmts, file_key = get_assembled_statements(model, date, EMMAA_BUCKET_NAME)
+    stmts_cache[model] = (date, stmts)
     return stmts
 
 
@@ -727,13 +727,14 @@ def get_statement_evidence_page():
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
+    date = request.args.get('date')
     display_format = request.args.get('format', 'html')
     stmts = []
     if source == 'model_statement':
         test_stats, _ = get_model_stats(model, 'test')
         stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
         stmt_counts_dict = dict(stmt_counts)
-        all_stmts = _load_stmts_from_cache(model)
+        all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
@@ -783,9 +784,10 @@ def get_all_statements_page(model):
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
+    date = request.args.get('date')
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
-    stmts = _load_stmts_from_cache(model)
+    stmts = _load_stmts_from_cache(model, date)
     stmts_by_hash = {}
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
@@ -1069,7 +1071,8 @@ def email_unsubscribe_post():
 
 @app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, hash_val):
-    stmts = _load_stmts_from_cache(model)
+    date = request.args.get('date')
+    stmts = _load_stmts_from_cache(model, date)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
