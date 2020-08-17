@@ -327,6 +327,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let agentChart = generateBar(agDist, agentDataParams, top_agents_array, '');
 
+  var sourceChart = NaN;
   if (model_json.model_summary.sources) {
     // Source APIs bar graph
     let sources_array = [];
@@ -344,7 +345,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
       type: 'bar'
     };
 
-    let sourceChart = generateBar(sources, sourceDataParams, sources_array, '');
+    var sourceChart = generateBar(sources, sourceDataParams, sources_array, '');
   }
   // Statements over Time line graph
   let stmtsOverTime = model_json.changes_over_time.number_of_statements;
