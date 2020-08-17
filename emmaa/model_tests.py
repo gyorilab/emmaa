@@ -22,7 +22,7 @@ from emmaa.model import EmmaaModel
 from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
-    save_pickle_to_s3, load_json_from_s3, save_json_to_s3
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date
 
 
 logger = logging.getLogger(__name__)
@@ -200,6 +200,7 @@ class ModelManager(object):
 
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
+        date = strip_out_date(self.date_str, 'date')
         if merge:
             groups = group_and_sort_statements(stmts)
             for group in groups:
@@ -229,7 +230,7 @@ class ModelManager(object):
                 stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
-                     'model': self.model.name}, doseq=True)
+                     'model': self.model.name, 'date': date}, doseq=True)
                 link = f'/evidence?{url_param}'
                 sentences.append((link, sentence, ''))
         else:
@@ -243,7 +244,7 @@ class ModelManager(object):
                     stmt_hashes = [stmt.get_hash()]
                     url_param = parse.urlencode(
                         {'stmt_hash': stmt_hashes, 'source': 'model_statement',
-                         'model': self.model.name}, doseq=True)
+                         'model': self.model.name, 'date': date}, doseq=True)
                     link = f'/evidence?{url_param}'
                     sentences.append((link, sentence, ''))
         return sentences

@@ -268,7 +268,7 @@ def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
     for th, test in tests_json:
         ev_url_par = parse.urlencode(
             {'stmt_hash': th, 'source': 'test', 'model': model_name,
-             'test_corpus': test_corpus})
+             'test_corpus': test_corpus, 'date': date})
         test['test'][0] = f'/evidence?{ev_url_par}'
         test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
@@ -335,7 +335,7 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             test = all_test_results[th]
             ev_url_par = parse.urlencode(
                 {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                 'test_corpus': test_corpus})
+                 'test_corpus': test_corpus, 'date': date})
             test['test'][0] = f'/evidence?{ev_url_par}'
             test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
@@ -405,7 +405,7 @@ def _count_curations(curations, stmts_by_hash):
     return cur_counts
 
 
-def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
+def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
                   path_counts=None, cur_dict=None, with_evid=False):
     stmt_hash = str(stmt.get_hash())
     english = _format_stmt_text(stmt)
@@ -415,7 +415,7 @@ def _get_stmt_row(stmt, source, model, cur_counts, test_corpus=None,
         evid = _format_evidence_text(
             stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])[:10]
     params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
-              'format': 'json'}
+              'format': 'json', 'date': date}
     if test_corpus:
         params.update({'test_corpus': test_corpus})
     url_param = parse.urlencode(params)
@@ -540,7 +540,8 @@ def get_model_dashboard(model):
     all_stmts = model_stats['model_summary']['all_stmts']
     for st_hash, st_value in all_stmts.items():
         url_param = parse.urlencode(
-            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model})
+            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model,
+             'date': date})
         st_value[0] = f'/evidence?{url_param}'
         st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
@@ -762,7 +763,7 @@ def get_statement_evidence_page():
                 {'error_type': cur.tag})
         cur_counts = _count_curations(curations, stmts_by_hash)
         for stmt in stmts:
-            stmt_row = _get_stmt_row(stmt, source, model, cur_counts,
+            stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                      test_corpus, stmt_counts_dict,
                                      cur_dict, True)
             stmt_rows.append(stmt_row)
@@ -776,7 +777,8 @@ def get_statement_evidence_page():
                            test_corpus=test_corpus if test_corpus else None,
                            table_title='Statement Evidence and Curation',
                            msg=None,
-                           is_all_stmts=False)
+                           is_all_stmts=False,
+                           date=date)
 
 
 @app.route('/all_statements/<model>')
@@ -830,7 +832,7 @@ def get_all_statements_page(model):
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
-                                 None, stmt_counts_dict)
+                                 date, None, stmt_counts_dict)
         stmt_rows.append(stmt_row)
     table_title = f'All statements in {model.upper()} model.'
 
@@ -855,7 +857,8 @@ def get_all_statements_page(model):
                            next=next_page,
                            filter_curated=filter_curated,
                            sort_by=sort_by,
-                           link=link)
+                           link=link,
+                           date=date)
 
 
 @app.route('/query/<model>')

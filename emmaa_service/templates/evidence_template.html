@@ -77,7 +77,7 @@
 {% endif %}
 <div class="container" id="app">
   {% if source == 'model_statement' %}
-  {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='') %}
+  {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='', date=date) %}
   {% else %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
   {% endif %}

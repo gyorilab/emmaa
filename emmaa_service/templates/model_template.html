@@ -99,7 +99,8 @@
         </div>
       </div>
       {% endif %}
-      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence", show_all=True) }}
+      {% set show_all = url_for('get_all_statements_page', model=model, sort_by='evidence', page=1, filter_curated=false, date=date) %}
+      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidenceTable", ["Statement", "Evidence Count"], "stmtEvidence", show_all=show_all) }}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
