@@ -162,10 +162,6 @@ function redirectSelection(ddSelect, param) {
   redirectOneArgument(newValue, param);
 }
 
-function redirectToAllStmts() {
-  let model = window.location.pathname.split('/')[2]
-  window.open(`/all_statements/${model}?sort_by=evidence&page=1&filter_curated=false`, target="_blank")
-}
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
