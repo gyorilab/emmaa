@@ -428,28 +428,28 @@ class ModelManager(object):
 
         return sorted(responses, key=lambda x: x[0].matches_key())
 
-    def _get_test_configs(self, mode='test', mc_type=None, default_length=5,
-                          default_paths=1):
+    def _get_test_configs(self, mode='test', qtype='statement_checking',
+                          mc_type=None, default_length=5, default_paths=1):
         if mode == 'test':
             config = self.model.test_config
         elif mode == 'query':
             config = self.model.query_config
         try:
             max_path_length = \
-                config['statement_checking'][mc_type]['max_path_length']
+                config[qtype][mc_type]['max_path_length']
         except KeyError:
             try:
                 max_path_length = \
-                    config['statement_checking']['max_path_length']
+                    config[qtype]['max_path_length']
             except KeyError:
                 max_path_length = default_length
         try:
             max_paths = \
-                config['statement_checking'][mc_type]['max_paths']
+                config[qtype][mc_type]['max_paths']
         except KeyError:
             try:
                 max_paths = \
-                    config['statement_checking']['max_paths']
+                    config[qtype]['max_paths']
             except KeyError:
                 max_paths = default_paths
         logger.info('Parameters for model checking: %d, %d' %
