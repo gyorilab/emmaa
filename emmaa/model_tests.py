@@ -314,7 +314,8 @@ class ModelManager(object):
             results = []
             for mc_type in self.mc_types:
                 max_path_length, max_paths = self._get_test_configs(
-                    mode='query', mc_type=mc_type, default_paths=5)
+                    mode='query', qtype='open_search', mc_type=mc_type,
+                    default_paths=50, default_length=2)
                 add_ns = False
                 if query.terminal_ns:
                     add_ns = True
