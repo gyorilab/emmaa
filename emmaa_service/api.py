@@ -1072,9 +1072,8 @@ def email_unsubscribe_post():
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
-@app.route('/statements/from_hash/<model>/<hash_val>', methods=['GET'])
-def get_statement_by_hash_model(model, hash_val):
-    date = request.args.get('date')
+@app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
+def get_statement_by_hash_model(model, date, hash_val):
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)

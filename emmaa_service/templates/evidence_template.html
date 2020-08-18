@@ -77,14 +77,14 @@
 {% endif %}
 <div class="container" id="app">
   {% if source == 'model_statement' %}
-  {% set url = url_for('get_statement_by_hash_model', model=model, hash_val='', date=date) %}
+  {% set url = url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') %}
   {% else %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
   {% endif %}
   {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
 </div>
 <script>
-  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, hash_val='') }}";
+  Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') }}";
   Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
   Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
   var app = new Vue({el: '#app'});
