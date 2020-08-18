@@ -605,7 +605,7 @@ def save_model_manager_to_s3(model_name, model_manager,
     date_str = model_manager.date_str
     logger.info('Pickling a model manager')
     with open('mm.pkl', 'wb') as fh:
-        pickle.dump(model_manager, fh)
+        pickle.dump(model_manager, fh, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info('Uploading a model manager')
     client = get_s3_client(unsigned=False)
     client.upload_file(
