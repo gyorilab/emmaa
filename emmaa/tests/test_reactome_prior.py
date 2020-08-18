@@ -6,6 +6,7 @@ from emmaa.priors.reactome_prior import find_drugs_for_genes
 from emmaa.priors.reactome_prior import make_prior_from_genes
 from emmaa.priors.reactome_prior import get_pathways_containing_gene
 from emmaa.priors.reactome_prior import get_genes_contained_in_pathway
+from indra.statements import Inhibition, Agent
 
 
 def test_rx_id_from_up_id():
@@ -72,7 +73,12 @@ def test_find_drugs_for_genes():
     SRC = SearchTerm(type='gene', name='SRC', search_term='"SRC"',
                      db_refs={'HGNC': '11283'})
     # drugs targeting KRAS
-    drug_terms = find_drugs_for_genes([SRC])
+    drug_terms = find_drugs_for_genes(
+        [SRC],
+        [Inhibition(Agent('Dasatinib', db_refs={'CHEBI': 'CHEBI:49375'}),
+                    Agent('SRC', db_refs={'HGNC': '11283'})),
+         Inhibition(Agent('Ponatinib', db_refs={'CHEBI': 'CHEBI:78543'}),
+                    Agent('SRC', db_refs={'HGNC': '11283'}))])
 
     # make sure there are results
     assert drug_terms
@@ -80,10 +86,6 @@ def test_find_drugs_for_genes():
     # make sure the result is a list of search terms
     assert all(isinstance(term, SearchTerm) for term in drug_terms)
 
-    # something is wrong if there are fewer than 10 drugs
-    assert len(drug_terms) > 10
-
     # test that some example drugs are included
     drug_names = set(term.name for term in drug_terms)
-    example_drugs = set(['Dasatinib', 'Tozasertib', 'Ponatinib'])
-    assert example_drugs <= drug_names
+    assert drug_names == set(['Dasatinib', 'Ponatinib'])

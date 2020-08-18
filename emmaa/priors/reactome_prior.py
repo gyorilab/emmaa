@@ -78,7 +78,7 @@ def make_prior_from_genes(gene_list):
     return sorted(gene_terms, key=lambda x: x.name)
 
 
-def find_drugs_for_genes(search_terms):
+def find_drugs_for_genes(search_terms, drug_gene_stmts=None):
     """Return list of drugs targeting at least one gene from a list of genes
 
     Parameters
@@ -91,13 +91,14 @@ def find_drugs_for_genes(search_terms):
     drug_terms : list of :py:class:`emmaa.priors.SearchTerm`
         List of search terms of drugs targeting at least one of the input genes
     """
-    tas_statements = tas.process_csv().statements
+    if not drug_gene_stmts:
+        drug_gene_stmts = tas.process_from_web().statements
     drug_terms = []
     already_added = set()
     for search_term in search_terms:
         if search_term.type == 'gene':
             hgnc_id = search_term.db_refs['HGNC']
-            drugs = get_drugs_for_gene(tas_statements, hgnc_id)
+            drugs = get_drugs_for_gene(drug_gene_stmts, hgnc_id)
             for drug in drugs:
                 if drug.name not in already_added:
                     drug_terms.append(drug)
