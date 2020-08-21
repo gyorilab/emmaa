@@ -258,7 +258,7 @@ def load_pickle_from_s3(bucket, key):
         content = pickle.loads(obj['Body'].read())
         return content
     except Exception as e:
-        logger.info('Could not load the pickle from s3')
+        logger.info(f'Could not load the pickle from {key}')
         logger.info(e)
 
 

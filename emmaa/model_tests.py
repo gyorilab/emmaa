@@ -603,6 +603,7 @@ def save_model_manager_to_s3(model_name, model_manager,
                              bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     date_str = model_manager.date_str
+    model_manager.model.stmts = None
     save_pickle_to_s3(model_manager, bucket,
                       f'results/{model_name}/model_manager_{date_str}.pkl')
 
