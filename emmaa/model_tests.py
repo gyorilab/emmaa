@@ -20,7 +20,7 @@ from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json_file
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
-from emmaa.model import EmmaaModel
+from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
@@ -603,7 +603,8 @@ def save_model_manager_to_s3(model_name, model_manager,
                              bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     date_str = model_manager.date_str
-    model_manager.model.stmts = None
+    model_manager.model.stmts = []
+    model_manager.model.assembled_stmts = []
     save_pickle_to_s3(model_manager, bucket,
                       f'results/{model_name}/model_manager_{date_str}.pkl')
 
@@ -614,6 +615,11 @@ def load_model_manager_from_s3(model_name=None, key=None,
     if key:
         try:
             model_manager = load_pickle_from_s3(bucket, key)
+            if not model_manager.model.assembled_stmts:
+                stmts, _ = get_assembled_statements(
+                    model_manager.model.name,
+                    strip_out_date(model_manager.date_str, 'date'))
+                model_manager.model.assembled_stmts = stmts
             return model_manager
         except Exception as e:
             logger.info('Could not load the model manager')
