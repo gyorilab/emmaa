@@ -618,7 +618,8 @@ def load_model_manager_from_s3(model_name=None, key=None,
             if not model_manager.model.assembled_stmts:
                 stmts, _ = get_assembled_statements(
                     model_manager.model.name,
-                    strip_out_date(model_manager.date_str, 'date'))
+                    strip_out_date(model_manager.date_str, 'date'),
+                    bucket=bucket)
                 model_manager.model.assembled_stmts = stmts
             return model_manager
         except Exception as e:

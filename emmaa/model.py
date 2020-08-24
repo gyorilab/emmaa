@@ -679,7 +679,7 @@ def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
     if not latest_file_key:
         logger.info(f'No assembled statements found for {model}.')
         return None, None
-    logger.info(f'Loading assembled statements for {model} from S3.')
+    logger.info(f'Loading assembled statements for {model} from {latest_file_key}.')
     stmt_jsons = load_json_from_s3(bucket, latest_file_key)
     stmts = stmts_from_json(stmt_jsons)
     return stmts, latest_file_key
