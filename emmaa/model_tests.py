@@ -9,6 +9,7 @@ from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
 from copy import deepcopy
+from zipfile import ZipFile
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -451,12 +452,18 @@ class ModelManager(object):
         dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
         latest_key = f'assembled/{self.model.name}/' \
                      f'latest_statements_{self.model.name}'
-        for key in (dated_key, latest_key):
-            for ext in ('.json', '.jsonl'):
-                fname = 'assembled_stmts' + ext
-                obj_key = key + ext
-                logger.info(f'Uploading assembled statements to {obj_key}')
-                client.upload_file(fname, bucket, obj_key)
+        for ext in ('.json', '.jsonl'):
+            fname = 'assembled_stmts' + ext
+            obj_key = latest_key + ext
+            logger.info(f'Uploading assembled statements to {obj_key}')
+            client.upload_file(fname, bucket, obj_key)
+        with ZipFile('assembled_stmts.zip', mode='w') as zipf:
+            zipf.write('assembled_stmts.json')
+        logger.info(f'Uploading assembled statements to {dated_key}.zip')
+        client.upload_file('assembled_stmts.zip', bucket, f'{dated_key}.zip')
+        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
+        client.upload_file(
+            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
 
 
 class TestManager(object):
