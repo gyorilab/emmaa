@@ -73,6 +73,20 @@
     <!-- This table displays model data -->
     <div class="container">
       {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
+      {% if exp_formats %}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Download as</h4>
+        </div>
+        <div class="card-body">
+          {% for exp_f, link in exp_formats.items() %}
+          <a href='{{ link }}' download>
+            <button class="btn btn-outline-secondary" type="button">{{ exp_f|upper }}</button>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       <div class="card">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
