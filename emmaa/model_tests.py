@@ -103,7 +103,7 @@ class ModelManager(object):
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.date_str = make_date_str()
+        self.date_str = self.model.date_str
         self.path_stmt_counts = defaultdict(int)
 
     def get_updated_mc(self, mc_type, stmts, add_ns=False):
