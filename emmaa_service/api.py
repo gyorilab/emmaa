@@ -907,7 +907,7 @@ def get_query_tests_page(model):
         [query_hash], 'path_property', order)
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
-    date = results[query_hash]['date']
+    date = results[query_hash]['date'][:10]
     card_title = ('', results[query_hash]['query'] if results else '', '')
     next_order = order - 1 if order > 1 else None
     prev_order = order + 1 if \
