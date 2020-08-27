@@ -3,11 +3,13 @@ import logging
 import itertools
 import jsonpickle
 import os
+import pickle
 import sys
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
 from copy import deepcopy
+from zipfile import ZipFile
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -19,7 +21,7 @@ from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json_file
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
-from emmaa.model import EmmaaModel
+from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
@@ -450,12 +452,18 @@ class ModelManager(object):
         dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
         latest_key = f'assembled/{self.model.name}/' \
                      f'latest_statements_{self.model.name}'
-        for key in (dated_key, latest_key):
-            for ext in ('.json', '.jsonl'):
-                fname = 'assembled_stmts' + ext
-                obj_key = key + ext
-                logger.info(f'Uploading assembled statements to {obj_key}')
-                client.upload_file(fname, bucket, obj_key)
+        for ext in ('.json', '.jsonl'):
+            fname = 'assembled_stmts' + ext
+            obj_key = latest_key + ext
+            logger.info(f'Uploading assembled statements to {obj_key}')
+            client.upload_file(fname, bucket, obj_key)
+        with ZipFile('assembled_stmts.zip', mode='w') as zipf:
+            zipf.write('assembled_stmts.json')
+        logger.info(f'Uploading assembled statements to {dated_key}.zip')
+        client.upload_file('assembled_stmts.zip', bucket, f'{dated_key}.zip')
+        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
+        client.upload_file(
+            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
 
 
 class TestManager(object):
@@ -602,6 +610,8 @@ def save_model_manager_to_s3(model_name, model_manager,
                              bucket=EMMAA_BUCKET_NAME):
     logger.info(f'Saving a model manager for {model_name} model to S3.')
     date_str = model_manager.date_str
+    model_manager.model.stmts = []
+    model_manager.model.assembled_stmts = []
     save_pickle_to_s3(model_manager, bucket,
                       f'results/{model_name}/model_manager_{date_str}.pkl')
 
@@ -612,6 +622,12 @@ def load_model_manager_from_s3(model_name=None, key=None,
     if key:
         try:
             model_manager = load_pickle_from_s3(bucket, key)
+            if not model_manager.model.assembled_stmts:
+                stmts, _ = get_assembled_statements(
+                    model_manager.model.name,
+                    strip_out_date(model_manager.date_str, 'date'),
+                    bucket=bucket)
+                model_manager.model.assembled_stmts = stmts
             return model_manager
         except Exception as e:
             logger.info('Could not load the model manager')

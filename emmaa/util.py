@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from botocore import UNSIGNED
 from botocore.client import Config
 from inflection import camelize
+from zipfile import ZipFile
 from indra.util.aws import get_s3_file_tree, get_date_from_str
 from indra.statements import get_all_descendants
 from emmaa.subscription.email_service import email_bucket
@@ -254,21 +255,26 @@ def _get_flask_app():
 def load_pickle_from_s3(bucket, key):
     client = get_s3_client()
     try:
+        logger.info(f'Loading object from {key}')
         obj = client.get_object(Bucket=bucket, Key=key)
         content = pickle.loads(obj['Body'].read())
         return content
     except Exception as e:
-        logger.info('Could not load the pickle from s3')
+        logger.info(f'Could not load the pickle from {key}')
         logger.info(e)
 
 
 def save_pickle_to_s3(obj, bucket, key):
     client = get_s3_client(unsigned=False)
-    client.put_object(Body=pickle.dumps(obj), Bucket=bucket, Key=key)
+    logger.info('Pickling object')
+    obj_str = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
+    logger.info(f'Saving object to {key}')
+    client.put_object(Body=obj_str, Bucket=bucket, Key=key)
 
 
 def load_json_from_s3(bucket, key):
     client = get_s3_client()
+    logger.info(f'Loading object from {key}')
     obj = client.get_object(Bucket=bucket, Key=key)
     content = json.loads(obj['Body'].read().decode('utf8'))
     return content
@@ -278,6 +284,15 @@ def save_json_to_s3(obj, bucket, key):
     client = get_s3_client(unsigned=False)
     client.put_object(Body=json.dumps(obj, indent=1).encode('utf8'),
                       Bucket=bucket, Key=key)
+
+
+def load_zip_json_from_s3(bucket, key):
+    client = get_s3_client()
+    logger.info(f'Loading zipfile from {key}')
+    client.download_file(bucket, key, 'temp.zip')
+    with ZipFile('temp.zip', 'r') as zipf:
+        content = json.loads(zipf.read(zipf.namelist()[0]))
+    return content
 
 
 class EmailHtmlBody(object):

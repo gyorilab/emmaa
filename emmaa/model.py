@@ -20,7 +20,8 @@ from emmaa.readers.elsevier_eidos_reader import \
     read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
     EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
-    save_pickle_to_s3, load_json_from_s3, save_json_to_s3
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, \
+    load_zip_json_from_s3
 from emmaa.statements import to_emmaa_stmts
 
 
@@ -675,12 +676,19 @@ def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
         prefix = f'assembled/{model}/statements_'
     else:
         prefix = f'assembled/{model}/statements_{date}'
-    latest_file_key = find_latest_s3_file(bucket, prefix, '.json')
-    if not latest_file_key:
-        logger.info(f'No assembled statements found for {model}.')
-        return None, None
-    logger.info(f'Loading assembled statements for {model} from S3.')
-    stmt_jsons = load_json_from_s3(bucket, latest_file_key)
+    # Try loading zip file
+    latest_file_key = find_latest_s3_file(bucket, prefix, '.zip')
+    if latest_file_key:
+        stmt_jsons = load_zip_json_from_s3(bucket, latest_file_key)
+    else:
+        # Try loading json file
+        latest_file_key = find_latest_s3_file(bucket, prefix, '.json')
+        if latest_file_key:
+            stmt_jsons = load_json_from_s3(bucket, latest_file_key)
+        # Didn't get zip or json
+        else:
+            logger.info(f'No assembled statements found for {model}.')
+            return None, None
     stmts = stmts_from_json(stmt_jsons)
     return stmts, latest_file_key
 
