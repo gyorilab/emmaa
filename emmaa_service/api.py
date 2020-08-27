@@ -155,7 +155,7 @@ def _load_stmts_from_cache(model, date):
     # Only store stmts for one date for browsing on one page, if needed load
     # statements for different date
     available_date, stmts = stmts_cache.get(model, (None, None))
-    if available_date == date:
+    if date and available_date == date:
         logger.info(f'Loaded assembled stmts for {model} {date} from cache.')
         return stmts
     stmts, file_key = get_assembled_statements(model, date, EMMAA_BUCKET_NAME)
