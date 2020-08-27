@@ -179,7 +179,8 @@ def test_answer_get_registered_queries():
     for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
         assert results[qh][mc_type][0] == 'Pass'
         assert isinstance(results[qh][mc_type][1], list)
-        assert test_response['3801854542'] in results[qh][mc_type][1]
+        assert test_response['3801854542']['path'] in [
+            res['path'] for res in results[qh][mc_type][1]]
 
 
 def test_is_diff():
