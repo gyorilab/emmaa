@@ -130,7 +130,8 @@ def test_immediate_open():
     for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
         assert result_values[mc_type][0] == 'Pass'
         assert isinstance(result_values[mc_type][1], list)
-        assert test_response['3801854542'] in result_values[mc_type][1]
+        assert test_response['3801854542']['path'] in [
+            res['path'] for res in result_values[mc_type][1]]
 
 
 @attr('nonpublic')
@@ -174,6 +175,7 @@ def test_answer_get_registered_queries():
     assert qh in results
     assert results[qh]['model'] == 'test'
     assert results[qh]['query'] == 'What does BRAF activate?'
+    assert isinstance(results[qh]['date'], str)
     for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
         assert results[qh][mc_type][0] == 'Pass'
         assert isinstance(results[qh][mc_type][1], list)
@@ -183,7 +185,7 @@ def test_answer_get_registered_queries():
 def test_is_diff():
     assert not is_query_result_diff(query_not_appl, query_not_appl)
     assert is_query_result_diff(test_response, query_not_appl)
-    assert isinstance(results[qh]['date'], str)
+
 
 @attr('nonpublic')
 def test_report_one_query():
