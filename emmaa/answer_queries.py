@@ -150,7 +150,7 @@ class QueryManager(object):
             raise ValueError('Argument report_format must be either "html" '
                              'or "str"')
         processed_query_mc = []
-        reports = [] if report_format == 'str' else [[], []]
+        reports = [] if report_format == 'str' else [[], [], []]
         # If latest results are in db, retrieve the second latest
         if stored:
             order = 2
@@ -190,21 +190,17 @@ class QueryManager(object):
                                     model_name,
                                     model_type_name
                                 ]
-                                try:
-                                    # static
-                                    if query.get_type() == 'path_property':
-                                        reports[0].append(delta)
-                                    # dynamic
-                                    else:
-                                        # Remove link for dynamic
-                                        _ = delta.pop(1)
-                                        reports[1].append(delta)
-                                except IndexError:
-                                    # Set first entry = [static], [dynamic]
-                                    pl = ([delta], []) if \
-                                        query.get_type() == \
-                                        'path_propety' else ([delta], [])
-                                    reports = [*pl]
+                                # static
+                                if query.get_type() == 'path_property':
+                                    reports[0].append(delta)
+                                # open
+                                elif query.get_type() == 'open_search_query':
+                                    reports[1].append(delta)
+                                # dynamic
+                                else:
+                                    # Remove link for dynamic
+                                    _ = delta.pop(1)
+                                    reports[2].append(delta)
                 elif report_format == 'str':
                     logger.info('No previous result was found.')
                     report = self.make_str_report_one_query(
@@ -314,7 +310,7 @@ class QueryManager(object):
         results = results[:limit] if limit else results
 
         # Get the query deltas
-        static_results_delta, dynamic_results_delta = \
+        static_results_delta, open_results_delta, dynamic_results_delta = \
             self.make_reports_from_results(results, report_format='html',
                                            include_no_diff=False,
                                            domain=domain)
@@ -322,9 +318,10 @@ class QueryManager(object):
         # Generate unsubscribe link
         link = generate_unsubscribe_link(email=email, domain=domain)
 
-        if static_results_delta or dynamic_results_delta:
+        if static_results_delta or open_results_delta or dynamic_results_delta:
             return email_html.render(
                 static_query_deltas=static_results_delta,
+                open_query_deltas=open_results_delta,
                 dynamic_query_deltas=dynamic_results_delta,
                 unsub_link=link
             )
@@ -438,7 +435,7 @@ def format_results(results, query_type='path_property'):
                 response = v
             elif isinstance(v, dict):
                 response.append(v)
-        if query_type == 'path_property':
+        if query_type in ['path_property', 'open_search_query']:
             if mc_type == '' and \
                     response == 'Query is not applicable for this model':
                 for mt in model_types:
@@ -462,8 +459,9 @@ def format_results(results, query_type='path_property'):
                     formatted_results[query_hash]['result'] = ['Pass', expl]
                 else:
                     formatted_results[query_hash]['result'] = ['Fail', expl]
-                formatted_results[query_hash]['image'] = response[0]['fig_path']
-    if query_type == 'path_property':
+                formatted_results[query_hash]['image'] = (
+                    response[0]['fig_path'])
+    if query_type in ['path_property', 'open_search_query']:
         # Loop through the results again to make sure all model types are there
         for qh in formatted_results:
             for mt in model_types:

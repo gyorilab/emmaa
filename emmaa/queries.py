@@ -5,10 +5,10 @@ import gilda
 from indra.sources import trips
 from indra.ontology.standardize import \
     standardize_agent_name
-from indra.statements.statements import Statement, Agent, get_all_descendants,\
-    mk_str, make_hash
+from indra.statements.statements import *
 from indra.assemblers.english.assembler import _assemble_agent_str, \
-    EnglishAssembler
+    EnglishAssembler, statement_base_verb, statement_present_verb
+from indra.assemblers.pybel.assembler import _get_agent_node
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern
 from .util import get_class_from_name
 
@@ -260,13 +260,128 @@ class DynamicProperty(Query):
         return f'{agent} is {pattern}.'
 
 
+class OpenSearchQuery(Query):
+    """This type of query requires doing an open ended breadth-first search
+    to find paths satisfying the query.
+
+    Parameters
+    ----------
+    entity : indra.statements.Agent
+        An entity to simulate the model for.
+    stmt_type : str
+        Name of statement type.
+    entity_role : str
+        What role entity should play in statement (subject or object).
+    terminal_ns : list[str]
+        Force a path to terminate when any of the namespaces in this list
+        are encountered and only yield paths that terminate at these
+        namepsaces
+
+    Attributes
+    ----------
+    path_stmt : indra.statements.Statement
+        An INDRA statement having its subject or object set to None to
+        represent open search query.
+    """
+    def __init__(self, entity, stmt_type, entity_role, terminal_ns=None):
+        self.entity = entity
+        self.stmt_type = stmt_type
+        self.entity_role = entity_role
+        self.terminal_ns = terminal_ns
+        self.path_stmt = self.make_stmt()
+
+    def make_stmt(self):
+        stmt_type = self.stmt_type
+        if self.entity_role == 'subject':
+            if self.stmt_type == 'IncreaseAmount':
+                stmt_type = 'Activation'
+            elif self.stmt_type == 'DecreaseAmount':
+                stmt_type = 'Inhibition'
+        stmt_class = get_statement_by_name(stmt_type)
+        if self.entity_role == 'subject':
+            subj = self.entity
+            obj = None
+        elif self.entity_role == 'object':
+            subj = None
+            obj = self.entity
+        stmt = stmt_class(subj, obj)
+        return stmt
+
+    def get_sign(self, mc_type):
+        if mc_type == 'unsigned_graph' or self.entity_role == 'object':
+            sign = 0
+        elif isinstance(self.path_stmt, RegulateActivity):
+            sign = 0 if self.path_stmt.is_activation else 1
+        elif isinstance(self.path_stmt, RegulateAmount):
+            sign = 1 if isinstance(self.path_stmt, DecreaseAmount) else 0
+        else:
+            raise ValueError('Could not determine sign')
+        return sign
+
+    def matches_key(self):
+        key = self.entity.matches_key()
+        key += self.stmt_type
+        key += self.entity_role
+        if self.terminal_ns:
+            for ns in self.terminal_ns:
+                key += ns
+        return mk_str(key)
+
+    def to_json(self):
+        query_type = self.get_type()
+        json_dict = _o(type=query_type)
+        json_dict['entity'] = self.entity.to_json()
+        json_dict['stmt_type'] = self.stmt_type
+        json_dict['entity_role'] = self.entity_role
+        json_dict['terminal_ns'] = self.terminal_ns
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        ent_json = json_dict.get('entity')
+        entity = Agent._from_json(ent_json)
+        stmt_type = json_dict.get('stmt_type')
+        entity_role = json_dict.get('entity_role')
+        terminal_ns = json_dict.get('terminal_ns')
+        query = cls(entity, stmt_type, entity_role, terminal_ns)
+        return query
+
+    def __str__(self):
+        parts = [f'OpenSearchQuery(stmt={self.path_stmt}.']
+        if self.terminal_ns:
+            parts.append(f' Terminal namespace={self.terminal_ns}')
+        return ''.join(parts)
+
+    def __repr__(self):
+        return str(self)
+
+    def to_english(self):
+        agent = _assemble_agent_str(self.entity).agent_str
+        if self.entity_role == 'subject':
+            verb = statement_base_verb(self.stmt_type.lower())
+            verb = verb[0].lower() + verb[1:]
+            sentence = f'What does {agent} {verb}?'
+        elif self.entity_role == 'object':
+            verb = statement_present_verb(self.stmt_type.lower())
+            verb = verb[0].lower() + verb[1:]
+            sentence = f'What {verb} {agent}?'
+        sentence = sentence[0].upper() + sentence[1:]
+        if self.terminal_ns:
+            sentence += f' ({", ".join(self.terminal_ns).upper()})'
+        return sentence
+
+    def get_entities(self):
+        return [self.entity]
+
+
 # This is the general method to get a grounding agent from text but it doesn't
 # handle agent state which is required for dynamic queries
-def get_agent_from_text(ag_name):
+def get_agent_from_gilda(ag_name):
     """Return an INDRA Agent object by grounding its entity text with Gilda."""
     matches = gilda.ground(ag_name)
     if not matches:
-        raise GroundingError(f"Could not find grounding for {ag_name}.")
+        raise GroundingError(
+            f"Could not find grounding for {ag_name} with Gilda.")
     agent = Agent(ag_name,
                   db_refs={'TEXT': ag_name,
                            matches[0].term.db: matches[0].term.id})
@@ -277,11 +392,31 @@ def get_agent_from_text(ag_name):
 # This is the method that dynamical queries use to represent agents with
 # state
 def get_agent_from_trips(ag_text):
+    """Return an INDRA Agent object by grounding its entity text with TRIPS."""
     tp = trips.process_text(ag_text)
     agent_list = tp.get_agents()
-    if agent_list:
-        return agent_list[0]
-    return None
+    if not agent_list:
+        raise GroundingError(
+            f"Could not find grounding for {ag_text} with TRIPS.")
+    return agent_list[0]
+
+
+def get_agent_from_text(ag_text):
+    """
+    Return an INDRA Agent object by grounding its entity text with either
+    Gilda or TRIPS.
+    """
+    try:
+        agent = get_agent_from_gilda(ag_text)
+        logger.info('Got agent from Gilda')
+    except GroundingError:
+        try:
+            agent = get_agent_from_trips(ag_text)
+            logger.info('Got agent from TRIPS')
+        except GroundingError:
+            raise GroundingError(f'Could not find grounding for {ag_text}.')
+    return agent
+
 
 class GroundingError(Exception):
     pass

@@ -29,7 +29,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache, \
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, get_agent_from_trips
+    DynamicProperty, OpenSearchQuery
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -53,6 +53,11 @@ link_list = [('/home', 'EMMAA Dashboard'),
 pass_fail_msg = 'Click to see detailed results for this test'
 stmt_db_link_msg = 'Click to see the evidence for this statement'
 SC, jwt = config_auth(app)
+
+ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
+              'small molecules': ['chebi', 'drugbank', 'chembl', 'pubchem'],
+              'biological processes': ['go', 'mesh']}
+
 qm = QueryManager()
 
 
@@ -150,7 +155,7 @@ def _load_stmts_from_cache(model, date):
     # Only store stmts for one date for browsing on one page, if needed load
     # statements for different date
     available_date, stmts = stmts_cache.get(model, (None, None))
-    if available_date == date:
+    if date and available_date == date:
         logger.info(f'Loaded assembled stmts for {model} {date} from cache.')
         return stmts
     stmts, file_key = get_assembled_statements(model, date, EMMAA_BUCKET_NAME)
@@ -234,14 +239,27 @@ def _make_query(query_dict):
         stmt = stmt_class(subj, obj)
         query = PathProperty(path_stmt=stmt)
         tab = 'static'
-    elif 'agentSelection' in query_dict.keys():
-        agent = get_agent_from_trips(query_dict['agentSelection'])
+    elif 'patternSelection' in query_dict.keys():
+        agent = get_agent_from_text(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         if not value:
             value = None
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
         tab = 'dynamic'
+    elif 'openAgentSelection' in query_dict.keys():
+        agent = get_agent_from_text(query_dict['openAgentSelection'])
+        stmt_type = query_dict['stmtTypeSelection']
+        role = query_dict['roleSelection']
+        ns_groups = query_dict['nsSelection']
+        if not ns_groups:
+            terminal_ns = None
+        else:
+            terminal_ns = []
+            for gr in ns_groups:
+                terminal_ns += ns_mapping[gr]
+        tab = 'open'
+        query = OpenSearchQuery(agent, stmt_type, role, terminal_ns)
     return query, tab
 
 
@@ -262,7 +280,8 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date,
                                test_corpus)
 
 
-def _format_table_array(tests_json, model_types, model_name, date, test_corpus):
+def _format_table_array(tests_json, model_types, model_name, date,
+                        test_corpus):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
@@ -514,7 +533,8 @@ def get_model_dashboard(model):
         [('', 'Model Description', ''), ('', description, '')],
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
-         ('', date, 'Click on the point on time graph to see earlier results')],
+         ('', date,
+          'Click on the point on time graph to see earlier results')],
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
@@ -654,6 +674,44 @@ def get_model_tests_page(model):
                            next=next_date)
 
 
+def get_immediate_queries(query_type):
+    headers = None
+    results = 'Results for submitted queries'
+    if session.get('query_hashes') and session['query_hashes'].get(query_type):
+        query_hashes = session['query_hashes'][query_type]
+        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
+        if query_type in ['path_property', 'open_search_query']:
+            headers = ['Query', 'Model'] + [
+                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+                list(qr.values())[0]] if qr else []
+            results = _format_query_results(qr) if qr else\
+                'No stashed results for subscribed queries. Please re-run ' \
+                'query to see latest result.'
+        elif query_type == 'dynamic_property':
+            headers = ['Query', 'Model', 'Result', 'Image']
+            results = _format_dynamic_query_results(qr)
+    return headers, results
+
+
+def get_subscribed_queries(query_type, user_email=None):
+    headers = []
+    if user_email:
+        res = qm.get_registered_queries(user_email, query_type)
+        if res:
+            if query_type in ['path_property', 'open_search_query']:
+                sub_results = _format_query_results(res)
+                headers = ['Query', 'Model'] + [
+                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
+            elif query_type == 'dynamic_property':
+                sub_results = _format_dynamic_query_results(res)
+                headers = ['Query', 'Model', 'Result', 'Image']
+        else:
+            sub_results = 'You have no subscribed queries'
+    else:
+        sub_results = 'Please log in to see your subscribed queries'
+    return headers, sub_results
+
+
 @app.route('/query')
 @jwt_optional
 def get_query_page():
@@ -664,59 +722,36 @@ def get_query_page():
     stmt_types = get_queryable_stmt_types()
 
     # Queried results
-    queried_results = 'Results for submitted queries'
-    immediate_table_headers = None
-    dynamic_results = 'Results for submitted queries'
-    dynamic_immediate_headers = None
-    if session.get('query_hashes'):
-        for query_type, query_hashes in session['query_hashes'].items():
-            qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
-            if query_type == 'path_property':
-                immediate_table_headers = ['Query', 'Model'] + [
-                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-                    list(qr.values())[0]] if qr else []
-                queried_results = _format_query_results(qr) if qr else\
-                    'No stashed results for subscribed queries. Please ' \
-                    're-run query to see latest result.'
-            elif query_type == 'dynamic_property':
-                dynamic_immediate_headers = [
-                    'Query', 'Model', 'Result', 'Image']
-                dynamic_results = _format_dynamic_query_results(qr)
+    immediate_table_headers, queried_results = get_immediate_queries(
+        'path_property')
+    open_headers, open_results = get_immediate_queries('open_search_query')
+    dynamic_immediate_headers, dynamic_results = get_immediate_queries(
+        'dynamic_property')
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    subscribed_path_headers = []
-    subscribed_dyn_headers = []
-    if user_email:
-        sub_path_res = qm.get_registered_queries(user_email, 'path_property')
-        if sub_path_res:
-            subscribed_path_results = _format_query_results(sub_path_res)
-            subscribed_path_headers = \
-                ['Query', 'Model'] + \
-                [FORMATTED_TYPE_NAMES[mt] for mt in list(
-                    sub_path_res.values())[0] if mt in ALL_MODEL_TYPES]
-        else:
-            subscribed_path_results = 'You have no subscribed queries'
-        sub_dyn_res = qm.get_registered_queries(user_email, 'dynamic_property')
-        if sub_dyn_res:
-            subscribed_dyn_results = _format_dynamic_query_results(sub_dyn_res)
-            subscribed_dyn_headers = ['Query', 'Model', 'Result', 'Image']
-        else:
-            subscribed_dyn_results = 'You have no subscribed queries'
-    else:
-        subscribed_path_results = 'Please log in to see your subscribed queries'
-        subscribed_dyn_results = 'Please log in to see your subscribed queries'
+    subscribed_path_headers, subscribed_path_results = get_subscribed_queries(
+        'path_property', user_email)
+    subscribed_dyn_headers, subscribed_dyn_results = get_subscribed_queries(
+        'dynamic_property', user_email)
+    subscribed_open_headers, subscribed_open_results = get_subscribed_queries(
+        'open_search_query', user_email)
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            immediate_query_result=queried_results,
                            immediate_dynamic_results=dynamic_results,
                            dynamic_immediate_headers=dynamic_immediate_headers,
+                           open_immediate_headers=open_headers,
+                           open_immediate_results=open_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
                            subscribed_results=subscribed_path_results,
                            subscribed_headers=subscribed_path_headers,
                            subscribed_dynamic_headers=subscribed_dyn_headers,
                            subscribed_dynamic_results=subscribed_dyn_results,
+                           subscribed_open_headers=subscribed_open_headers,
+                           subscribed_open_results=subscribed_open_results,
+                           ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
                            tab=tab)
@@ -733,7 +768,8 @@ def get_statement_evidence_page():
     stmts = []
     if source == 'model_statement':
         test_stats, _ = get_model_stats(model, 'test')
-        stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
         stmt_counts_dict = dict(stmt_counts)
         all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
@@ -870,7 +906,7 @@ def get_query_tests_page(model):
         [query_hash], 'path_property', order)
     detailed_results = results[query_hash][model_type]\
         if results else ['query', f'{query_hash}']
-    date = results[query_hash]['date']
+    date = results[query_hash]['date'][:10]
     card_title = ('', results[query_hash]['query'] if results else '', '')
     next_order = order - 1 if order > 1 else None
     prev_order = order + 1 if \
@@ -924,6 +960,8 @@ def process_query():
                                   for pos in ['subject', 'object', 'type']}
     expected_dynamic_query_keys = {f'{pos}Selection'
                                    for pos in ['pattern', 'value', 'agent']}
+    expected_open_query_keys = {f'{pos}Selection' for pos in
+                                ['openAgent', 'stmtType', 'role', 'ns']}
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:
@@ -942,9 +980,10 @@ def process_query():
         else:
             subscribe = False
         query_json = request.json['query']
-        assert ((set(query_json.keys()) == expected_static_query_keys or
-                 set(query_json.keys()) == expected_dynamic_query_keys),
-                f'Did not get expected query keys: got {set(query_json.keys())} ')
+        assert (set(query_json.keys()) == expected_static_query_keys or
+                set(query_json.keys()) == expected_dynamic_query_keys or
+                set(query_json.keys()) == expected_open_query_keys), (
+            f'Did not get expected query keys: got {set(query_json.keys())} ')
         models = set(request.json.get('models'))
         assert models < expected_models, \
             f'Got unexpected models: {models - expected_models}'
@@ -1157,7 +1196,7 @@ def list_curations(stmt_hash, src_hash):
 def load_latest_statements(model):
     if does_exist(EMMAA_BUCKET_NAME,
                   f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'      
+        fkey = f'assembled/{model}/latest_statements_{model}.json'
     elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
         fkey = find_latest_s3_file(
             EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')

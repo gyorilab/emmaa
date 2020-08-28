@@ -1,0 +1,10 @@
+{"type": "open_search_query",
+ "entity": {
+    "type": "Agent",
+    "name": "EGFR",
+    "db_refs": {"HGNC": "3236"}
+    },
+  "stmt_type": "Inhibition",
+  "entity_role": "object",
+  "terminal_ns": ["chebi"]
+  }

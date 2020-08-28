@@ -13,11 +13,17 @@ test_query = {'type': 'path_property', 'path': {'type': 'Activation',
               'subj': {'type': 'Agent', 'name': 'BRAF',
                        'db_refs': {'HGNC': '1097'}},
               'obj': {'type': 'Agent', 'name': 'MAPK1',
-                      'db_refs': {'HGNC': '6871'}}, 'obj_activity': 'activity'}}
+                      'db_refs': {'HGNC': '6871'}},
+                      'obj_activity': 'activity'}}
 simple_query = 'BRAF activates MAPK1.'
 query_object = Query._from_json(test_query)
 dyn_ag = get_agent_from_trips('active MAP2K1')
 dyn_query = DynamicProperty(dyn_ag, 'eventual_value', 'high')
+open_qj = {'type': 'open_search_query',
+            'entity': {'type': 'Agent', 'name': 'BRAF',
+                       'db_refs': {'HGNC': '1097'}},
+            'entity_role': 'subject', 'stmt_type': 'Activation'}
+open_query = Query._from_json(open_qj)
 test_response = {
     '3801854542': {
         'path': 'BRAF → MAP2K1 → MAPK1',
@@ -33,7 +39,8 @@ test_response = {
                   'model_statement&model=test&date=2020-01-01',
                   'Active MAP2K1 activates MAPK1.', '']]}]}}
 query_not_appl = {'2413475507': 'Query is not applicable for this model'}
-fail_response = {'521653329': 'No path found that satisfies the test statement'}
+fail_response = {
+    '521653329': 'No path found that satisfies the test statement'}
 # Create a new EmmaaModel and ModelManager for tests instead of depending
 # on S3 version
 test_model = create_model()
@@ -106,14 +113,37 @@ def test_immediate_dynamic():
     assert isinstance(result_values['image'], str)
 
 
+def test_immediate_open():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    query_hashes = qm.answer_immediate_query(
+        test_email, 1, open_query, ['test'], subscribe=False)[
+            'open_search_query']
+    assert query_hashes == [-13552944417558866], query_hashes
+    results = qm.retrieve_results_from_hashes(query_hashes)
+    assert len(results) == 1
+    assert query_hashes[0] in results
+    result_values = results[query_hashes[0]]
+    assert result_values['model'] == 'test'
+    assert result_values['query'] == 'What does BRAF activate?'
+    assert isinstance(result_values['date'], str)
+    for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
+        assert result_values[mc_type][0] == 'Pass'
+        assert isinstance(result_values[mc_type][1], list)
+        assert test_response['3801854542']['path'] in [
+            res['path'] for res in result_values[mc_type][1]]
+
+
 @attr('nonpublic')
 def test_answer_get_registered_queries():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
-    # Put both path and dynamic queries in db, answer together
+    # Put all types of queries in db, answer together
     qm.db.put_queries(test_email, 1, query_object, ['test'],
                       subscribe=True)
     qm.db.put_queries(test_email, 1, dyn_query, ['test'],
+                      subscribe=True)
+    qm.db.put_queries(test_email, 1, open_query, ['test'],
                       subscribe=True)
     qm.answer_registered_queries('test')
     # Retrieve results for path query
@@ -139,6 +169,18 @@ def test_answer_get_registered_queries():
     assert results[qh]['result'] == [
         'Pass', 'Satisfaction rate is 100% after 2 simulations.']
     assert isinstance(results[qh]['image'], str)
+    # Retrieve results for dynamic query
+    results = qm.get_registered_queries(test_email, 'open_search_query')
+    qh = open_query.get_hash_with_model('test')
+    assert qh in results
+    assert results[qh]['model'] == 'test'
+    assert results[qh]['query'] == 'What does BRAF activate?'
+    assert isinstance(results[qh]['date'], str)
+    for mc_type in ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']:
+        assert results[qh][mc_type][0] == 'Pass'
+        assert isinstance(results[qh][mc_type][1], list)
+        assert test_response['3801854542']['path'] in [
+            res['path'] for res in results[qh][mc_type][1]]
 
 
 def test_is_diff():

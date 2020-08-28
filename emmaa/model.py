@@ -383,7 +383,8 @@ class EmmaaModel(object):
         return pybel_model
 
     def assemble_signed_graph(self):
-        """Assemble the model into signed graph and return the assembled graph."""
+        """Assemble the model into signed graph and return the assembled graph.
+        """
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
@@ -391,7 +392,8 @@ class EmmaaModel(object):
         return signed_graph
 
     def assemble_unsigned_graph(self):
-        """Assemble the model into unsigned graph and return the assembled graph."""
+        """Assemble the model into unsigned graph and return the assembled
+        graph."""
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)

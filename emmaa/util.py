@@ -304,8 +304,10 @@ class EmailHtmlBody(object):
         self.domain = domain
         self.static_tab_link = f'https://{domain}/query?tab=static'
         self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
+        self.open_tab_link = f'https://{domain}/query?tab=open'
 
-    def render(self, static_query_deltas, dynamic_query_deltas, unsub_link):
+    def render(self, static_query_deltas, open_query_deltas,
+               dynamic_query_deltas, unsub_link):
         """Provided the delta json objects, render HTML to put in email body
 
         Parameters
@@ -325,13 +327,16 @@ class EmailHtmlBody(object):
         html
             An html string rendered from the associated jinja2 template
         """
-        if not static_query_deltas and not dynamic_query_deltas:
+        if not static_query_deltas and open_query_deltas and \
+                not dynamic_query_deltas:
             raise ValueError('No query deltas provided')
         # Todo consider generating unsubscribe link here, will probably have
         #  to solve import loops for that though
         return self.template.render(
             static_tab_link=self.static_tab_link,
             static_query_deltas=static_query_deltas,
+            open_tab_link=self.open_tab_link,
+            open_query_deltas=open_query_deltas,
             dynamic_tab_link=self.dynamic_tab_link,
             dynamic_query_deltas=dynamic_query_deltas,
             unsub_link=unsub_link

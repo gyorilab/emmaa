@@ -15,6 +15,7 @@ from indra.explanation.model_checker import PysbModelChecker, \
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
     pybel_edge_to_english
+from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
@@ -22,7 +23,7 @@ from indra.statements import Statement, Agent, Concept, Event, \
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
-from emmaa.queries import PathProperty, DynamicProperty
+from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date
@@ -32,7 +33,8 @@ logger = logging.getLogger(__name__)
 sys.setrecursionlimit(50000)
 
 
-result_codes_link = 'https://emmaa.readthedocs.io/en/latest/dashboard/response_codes.html'
+result_codes_link = ('https://emmaa.readthedocs.io/en/latest/dashboard/'
+                     'response_codes.html')
 RESULT_CODES = {
     'STATEMENT_TYPE_NOT_HANDLED': 'Statement type not handled',
     'SUBJECT_MONOMERS_NOT_FOUND': 'Statement subject not in model',
@@ -44,7 +46,8 @@ RESULT_CODES = {
     'PATHS_FOUND': 'Path found which satisfies the test statement',
     'INPUT_RULES_NOT_FOUND': 'No rules with test statement subject',
     'MAX_PATHS_ZERO': 'Path found but not reconstructed',
-    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model'
+    'QUERY_NOT_APPLICABLE': 'Query is not applicable for this model',
+    'NODE_NOT_FOUND': 'Node not in model'
 }
 ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
@@ -101,13 +104,15 @@ class ModelManager(object):
         self.date_str = make_date_str()
         self.path_stmt_counts = defaultdict(int)
 
-    def get_updated_mc(self, mc_type, stmts):
+    def get_updated_mc(self, mc_type, stmts, add_ns=False):
         """Update the ModelChecker and graph with stmts for tests/queries."""
         mc = self.mc_types[mc_type]['model_checker']
         mc.statements = stmts
         if mc_type == 'pysb':
             mc.graph = None
-            mc.get_graph(prune_im=True, prune_im_degrade=True)
+            mc.model_stmts = self.model.assembled_stmts
+            mc.get_graph(prune_im=True, prune_im_degrade=True,
+                         add_namespaces=add_ns)
         return mc
 
     def add_test(self, test):
@@ -134,71 +139,70 @@ class ModelManager(object):
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
-    def make_path_json(self, mc_type, result):
+    def make_path_json(self, mc_type, result_paths):
         paths = []
-        if result.paths:
-            for path in result.paths:
-                path_nodes = []
-                edge_list = []
-                report_function = self.mc_mapping[mc_type][2]
-                model = self.mc_types[mc_type]['model']
-                stmts = self.model.assembled_stmts
-                if mc_type == 'pysb':
-                    report_stmts = report_function(path, model, stmts)
-                    path_stmts = [[st] for st in report_stmts]
-                    merge = False
-                elif mc_type == 'pybel':
-                    path_stmts = report_function(path, model, False, stmts)
-                    merge = False
-                elif mc_type == 'signed_graph':
-                    path_stmts = report_function(path, model, True, False, stmts)
-                    merge = True
-                elif mc_type == 'unsigned_graph':
-                    path_stmts = report_function(path, model, False, False, stmts)
-                    merge = True
-                for i, step in enumerate(path_stmts):
-                    edge_nodes = []
-                    if len(step) < 1:
-                        continue
-                    stmt_type = type(step[0]).__name__
-                    if stmt_type == 'PybelEdge':
-                        source, target = step[0].source, step[0].target
-                        edge_nodes.append(source.name)
-                        edge_nodes.append(u"\u2192")
-                        edge_nodes.append(target.name)
-                    else:
-                        for stmt in step:
-                            self.path_stmt_counts[stmt.get_hash()] += 1
-                        agents = [ag.name if ag is not None else None
-                                  for ag in step[0].agent_list()]
-                        # For complexes make sure that the agent from the
-                        # previous edge goes first
-                        if stmt_type == 'Complex' and len(path_nodes) > 0:
-                            agents = sorted(
-                                [ag for ag in agents if ag is not None],
-                                key=lambda x: x != path_nodes[-1])
-                        for j, ag in enumerate(agents):
-                            if ag is not None:
-                                edge_nodes.append(ag)
-                            if j == (len(agents) - 1):
-                                break
-                            if stmt_type in ARROW_DICT:
-                                edge_nodes.append(ARROW_DICT[stmt_type])
-                            else:
-                                edge_nodes.append(u"\u2192")
-                    if i == 0:
-                        for n in edge_nodes:
-                            path_nodes.append(n)
-                    else:
-                        for n in edge_nodes[1:]:
-                            path_nodes.append(n)
-                    step_sentences = self._make_path_stmts(step, merge=merge)
-                    edge_dict = {'edge': ' '.join(edge_nodes),
-                                 'stmts': step_sentences}
-                    edge_list.append(edge_dict)
-                path_json = {'path': ' '.join(path_nodes),
-                             'edge_list': edge_list}
-                paths.append(path_json)
+        for path in result_paths:
+            path_nodes = []
+            edge_list = []
+            report_function = self.mc_mapping[mc_type][2]
+            model = self.mc_types[mc_type]['model']
+            stmts = self.model.assembled_stmts
+            if mc_type == 'pysb':
+                report_stmts = report_function(path, model, stmts)
+                path_stmts = [[st] for st in report_stmts]
+                merge = False
+            elif mc_type == 'pybel':
+                path_stmts = report_function(path, model, False, stmts)
+                merge = False
+            elif mc_type == 'signed_graph':
+                path_stmts = report_function(path, model, True, False, stmts)
+                merge = True
+            elif mc_type == 'unsigned_graph':
+                path_stmts = report_function(path, model, False, False, stmts)
+                merge = True
+            for i, step in enumerate(path_stmts):
+                edge_nodes = []
+                if len(step) < 1:
+                    continue
+                stmt_type = type(step[0]).__name__
+                if stmt_type == 'PybelEdge':
+                    source, target = step[0].source, step[0].target
+                    edge_nodes.append(source.name)
+                    edge_nodes.append(u"\u2192")
+                    edge_nodes.append(target.name)
+                else:
+                    for stmt in step:
+                        self.path_stmt_counts[stmt.get_hash()] += 1
+                    agents = [ag.name if ag is not None else None
+                              for ag in step[0].agent_list()]
+                    # For complexes make sure that the agent from the
+                    # previous edge goes first
+                    if stmt_type == 'Complex' and len(path_nodes) > 0:
+                        agents = sorted(
+                            [ag for ag in agents if ag is not None],
+                            key=lambda x: x != path_nodes[-1])
+                    for j, ag in enumerate(agents):
+                        if ag is not None:
+                            edge_nodes.append(ag)
+                        if j == (len(agents) - 1):
+                            break
+                        if stmt_type in ARROW_DICT:
+                            edge_nodes.append(ARROW_DICT[stmt_type])
+                        else:
+                            edge_nodes.append(u"\u2192")
+                if i == 0:
+                    for n in edge_nodes:
+                        path_nodes.append(n)
+                else:
+                    for n in edge_nodes[1:]:
+                        path_nodes.append(n)
+                step_sentences = self._make_path_stmts(step, merge=merge)
+                edge_dict = {'edge': ' '.join(edge_nodes),
+                             'stmts': step_sentences}
+                edge_list.append(edge_dict)
+            path_json = {'path': ' '.join(path_nodes),
+                         'edge_list': edge_list}
+            paths.append(path_json)
         return paths
 
     def _make_path_stmts(self, stmts, merge=False):
@@ -261,6 +265,8 @@ class ModelManager(object):
             return self.answer_dynamic_query(query, **kwargs)
         if isinstance(query, PathProperty):
             return self.answer_path_query(query)
+        if isinstance(query, OpenSearchQuery):
+            return self.answer_open_query(query)
 
     def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
@@ -272,7 +278,8 @@ class ModelManager(object):
                     mode='query', mc_type=mc_type, default_paths=5)
                 result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
-                results.append((mc_type, self.process_response(mc_type, result)))
+                results.append(
+                    (mc_type, self.process_response(mc_type, result)))
             return results
         else:
             return [('', self.hash_response_list(
@@ -289,7 +296,8 @@ class ModelManager(object):
                 pysb_model, tp)
             fig_name, ext = os.path.splitext(os.path.basename(fig_path))
             date_str = make_date_str()
-            s3_key = f'query_images/{self.model.name}/{fig_name}_{date_str}{ext}'
+            s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                      f'{date_str}{ext}')
             s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
             client = get_s3_client(unsigned=False)
             logger.info(f'Uploading image to {s3_path}')
@@ -299,6 +307,58 @@ class ModelManager(object):
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json))]
+
+    def answer_open_query(self, query):
+        """Answer user open search query with found paths."""
+        if ScopeTestConnector.applicable(self, query):
+            results = []
+            for mc_type in self.mc_types:
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', qtype='open_search', mc_type=mc_type,
+                    default_paths=50, default_length=2)
+                add_ns = False
+                if query.terminal_ns:
+                    add_ns = True
+                mc = self.get_updated_mc(mc_type, [query.path_stmt], add_ns)
+                res = self.open_query_per_mc(
+                    mc_type, mc, query, max_path_length, max_paths)
+                results.append((mc_type, res))
+            return results
+        else:
+            return [('', self.hash_response_list(
+                RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+
+    def open_query_per_mc(self, mc_type, mc, query, max_path_length,
+                          max_paths):
+        g = mc.get_graph()
+        subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
+            query.path_stmt)
+        if res_code:
+            return self.hash_response_list(RESULT_CODES[res_code])
+        else:
+            if query.entity_role == 'subject':
+                reverse = False
+                assert subj_nodes is not None
+                nodes = subj_nodes
+            else:
+                reverse = True
+                assert obj_nodes is not None
+                nodes = obj_nodes
+            sign = query.get_sign(mc_type)
+            if mc_type == 'pysb':
+                terminal_ns = None
+            else:
+                terminal_ns = query.terminal_ns
+            paths_gen = bfs_search_multiple_nodes(
+                g, nodes, reverse=reverse, terminal_ns=terminal_ns,
+                depth_limit=max_path_length, path_limit=max_paths, sign=sign)
+            paths = []
+            for p in paths_gen:
+                if reverse:
+                    paths.append(p[::-1])
+                else:
+                    paths.append(p)
+            return self.process_open_query_response(mc_type, paths)
 
     def answer_queries(self, queries, **kwargs):
         """Answer all queries registered for this model.
@@ -316,7 +376,11 @@ class ModelManager(object):
         responses = []
         applicable_queries = []
         applicable_stmts = []
+        applicable_open_queries = []
+        applicable_open_stmts = []
         for query in queries:
+            # Dynamic queries need to be answered individually, while for
+            # path and open queries some parts can be shared
             if isinstance(query, DynamicProperty):
                 mc_type, response = self.answer_dynamic_query(
                     query, **kwargs)[0]
@@ -329,7 +393,17 @@ class ModelManager(object):
                     responses.append(
                         (query, '', self.hash_response_list(
                             RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+            elif isinstance(query, OpenSearchQuery):
+                if ScopeTestConnector.applicable(self, query):
+                    applicable_open_queries.append(query)
+                    applicable_open_stmts.append(query.path_stmt)
+                else:
+                    responses.append(
+                        (query, '', self.hash_response_list(
+                            RESULT_CODES['QUERY_NOT_APPLICABLE'])))
+
         # Only do the following steps if there are applicable queries
+        # Path queries
         if applicable_queries:
             for mc_type in self.mc_types:
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
@@ -341,30 +415,42 @@ class ModelManager(object):
                     responses.append(
                         (applicable_queries[ix], mc_type,
                          self.process_response(mc_type, result)))
+
+        # Open queries
+        if applicable_open_queries:
+            for mc_type in self.mc_types:
+                max_path_length, max_paths = self._get_test_configs(
+                    mode='query', mc_type=mc_type, default_paths=5)
+                mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
+                for query in applicable_open_queries:
+                    res = self.open_query_per_mc(
+                        mc_type, mc, query, max_path_length, max_paths)
+                    responses.append((query, mc_type, res))
+
         return sorted(responses, key=lambda x: x[0].matches_key())
 
-    def _get_test_configs(self, mode='test', mc_type=None, default_length=5,
-                          default_paths=1):
+    def _get_test_configs(self, mode='test', qtype='statement_checking',
+                          mc_type=None, default_length=5, default_paths=1):
         if mode == 'test':
             config = self.model.test_config
         elif mode == 'query':
             config = self.model.query_config
         try:
             max_path_length = \
-                config['statement_checking'][mc_type]['max_path_length']
+                config[qtype][mc_type]['max_path_length']
         except KeyError:
             try:
                 max_path_length = \
-                    config['statement_checking']['max_path_length']
+                    config[qtype]['max_path_length']
             except KeyError:
                 max_path_length = default_length
         try:
             max_paths = \
-                config['statement_checking'][mc_type]['max_paths']
+                config[qtype][mc_type]['max_paths']
         except KeyError:
             try:
                 max_paths = \
-                    config['statement_checking']['max_paths']
+                    config[qtype]['max_paths']
             except KeyError:
                 max_paths = default_paths
         logger.info('Parameters for model checking: %d, %d' %
@@ -379,9 +465,16 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response = self.make_path_json(mc_type, result)
+            response = self.make_path_json(mc_type, result.paths)
         else:
             response = self.make_result_code(result)
+        return self.hash_response_list(response)
+
+    def process_open_query_response(self, mc_type, paths):
+        if paths:
+            response = self.make_path_json(mc_type, paths)
+        else:
+            response = 'No paths found that satisfy this query'
         return self.hash_response_list(response)
 
     def hash_response_list(self, response):
@@ -428,7 +521,7 @@ class ModelManager(object):
                 result = self.mc_types[mc_type]['test_results'][ix]
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
-                    'path_json': self.make_path_json(mc_type, result),
+                    'path_json': self.make_path_json(mc_type, result.paths),
                     'result_code': self.make_result_code(result)}
             results_json.append(test_ix_results)
         return results_json
