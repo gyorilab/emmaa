@@ -141,9 +141,12 @@ class ModelManager(object):
 
     def make_path_json(self, mc_type, result_paths):
         paths = []
+        json_lines = []
         for path in result_paths:
             path_nodes = []
             edge_list = []
+            path_node_list = []
+            hashes = []
             report_function = self.mc_mapping[mc_type][2]
             model = self.mc_types[mc_type]['model']
             stmts = self.model.assembled_stmts
@@ -170,9 +173,13 @@ class ModelManager(object):
                     edge_nodes.append(source.name)
                     edge_nodes.append(u"\u2192")
                     edge_nodes.append(target.name)
+                    hashes.append(['not a statement'])
                 else:
+                    step_hashes = []
                     for stmt in step:
                         self.path_stmt_counts[stmt.get_hash()] += 1
+                        step_hashes.append(stmt.get_hash())
+                    hashes.append(step_hashes)
                     agents = [ag.name if ag is not None else None
                               for ag in step[0].agent_list()]
                     # For complexes make sure that the agent from the
@@ -193,17 +200,23 @@ class ModelManager(object):
                 if i == 0:
                     for n in edge_nodes:
                         path_nodes.append(n)
+                    path_node_list.append(edge_nodes[0])
+                    path_node_list.append(edge_nodes[-1])
                 else:
                     for n in edge_nodes[1:]:
                         path_nodes.append(n)
+                    path_node_list.append(edge_nodes[-1])
                 step_sentences = self._make_path_stmts(step, merge=merge)
                 edge_dict = {'edge': ' '.join(edge_nodes),
                              'stmts': step_sentences}
                 edge_list.append(edge_dict)
             path_json = {'path': ' '.join(path_nodes),
                          'edge_list': edge_list}
+            one_line_path_json = {'nodes': path_node_list, 'edges': hashes,
+                                  'graph_type': mc_type}
             paths.append(path_json)
-        return paths
+            json_lines.append(one_line_path_json)
+        return paths, json_lines
 
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
