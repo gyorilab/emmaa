@@ -575,13 +575,15 @@ class ModelManager(object):
             obj_key = latest_key + ext
             logger.info(f'Uploading assembled statements to {obj_key}')
             client.upload_file(fname, bucket, obj_key)
+        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
+        client.upload_file(
+            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
+        os.remove('assembled_stmts.jsonl')
         with ZipFile('assembled_stmts.zip', mode='w') as zipf:
             zipf.write('assembled_stmts.json')
         logger.info(f'Uploading assembled statements to {dated_key}.zip')
         client.upload_file('assembled_stmts.zip', bucket, f'{dated_key}.zip')
-        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
-        client.upload_file(
-            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
+        os.remove('assembled_stmts.json')
 
 
 class TestManager(object):
