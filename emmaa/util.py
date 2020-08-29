@@ -280,9 +280,13 @@ def load_json_from_s3(bucket, key):
     return content
 
 
-def save_json_to_s3(obj, bucket, key):
+def save_json_to_s3(obj, bucket, key, save_format='json'):
     client = get_s3_client(unsigned=False)
-    client.put_object(Body=json.dumps(obj, indent=1).encode('utf8'),
+    if save_format == 'json':
+        json_str = json.dumps(obj, indent=1).encode('utf8')
+    elif save_format == 'jsonl':
+        json_str = '\n'.join([json.dumps(item) for item in obj]).encode('utf8')
+    client.put_object(Body=json_str,
                       Bucket=bucket, Key=key)
 
 
