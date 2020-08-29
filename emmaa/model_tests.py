@@ -478,14 +478,14 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response = self.make_path_json(mc_type, result.paths)
+            response, _ = self.make_path_json(mc_type, result.paths)
         else:
             response = self.make_result_code(result)
         return self.hash_response_list(response)
 
     def process_open_query_response(self, mc_type, paths):
         if paths:
-            response = self.make_path_json(mc_type, paths)
+            response, _ = self.make_path_json(mc_type, paths)
         else:
             response = 'No paths found that satisfy this query'
         return self.hash_response_list(response)
@@ -527,26 +527,38 @@ class ModelManager(object):
             'path_stmt_counts': self.path_stmt_counts,
             'date_str': self.date_str,
             'test_data': test_data})
+        json_lines = []
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
             for mc_type in self.mc_types:
                 result = self.mc_types[mc_type]['test_results'][ix]
+                path_json, test_json_lines = self.make_path_json(
+                    mc_type, result.paths)
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
-                    'path_json': self.make_path_json(mc_type, result.paths),
+                    'path_json': path_json,
                     'result_code': self.make_result_code(result)}
+                for line in test_json_lines:
+                    # Only include lines with paths
+                    if line:
+                        line.update({'test': test.stmt.get_hash()})
+                        json_lines.append(line)
             results_json.append(test_ix_results)
-        return results_json
+        return results_json, json_lines
 
     def upload_results(self, test_corpus='large_corpus_tests',
                        test_data=None, bucket=EMMAA_BUCKET_NAME):
         """Upload results to s3 bucket."""
-        json_dict = self.results_to_json(test_data)
+        json_dict, json_lines = self.results_to_json(test_data)
         result_key = (f'results/{self.model.name}/results_'
                       f'{test_corpus}_{self.date_str}.json')
+        paths_key = (f'paths/{self.model.name}/paths_{test_corpus}_'
+                     f'{self.date_str}.jsonl')
         logger.info(f'Uploading test results to {result_key}')
         save_json_to_s3(json_dict, bucket, result_key)
+        logger.info(f'Uploading test paths to {paths_key}')
+        save_json_to_s3(json_lines, bucket, paths_key, save_format='jsonl')
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
