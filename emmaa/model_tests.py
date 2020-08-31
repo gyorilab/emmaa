@@ -433,7 +433,8 @@ class ModelManager(object):
         if applicable_open_queries:
             for mc_type in self.mc_types:
                 max_path_length, max_paths = self._get_test_configs(
-                    mode='query', mc_type=mc_type, default_paths=5)
+                    mode='query', mc_type=mc_type, default_paths=50,
+                    default_length=2)
                 mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
                 for query in applicable_open_queries:
                     res = self.open_query_per_mc(
