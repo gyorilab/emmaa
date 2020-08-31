@@ -331,7 +331,7 @@ class EmailHtmlBody(object):
         html
             An html string rendered from the associated jinja2 template
         """
-        if not static_query_deltas and open_query_deltas and \
+        if not static_query_deltas and not open_query_deltas and \
                 not dynamic_query_deltas:
             raise ValueError('No query deltas provided')
         # Todo consider generating unsubscribe link here, will probably have
