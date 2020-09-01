@@ -66,9 +66,14 @@ information on specific drugs and their targets.
 EMMAA models will also link back to UW's COSMOS system to provide additional
 annotations for documents they index.
 
-Finally, EMMAA will integrate with the Uncharted UI both at the level of
+EMMAA will integrate with the Uncharted UI both at the level of
 the knowledge base that each model constitutes, and the explanations
 produced by each model.
+
+Finally, the COVID-19 EMMAA model will also attempt to form links with the
+Epi Platform by using causal relations between molecular and high-level
+(e.g., clinical, epidemiological) factors to connect therapeutic interventions
+to epidemiology.
 
 Progress during the ASKE-E Hackathon
 ------------------------------------
