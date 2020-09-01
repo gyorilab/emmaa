@@ -95,7 +95,7 @@ of observations against the COVID-19 EMMAA model
 (see https://emmaa.indra.bio/dashboard/covid19?tab=tests&test_corpus=covid19_mitre_tests).
 The set of applied tests (i.e., observations) went up from 1,839 to 2,641, and
 the number of explanatory paths found by EMMAA went up from 1,643 to 2,398.
-In other words, we not produce explanations for an additional 755 drug-virus
+In other words, we now produce explanations for an additional 755 drug-virus
 relationships.
 
 With the UW team, we made technical specifications for how INDRA/EMMAA
