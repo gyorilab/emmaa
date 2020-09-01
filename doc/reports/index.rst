@@ -3,8 +3,8 @@
 ASKE Reports
 ============
 
-This page contains reports on the EMMAA project as part of the DARPA Automating
-Scientific Knowledge Extraction (ASKE) program.
+This section contains reports on the EMMAA project as part of the DARPA
+Automating Scientific Knowledge Extraction (ASKE) program.
 
 .. toctree::
    :maxdepth: 4
@@ -17,3 +17,14 @@ Scientific Knowledge Extraction (ASKE) program.
    month13_report
    month15_report
    month18_report
+
+ASKE-E Reports
+==============
+
+This section contains reports on the EMMAA project as part of the DARPA
+Automating Scientific Knowledge Extraction (ASKE) program extension.
+
+.. toctree::
+   :maxdepth: 4
+
+   askee_month1_report
