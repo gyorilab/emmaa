@@ -242,12 +242,12 @@ class QueryManager(object):
         # Make text report
         str_report = self.make_str_report_per_user(results,
                                                    include_no_diff=False)
-        str_report = '\n'.join(str_report[:10]) if str_report else None
+        str_report = '\n'.join(str_report) if str_report else None
 
         # Make html report
         html_report = self.make_html_report_per_user(results, user_email,
                                                      domain=domain,
-                                                     limit=10)
+                                                     limit=None)
         html_report = html_report if html_report else None
 
         if html_report:
