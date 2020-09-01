@@ -156,13 +156,14 @@ inhibits COVID-19" in the unsigned network model:
     :scale: 75%
 
 The paths show that EMMAA identifies drugs linked to COVID-19 via an
-intermediate node, the viral receptor ACE2. Both of the paths highlighted
-pointed to ACE2 inhibitors as possibly relevant drugs. Losartan entered
-clinical trials early on as a potential COVID-19 therapeutic. Interestingly,
-the second drug, piaglitazone, was discussed only recently as potentially
-relevant (see the paper "Can pioglitazone be potentially useful therapeutically
-in treating patients with COVID-19?"). With this initial baseline established,
-we will be following the results of these searches for findings with
-implications for new drug repurposing candidates.
+intermediate node, the viral receptor ACE2: both of the paths highlighted
+pointed to ACE2 inhibitors as possibly relevant drugs. While losartan entered
+clinical trials early on as a potential COVID-19 therapeutic, piaglitazone was
+discussed only recently as potentially relevant (see the paper `"Can
+pioglitazone be potentially useful therapeutically in treating patients with
+COVID-19?" <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7175844/>`_). With
+this initial baseline established, we will be monitoring the results of these
+open searches for findings with implications for new drug repurposing
+candidates.
 
 
