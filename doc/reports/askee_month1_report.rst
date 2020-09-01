@@ -38,6 +38,7 @@ The following diagram shows the integration architecture for the Bio
 Platform:
 
 .. image:: ../_static/images/bio_platform.png
+    :scale: 75%
 
 The main components of this integration are as follows. The HMS team's INDRA
 system integrates multiple knowledge sources, including the Reach and Eidos
