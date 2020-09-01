@@ -123,3 +123,46 @@ well as access to a query API for the same knowledge.
 Open Search model queries and notifications
 -------------------------------------------
 
+During this reporting period, we added a new "Open Search" capability to
+EMMAA's model queries and notifications feature.  Until now, EMMAA's
+notification tools have been focused on identifying new *explanations* for
+observed cause-effect relationships. The primary use case for this feature is
+to support scientists who are interested in understanding possible *mechanisms*
+for a known biological effect.
+
+With Open Search, users can specify a target and get updates on newly
+discovered regulators of the target (e.g., drugs), or downstream effects (e.g.,
+phenotypes). The motivation for this feature was to allow users to be notified
+of new discoveries suggesting repurposable drugs for COVID-19. Not only can the
+user specify the type of target they are searching from (e.g., the disease
+"COVID-19" or the viral co-receptor protein "TMPRSS2"), but also class of
+entities they are searching for (e.g., chemicals, proteins, or phenotypes).
+
+The figure below illustrates an EMMAA notification email for a variety of
+different open searches, including chemicals affecting diseases ("COVID-19"),
+viruses ("Middle East Respiratory Syndrome Coronavirus") and proteins ("ACE2",
+"TMPRSS2", "CTSB"). In addition, it includes a search for new downstream
+effects of a particular drug, "leupeptin":
+
+.. image:: ../_static/images/open_search_email.png
+    :scale: 75%
+
+As with notifications for causal paths, EMMAA keeps track of the previously
+reported results for the query and generates updates for new results. The
+following image shows the initial set of paths returned for the query "What
+inhibits COVID-19" in the unsigned network model: 
+
+.. image:: ../_static/images/open_search_paths.png
+    :scale: 75%
+
+The paths show that EMMAA identifies drugs linked to COVID-19 via an
+intermediate node, the viral receptor ACE2. Both of the paths highlighted
+pointed to ACE2 inhibitors as possibly relevant drugs. Losartan entered
+clinical trials early on as a potential COVID-19 therapeutic. Interestingly,
+the second drug, piaglitazone, was discussed only recently as potentially
+relevant (see the paper "Can pioglitazone be potentially useful therapeutically
+in treating patients with COVID-19?"). With this initial baseline established,
+we will be following the results of these searches for findings with
+implications for new drug repurposing candidates.
+
+
