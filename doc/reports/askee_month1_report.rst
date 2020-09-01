@@ -145,7 +145,7 @@ viruses ("Middle East Respiratory Syndrome Coronavirus") and proteins ("ACE2",
 effects of a particular drug, "leupeptin":
 
 .. image:: ../_static/images/open_search_email.png
-    :scale: 75%
+    :scale: 60%
 
 As with notifications for causal paths, EMMAA keeps track of the previously
 reported results for the query and generates updates for new results. The
@@ -153,7 +153,7 @@ following image shows the initial set of paths returned for the query "What
 inhibits COVID-19" in the unsigned network model: 
 
 .. image:: ../_static/images/open_search_paths.png
-    :scale: 75%
+    :scale: 60%
 
 The paths show that EMMAA identifies drugs linked to COVID-19 via an
 intermediate node, the viral receptor ACE2: both of the paths highlighted
