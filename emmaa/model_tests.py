@@ -19,14 +19,15 @@ from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
-    stmts_to_json_file
+    stmts_to_json
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
-    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
+    save_zip_json_to_s3
 
 
 logger = logging.getLogger(__name__)
@@ -563,28 +564,22 @@ class ModelManager(object):
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        client = get_s3_client(unsigned=False)
         stmts = self.model.assembled_stmts
-        stmts_to_json_file(stmts, 'assembled_stmts.json', 'json')
-        stmts_to_json_file(stmts, 'assembled_stmts.jsonl', 'jsonl')
+        stmts_json = stmts_to_json(stmts)
         # Save a timestapmed version and a generic latest version of files
         dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
         latest_key = f'assembled/{self.model.name}/' \
                      f'latest_statements_{self.model.name}'
-        for ext in ('.json', '.jsonl'):
-            fname = 'assembled_stmts' + ext
-            obj_key = latest_key + ext
-            logger.info(f'Uploading assembled statements to {obj_key}')
-            client.upload_file(fname, bucket, obj_key)
-        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
-        client.upload_file(
-            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
-        os.remove('assembled_stmts.jsonl')
-        with ZipFile('assembled_stmts.zip', mode='w') as zipf:
-            zipf.write('assembled_stmts.json')
-        logger.info(f'Uploading assembled statements to {dated_key}.zip')
-        client.upload_file('assembled_stmts.zip', bucket, f'{dated_key}.zip')
-        os.remove('assembled_stmts.json')
+        for ext in ('json', 'jsonl'):
+            latest_obj_key = latest_key + '.' + ext
+            logger.info(f'Uploading assembled statements to {latest_obj_key}')
+            save_json_to_s3(stmts_json, bucket, latest_obj_key, ext)
+        dated_jsonl = dated_key + '.jsonl'
+        dated_zip = dated_key + '.zip'
+        logger.info(f'Uploading assembled statements to {dated_jsonl}')
+        save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
+        logger.info(f'Uploading assembled statements to {dated_zip}')
+        save_zip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
 
 
 class TestManager(object):
