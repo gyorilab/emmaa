@@ -557,10 +557,13 @@ class ModelManager(object):
                       f'{test_corpus}_{self.date_str}.json')
         paths_key = (f'paths/{self.model.name}/paths_{test_corpus}_'
                      f'{self.date_str}.jsonl')
+        latest_paths_key = (f'paths/{self.model.name}/{test_corpus}'
+                            '_latest_paths.jsonl')
         logger.info(f'Uploading test results to {result_key}')
         save_json_to_s3(json_dict, bucket, result_key)
         logger.info(f'Uploading test paths to {paths_key}')
         save_json_to_s3(json_lines, bucket, paths_key, save_format='jsonl')
+        save_json_to_s3(json_lines, bucket, latest_paths_key, 'jsonl')
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
