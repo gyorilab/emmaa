@@ -714,7 +714,7 @@ def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     """
     prefix = f'tests/{test_name}'
     try:
-        test_key = find_latest_s3_file(bucket, prefix)
+        test_key = find_latest_s3_file(bucket, prefix, '.pkl')
     except ValueError:
         test_key = f'tests/{test_name}.pkl'
     logger.info(f'Loading tests from {test_key}')
@@ -781,9 +781,22 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     test_dict = {'test_data': {'description': test_description},
                  'tests': tests}
     if upload:
-        save_pickle_to_s3(test_dict, bucket,
-                          f'tests/{model_name}_tests_{date_str}.pkl')
+        save_tests_to_s3(test_dict, bucket,
+                         f'tests/{model_name}_tests_{date_str}.pkl', 'pkl')
     return test_dict
+
+
+def save_tests_to_s3(tests, bucket, key, save_format='pkl'):
+    """Save tests in pkl, json or jsonl format."""
+    if save_format == 'pkl':
+        save_pickle_to_s3(tests, bucket, key)
+    elif save_format in ['json', 'jsonl']:
+        if isinstance(tests, list):
+            stmts = [test.stmt for test in tests]
+        elif isinstance(tests, dict):
+            stmts = [test.stmt for test in tests['tests']]
+        stmts_json = stmts_to_json(stmts)
+        save_json_to_s3(stmts_json, bucket, key, save_format)
 
 
 def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
