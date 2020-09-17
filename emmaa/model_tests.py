@@ -114,6 +114,8 @@ class ModelManager(object):
             mc.model_stmts = self.model.assembled_stmts
             mc.get_graph(prune_im=True, prune_im_degrade=True,
                          add_namespaces=add_ns)
+        if mc_type in ('signed_graph', 'unsigned_graph'):
+            mc.nodes_to_agents = {ag.name: ag for ag in self.entities}
         return mc
 
     def add_test(self, test):
@@ -124,19 +126,22 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self):
+    def run_all_tests(self, filter_func=None):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
-            self.run_tests_per_mc(mc_type, max_path_length, max_paths)
+            self.run_tests_per_mc(mc_type, max_path_length, max_paths,
+                                  filter_func)
 
-    def run_tests_per_mc(self, mc_type, max_path_length, max_paths):
+    def run_tests_per_mc(self, mc_type, max_path_length, max_paths,
+                         filter_func):
         """Run all applicable tests with one ModelChecker."""
         mc = self.get_updated_mc(
             mc_type, [test.stmt for test in self.applicable_tests])
         logger.info(f'Running the tests with {mc_type} ModelChecker.')
         results = mc.check_model(
-            max_path_length=max_path_length, max_paths=max_paths)
+            max_path_length=max_path_length, max_paths=max_paths,
+            agent_filter_func=filter_func)
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
