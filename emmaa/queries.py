@@ -391,9 +391,9 @@ def get_agent_from_gilda(ag_name):
 
 # This is the method that dynamical queries use to represent agents with
 # state
-def get_agent_from_trips(ag_text):
+def get_agent_from_trips(ag_text, service_host='http://34.230.33.149:8002/cgi/'):
     """Return an INDRA Agent object by grounding its entity text with TRIPS."""
-    tp = trips.process_text(ag_text)
+    tp = trips.process_text(ag_text, service_host=service_host)
     agent_list = tp.get_agents()
     if not agent_list:
         raise GroundingError(

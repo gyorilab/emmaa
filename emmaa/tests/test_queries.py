@@ -205,7 +205,7 @@ def test_agent_from_trips():
     assert isinstance(ag, Agent)
     assert ag.name == 'MAP2K1'
     assert not ag.mods
-    ag_phos = get_agent_from_trips('phosphorylated MAP2K1')
+    ag_phos = get_agent_from_trips('the phosphorylated MAP2K1')
     assert ag_phos.mods
 
 
@@ -216,7 +216,6 @@ def test_generic_agent_from_text():
     assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
                              'MESH': 'D019950'}, agent.db_refs
     assert not agent.mods
-    ag_phos = get_agent_from_trips('phosphorylated MAP2K1')
-    assert ag_phos.db_refs == {'TEXT': 'MAP2K1', 'HGNC': '6840',
-                               'UP': 'Q02750', 'NCIT': 'C17808'}
+    ag_phos = get_agent_from_trips('the phosphorylated MAP2K1')
+    assert ag_phos.db_refs.get('HGNC') == '6840'
     assert ag_phos.mods
