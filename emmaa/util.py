@@ -4,6 +4,7 @@ import boto3
 import logging
 import json
 import pickle
+import zlib
 from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ from inflection import camelize
 from zipfile import ZipFile
 from indra.util.aws import get_s3_file_tree, get_date_from_str
 from indra.statements import get_all_descendants
+from indra.literature.s3_client import gzip_string
 from emmaa.subscription.email_service import email_bucket
 
 FORMAT = '%Y-%m-%d-%H-%M-%S'
@@ -280,19 +282,45 @@ def load_json_from_s3(bucket, key):
     return content
 
 
-def save_json_to_s3(obj, bucket, key):
+def save_json_to_s3(obj, bucket, key, save_format='json'):
     client = get_s3_client(unsigned=False)
-    client.put_object(Body=json.dumps(obj, indent=1).encode('utf8'),
+    json_str = _get_json_str(obj, save_format=save_format)
+    client.put_object(Body=json_str.encode('utf8'),
                       Bucket=bucket, Key=key)
 
 
 def load_zip_json_from_s3(bucket, key):
     client = get_s3_client()
-    logger.info(f'Loading zipfile from {key}')
-    client.download_file(bucket, key, 'temp.zip')
-    with ZipFile('temp.zip', 'r') as zipf:
-        content = json.loads(zipf.read(zipf.namelist()[0]))
+    # Newer files are zipped with gzip while older with zipfile
+    try:
+        logger.info(f'Loading zipped object from {key}')
+        gz_obj = client.get_object(Bucket=bucket, Key=key)
+        content = json.loads(zlib.decompress(
+            gz_obj['Body'].read(), 16+zlib.MAX_WBITS).decode('utf8'))
+    except Exception as e:
+        logger.info(e)
+        logger.info('Could not load with gzip, using zipfile')
+        logger.info(f'Loading zipfile from {key}')
+        client.download_file(bucket, key, 'temp.zip')
+        with ZipFile('temp.zip', 'r') as zipf:
+            content = json.loads(zipf.read(zipf.namelist()[0]))
     return content
+
+
+def save_zip_json_to_s3(obj, bucket, key, save_format='json'):
+    client = get_s3_client(unsigned=False)
+    json_str = _get_json_str(obj, save_format=save_format)
+    gz_str = gzip_string(json_str, f'assembled_stmts.{save_format}')
+    client.put_object(Body=gz_str, Bucket=bucket, Key=key)
+
+
+def _get_json_str(json_obj, save_format='json'):
+    if save_format == 'json':
+        json_str = json.dumps(json_obj, indent=1)
+    elif save_format == 'jsonl':
+        json_str = '\n'.join(
+            [json.dumps(item) for item in json_obj])
+    return json_str
 
 
 class EmailHtmlBody(object):
@@ -327,7 +355,7 @@ class EmailHtmlBody(object):
         html
             An html string rendered from the associated jinja2 template
         """
-        if not static_query_deltas and open_query_deltas and \
+        if not static_query_deltas and not open_query_deltas and \
                 not dynamic_query_deltas:
             raise ValueError('No query deltas provided')
         # Todo consider generating unsubscribe link here, will probably have

@@ -19,14 +19,15 @@ from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
-    stmts_to_json_file
+    stmts_to_json
 from indra.util.statement_presentation import group_and_sort_statements
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
-    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date
+    save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
+    save_zip_json_to_s3
 
 
 logger = logging.getLogger(__name__)
@@ -141,9 +142,12 @@ class ModelManager(object):
 
     def make_path_json(self, mc_type, result_paths):
         paths = []
+        json_lines = []
         for path in result_paths:
             path_nodes = []
             edge_list = []
+            path_node_list = []
+            hashes = []
             report_function = self.mc_mapping[mc_type][2]
             model = self.mc_types[mc_type]['model']
             stmts = self.model.assembled_stmts
@@ -170,9 +174,13 @@ class ModelManager(object):
                     edge_nodes.append(source.name)
                     edge_nodes.append(u"\u2192")
                     edge_nodes.append(target.name)
+                    hashes.append(['not a statement'])
                 else:
+                    step_hashes = []
                     for stmt in step:
                         self.path_stmt_counts[stmt.get_hash()] += 1
+                        step_hashes.append(stmt.get_hash())
+                    hashes.append(step_hashes)
                     agents = [ag.name if ag is not None else None
                               for ag in step[0].agent_list()]
                     # For complexes make sure that the agent from the
@@ -193,17 +201,23 @@ class ModelManager(object):
                 if i == 0:
                     for n in edge_nodes:
                         path_nodes.append(n)
+                    path_node_list.append(edge_nodes[0])
+                    path_node_list.append(edge_nodes[-1])
                 else:
                     for n in edge_nodes[1:]:
                         path_nodes.append(n)
+                    path_node_list.append(edge_nodes[-1])
                 step_sentences = self._make_path_stmts(step, merge=merge)
                 edge_dict = {'edge': ' '.join(edge_nodes),
                              'stmts': step_sentences}
                 edge_list.append(edge_dict)
             path_json = {'path': ' '.join(path_nodes),
                          'edge_list': edge_list}
+            one_line_path_json = {'nodes': path_node_list, 'edges': hashes,
+                                  'graph_type': mc_type}
             paths.append(path_json)
-        return paths
+            json_lines.append(one_line_path_json)
+        return paths, json_lines
 
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
@@ -420,7 +434,8 @@ class ModelManager(object):
         if applicable_open_queries:
             for mc_type in self.mc_types:
                 max_path_length, max_paths = self._get_test_configs(
-                    mode='query', mc_type=mc_type, default_paths=5)
+                    mode='query', mc_type=mc_type, default_paths=50,
+                    default_length=2)
                 mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
                 for query in applicable_open_queries:
                     res = self.open_query_per_mc(
@@ -465,14 +480,14 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response = self.make_path_json(mc_type, result.paths)
+            response, _ = self.make_path_json(mc_type, result.paths)
         else:
             response = self.make_result_code(result)
         return self.hash_response_list(response)
 
     def process_open_query_response(self, mc_type, paths):
         if paths:
-            response = self.make_path_json(mc_type, paths)
+            response, _ = self.make_path_json(mc_type, paths)
         else:
             response = 'No paths found that satisfy this query'
         return self.hash_response_list(response)
@@ -514,49 +529,60 @@ class ModelManager(object):
             'path_stmt_counts': self.path_stmt_counts,
             'date_str': self.date_str,
             'test_data': test_data})
+        json_lines = []
         for ix, test in enumerate(self.applicable_tests):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
             for mc_type in self.mc_types:
                 result = self.mc_types[mc_type]['test_results'][ix]
+                path_json, test_json_lines = self.make_path_json(
+                    mc_type, result.paths)
                 test_ix_results[mc_type] = {
                     'result_json': pickler.flatten(result),
-                    'path_json': self.make_path_json(mc_type, result.paths),
+                    'path_json': path_json,
                     'result_code': self.make_result_code(result)}
+                for line in test_json_lines:
+                    # Only include lines with paths
+                    if line:
+                        line.update({'test': test.stmt.get_hash()})
+                        json_lines.append(line)
             results_json.append(test_ix_results)
-        return results_json
+        return results_json, json_lines
 
     def upload_results(self, test_corpus='large_corpus_tests',
                        test_data=None, bucket=EMMAA_BUCKET_NAME):
         """Upload results to s3 bucket."""
-        json_dict = self.results_to_json(test_data)
+        json_dict, json_lines = self.results_to_json(test_data)
         result_key = (f'results/{self.model.name}/results_'
                       f'{test_corpus}_{self.date_str}.json')
+        paths_key = (f'paths/{self.model.name}/paths_{test_corpus}_'
+                     f'{self.date_str}.jsonl')
+        latest_paths_key = (f'paths/{self.model.name}/{test_corpus}'
+                            '_latest_paths.jsonl')
         logger.info(f'Uploading test results to {result_key}')
         save_json_to_s3(json_dict, bucket, result_key)
+        logger.info(f'Uploading test paths to {paths_key}')
+        save_json_to_s3(json_lines, bucket, paths_key, save_format='jsonl')
+        save_json_to_s3(json_lines, bucket, latest_paths_key, 'jsonl')
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        client = get_s3_client(unsigned=False)
         stmts = self.model.assembled_stmts
-        stmts_to_json_file(stmts, 'assembled_stmts.json', 'json')
-        stmts_to_json_file(stmts, 'assembled_stmts.jsonl', 'jsonl')
+        stmts_json = stmts_to_json(stmts)
         # Save a timestapmed version and a generic latest version of files
         dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
         latest_key = f'assembled/{self.model.name}/' \
                      f'latest_statements_{self.model.name}'
-        for ext in ('.json', '.jsonl'):
-            fname = 'assembled_stmts' + ext
-            obj_key = latest_key + ext
-            logger.info(f'Uploading assembled statements to {obj_key}')
-            client.upload_file(fname, bucket, obj_key)
-        with ZipFile('assembled_stmts.zip', mode='w') as zipf:
-            zipf.write('assembled_stmts.json')
-        logger.info(f'Uploading assembled statements to {dated_key}.zip')
-        client.upload_file('assembled_stmts.zip', bucket, f'{dated_key}.zip')
-        logger.info(f'Uploading assembled statements to {dated_key}.jsonl')
-        client.upload_file(
-            'assembled_stmts.jsonl', bucket, f'{dated_key}.jsonl')
+        for ext in ('json', 'jsonl'):
+            latest_obj_key = latest_key + '.' + ext
+            logger.info(f'Uploading assembled statements to {latest_obj_key}')
+            save_json_to_s3(stmts_json, bucket, latest_obj_key, ext)
+        dated_jsonl = dated_key + '.jsonl'
+        dated_zip = dated_key + '.zip'
+        logger.info(f'Uploading assembled statements to {dated_jsonl}')
+        save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
+        logger.info(f'Uploading assembled statements to {dated_zip}')
+        save_zip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
 
 
 class TestManager(object):
@@ -691,7 +717,7 @@ def load_tests_from_s3(test_name, bucket=EMMAA_BUCKET_NAME):
     """
     prefix = f'tests/{test_name}'
     try:
-        test_key = find_latest_s3_file(bucket, prefix)
+        test_key = find_latest_s3_file(bucket, prefix, '.pkl')
     except ValueError:
         test_key = f'tests/{test_name}.pkl'
     logger.info(f'Loading tests from {test_key}')
@@ -758,9 +784,22 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     test_dict = {'test_data': {'description': test_description},
                  'tests': tests}
     if upload:
-        save_pickle_to_s3(test_dict, bucket,
-                          f'tests/{model_name}_tests_{date_str}.pkl')
+        save_tests_to_s3(test_dict, bucket,
+                         f'tests/{model_name}_tests_{date_str}.pkl', 'pkl')
     return test_dict
+
+
+def save_tests_to_s3(tests, bucket, key, save_format='pkl'):
+    """Save tests in pkl, json or jsonl format."""
+    if save_format == 'pkl':
+        save_pickle_to_s3(tests, bucket, key)
+    elif save_format in ['json', 'jsonl']:
+        if isinstance(tests, list):
+            stmts = [test.stmt for test in tests]
+        elif isinstance(tests, dict):
+            stmts = [test.stmt for test in tests['tests']]
+        stmts_json = stmts_to_json(stmts)
+        save_json_to_s3(stmts_json, bucket, key, save_format)
 
 
 def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',

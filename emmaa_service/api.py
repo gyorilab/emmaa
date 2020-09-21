@@ -9,7 +9,7 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
 from flask_jwt_extended import jwt_optional
 from urllib import parse
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -767,10 +767,14 @@ def get_statement_evidence_page():
     display_format = request.args.get('format', 'html')
     stmts = []
     if source == 'model_statement':
-        test_stats, _ = get_model_stats(model, 'test')
-        stmt_counts = test_stats['test_round_summary'].get(
-            'path_stmt_counts', [])
-        stmt_counts_dict = dict(stmt_counts)
+        # Add up paths per statement count across test corpora
+        stmt_counts_dict = Counter()
+        test_corpora = _get_test_corpora(model)
+        for test_corpus in test_corpora:
+            test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+            stmt_counts = test_stats['test_round_summary'].get(
+                'path_stmt_counts', [])
+            stmt_counts_dict += Counter(dict(stmt_counts))
         all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
@@ -835,9 +839,16 @@ def get_all_statements_page(model):
     if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
                  cur_counts]
-    test_stats, _ = get_model_stats(model, 'test')
-    stmt_counts = test_stats['test_round_summary'].get('path_stmt_counts', [])
-    stmt_counts_dict = dict(stmt_counts)
+    # Add up paths per statement count across test corpora
+    stmt_counts_dict = Counter()
+    test_corpora = _get_test_corpora(model)
+    for test_corpus in test_corpora:
+        test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
+        stmt_counts_dict += Counter(dict(stmt_counts))
+    stmt_count_sorted = sorted(
+        stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
     if len(stmts) % 1000 == 0:
         total_pages = len(stmts)//1000
     else:
@@ -854,13 +865,13 @@ def get_all_statements_page(model):
         stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
             offset:offset+1000]
     elif sort_by == 'paths':
-        if not stmt_counts:
+        if not stmt_count_sorted:
             msg = 'Sorting by paths is not available, sorting by evidence'
             stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
                 offset:offset+1000]
         else:
             stmts = []
-            for (stmt_hash, count) in stmt_counts[offset:offset+1000]:
+            for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
                 try:
                     stmts.append(stmts_by_hash[stmt_hash])
                 except KeyError:
