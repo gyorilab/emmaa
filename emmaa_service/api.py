@@ -766,6 +766,8 @@ def get_statement_evidence_page():
     date = request.args.get('date')
     display_format = request.args.get('format', 'html')
     stmts = []
+    if not date:
+        date = get_latest_available_date(model, _default_test(model))
     if source == 'model_statement':
         # Add up paths per statement count across test corpora
         stmt_counts_dict = Counter()
@@ -827,6 +829,8 @@ def get_all_statements_page(model):
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
     date = request.args.get('date')
+    if not date:
+        date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = _load_stmts_from_cache(model, date)
