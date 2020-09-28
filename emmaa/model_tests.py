@@ -126,9 +126,11 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self, filter_func=None):
+    def run_all_tests(self):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
+        # TODO get the filter function from model config
+        filter_func = None
         for mc_type in self.mc_types:
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
                                   filter_func)
