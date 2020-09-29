@@ -4,7 +4,7 @@ from datetime import datetime
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
 from emmaa.util import make_date_str, find_latest_s3_file, EmailHtmlBody, \
-    EMMAA_BUCKET_NAME
+    EMMAA_BUCKET_NAME, FORMATTED_TYPE_NAMES
 from emmaa.subscription.email_util import generate_unsubscribe_link
 
 
@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 model_manager_cache = {}
 
-FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
-                        'pybel': 'PyBEL',
-                        'signed_graph': 'Signed Graph',
-                        'unsigned_graph': 'Unsigned Graph'}
+
 email_html = EmailHtmlBody()
 
 

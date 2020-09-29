@@ -5,6 +5,7 @@ import logging
 import json
 import pickle
 import zlib
+import tweepy
 from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -22,6 +23,12 @@ RE_DATETIMEFORMAT = r'\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}'
 RE_DATEFORMAT = r'\d{4}\-\d{2}\-\d{2}'
 EMMAA_BUCKET_NAME = 'emmaa'
 logger = logging.getLogger(__name__)
+
+
+FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
+                        'pybel': 'PyBEL',
+                        'signed_graph': 'Signed Graph',
+                        'unsigned_graph': 'Unsigned Graph'}
 
 
 def strip_out_date(keystring, date_format='datetime'):
@@ -373,3 +380,35 @@ class EmailHtmlBody(object):
 
 class NotAClassName(Exception):
     pass
+
+
+def get_credentials(key):
+    client = boto3.client('ssm')
+    auth_dict = {}
+    for par in ['consumer_token', 'consumer_secret', 'access_token',
+                'access_secret']:
+        name = f'/twitter/{key}/{par}'
+        try:
+            response = client.get_parameter(Name=name, WithDecryption=True)
+            val = response['Parameter']['Value']
+            auth_dict[par] = val
+        except Exception as e:
+            print(e)
+            break
+    return auth_dict
+
+
+def get_oauth_dict(auth_dict):
+    oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
+                                auth_dict.get('consumer_secret'))
+    oauth.set_access_token(auth_dict.get('access_token'),
+                           auth_dict.get('access_secret'))
+    return oauth
+
+
+def update_status(msg, twitter_cred):
+    twitter_auth = get_oauth_dict(twitter_cred)
+    if twitter_auth is None:
+        return
+    twitter_api = tweepy.API(twitter_auth)
+    twitter_api.update_status(msg)

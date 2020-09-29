@@ -3,7 +3,7 @@ import json
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.analyze_tests_results import ModelRound, TestRound, \
-    ModelStatsGenerator, TestStatsGenerator
+    ModelStatsGenerator, TestStatsGenerator, _make_twitter_msg
 
 
 TestRound.__test__ = False
@@ -151,3 +151,32 @@ def test_test_stats_generator():
     assert changes['signed_graph']['passed_ratio'] == [1, 1]
     assert changes['unsigned_graph']['number_passed_tests'] == [1, 2]
     assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
+
+
+def test_twitter_msg():
+    # No message when no delta
+    msg = _make_twitter_msg('test', 'stmts', {'added': []}, '2020-01-01')
+    assert not msg
+    # New statements message
+    msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
+                            '2020-01-01')
+    assert msg == ('Today I learned 2 new mechanisms. See '
+                   'https://emmaa.indra.bio/dashboard/test?tab=model&date='
+                   '2020-01-01 for more details.'), msg
+    # New applied tests message
+    msg = _make_twitter_msg('test', 'applied_tests', {'added': [1234, 2345]},
+                            '2020-01-01', test_corpus='simple_tests',
+                            test_name='Simple tests corpus')
+    assert msg == ('Today I applied 2 new tests in the Simple tests corpus. '
+                   'See https://emmaa.indra.bio/dashboard/test?'
+                   'tab=tests&test_corpus=simple_tests&date=2020-01-01 '
+                   'for more details.'), msg
+    # New passed tests message
+    msg = _make_twitter_msg('test', 'passed_tests', {'added': [1234, 2345]},
+                            '2020-01-01', 'pysb', test_corpus='simple_tests',
+                            test_name='Simple tests corpus')
+    assert msg == ('Today I explained 2 new observations in the Simple tests '
+                   'corpus with my PySB model. See '
+                   'https://emmaa.indra.bio/dashboard/test?tab=tests'
+                   '&test_corpus=simple_tests&date=2020-01-01 '
+                   'for more details.'), msg

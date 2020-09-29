@@ -1,10 +1,11 @@
 import logging
 import jsonpickle
 from collections import defaultdict
-from emmaa.model import _default_test
+from emmaa.model import _default_test, load_config_from_s3, get_model_stats
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
-    strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3
+    strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
+    FORMATTED_TYPE_NAMES, get_credentials, update_status
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -97,6 +98,8 @@ class ModelRound(Round):
     ----------
     statements : list[indra.statements.Statement]
         A list of INDRA Statements used to assemble a model.
+    date_str : str
+        Time when ModelManager responsible for this round was created.
     """
     def __init__(self, statements, date_str):
         super().__init__(date_str)
@@ -179,6 +182,8 @@ class TestRound(Round):
         test results. The first dictionary contains information about the
         model. Each consecutive dictionary contains information about a single
         test applied to the model and test results.
+    date_str : str
+        Time when ModelManager responsible for this round was created.
 
     Attributes
     ----------
@@ -446,9 +451,14 @@ class ModelStatsGenerator(StatsGenerator):
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': {'added': [], 'removed': []}}
         else:
+            stmts_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'statements')
             self.json_stats['model_delta'] = {
-                'statements_hashes_delta': self.latest_round.find_delta_hashes(
-                    self.previous_round, 'statements')}
+                'statements_hashes_delta': stmts_delta}
+            msg = _make_twitter_msg(self.model_name, 'stmts', stmts_delta,
+                                    self.latest_round.date_str[:10])
+            if msg:
+                logger.info(msg)
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -588,13 +598,24 @@ class TestStatsGenerator(StatsGenerator):
     def make_tests_delta(self):
         """Add tests delta between two latest test rounds to json_stats."""
         logger.info(f'Generating tests delta for {self.model_name}.')
+        date = self.latest_round.date_str[:10]
+        test_name = None
+        test_data = self.latest_round.json_results[0].get('test_data')
+        if test_data:
+            test_name = test_data.get('name')
         if not self.previous_round:
             tests_delta = {
                 'applied_hashes_delta': {'added': [], 'removed': []}}
         else:
+            applied_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'applied_tests')
             tests_delta = {
-                'applied_hashes_delta': self.latest_round.find_delta_hashes(
-                    self.previous_round, 'applied_tests')}
+                'applied_hashes_delta': applied_delta}
+            msg = _make_twitter_msg(
+                self.model_name, 'applied_tests', applied_delta, date,
+                test_corpus=self.test_corpus, test_name=test_name)
+            if msg:
+                logger.info(msg)
 
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
@@ -602,9 +623,15 @@ class TestStatsGenerator(StatsGenerator):
                 tests_delta[mc_type] = {
                     'passed_hashes_delta': {'added': [], 'removed': []}}
             else:
+                passed_delta = self.latest_round.find_delta_hashes(
+                    self.previous_round, 'passed_tests', mc_type=mc_type)
                 tests_delta[mc_type] = {
-                    'passed_hashes_delta': self.latest_round.find_delta_hashes(
-                        self.previous_round, 'passed_tests', mc_type=mc_type)}
+                    'passed_hashes_delta': passed_delta}
+                msg = _make_twitter_msg(
+                    self.model_name, 'passed_tests', passed_delta, date,
+                    mc_type, test_corpus=self.test_corpus, test_name=test_name)
+                if msg:
+                    logger.info(msg)
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):
@@ -733,3 +760,86 @@ def generate_stats_on_s3(
     if upload_stats:
         sg.save_to_s3()
     return sg
+
+
+def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
+                      test_corpus=None, test_name=None):
+    if len(delta['added']) == 0:
+        logger.info(f'No {msg_type} delta found')
+        return
+    if not test_name:
+        test_name = test_corpus
+    if msg_type == 'stmts':
+        msg = (f'Today I learned {len(delta["added"])} new mechanisms. '
+               f'See https://emmaa.indra.bio/dashboard/{model_name}'
+               f'?tab=model&date={date} for more details.')
+    elif msg_type == 'applied_tests':
+        msg = (f'Today I applied {len(delta["added"])} new tests in the '
+               f'{test_name}. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date} for more details.')
+    elif msg_type == 'passed_tests' and mc_type:
+        msg = (f'Today I explained {len(delta["added"])} new observations in '
+               f'the {test_name} with my '
+               f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date} for more details.')
+    else:
+        raise TypeError(f'Invalid message type: {msg_type}.')
+    return msg
+
+
+def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
+    model_stats, _ = get_model_stats(model_name, 'model', date=date)
+    test_stats_by_corpus = {}
+    for test_corpus in test_corpora:
+        test_stats, _ = get_model_stats(model_name, 'test', tests=test_corpus,
+                                        date=date)
+        if not test_stats:
+            logger.info(f'Could not find test stats for {test_corpus}')
+        test_stats_by_corpus[test_corpus] = test_stats
+    if not model_stats or not test_stats_by_corpus:
+        logger.warning('Stats are not found, not tweeting')
+        return
+    config = load_config_from_s3(model_name, bucket)
+    twitter_key = config.get('twitter')
+    twitter_cred = get_credentials(twitter_key)
+    if not twitter_cred:
+        logger.warning('Twitter credentials are not found, not tweeting')
+    # Model message
+    stmts_delta = model_stats['model_delta']['statements_hashes_delta']
+    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta, date)
+    if stmts_msg:
+        logger.info(stmts_msg)
+        if twitter_cred:
+            update_status(stmts_msg, twitter_cred)
+
+    # Tests messages
+    for test_corpus, test_stats in test_stats_by_corpus.items():
+        test_name = None
+        test_data = test_stats['test_round_summary'].get('test_data')
+        if test_data:
+            test_name = test_data.get('name')
+        for k, v in test_stats['tests_delta'].items():
+            if k == 'applied_hashes_delta':
+                applied_delta = v
+                applied_msg = _make_twitter_msg(
+                    model_name, 'applied_tests', applied_delta, date,
+                    test_corpus=test_corpus, test_name=test_name)
+                if applied_msg:
+                    logger.info(applied_msg)
+                    if twitter_cred:
+                        update_status(applied_msg, twitter_cred)
+            else:
+                mc_type = k
+                passed_delta = v['passed_hashes_delta']
+                passed_msg = _make_twitter_msg(
+                    model_name, 'passed_tests', passed_delta,
+                    date, mc_type, test_corpus=test_corpus,
+                    test_name=test_name)
+                if passed_msg:
+                    logger.info(passed_msg)
+                    if twitter_cred:
+                        update_status(passed_msg, twitter_cred)
+
+    logger.info('Done tweeting')
