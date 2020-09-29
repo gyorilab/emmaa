@@ -165,15 +165,17 @@ def test_twitter_msg():
                    '2020-01-01 for more details.'), msg
     # New applied tests message
     msg = _make_twitter_msg('test', 'applied_tests', {'added': [1234, 2345]},
-                            '2020-01-01', test_corpus='simple_tests')
-    assert msg == ('Today I applied 2 new tests in simple_tests test corpus. '
-                   'See https://emmaa.indra.bio/dashboard/test?tab=tests'
-                   '&test_corpus=simple_tests&date=2020-01-01 '
+                            '2020-01-01', test_corpus='simple_tests',
+                            test_name='Simple Tests')
+    assert msg == ('Today I applied 2 new tests in the Simple Tests test '
+                   'corpus. See https://emmaa.indra.bio/dashboard/test?'
+                   'tab=tests&test_corpus=simple_tests&date=2020-01-01 '
                    'for more details.'), msg
     # New passed tests message
     msg = _make_twitter_msg('test', 'passed_tests', {'added': [1234, 2345]},
-                            '2020-01-01', 'pysb', test_corpus='simple_tests')
-    assert msg == ('Today I explained 2 new observations in simple_tests '
+                            '2020-01-01', 'pysb', test_corpus='simple_tests',
+                            test_name='Simple Tests')
+    assert msg == ('Today I explained 2 new observations in the Simple Tests '
                    'test corpus with my PySB model. See '
                    'https://emmaa.indra.bio/dashboard/test?tab=tests'
                    '&test_corpus=simple_tests&date=2020-01-01 '
