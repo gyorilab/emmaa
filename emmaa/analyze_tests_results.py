@@ -775,12 +775,12 @@ def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
                f'?tab=model&date={date} for more details.')
     elif msg_type == 'applied_tests':
         msg = (f'Today I applied {len(delta["added"])} new tests in the '
-               f'{test_name} test corpus. See '
+               f'{test_name}. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date} for more details.')
     elif msg_type == 'passed_tests' and mc_type:
         msg = (f'Today I explained {len(delta["added"])} new observations in '
-               f'the {test_name} test corpus with my '
+               f'the {test_name} with my '
                f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date} for more details.')
