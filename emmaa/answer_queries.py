@@ -118,7 +118,13 @@ class QueryManager(object):
         """Retrieve results from a db given a list of query-model hashes."""
         results = self.db.get_results_from_hashes(
             query_hashes, latest_order=latest_order)
-        return format_results(results, query_type)
+        try:
+            old_results = self.db.get_results_from_hashes(
+                query_hashes, latest_order=latest_order+1)
+        except IndexError:
+            old_results = None
+        diff = get_all_diff(results, old_results)
+        return format_results(results, diff, query_type)
 
     def make_reports_from_results(
             self, new_results, stored=True, report_format='str',
@@ -403,6 +409,25 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     return not set(new_result_hashes) == set(old_result_hashes)
 
 
+def get_query_result_diff(new_result_json, old_result_json):
+    """Compare two result jsons and return a set of hashes of new paths."""
+    old_result_hashes = [k for k in old_result_json.keys()]
+    new_result_hashes = [k for k in new_result_json.keys()]
+    return set(new_result_hashes) - set(old_result_hashes)
+
+
+def get_all_diff(new_results, old_results=None):
+    """Get new hashes across all model types."""
+    if not old_results:
+        return {}
+    new_results_dict = {res[2]: res[3] for res in new_results}
+    old_results_dict = {res[2]: res[3] for res in old_results}
+    diff_dict = {mc_type: get_query_result_diff(
+        new_results_dict.get(mc_type), old_results_dict.get(mc_type))
+            for mc_type in new_results_dict}
+    return diff_dict
+
+
 def _detailed_page_link(domain, model_name, model_type, query_hash):
     # example:
     # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash
@@ -411,7 +436,7 @@ def _detailed_page_link(domain, model_name, model_type, query_hash):
            f'{model_type}&query_hash={query_hash}&order=1'
 
 
-def format_results(results, query_type='path_property'):
+def format_results(results, diff, query_type='path_property'):
     """Format db output to a standard json structure."""
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
@@ -427,10 +452,12 @@ def format_results(results, query_type='path_property'):
         mc_type = result[2]
         response_json = result[3]
         response = []
-        for v in response_json.values():
+        for k, v in response_json.items():
             if isinstance(v, str):
                 response = v
             elif isinstance(v, dict):
+                if k in diff[mc_type]:
+                    v['path'] = ('new', v['path'])
                 response.append(v)
         if query_type in ['path_property', 'open_search_query']:
             if mc_type == '' and \
