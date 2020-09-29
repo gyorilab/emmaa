@@ -602,7 +602,7 @@ class TestStatsGenerator(StatsGenerator):
         test_name = None
         test_data = self.latest_round.json_results[0].get('test_data')
         if test_data:
-            test_name = test_data.get('test_name')
+            test_name = test_data.get('name')
         if not self.previous_round:
             tests_delta = {
                 'applied_hashes_delta': {'added': [], 'removed': []}}
@@ -819,7 +819,7 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
         test_name = None
         test_data = test_stats['test_round_summary'].get('test_data')
         if test_data:
-            test_name = test_data.get('test_name')
+            test_name = test_data.get('name')
         for k, v in test_stats['tests_delta'].items():
             if k == 'applied_hashes_delta':
                 applied_delta = v
