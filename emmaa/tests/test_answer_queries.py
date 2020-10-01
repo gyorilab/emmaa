@@ -20,9 +20,9 @@ query_object = Query._from_json(test_query)
 dyn_ag = get_agent_from_trips('active MAP2K1')
 dyn_query = DynamicProperty(dyn_ag, 'eventual_value', 'high')
 open_qj = {'type': 'open_search_query',
-            'entity': {'type': 'Agent', 'name': 'BRAF',
-                       'db_refs': {'HGNC': '1097'}},
-            'entity_role': 'subject', 'stmt_type': 'Activation'}
+           'entity': {'type': 'Agent', 'name': 'BRAF',
+                      'db_refs': {'HGNC': '1097'}},
+           'entity_role': 'subject', 'stmt_type': 'Activation'}
 open_query = Query._from_json(open_qj)
 test_response = {
     '3801854542': {
@@ -54,7 +54,7 @@ def test_format_results():
     results = [('test', query_object, 'pysb', test_response, date),
                ('test', query_object, 'signed_graph', fail_response, date),
                ('test', query_object, 'unsigned_graph', test_response, date)]
-    formatted_results = format_results(results)
+    formatted_results = format_results(results, {})
     assert len(formatted_results) == 1
     qh = query_object.get_hash_with_model('test')
     assert qh in formatted_results

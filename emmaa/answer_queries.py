@@ -111,7 +111,7 @@ class QueryManager(object):
     def get_registered_queries(self, user_email, query_type='path_property'):
         """Get formatted results to queries registered by user."""
         results = self.db.get_results(user_email, query_type=query_type)
-        return format_results(results, query_type)
+        return format_results(results, {}, query_type)
 
     def retrieve_results_from_hashes(
             self, query_hashes, query_type='path_property', latest_order=1):
@@ -456,7 +456,7 @@ def format_results(results, diff, query_type='path_property'):
             if isinstance(v, str):
                 response = v
             elif isinstance(v, dict):
-                if k in diff[mc_type]:
+                if diff and k in diff[mc_type]:
                     v['path'] = ('new', v['path'])
                 response.append(v)
         if query_type in ['path_property', 'open_search_query']:
