@@ -122,7 +122,7 @@ def lambda_handler(event, context):
         # Submit twitter job
         if config.get('twitter'):
             twitter_command = (
-                f'python scripts/tweet_deltas.py --model {model_name} '
+                f' python scripts/tweet_deltas.py --model {model_name} '
                 f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
             submit_batch_job(twitter_command, 'update-twitter-status',
                              f'{model_name}_twitter_{now_str}', stats_job_ids)
