@@ -45,3 +45,20 @@ the evolving literature around a given scientific topic. For instance,
 scientists who follow the EMMAA COVID-19 model Twitter account get
 targeted updates on specific new pieces of knowledge that were just published
 which enable new explanations to drug-virus effects.
+
+Improving named entity recognition in text mining integrated with EMMAA models
+------------------------------------------------------------------------------
+
+Having evaluated the performance of integrating protein cleavage product
+names from the Protein Ontology with the Reach reading system's resources,
+we found that the space of protein fragments covered, as well as the quality
+of synonyms was not sufficient. We therefore implemented an alternative
+approach, which involves extracting protein chain and fragment names from
+UniProt, and using these as synonyms for grounding purposes
+(see [`Pull request`](https://github.com/clulab/bioresources/pull/42)).
+We found that this approach adds around 50 thousand new, high-quality
+lexicalizations for protein fragments, including a large number of human
+proteins (e.g., Angiotensin-2) and viral proteins (e.g., Nsp1) that are
+of interest for COVID-19 and many other applications in biology. The UA
+team is currently working on finalizing these updates and we hope to run an
+updated version of Reach on the COVID-19 literature next month.
