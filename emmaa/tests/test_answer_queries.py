@@ -1,8 +1,9 @@
 from os.path import abspath, dirname, join
 from datetime import datetime
+from copy import deepcopy
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
-    is_query_result_diff
+    is_query_result_diff, get_query_result_diff
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_db import _get_test_db
@@ -186,6 +187,19 @@ def test_answer_get_registered_queries():
 def test_is_diff():
     assert not is_query_result_diff(query_not_appl, query_not_appl)
     assert is_query_result_diff(test_response, query_not_appl)
+    new_response = deepcopy(test_response)
+    new_response.update(query_not_appl)
+    # Show diff if there are new paths
+    assert is_query_result_diff(new_response, test_response)
+    # Show no diff if path is removed
+    assert not is_query_result_diff(test_response, new_response)
+
+
+def test_get_diff():
+    new_response = deepcopy(test_response)
+    new_response.update(query_not_appl)
+    assert get_query_result_diff(new_response, test_response) == {'2413475507'}
+    assert get_query_result_diff(test_response, new_response) == set()
 
 
 @attr('nonpublic')
