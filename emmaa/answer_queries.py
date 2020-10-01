@@ -403,10 +403,8 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     # Return True if this is the first result
     if not old_result_json:
         return True
-    # Compare hashes of query results
-    old_result_hashes = [k for k in old_result_json.keys()]
-    new_result_hashes = [k for k in new_result_json.keys()]
-    return not set(new_result_hashes) == set(old_result_hashes)
+    # Check if there're new paths
+    return len(get_query_result_diff(new_result_json, old_result_json)) > 0
 
 
 def get_query_result_diff(new_result_json, old_result_json):
