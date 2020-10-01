@@ -16,6 +16,7 @@ framework, we addressed both of these crucial limitations.
 
 Twitter updates are now generated for three distinct types of events triggered
 by the appearance of new discoveries in the literature:
+
 - New (note that "new" here means that a statement is meaningfully distinct
   from any other statement that the model previously contained) statements
   added to a model.
@@ -23,7 +24,7 @@ by the appearance of new discoveries in the literature:
   with respect to a set of tests (e.g., experimental findings). This typically
   happens if a new entity is added to the model that was previously not
   part of it.
-- The model explaining a previously unexplained observatrion (in other words,
+- The model explaining a previously unexplained observation (in other words,
   passing a previously failing "test"). These notifications are particularly
   important conceptually, since they indicate that the model learned
   something from the newly ingested literature that changed it such that
