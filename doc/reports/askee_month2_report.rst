@@ -35,6 +35,7 @@ The image below shows the first tweet from the
 
 .. image:: ../_static/images/covid19_twitter.png
     :scale: 75%
+    :align: center
 
 Crucially, each of the tweets above include a link to a specific landing page
 where the new results can be examined and curated (in case there are any
@@ -67,8 +68,8 @@ Making model tests and paths available for use by other applications
 --------------------------------------------------------------------
 
 To facilitate integration of EMMAA test results with other applications we made
-data on model tests and causal paths available for programmatic download.  This
-was feature was requested by the Uncharted team, who is exploring approaches to
+data on model tests and causal paths available for programmatic download. This
+feature was requested by the Uncharted team, who is exploring approaches to
 visualize and interact with EMMAA results. The test and path data are stored in
 public JSON-L files on Amazon S3 and are updated daily. Model test files
 contain a JSON representation of the EMMAA test statements; test path files
