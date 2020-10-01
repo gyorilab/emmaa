@@ -28,3 +28,4 @@ Automating Scientific Knowledge Extraction (ASKE) program extension.
    :maxdepth: 4
 
    askee_month1_report
+   askee_month2_report
