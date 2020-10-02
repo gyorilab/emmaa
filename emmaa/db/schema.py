@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
     Boolean, DateTime, func, BigInteger
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 
 
 logger = logging.getLogger(__name__)
@@ -146,3 +146,4 @@ class Result(Base, EmmaaTable):
     date = Column(DateTime, default=func.now())
     result_json = Column(JSONB, nullable=False)
     mc_type = Column(String(20), default='pysb')
+    all_result_hashes = Column(ARRAY(String), default=[])
