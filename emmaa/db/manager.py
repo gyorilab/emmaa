@@ -282,9 +282,13 @@ class EmmaaDatabaseManager(object):
         results = []
         for query, mc_type, result_json in query_results:
             query_hash = query.get_hash_with_model(model_id)
+            all_result_hashes = self.get_all_result_hashes(query_hash, mc_type)
+            delta = set(result_json.keys()) - all_result_hashes
+            new_all_hashes = all_result_hashes.union(delta)
             results.append(Result(query_hash=query_hash,
                                   mc_type=mc_type,
-                                  result_json=result_json))
+                                  result_json=result_json,
+                                  all_result_hashes=new_all_hashes))
 
         with self.get_session() as sess:
             sess.add_all(results)
