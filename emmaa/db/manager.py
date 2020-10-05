@@ -309,14 +309,17 @@ class EmmaaDatabaseManager(object):
         logger.info(f"Found {len(results)} results.")
         return results
 
-    def get_all_result_hashes(self, qhash, mc_type):
+    def get_all_result_hashes(self, qhash, mc_type, latest_order=1):
         """Get a set of all result hashes for a given query and mc_type."""
         with self.get_session() as sess:
             q = (sess.query(Result.all_result_hashes)
                  .filter(Result.query_hash == qhash,
                          Result.mc_type == mc_type)
-                 .order_by(Result.date.desc()).limit(1))
-        return set([q[0] for q in q.all()][0])
+                 .order_by(Result.date.desc()))
+        all_sets = [q for q in q.all()]
+        if all_sets:
+            return set(all_sets[latest_order - 1][0])
+        return set()
 
     def get_results(self, user_email, latest_order=1, query_type=None):
         """Get the results for which the user has registered.
