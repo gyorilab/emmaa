@@ -147,3 +147,4 @@ class Result(Base, EmmaaTable):
     result_json = Column(JSONB, nullable=False)
     mc_type = Column(String(20), default='pysb')
     all_result_hashes = Column(ARRAY(String), default=[])
+    delta = Column(ARRAY(String), default=[])
