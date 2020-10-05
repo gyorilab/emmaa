@@ -126,23 +126,14 @@ class QueryManager(object):
         diff = get_all_diff(results, old_results)
         return format_results(results, diff, query_type)
 
-    def make_reports_from_results(
-            self, new_results, stored=True, report_format='str',
-            include_no_diff=True, domain='emmaa.indra.bio'):
+    def make_reports_from_results(self, new_results, domain='emmaa.indra.bio'):
         """Make a report given latest results and queries the results are for.
 
         Parameters
         ----------
         new_results : list[tuple]
             Latest results as a list of tuples where each tuple has the format
-            (model_name, query, mc_type, result_json, date).
-        stored : bool
-            Whether the new_results are already stored in the database.
-        report_format : str
-            A format to write reports in. Accepted values: 'str' and 'html'.
-            Default: 'str'.
-        include_no_diff : bool
-            If True, also report results that haven't changed. Default: True.
+            (model_name, query, mc_type, result_json, date, delta).
 
         Returns
         -------
@@ -153,72 +144,43 @@ class QueryManager(object):
             raise ValueError('Argument report_format must be either "html" '
                              'or "str"')
         processed_query_mc = []
-        reports = [] if report_format == 'str' else [[], [], []]
+        static_reports = []
+        open_reports = []
+        dynamic_reports = []
         # If latest results are in db, retrieve the second latest
         if stored:
             order = 2
         # If latest results are not in db, retrieve the latest stored
         else:
             order = 1
-        for model_name, query, mc_type, new_result_json, _ in new_results:
+        for model_name, query, mc_type, result_json, _, delta in new_results:
             if (model_name, query, mc_type) in processed_query_mc:
                 continue
-            try:
-                old_results = self.db.get_results_from_query(
-                    query, [model_name], order)
-                if old_results:
-                    for old_model_name, old_query, old_mc_type,\
-                            old_result_json, _ in old_results:
-                        if mc_type == old_mc_type and \
-                                is_query_result_diff(new_result_json,
-                                                     old_result_json):
-                            if report_format == 'str':
-                                report = self.make_str_report_one_query(
-                                    model_name, query, mc_type,
-                                    new_result_json, old_result_json,
-                                    include_no_diff=include_no_diff)
-                                if report:
-                                    reports.append(report)
-                            elif report_format == 'html':
-                                model_type_name = FORMATTED_TYPE_NAMES[
-                                    mc_type] if mc_type else mc_type
-                                delta = [
-                                    query.to_english(),
-                                    _detailed_page_link(
-                                        domain,
-                                        model_name,
-                                        mc_type,
-                                        query.get_hash_with_model(
-                                            model_name)),
-                                    model_name,
-                                    model_type_name
-                                ]
-                                # static
-                                if query.get_type() == 'path_property':
-                                    reports[0].append(delta)
-                                # open
-                                elif query.get_type() == 'open_search_query':
-                                    reports[1].append(delta)
-                                # dynamic
-                                else:
-                                    # Remove link for dynamic
-                                    _ = delta.pop(1)
-                                    reports[2].append(delta)
-                elif report_format == 'str':
-                    logger.info('No previous result was found.')
-                    report = self.make_str_report_one_query(
-                        model_name, query, mc_type, new_result_json,
-                        None, include_no_diff=include_no_diff)
-                    if report:
-                        reports.append(report)
-            except IndexError:
-                logger.info('No result for desired date back was found.')
-                if report_format == 'str':
-                    report = self.make_str_report_one_query(
-                        model_name, query, mc_type, new_result_json, None,
-                        include_no_diff=include_no_diff)
-                    if report:
-                        reports.append(report)
+            if delta:
+                model_type_name = FORMATTED_TYPE_NAMES[
+                    mc_type] if mc_type else mc_type
+                rep = [
+                    query.to_english(),
+                    _detailed_page_link(
+                        domain,
+                        model_name,
+                        mc_type,
+                        query.get_hash_with_model(
+                            model_name)),
+                    model_name,
+                    model_type_name
+                ]
+                # static
+                if query.get_type() == 'path_property':
+                    static_reports.append(rep)
+                # open
+                elif query.get_type() == 'open_search_query':
+                    open_reports.append(rep)
+                # dynamic
+                else:
+                    # Remove link for dynamic
+                    _ = rep.pop(1)
+                    dynamic_reports.append(rep)
             processed_query_mc.append((model_name, query, mc_type))
         return reports
 
@@ -242,15 +204,23 @@ class QueryManager(object):
         # Get results of user's query
         results = self.db.get_results(user_email, latest_order=1)
 
+        # Get the query deltas
+        static_results_delta, open_results_delta, dynamic_results_delta = \
+            self.make_reports_from_results(results, report_format='html',
+                                           include_no_diff=False,
+                                           domain=domain)
         # Make text report
-        str_report = self.make_str_report_per_user(results,
-                                                   include_no_diff=False)
-        str_report = '\n'.join(str_report) if str_report else None
+        str_report = self.make_str_report_per_user(static_results_delta,
+                                                   open_results_delta,
+                                                   dynamic_results_delta)
+        str_report = str_report if str_report else ''
 
         # Make html report
-        html_report = self.make_html_report_per_user(results, user_email,
-                                                     domain=domain,
-                                                     limit=None)
+        html_report = self.make_html_report_per_user(static_results_delta,
+                                                     open_results_delta,
+                                                     dynamic_results_delta,
+                                                     user_email,
+                                                     domain=domain)
         html_report = html_report if html_report else None
 
         if html_report:
@@ -259,65 +229,88 @@ class QueryManager(object):
             logger.info(f'No query delta to report for {user_email}')
         return str_report, html_report
 
-    def get_report_per_query(self, model_name, query, format='str'):
-        if format not in {'html', 'str'}:
-            logger.error(f'Invalid format ({format}). Must be "str" '
-                         f'or "html"')
-            return None
-        try:
-            new_results = self.db.get_results_from_query(
-                query, [model_name], latest_order=1)
-        except IndexError:
-            logger.info('No latest result was found.')
-            return None
-        if format == 'html':
-            return self.make_reports_from_results(new_results, True, 'html')
-        return self.make_reports_from_results(new_results, True, 'str')
+    # def get_report_per_query(self, model_name, query, format='str'):
+    #     if format not in {'html', 'str'}:
+    #         logger.error(f'Invalid format ({format}). Must be "str" '
+    #                      f'or "html"')
+    #         return None
+    #     try:
+    #         new_results = self.db.get_results_from_query(
+    #             query, [model_name], latest_order=1)
+    #     except IndexError:
+    #         logger.info('No latest result was found.')
+    #         return None
+    #     if format == 'html':
+    #         return self.make_reports_from_results(new_results, True, 'html')
+    #     return self.make_reports_from_results(new_results, True, 'str')
 
-    def make_str_report_per_user(self, results, filename=None,
-                                 include_no_diff=True):
-        """Produce a report for all query results per user in a text file."""
-        reports = self.make_reports_from_results(
-            results, True, 'str', include_no_diff=include_no_diff)
-        if filename:
-            with open(filename, 'w') as f:
-                for report in reports:
-                    f.write(report)
-        else:
-            return reports
+    def make_str_report_per_user(self, static_results_delta,
+                                 open_results_delta, dynamic_results_delta):
+        """Produce a report for all query results per user as a string.
 
-    def make_html_report_per_user(self, results, email,
-                                  domain='emmaa.indra.bio', limit=None):
+        Parameters
+        ----------
+        static_results_delta : list
+            A list of tuples of query deltas for static queries. Each tuple
+            has a format (english_query, link, model, mc_type)
+        open_results_delta : list
+            A list of tuples of query deltas for open queries. Each tuple
+            has a format (english_query, link, model, mc_type)
+        dynamic_results_delta : list
+            A list of tuples of query deltas for dynamic queries. Each tuple
+            has a format (english_query, link, model, mc_type)
+
+        Returns
+        -------
+        msg : str
+            A message about query deltas.
+        """
+        if not static_results_delta and not open_results_delta and not \
+                dynamic_results_delta:
+            logger.info('No delta provided')
+            return None
+        msg = ''
+        if static_results_delta:
+            msg += 'Updates to your static queries:\n'
+            for english_query, _, model, mc_type in static_results_delta:
+                msg += f'{english_query} in {model} using the {mc_type}.\n'
+        if open_results_delta:
+            msg += 'Updates to your open queries:\n'
+            for english_query, _, model, mc_type in open_results_delta:
+                msg += f'{english_query} in {model} using the {mc_type}.\n'
+        if dynamic_results_delta:
+            msg += 'Updates to your dynamic queries:\n'
+            for english_query, _, model, mc_type in dynamic_results_delta:
+                msg += f'{english_query} in {model} using the {mc_type}.\n'
+        return msg
+
+    def make_html_report_per_user(self, static_results_delta,
+                                  open_results_delta, dynamic_results_delta,
+                                  email, domain='emmaa.indra.bio'):
         """Produce a report for all query results per user in an html file.
 
         Parameters
         ----------
-        results : list[tuple]
-            Results as a list of tuples where each tuple has the format
-            (model_name, query, mc_type, result_json, date).
+        static_results_delta : list
+            A list of tuples of query deltas for static queries. Each tuple
+            has a format (english_query, link, model, mc_type)
+        open_results_delta : list
+            A list of tuples of query deltas for open queries. Each tuple
+            has a format (english_query, link, model, mc_type)
+        dynamic_results_delta : list
+            A list of tuples of query deltas for dynamic queries. Each tuple
+            has a format (english_query, link, model, mc_type)
         email : str
             The email of the user to get the results for.
         domain : str
             The domain name for the unsubscibe link in the report. Default:
             "emmaa.indra.bio".
-        limit : int
-            The limit for how many results to show. With this set,
-            on the first 'limit' results are processed into html, i.e. use
-            results[:limit]. Default: all.
 
         Returns
         -------
         str
             A string containing an html document
         """
-        results = results[:limit] if limit else results
-
-        # Get the query deltas
-        static_results_delta, open_results_delta, dynamic_results_delta = \
-            self.make_reports_from_results(results, report_format='html',
-                                           include_no_diff=False,
-                                           domain=domain)
-
         # Generate unsubscribe link
         link = generate_unsubscribe_link(email=email, domain=domain)
 
@@ -331,57 +324,58 @@ class QueryManager(object):
         else:
             return ''
 
-    def make_str_report_one_query(self, model_name, query, mc_type,
-                                  new_result_json, old_result_json=None,
-                                  include_no_diff=True):
-        """Return a string message containing information about a query and any
-        change in the results.
+    # def make_str_report_one_query(self, query_str, link, model_name, mc_type,
+    #                               include_no_diff=True):
+    #                                                   query.to_english(),
 
-        Parameters
-        ----------
-        model_name : str
-            Name of model
-        query : emmaa.query.Query
-            The query object representing the query
-        mc_type : str
-            The model type
-        new_result_json : dict
-            The json containing the new results
-        old_result_json : dict
-            The json the new results are to be compared with
-        include_no_diff : bool
-            If True, also report results that haven't changed. Default: True.
+    #     """Return a string message containing information about a query and any
+    #     change in the results.
 
-        Returns
-        -------
-        str
-            The string containing the report.
-        """
-        model_type_name = FORMATTED_TYPE_NAMES[mc_type] if mc_type else mc_type
+    #     Parameters
+    #     ----------
+    #     model_name : str
+    #         Name of model
+    #     query : emmaa.query.Query
+    #         The query object representing the query
+    #     mc_type : str
+    #         The model type
+    #     new_result_json : dict
+    #         The json containing the new results
+    #     old_result_json : dict
+    #         The json the new results are to be compared with
+    #     include_no_diff : bool
+    #         If True, also report results that haven't changed. Default: True.
 
-        if is_query_result_diff(new_result_json, old_result_json):
+    #     Returns
+    #     -------
+    #     str
+    #         The string containing the report.
+    #     """
+    #     model_type_name = FORMATTED_TYPE_NAMES[mc_type] if mc_type else mc_type
 
-            if not old_result_json:
-                msg = f'\nThis is the first result to query ' \
-                      f'{query.to_english()} in {model_name} with' \
-                      f' {model_type_name} model checker.\nThe result is:'
-                msg += _process_result_to_str(new_result_json, 'str')
-            else:
-                msg = f'\nA new result to query {query.to_english()}' \
-                      f' in {model_name} was found with {model_type_name}' \
-                      f' model checker. '
-                msg += '\nPrevious result was:'
-                msg += _process_result_to_str(old_result_json, 'str')
-                msg += '\nNew result is:'
-                msg += _process_result_to_str(new_result_json, 'str')
-        elif include_no_diff:
-            msg = f'\nA result to query {query.to_english()} in ' \
-                  f'{model_name} from {model_type_name} model checker ' \
-                  f'did not change. The result is:'
-            msg += _process_result_to_str(new_result_json, 'str')
-        else:
-            msg = None
-        return msg
+    #     if is_query_result_diff(new_result_json, old_result_json):
+
+    #         if not old_result_json:
+    #             msg = f'\nThis is the first result to query ' \
+    #                   f'{query.to_english()} in {model_name} with' \
+    #                   f' {model_type_name} model checker.\nThe result is:'
+    #             msg += _process_result_to_str(new_result_json, 'str')
+    #         else:
+    #             msg = f'\nA new result to query {query.to_english()}' \
+    #                   f' in {model_name} was found with {model_type_name}' \
+    #                   f' model checker. '
+    #             msg += '\nPrevious result was:'
+    #             msg += _process_result_to_str(old_result_json, 'str')
+    #             msg += '\nNew result is:'
+    #             msg += _process_result_to_str(new_result_json, 'str')
+    #     elif include_no_diff:
+    #         msg = f'\nA result to query {query.to_english()} in ' \
+    #               f'{model_name} from {model_type_name} model checker ' \
+    #               f'did not change. The result is:'
+    #         msg += _process_result_to_str(new_result_json, 'str')
+    #     else:
+    #         msg = None
+    #     return msg
 
     def get_model_manager(self, model_name):
         # Try get model manager from class attributes or load from s3.
