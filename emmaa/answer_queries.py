@@ -211,21 +211,6 @@ class QueryManager(object):
             logger.info(f'No query delta to report for {user_email}')
         return str_report, html_report
 
-    # def get_report_per_query(self, model_name, query, format='str'):
-    #     if format not in {'html', 'str'}:
-    #         logger.error(f'Invalid format ({format}). Must be "str" '
-    #                      f'or "html"')
-    #         return None
-    #     try:
-    #         new_results = self.db.get_results_from_query(
-    #             query, [model_name], latest_order=1)
-    #     except IndexError:
-    #         logger.info('No latest result was found.')
-    #         return None
-    #     if format == 'html':
-    #         return self.make_reports_from_results(new_results, True, 'html')
-    #     return self.make_reports_from_results(new_results, True, 'str')
-
     def make_str_report_per_user(self, static_results_delta,
                                  open_results_delta, dynamic_results_delta):
         """Produce a report for all query results per user as a string.
@@ -305,59 +290,6 @@ class QueryManager(object):
             )
         else:
             return ''
-
-    # def make_str_report_one_query(self, query_str, link, model_name, mc_type,
-    #                               include_no_diff=True):
-    #                                                   query.to_english(),
-
-    #     """Return a string message containing information about a query and any
-    #     change in the results.
-
-    #     Parameters
-    #     ----------
-    #     model_name : str
-    #         Name of model
-    #     query : emmaa.query.Query
-    #         The query object representing the query
-    #     mc_type : str
-    #         The model type
-    #     new_result_json : dict
-    #         The json containing the new results
-    #     old_result_json : dict
-    #         The json the new results are to be compared with
-    #     include_no_diff : bool
-    #         If True, also report results that haven't changed. Default: True.
-
-    #     Returns
-    #     -------
-    #     str
-    #         The string containing the report.
-    #     """
-    #     model_type_name = FORMATTED_TYPE_NAMES[mc_type] if mc_type else mc_type
-
-    #     if is_query_result_diff(new_result_json, old_result_json):
-
-    #         if not old_result_json:
-    #             msg = f'\nThis is the first result to query ' \
-    #                   f'{query.to_english()} in {model_name} with' \
-    #                   f' {model_type_name} model checker.\nThe result is:'
-    #             msg += _process_result_to_str(new_result_json, 'str')
-    #         else:
-    #             msg = f'\nA new result to query {query.to_english()}' \
-    #                   f' in {model_name} was found with {model_type_name}' \
-    #                   f' model checker. '
-    #             msg += '\nPrevious result was:'
-    #             msg += _process_result_to_str(old_result_json, 'str')
-    #             msg += '\nNew result is:'
-    #             msg += _process_result_to_str(new_result_json, 'str')
-    #     elif include_no_diff:
-    #         msg = f'\nA result to query {query.to_english()} in ' \
-    #               f'{model_name} from {model_type_name} model checker ' \
-    #               f'did not change. The result is:'
-    #         msg += _process_result_to_str(new_result_json, 'str')
-    #     else:
-    #         msg = None
-    #     return msg
 
     def get_model_manager(self, model_name):
         # Try get model manager from class attributes or load from s3.
@@ -472,22 +404,6 @@ def load_model_manager_from_cache(model_name, bucket=EMMAA_BUCKET_NAME):
         model_name=model_name, bucket=bucket)
     model_manager_cache[model_name] = model_manager
     return model_manager
-
-
-def _process_result_to_str(result_json, format='str'):
-    msg = '\n' if format == 'str' else '<br>'
-    for v in result_json.values():
-        if isinstance(v, str):
-            msg += v
-        elif isinstance(v, dict):
-            if 'path' in v.keys():
-                msg += v['path']
-                msg += '\n' if format == 'str' else '<br>'
-            else:
-                msg += f'Satisfaction rate: {v["sat_rate"]}, '
-                msg += f'Number of simulations: {v["num_sim"]}, '
-                msg += f'Suggested pattern: {v["kpat"]}.'
-    return msg
 
 
 def answer_queries_from_s3(model_name, db=None, bucket=EMMAA_BUCKET_NAME):
