@@ -285,6 +285,10 @@ class EmmaaDatabaseManager(object):
             all_result_hashes = self.get_all_result_hashes(query_hash, mc_type)
             delta = set(result_json.keys()) - all_result_hashes
             new_all_hashes = all_result_hashes.union(delta)
+            if delta:
+                logger.info('New results:')
+                for key in delta:
+                    logger.info(result_json[key])
             results.append(Result(query_hash=query_hash,
                                   mc_type=mc_type,
                                   result_json=result_json,

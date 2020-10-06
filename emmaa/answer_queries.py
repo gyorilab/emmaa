@@ -68,8 +68,8 @@ class QueryManager(object):
                 self.db.put_results(model_name, results_to_store)
         return {query_type: query_hashes}
 
-    def answer_registered_queries(self, model_name, find_delta=True,
-                                  use_kappa=False, bucket=EMMAA_BUCKET_NAME):
+    def answer_registered_queries(self, model_name, use_kappa=False,
+                                  bucket=EMMAA_BUCKET_NAME):
         """Retrieve and asnwer registered queries
 
         Retrieve queries registered on database for a given model,
@@ -80,10 +80,6 @@ class QueryManager(object):
         ----------
         model_name : str
             The name of the model
-        find_delta : bool
-            If True, also generate a report for the logs on what the delta
-            is for the new results compared to the previous results.
-            Default: True
         use_kappa : bool
             If True, use kappa modeling when answering the dynamic query
         bucket : str
@@ -98,14 +94,6 @@ class QueryManager(object):
                 queries, use_kappa=use_kappa, bucket=bucket)
             new_results = [(model_name, result[0], result[1], result[2], '')
                            for result in results]
-            # Optionally find delta between results
-            # NOTE: For now the report is presented in the logs. In future we
-            # can choose some other ways to keep track of result changes.
-            if find_delta:
-                reports = self.make_reports_from_results(new_results, False,
-                                                         'str')
-                for report in reports:
-                    logger.info(report)
             self.db.put_results(model_name, results)
 
     def get_registered_queries(self, user_email, query_type='path_property'):
@@ -118,13 +106,7 @@ class QueryManager(object):
         """Retrieve results from a db given a list of query-model hashes."""
         results = self.db.get_results_from_hashes(
             query_hashes, latest_order=latest_order)
-        try:
-            old_results = self.db.get_results_from_hashes(
-                query_hashes, latest_order=latest_order+1)
-        except IndexError:
-            old_results = None
-        diff = get_all_diff(results, old_results)
-        return format_results(results, diff, query_type)
+        return format_results(results, query_type)
 
     def make_reports_from_results(self, new_results, domain='emmaa.indra.bio'):
         """Make a report given latest results and queries the results are for.
