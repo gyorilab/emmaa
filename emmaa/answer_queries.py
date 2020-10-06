@@ -371,7 +371,7 @@ class QueryManager(object):
         self.db.create_tables()
 
 
-def is_query_result_diff(new_result_json, old_result_json=None):
+def is_query_result_diff(new_result_json, all_result_hashes):
     """Return True if there is a delta between results."""
     # NOTE: this function is query-type specific so it may need to be
     # refactored as a method of the Query class:
@@ -380,26 +380,13 @@ def is_query_result_diff(new_result_json, old_result_json=None):
     if not old_result_json:
         return True
     # Check if there're new paths
-    return len(get_query_result_diff(new_result_json, old_result_json)) > 0
+    return len(get_query_result_diff(new_result_json, all_result_hashes)) > 0
 
 
-def get_query_result_diff(new_result_json, old_result_json):
+def get_query_result_diff(new_result_json, all_result_hashes):
     """Compare two result jsons and return a set of hashes of new paths."""
-    old_result_hashes = [k for k in old_result_json.keys()]
     new_result_hashes = [k for k in new_result_json.keys()]
-    return set(new_result_hashes) - set(old_result_hashes)
-
-
-def get_all_diff(new_results, old_results=None):
-    """Get new hashes across all model types."""
-    if not old_results:
-        return {}
-    new_results_dict = {res[2]: res[3] for res in new_results}
-    old_results_dict = {res[2]: res[3] for res in old_results}
-    diff_dict = {mc_type: get_query_result_diff(
-        new_results_dict.get(mc_type), old_results_dict.get(mc_type))
-            for mc_type in new_results_dict}
-    return diff_dict
+    return set(new_result_hashes) - set(all_result_hashes)
 
 
 def _detailed_page_link(domain, model_name, model_type, query_hash):
