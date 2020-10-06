@@ -303,24 +303,6 @@ class QueryManager(object):
         self.db.create_tables()
 
 
-def is_query_result_diff(new_result_json, all_result_hashes):
-    """Return True if there is a delta between results."""
-    # NOTE: this function is query-type specific so it may need to be
-    # refactored as a method of the Query class:
-
-    # Return True if this is the first result
-    if not old_result_json:
-        return True
-    # Check if there're new paths
-    return len(get_query_result_diff(new_result_json, all_result_hashes)) > 0
-
-
-def get_query_result_diff(new_result_json, all_result_hashes):
-    """Compare two result jsons and return a set of hashes of new paths."""
-    new_result_hashes = [k for k in new_result_json.keys()]
-    return set(new_result_hashes) - set(all_result_hashes)
-
-
 def _detailed_page_link(domain, model_name, model_type, query_hash):
     # example:
     # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash
