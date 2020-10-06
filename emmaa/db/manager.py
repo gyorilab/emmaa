@@ -309,7 +309,7 @@ class EmmaaDatabaseManager(object):
                     f"{query_hashes}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
-                            Result.result_json, Result.date)
+                            Result.result_json, Result.delta, Result.date)
                  .filter(Result.query_hash.in_(query_hashes),
                          Query.hash == Result.query_hash)).distinct()
             results = _make_queries_in_results(q.all())
@@ -347,13 +347,13 @@ class EmmaaDatabaseManager(object):
         -------
         results : list[tuple]
             A list of tuples, each of the form: (model_id, query, mc_type,
-            result_json, date) representing the result of a query run on a
-            model on a given date.
+            result_json, delta, date) representing the result of a query run
+            on a model on a given date.
         """
         logger.info(f"Got request for results for {user_email}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
-                            Result.result_json, Result.date)
+                            Result.result_json, Result.delta, Result.date)
                  .filter(Query.hash == Result.query_hash,
                          Query.hash == UserQuery.query_hash,
                          UserQuery.user_id == User.id,
@@ -482,7 +482,8 @@ class EmmaaDatabaseManager(object):
 
 
 def _weed_results(result_iter, latest_order=1):
-    # Each element of result_iter: (model_id, query(object), result_json, date)
+    # Each element of result_iter:
+    # (model_id, query(object), result_json, delta, date)
     result_dict = defaultdict(list)
     for res in result_iter:
         result_dict[(res[1].get_hash_with_model(res[0]), res[2])].append(
@@ -494,12 +495,13 @@ def _weed_results(result_iter, latest_order=1):
 
 
 def _make_queries_in_results(result_iter):
-    # Each element of result_iter: (model_id, query_json, result_json, date)
+    # Each element of result_iter:
+    # (model_id, query_json, result_json, delta, date)
     # Replace query_json with Query object
     results = []
     for res in result_iter:
         query = QueryObject._from_json(res[1])
-        results.append((res[0], query, res[2], res[3], res[4]))
+        results.append((res[0], query, res[2], res[3], res[4], res[5]))
     return results
 
 
