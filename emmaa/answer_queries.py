@@ -135,7 +135,7 @@ class QueryManager(object):
         # If latest results are not in db, retrieve the latest stored
         else:
             order = 1
-        for model_name, query, mc_type, result_json, _, delta in new_results:
+        for model_name, query, mc_type, result_json, delta, _ in new_results:
             if (model_name, query, mc_type) in processed_query_mc:
                 continue
             if delta:
@@ -311,7 +311,7 @@ def _detailed_page_link(domain, model_name, model_type, query_hash):
            f'{model_type}&query_hash={query_hash}&order=1'
 
 
-def format_results(results, diff, query_type='path_property'):
+def format_results(results, query_type='path_property'):
     """Format db output to a standard json structure."""
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
     formatted_results = {}
@@ -326,12 +326,13 @@ def format_results(results, diff, query_type='path_property'):
                 'date': make_date_str(result[4])}
         mc_type = result[2]
         response_json = result[3]
+        delta = result[4]
         response = []
         for k, v in response_json.items():
             if isinstance(v, str):
                 response = v
             elif isinstance(v, dict):
-                if diff and k in diff[mc_type]:
+                if k in delta:
                     v['path'] = ('new', v['path'])
                 response.append(v)
         if query_type in ['path_property', 'open_search_query']:
