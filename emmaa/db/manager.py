@@ -283,8 +283,12 @@ class EmmaaDatabaseManager(object):
         for query, mc_type, result_json in query_results:
             query_hash = query.get_hash_with_model(model_id)
             all_result_hashes = self.get_all_result_hashes(query_hash, mc_type)
-            delta = set(result_json.keys()) - all_result_hashes
-            new_all_hashes = all_result_hashes.union(delta)
+            if all_result_hashes is not None:
+                delta = set(result_json.keys()) - all_result_hashes
+                new_all_hashes = all_result_hashes.union(delta)
+            else:  # this is the first result
+                delta = set()
+                new_all_hashes = set(result_json.keys())
             if delta:
                 logger.info('New results:')
                 for key in delta:
@@ -292,7 +296,8 @@ class EmmaaDatabaseManager(object):
             results.append(Result(query_hash=query_hash,
                                   mc_type=mc_type,
                                   result_json=result_json,
-                                  all_result_hashes=new_all_hashes))
+                                  all_result_hashes=new_all_hashes,
+                                  delta=delta))
 
         with self.get_session() as sess:
             sess.add_all(results)
@@ -327,7 +332,7 @@ class EmmaaDatabaseManager(object):
         all_sets = [q for q in q.all()]
         if all_sets:
             return set(all_sets[latest_order - 1][0])
-        return set()
+        return None
 
     def get_results(self, user_email, latest_order=1, query_type=None):
         """Get the results for which the user has registered.
