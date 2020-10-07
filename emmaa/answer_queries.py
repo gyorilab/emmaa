@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from copy import deepcopy
 
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.db import get_db
@@ -99,7 +100,7 @@ class QueryManager(object):
     def get_registered_queries(self, user_email, query_type='path_property'):
         """Get formatted results to queries registered by user."""
         results = self.db.get_results(user_email, query_type=query_type)
-        return format_results(results, {}, query_type)
+        return format_results(results, query_type)
 
     def retrieve_results_from_hashes(
             self, query_hashes, query_type='path_property', latest_order=1):
@@ -122,19 +123,10 @@ class QueryManager(object):
         reports : list
             A list of reports on changes for each of the queries.
         """
-        if report_format not in {'html', 'str'}:
-            raise ValueError('Argument report_format must be either "html" '
-                             'or "str"')
         processed_query_mc = []
         static_reports = []
         open_reports = []
         dynamic_reports = []
-        # If latest results are in db, retrieve the second latest
-        if stored:
-            order = 2
-        # If latest results are not in db, retrieve the latest stored
-        else:
-            order = 1
         for model_name, query, mc_type, result_json, delta, _ in new_results:
             if (model_name, query, mc_type) in processed_query_mc:
                 continue
@@ -164,7 +156,7 @@ class QueryManager(object):
                     _ = rep.pop(1)
                     dynamic_reports.append(rep)
             processed_query_mc.append((model_name, query, mc_type))
-        return reports
+        return static_reports, open_reports, dynamic_reports
 
     def get_user_query_delta(self, user_email, domain='emmaa.indra.bio'):
         """Produce a report for all query results per user in a given format
@@ -188,9 +180,7 @@ class QueryManager(object):
 
         # Get the query deltas
         static_results_delta, open_results_delta, dynamic_results_delta = \
-            self.make_reports_from_results(results, report_format='html',
-                                           include_no_diff=False,
-                                           domain=domain)
+            self.make_reports_from_results(results, domain=domain)
         # Make text report
         str_report = self.make_str_report_per_user(static_results_delta,
                                                    open_results_delta,
@@ -323,7 +313,7 @@ def format_results(results, query_type='path_property'):
             formatted_results[query_hash] = {
                 'query': query.to_english(),
                 'model': model,
-                'date': make_date_str(result[4])}
+                'date': make_date_str(result[5])}
         mc_type = result[2]
         response_json = result[3]
         delta = result[4]
@@ -333,8 +323,11 @@ def format_results(results, query_type='path_property'):
                 response = v
             elif isinstance(v, dict):
                 if k in delta:
-                    v['path'] = ('new', v['path'])
-                response.append(v)
+                    new_v = deepcopy(v)
+                    new_v['path'] = ('new', new_v['path'])
+                    response.append(new_v)
+                else:
+                    response.append(v)
         if query_type in ['path_property', 'open_search_query']:
             if mc_type == '' and \
                     response == 'Query is not applicable for this model':
