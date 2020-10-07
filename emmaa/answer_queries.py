@@ -288,10 +288,6 @@ class QueryManager(object):
                 return mm
         return load_model_manager_from_cache(model_name)
 
-    def _recreate_db(self):
-        self.db.drop_tables(force=True)
-        self.db.create_tables()
-
 
 def _detailed_page_link(domain, model_name, model_type, query_hash):
     # example:
