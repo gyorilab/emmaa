@@ -2,9 +2,12 @@ import time
 import random
 
 from nose.plugins.attrib import attr
+from nose.tools import with_setup
 
-from emmaa.db import Query, Result, EmmaaDatabaseManager
+from emmaa.db import Query, Result
 from emmaa.queries import Query as QueryObject, PathProperty
+from emmaa.tests.db_setup import _get_test_db, setup_function, \
+    teardown_function
 
 
 test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
@@ -18,13 +21,7 @@ test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
 test_queries = [QueryObject._from_json(qj) for qj in test_query_jsons]
 
 
-def _get_test_db():
-    db = EmmaaDatabaseManager('postgresql://postgres:@localhost/emmaadb_test')
-    db.drop_tables(force=True)
-    db.create_tables()
-    return db
-
-
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_instantiation():
     db = _get_test_db()
@@ -32,6 +29,7 @@ def test_instantiation():
     return
 
 
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_put_queries():
     db = _get_test_db()
@@ -41,6 +39,7 @@ def test_put_queries():
     assert len(queries) == 2, len(queries)
 
 
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_get_queries():
     db = _get_test_db()
@@ -61,6 +60,7 @@ def _get_random_result():
         [{'12': [['This is fine.', '']]}, {'34': [['This is not ok.', '']]}])
 
 
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_put_results():
     db = _get_test_db()
@@ -74,6 +74,7 @@ def test_put_results():
     assert len(db_results) == len(results)
 
 
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_get_results():
     db = _get_test_db()
@@ -88,7 +89,7 @@ def test_get_results():
 
     # Try to get the results.
     results = db.get_results('joshua')
-    assert len(results) == len(test_queries)*len(models), len(results)
+    assert len(results) == len(test_queries)*len(models)
     assert all(isinstance(result, tuple) for result in results)
     assert all(result[0] in models for result in results)
     assert any(results[0][1].matches(q) for q in test_queries)
@@ -96,6 +97,7 @@ def test_get_results():
     assert all(isinstance(result[3], dict) for result in results)
 
 
+@with_setup(setup_function, teardown_function)
 @attr('nonpublic')
 def test_get_latest_results():
     db = _get_test_db()
