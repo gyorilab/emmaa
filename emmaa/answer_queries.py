@@ -390,4 +390,4 @@ def answer_queries_from_s3(model_name, db=None, bucket=EMMAA_BUCKET_NAME):
     """
     mm = load_model_manager_from_s3(model_name=model_name, bucket=bucket)
     qm = QueryManager(db=db, model_managers=[mm])
-    qm.answer_registered_queries(model_name, find_delta=True)
+    qm.answer_registered_queries(model_name)
