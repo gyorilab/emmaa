@@ -1,13 +1,19 @@
-from os.path import abspath, dirname, join
 from datetime import datetime
-from copy import deepcopy
 from nose.plugins.attrib import attr
-from emmaa.answer_queries import QueryManager, format_results, \
-    is_query_result_diff, get_query_result_diff
+from emmaa.answer_queries import QueryManager, format_results
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
-from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_model import create_model
+from emmaa.tests.db_setup import _get_test_db, setup_function, \
+    teardown_function
+
+
+def setup_module():
+    setup_function()
+
+
+def teardown_module():
+    teardown_function()
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
@@ -52,18 +58,21 @@ test_email = 'tester@test.com'
 
 def test_format_results():
     date = datetime.now()
-    results = [('test', query_object, 'pysb', test_response, date),
-               ('test', query_object, 'signed_graph', fail_response, date),
-               ('test', query_object, 'unsigned_graph', test_response, date)]
-    formatted_results = format_results(results, {})
+    results = [('test', query_object, 'pysb', test_response, {'3801854542'},
+                date),
+               ('test', query_object, 'signed_graph', fail_response, {}, date),
+               ('test', query_object, 'unsigned_graph', test_response, {},
+                date)]
+    formatted_results = format_results(results)
     assert len(formatted_results) == 1
     qh = query_object.get_hash_with_model('test')
     assert qh in formatted_results
     assert formatted_results[qh]['model'] == 'test'
     assert formatted_results[qh]['query'] == simple_query
     assert isinstance(formatted_results[qh]['date'], str)
-    assert formatted_results[qh]['pysb'] == [
-        'Pass', [test_response['3801854542']]]
+    assert formatted_results[qh]['pysb'][0] == 'Pass'
+    assert formatted_results[qh]['pysb'][1][0]['path'] == \
+        ('new', test_response['3801854542']['path'])
     assert formatted_results[qh]['pybel'] == [
         'n_a', 'Model type not supported']
     assert formatted_results[qh]['signed_graph'] == [
@@ -114,6 +123,7 @@ def test_immediate_dynamic():
     assert isinstance(result_values['image'], str)
 
 
+@attr('nonpublic')
 def test_immediate_open():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
@@ -170,7 +180,7 @@ def test_answer_get_registered_queries():
     assert results[qh]['result'] == [
         'Pass', 'Satisfaction rate is 100% after 2 simulations.']
     assert isinstance(results[qh]['image'], str)
-    # Retrieve results for dynamic query
+    # Retrieve results for open query
     results = qm.get_registered_queries(test_email, 'open_search_query')
     qh = open_query.get_hash_with_model('test')
     assert qh in results
@@ -182,77 +192,6 @@ def test_answer_get_registered_queries():
         assert isinstance(results[qh][mc_type][1], list)
         assert test_response['3801854542']['path'] in [
             res['path'] for res in results[qh][mc_type][1]]
-
-
-def test_is_diff():
-    assert not is_query_result_diff(query_not_appl, query_not_appl)
-    assert is_query_result_diff(test_response, query_not_appl)
-    new_response = deepcopy(test_response)
-    new_response.update(query_not_appl)
-    # Show diff if there are new paths
-    assert is_query_result_diff(new_response, test_response)
-    # Show no diff if path is removed
-    assert not is_query_result_diff(test_response, new_response)
-
-
-def test_get_diff():
-    new_response = deepcopy(test_response)
-    new_response.update(query_not_appl)
-    assert get_query_result_diff(new_response, test_response) == {'2413475507'}
-    assert get_query_result_diff(test_response, new_response) == set()
-
-
-@attr('nonpublic')
-def test_report_one_query():
-    db = _get_test_db()
-    qm = QueryManager(db=db, model_managers=[test_mm])
-    # Using results from db
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', test_response),
-                               (query_object, 'pysb', query_not_appl)])
-    str_msg = qm.get_report_per_query('test', query_object)[0]
-    assert str_msg
-    assert 'A new result to query' in str_msg
-    assert 'Query is not applicable for this model' in str_msg
-    assert 'BRAF → MAP2K1 → MAPK1' in str_msg
-    # String report given two responses explicitly
-    str_msg = qm.make_str_report_one_query(
-        'test', query_object, 'pysb', test_response, query_not_appl)
-    assert str_msg
-    assert 'A new result to query' in str_msg, str_msg
-    assert 'Query is not applicable for this model' in str_msg
-    assert 'BRAF → MAP2K1 → MAPK1' in str_msg
-    assert simple_query in str_msg
-
-
-@attr('nonpublic')
-def test_report_files():
-    db = _get_test_db()
-    qm = QueryManager(db=db, model_managers=[test_mm])
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
-    results = qm.db.get_results(test_email, latest_order=1)
-    qm.make_str_report_per_user(results,
-                                filename='test_query_delta.txt')
-    report_file = join(dirname(abspath(__file__)), 'test_query_delta.txt')
-    with open(report_file, 'r') as f:
-        msg = f.read()
-    assert msg
-    assert 'This is the first result to query' in msg, msg
-    assert 'Query is not applicable for this model' in msg
-    qm.db.put_results('test', [(query_object, 'pysb', test_response)])
-    results = qm.db.get_results(test_email, latest_order=1)
-    qm.make_str_report_per_user(results,
-                                filename='new_test_query_delta.txt')
-    new_report_file = join(dirname(abspath(__file__)),
-                           'new_test_query_delta.txt')
-    with open(new_report_file, 'r') as f:
-        msg = f.read()
-    assert msg
-    assert 'A new result to query' in msg
-    assert 'BRAF → MAP2K1 → MAPK1' in msg
 
 
 @attr('nonpublic')
