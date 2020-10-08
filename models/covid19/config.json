@@ -112,6 +112,14 @@
    "indra_db_pmid",
    "indra_db_doi"
   ],
-  "cord19_update": true
- }
+  "cord19_update": {
+   "filenames": [
+    "drug_stmts_db_only.pkl",
+    "gordon_ndex_stmts.pkl",
+    "virhostnet_stmts.pkl",
+    "ctd_stmts.pkl"
+   ]
+  }
+ },
+ "twitter": "covid19"
 }
