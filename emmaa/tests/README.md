@@ -35,5 +35,20 @@ Change `peer` or `md5` in the `METHOD` section to be `trust`. This will allow
 you to access the test databases without a password. *Note that you should
 **not** do this when the database could be exposed to the outside or multiple
 users may be using the same machine*. After changing the file, you will need to
-reboot your computer. After this is done, you should be all set to run the
-tests.
+reboot your computer. After this is done, you can try running the tests.
+
+You should not be prompted to enter a password to run the tests. If so, revisit
+the changes made to the `pg_hba.conf` file, and again make sure you rebooted
+after making the changes. You can then test that the database works as expected
+by entering
+
+```bash		
+psql -U postgres		
+```		
+At which point you should see a prompt like this:		
+```		
+psql (10.9 (Ubuntu 10.9-1.pgdg16.04+1), server 9.6.14)		
+Type "help" for help.		
+ postgres=# 		
+ ```		
+Enter `\q` to exit the prompt, and you should be all set to run the tests.
