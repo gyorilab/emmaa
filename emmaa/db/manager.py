@@ -275,9 +275,10 @@ class EmmaaDatabaseManager(object):
         model_id : str
             The short, standard model ID.
         query_results : list of tuples
-            A list of tuples of the form (query, result_json), where
-            the query is the query object run against the model,
-            and the result_json is the json containing corresponding result.
+            A list of tuples of the form (query, mc_type, result_json), where
+            the query is the query object run against the model, mc_type is
+            the model type for the result, and the result_json is the json
+            containing corresponding result.
         """
         results = []
         for query, mc_type, result_json in query_results:
@@ -322,16 +323,16 @@ class EmmaaDatabaseManager(object):
         logger.info(f"Found {len(results)} results.")
         return results
 
-    def get_all_result_hashes(self, qhash, mc_type, latest_order=1):
+    def get_all_result_hashes(self, qhash, mc_type):
         """Get a set of all result hashes for a given query and mc_type."""
         with self.get_session() as sess:
             q = (sess.query(Result.all_result_hashes)
                  .filter(Result.query_hash == qhash,
                          Result.mc_type == mc_type)
-                 .order_by(Result.date.desc()))
+                 .order_by(Result.date.desc()).limit(1))
         all_sets = [q for q in q.all()]
         if all_sets:
-            return set(all_sets[latest_order - 1][0])
+            return set(all_sets[0][0])
         return None
 
     def get_results(self, user_email, latest_order=1, query_type=None):
