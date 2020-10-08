@@ -267,17 +267,19 @@ class EmmaaModel(object):
     def update_with_cord19(self):
         """Update model with new CORD19 dataset statements."""
         current_stmts = self.get_indra_stmts()
-        drug_stmts = load_pickle_from_s3('indra-covid19', 'drug_stmts.pkl')
-        gordon_stmts = load_pickle_from_s3(
-            'indra-covid19', 'gordon_ndex_stmts.pkl')
-        virhostnet_stmts = load_pickle_from_s3(
-            'indra-covid19', 'virhostnet_stmts.pkl')
-        ctd_stmts = load_pickle_from_s3('indra-covid19', 'ctd_stmts.pkl')
-        logger.info(f'Loaded {len(current_stmts)} current model statements, '
-                    f'{len(drug_stmts)} drug statements, {len(gordon_stmts)} '
-                    f'Gordon statements, {len(virhostnet_stmts)} '
-                    f'VirHostNet statements, {len(ctd_stmts)} CTD statements.')
-        other_stmts = drug_stmts + gordon_stmts + virhostnet_stmts + ctd_stmts
+        default_filenames = [
+            'drug_stmts_v2.pkl', 'gordon_ndex_stmts.pkl',
+            'virhostnet_stmts.pkl', 'ctd_stmts.pkl']
+        if isinstance(self.reading_config['cord19_update'], dict):
+            fnames = self.reading_config['cord19_update'].get(
+                'filenames', default_filenames)
+        else:  # if it's a boolean
+            fnames = default_filenames
+        other_stmts = []
+        for fname in fnames:
+            file_stmts = load_pickle_from_s3('indra-covid19', fname)
+            logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
+            other_stmts += file_stmts
         new_stmts = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
