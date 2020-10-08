@@ -1,6 +1,8 @@
 from datetime import datetime
 from nose.plugins.attrib import attr
-from emmaa.answer_queries import QueryManager, format_results
+from emmaa.answer_queries import QueryManager, format_results, \
+    make_reports_from_results, make_str_report_per_user, \
+    make_html_report_per_user
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_model import create_model
@@ -210,3 +212,31 @@ def test_user_query_delta():
     assert '</body>' in html_rep
     assert 'pysb' in html_rep
     assert 'unsubscribe' in html_rep
+
+
+def test_make_reports():
+    date = datetime.now()
+    results = [
+        ('test', query_object, 'pysb', test_response, {'3801854542'}, date),
+        ('test', query_object, 'signed_graph', fail_response, {}, date),
+        ('test', query_object, 'unsigned_graph', test_response, {}, date),
+        ('test', open_query, 'pysb', test_response, {'3801854542'}, date),
+        ('test', dyn_query, 'pysb', query_not_appl, {'2413475507'}, date)]
+    static_rep, open_rep, dyn_rep = make_reports_from_results(results)
+    assert static_rep
+    assert open_rep
+    assert dyn_rep
+    str_rep = make_str_report_per_user(static_rep, open_rep, dyn_rep)
+    assert str_rep
+    assert 'Updates to your static queries:' in str_rep
+    assert 'Updates to your open queries:' in str_rep
+    assert 'Updates to your dynamic queries:' in str_rep
+    html_rep = make_html_report_per_user(static_rep, open_rep, dyn_rep,
+                                         test_email)
+    assert html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=static">static') in html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=open">open') in html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=dynamic">dynamic') in html_rep
