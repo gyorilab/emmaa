@@ -1,12 +1,21 @@
-from os.path import abspath, dirname, join
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
-    is_query_result_diff
+    make_reports_from_results, make_str_report_per_user, \
+    make_html_report_per_user
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
-from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_model import create_model
+from emmaa.tests.db_setup import _get_test_db, setup_function, \
+    teardown_function
+
+
+def setup_module():
+    setup_function()
+
+
+def teardown_module():
+    teardown_function()
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
@@ -20,9 +29,9 @@ query_object = Query._from_json(test_query)
 dyn_ag = get_agent_from_trips('active MAP2K1')
 dyn_query = DynamicProperty(dyn_ag, 'eventual_value', 'high')
 open_qj = {'type': 'open_search_query',
-            'entity': {'type': 'Agent', 'name': 'BRAF',
-                       'db_refs': {'HGNC': '1097'}},
-            'entity_role': 'subject', 'stmt_type': 'Activation'}
+           'entity': {'type': 'Agent', 'name': 'BRAF',
+                      'db_refs': {'HGNC': '1097'}},
+           'entity_role': 'subject', 'stmt_type': 'Activation'}
 open_query = Query._from_json(open_qj)
 test_response = {
     '3801854542': {
@@ -51,9 +60,11 @@ test_email = 'tester@test.com'
 
 def test_format_results():
     date = datetime.now()
-    results = [('test', query_object, 'pysb', test_response, date),
-               ('test', query_object, 'signed_graph', fail_response, date),
-               ('test', query_object, 'unsigned_graph', test_response, date)]
+    results = [('test', query_object, 'pysb', test_response, {'3801854542'},
+                date),
+               ('test', query_object, 'signed_graph', fail_response, {}, date),
+               ('test', query_object, 'unsigned_graph', test_response, {},
+                date)]
     formatted_results = format_results(results)
     assert len(formatted_results) == 1
     qh = query_object.get_hash_with_model('test')
@@ -61,8 +72,9 @@ def test_format_results():
     assert formatted_results[qh]['model'] == 'test'
     assert formatted_results[qh]['query'] == simple_query
     assert isinstance(formatted_results[qh]['date'], str)
-    assert formatted_results[qh]['pysb'] == [
-        'Pass', [test_response['3801854542']]]
+    assert formatted_results[qh]['pysb'][0] == 'Pass'
+    assert formatted_results[qh]['pysb'][1][0]['path'] == \
+        ('new', test_response['3801854542']['path'])
     assert formatted_results[qh]['pybel'] == [
         'n_a', 'Model type not supported']
     assert formatted_results[qh]['signed_graph'] == [
@@ -113,6 +125,7 @@ def test_immediate_dynamic():
     assert isinstance(result_values['image'], str)
 
 
+@attr('nonpublic')
 def test_immediate_open():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
@@ -169,7 +182,7 @@ def test_answer_get_registered_queries():
     assert results[qh]['result'] == [
         'Pass', 'Satisfaction rate is 100% after 2 simulations.']
     assert isinstance(results[qh]['image'], str)
-    # Retrieve results for dynamic query
+    # Retrieve results for open query
     results = qm.get_registered_queries(test_email, 'open_search_query')
     qh = open_query.get_hash_with_model('test')
     assert qh in results
@@ -181,64 +194,6 @@ def test_answer_get_registered_queries():
         assert isinstance(results[qh][mc_type][1], list)
         assert test_response['3801854542']['path'] in [
             res['path'] for res in results[qh][mc_type][1]]
-
-
-def test_is_diff():
-    assert not is_query_result_diff(query_not_appl, query_not_appl)
-    assert is_query_result_diff(test_response, query_not_appl)
-
-
-@attr('nonpublic')
-def test_report_one_query():
-    db = _get_test_db()
-    qm = QueryManager(db=db, model_managers=[test_mm])
-    # Using results from db
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', test_response),
-                               (query_object, 'pysb', query_not_appl)])
-    str_msg = qm.get_report_per_query('test', query_object)[0]
-    assert str_msg
-    assert 'A new result to query' in str_msg
-    assert 'Query is not applicable for this model' in str_msg
-    assert 'BRAF → MAP2K1 → MAPK1' in str_msg
-    # String report given two responses explicitly
-    str_msg = qm.make_str_report_one_query(
-        'test', query_object, 'pysb', test_response, query_not_appl)
-    assert str_msg
-    assert 'A new result to query' in str_msg, str_msg
-    assert 'Query is not applicable for this model' in str_msg
-    assert 'BRAF → MAP2K1 → MAPK1' in str_msg
-    assert simple_query in str_msg
-
-
-@attr('nonpublic')
-def test_report_files():
-    db = _get_test_db()
-    qm = QueryManager(db=db, model_managers=[test_mm])
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
-    results = qm.db.get_results(test_email, latest_order=1)
-    qm.make_str_report_per_user(results,
-                                filename='test_query_delta.txt')
-    report_file = join(dirname(abspath(__file__)), 'test_query_delta.txt')
-    with open(report_file, 'r') as f:
-        msg = f.read()
-    assert msg
-    assert 'This is the first result to query' in msg, msg
-    assert 'Query is not applicable for this model' in msg
-    qm.db.put_results('test', [(query_object, 'pysb', test_response)])
-    results = qm.db.get_results(test_email, latest_order=1)
-    qm.make_str_report_per_user(results,
-                                filename='new_test_query_delta.txt')
-    new_report_file = join(dirname(abspath(__file__)),
-                           'new_test_query_delta.txt')
-    with open(new_report_file, 'r') as f:
-        msg = f.read()
-    assert msg
-    assert 'A new result to query' in msg
-    assert 'BRAF → MAP2K1 → MAPK1' in msg
 
 
 @attr('nonpublic')
@@ -257,3 +212,32 @@ def test_user_query_delta():
     assert '</body>' in html_rep
     assert 'pysb' in html_rep
     assert 'unsubscribe' in html_rep
+
+
+@attr('nonpublic')
+def test_make_reports():
+    date = datetime.now()
+    results = [
+        ('test', query_object, 'pysb', test_response, {'3801854542'}, date),
+        ('test', query_object, 'signed_graph', fail_response, {}, date),
+        ('test', query_object, 'unsigned_graph', test_response, {}, date),
+        ('test', open_query, 'pysb', test_response, {'3801854542'}, date),
+        ('test', dyn_query, 'pysb', query_not_appl, {'2413475507'}, date)]
+    static_rep, open_rep, dyn_rep = make_reports_from_results(results)
+    assert static_rep
+    assert open_rep
+    assert dyn_rep
+    str_rep = make_str_report_per_user(static_rep, open_rep, dyn_rep)
+    assert str_rep
+    assert 'Updates to your static queries:' in str_rep
+    assert 'Updates to your open queries:' in str_rep
+    assert 'Updates to your dynamic queries:' in str_rep
+    html_rep = make_html_report_per_user(static_rep, open_rep, dyn_rep,
+                                         test_email)
+    assert html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=static">static') in html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=open">open') in html_rep
+    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
+            'tab=dynamic">dynamic') in html_rep

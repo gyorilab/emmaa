@@ -6,6 +6,7 @@ import re
 import time
 from moto import mock_s3
 from nose.plugins.attrib import attr
+from nose.tools import with_setup
 
 from indra.statements import Activation, Agent
 from emmaa.priors import SearchTerm
@@ -13,10 +14,10 @@ from emmaa.statements import EmmaaStatement
 from emmaa.tests.test_model import create_model
 from emmaa.tests.test_stats import previous_results, new_results, \
     previous_test_stats, previous_model_stats
-from emmaa.tests.test_db import _get_test_db
 from emmaa.tests.test_answer_queries import query_object
 from emmaa.util import make_date_str, RE_DATETIMEFORMAT, RE_DATEFORMAT
-
+from emmaa.tests.db_setup import _get_test_db, setup_function, \
+    teardown_function
 
 TEST_BUCKET_NAME = 'test_bucket'
 
@@ -331,6 +332,7 @@ def test_generate_stats_on_s3():
         TEST_BUCKET_NAME, 'stats/test/test_stats_') == 2
 
 
+@with_setup(setup_function, teardown_function)
 @mock_s3
 def test_answer_queries_from_s3():
     # Local imports are recommended when using moto

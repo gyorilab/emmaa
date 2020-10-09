@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
     Boolean, DateTime, func, BigInteger
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class User(Base, EmmaaTable):
 
 
 class Query(Base, EmmaaTable):
-    """Queries run on each model: ``Query(_hash_, model_id, json)``
+    """Queries run on each model: ``Query(_hash_, model_id, json, qtype)``
 
     The hash column is a hash generated from the json and model_id columns
     that can be derived from the
@@ -90,7 +90,7 @@ class Query(Base, EmmaaTable):
 class UserQuery(Base, EmmaaTable):
     """A table linking users to queries:
 
-    ``UserQuery(_id_, user_id, query_hash, date, subscription)``
+    ``UserQuery(_id_, user_id, query_hash, date, subscription, count)``
 
     Parameters
     ----------
@@ -123,7 +123,8 @@ class UserQuery(Base, EmmaaTable):
 class Result(Base, EmmaaTable):
     """Results of queries to models:
 
-    ``Result(_id_, query_hash, date, result_json)``
+    ``Result(_id_, query_hash, date, result_json, mc_type, all_result_hashes,
+    delta)``
 
     Parameters
     ----------
@@ -146,3 +147,5 @@ class Result(Base, EmmaaTable):
     date = Column(DateTime, default=func.now())
     result_json = Column(JSONB, nullable=False)
     mc_type = Column(String(20), default='pysb')
+    all_result_hashes = Column(ARRAY(String), default=[])
+    delta = Column(ARRAY(String), default=[])

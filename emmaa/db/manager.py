@@ -275,16 +275,30 @@ class EmmaaDatabaseManager(object):
         model_id : str
             The short, standard model ID.
         query_results : list of tuples
-            A list of tuples of the form (query, result_json), where
-            the query is the query object run against the model,
-            and the result_json is the json containing corresponding result.
+            A list of tuples of the form (query, mc_type, result_json), where
+            the query is the query object run against the model, mc_type is
+            the model type for the result, and the result_json is the json
+            containing corresponding result.
         """
         results = []
         for query, mc_type, result_json in query_results:
             query_hash = query.get_hash_with_model(model_id)
+            all_result_hashes = self.get_all_result_hashes(query_hash, mc_type)
+            if all_result_hashes is not None:
+                delta = set(result_json.keys()) - all_result_hashes
+                new_all_hashes = all_result_hashes.union(delta)
+            else:  # this is the first result
+                delta = set()
+                new_all_hashes = set(result_json.keys())
+            if delta:
+                logger.info('New results:')
+                for key in delta:
+                    logger.info(result_json[key])
             results.append(Result(query_hash=query_hash,
                                   mc_type=mc_type,
-                                  result_json=result_json))
+                                  result_json=result_json,
+                                  all_result_hashes=new_all_hashes,
+                                  delta=delta))
 
         with self.get_session() as sess:
             sess.add_all(results)
@@ -301,13 +315,25 @@ class EmmaaDatabaseManager(object):
                     f"{query_hashes}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
-                            Result.result_json, Result.date)
+                            Result.result_json, Result.delta, Result.date)
                  .filter(Result.query_hash.in_(query_hashes),
                          Query.hash == Result.query_hash)).distinct()
             results = _make_queries_in_results(q.all())
             results = _weed_results(results, latest_order=latest_order)
         logger.info(f"Found {len(results)} results.")
         return results
+
+    def get_all_result_hashes(self, qhash, mc_type):
+        """Get a set of all result hashes for a given query and mc_type."""
+        with self.get_session() as sess:
+            q = (sess.query(Result.all_result_hashes)
+                 .filter(Result.query_hash == qhash,
+                         Result.mc_type == mc_type)
+                 .order_by(Result.date.desc()).limit(1))
+        all_sets = [q for q in q.all()]
+        if all_sets:
+            return set(all_sets[0][0])
+        return None
 
     def get_results(self, user_email, latest_order=1, query_type=None):
         """Get the results for which the user has registered.
@@ -327,13 +353,13 @@ class EmmaaDatabaseManager(object):
         -------
         results : list[tuple]
             A list of tuples, each of the form: (model_id, query, mc_type,
-            result_json, date) representing the result of a query run on a
-            model on a given date.
+            result_json, delta, date) representing the result of a query run
+            on a model on a given date.
         """
         logger.info(f"Got request for results for {user_email}")
         with self.get_session() as sess:
             q = (sess.query(Query.model_id, Query.json, Result.mc_type,
-                            Result.result_json, Result.date)
+                            Result.result_json, Result.delta, Result.date)
                  .filter(Query.hash == Result.query_hash,
                          Query.hash == UserQuery.query_hash,
                          UserQuery.user_id == User.id,
@@ -462,7 +488,8 @@ class EmmaaDatabaseManager(object):
 
 
 def _weed_results(result_iter, latest_order=1):
-    # Each element of result_iter: (model_id, query(object), result_json, date)
+    # Each element of result_iter:
+    # (model_id, query(object), result_json, delta, date)
     result_dict = defaultdict(list)
     for res in result_iter:
         result_dict[(res[1].get_hash_with_model(res[0]), res[2])].append(
@@ -474,12 +501,13 @@ def _weed_results(result_iter, latest_order=1):
 
 
 def _make_queries_in_results(result_iter):
-    # Each element of result_iter: (model_id, query_json, result_json, date)
+    # Each element of result_iter:
+    # (model_id, query_json, result_json, delta, date)
     # Replace query_json with Query object
     results = []
     for res in result_iter:
         query = QueryObject._from_json(res[1])
-        results.append((res[0], query, res[2], res[3], res[4]))
+        results.append((res[0], query, res[2], res[3], res[4], res[5]))
     return results
 
 
