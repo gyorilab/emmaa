@@ -214,6 +214,7 @@ def test_user_query_delta():
     assert 'unsubscribe' in html_rep
 
 
+@attr('nonpublic')
 def test_make_reports():
     date = datetime.now()
     results = [
