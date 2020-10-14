@@ -91,30 +91,27 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date(model, test_corpus, bucket=EMMAA_BUCKET_NAME):
+def get_latest_available_date(
+        model, test_corpus, date_format='date', bucket=EMMAA_BUCKET_NAME):
     if not test_corpus:
         logger.error('Test corpus is missing, cannot find latest date')
         return
+    # First try to just get last updated dates for model stats and test stats
     model_date = last_updated_date(model, 'model_stats', extension='.json',
-                                   bucket=bucket)
+                                   date_format=date_format, bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
-                                  extension='.json', bucket=bucket)
+                                  extension='.json', date_format=date_format,
+                                  bucket=bucket)
     if model_date == test_date:
         logger.info(f'Latest available date for {model} model and '
                     f'{test_corpus} is {model_date}.')
         return model_date
+    # If last dates don't match, try to match to the earlier of them
     min_date = min(model_date, test_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
         logger.info(f'Latest available date for {model} model and '
                     f'{test_corpus} is {min_date}.')
         return min_date
-    min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
-    for day_count in range(1, 30):
-        earlier_date = min_date_obj - timedelta(days=day_count)
-        if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            logger.info(f'Latest available date for {model} model and '
-                        f'{test_corpus} is {earlier_date}.')
-            return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
 
