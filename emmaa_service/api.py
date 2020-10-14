@@ -1237,7 +1237,7 @@ def get_latest_statements_url(model):
     return {'link': link}
 
 
-@app.route('/latest_date/', methods=['GET'])
+@app.route('/latest_date', methods=['GET'])
 def get_latest_date():
     """Return latest available date of model and test stats.
 
