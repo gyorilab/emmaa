@@ -28,6 +28,7 @@ from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_zip_json_to_s3
+from emmaa.filter_functions import filter_functions
 
 
 logger = logging.getLogger(__name__)
@@ -126,21 +127,21 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self):
+    def run_all_tests(self, filter_func=None):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
-        # TODO get the filter function from model config
-        filter_func = None
         for mc_type in self.mc_types:
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
                                   filter_func)
 
     def run_tests_per_mc(self, mc_type, max_path_length, max_paths,
-                         filter_func):
+                         filter_func=None):
         """Run all applicable tests with one ModelChecker."""
         mc = self.get_updated_mc(
             mc_type, [test.stmt for test in self.applicable_tests])
         logger.info(f'Running the tests with {mc_type} ModelChecker.')
+        if filter_func:
+            logger.info(f'Applying {filter_func.__name__}')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths,
             agent_filter_func=filter_func)
@@ -629,10 +630,10 @@ class TestManager(object):
             logger.info(f'Created {len(model_manager.applicable_tests)} tests '
                         f'for {model_manager.model.name} model.')
 
-    def run_tests(self):
+    def run_tests(self, filter_func=None):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_all_tests()
+            model_manager.run_all_tests(filter_func)
 
 
 class TestConnector(object):
@@ -843,7 +844,12 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         test_data = None
     tm = TestManager([mm], tests)
     tm.make_tests(ScopeTestConnector())
-    tm.run_tests()
+    filter_func = None
+    if mm.model.test_config.get('filters'):
+        filter_func_name = mm.model.test_config['filters'].get(test_corpus)
+        if filter_func_name:
+            filter_func = filter_functions.get(filter_func_name)
+    tm.run_tests(filter_func)
     # Optionally upload test results to S3
     if upload_results:
         mm.upload_results(test_corpus, test_data, bucket=bucket)
