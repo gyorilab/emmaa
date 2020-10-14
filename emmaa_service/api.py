@@ -91,30 +91,27 @@ def is_available(model, test_corpus, date, bucket=EMMAA_BUCKET_NAME):
     return False
 
 
-def get_latest_available_date(model, test_corpus, bucket=EMMAA_BUCKET_NAME):
+def get_latest_available_date(
+        model, test_corpus, date_format='date', bucket=EMMAA_BUCKET_NAME):
     if not test_corpus:
         logger.error('Test corpus is missing, cannot find latest date')
         return
+    # First try to just get last updated dates for model stats and test stats
     model_date = last_updated_date(model, 'model_stats', extension='.json',
-                                   bucket=bucket)
+                                   date_format=date_format, bucket=bucket)
     test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
-                                  extension='.json', bucket=bucket)
+                                  extension='.json', date_format=date_format,
+                                  bucket=bucket)
     if model_date == test_date:
         logger.info(f'Latest available date for {model} model and '
                     f'{test_corpus} is {model_date}.')
         return model_date
+    # If last dates don't match, try to match to the earlier of them
     min_date = min(model_date, test_date)
     if is_available(model, test_corpus, min_date, bucket=bucket):
         logger.info(f'Latest available date for {model} model and '
                     f'{test_corpus} is {min_date}.')
         return min_date
-    min_date_obj = datetime.strptime(min_date, "%Y-%m-%d")
-    for day_count in range(1, 30):
-        earlier_date = min_date_obj - timedelta(days=day_count)
-        if is_available(model, test_corpus, earlier_date, bucket=bucket):
-            logger.info(f'Latest available date for {model} model and '
-                        f'{test_corpus} is {earlier_date}.')
-            return earlier_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
 
@@ -1238,6 +1235,37 @@ def get_latest_statements_url(model):
     else:
         link = None
     return {'link': link}
+
+
+@app.route('/latest_date', methods=['GET'])
+def get_latest_date():
+    """Return latest available date of model and test stats.
+
+    Parameters
+    ----------
+    model : str
+        Name of the model.
+    test_corpus : Optional[str]
+        Which test corpus stats to check. If not provided, default test corpus
+        for the model is used.
+    date_format : Optional[str]
+        Which format of the date to return: 'date' or 'datetime'. Default:
+        datetime.
+
+    Returns
+    -------
+    json : dict
+        A dictionary with key 'date' and value of a latest available date in a
+        selected format.
+    """
+    model = request.json.get('model')
+    if not model:
+        abort(Response('Need to provide model', 404))
+    date_format = request.json.get('date_format', 'datetime')
+    test_corpus = request.json.get('test_corpus', _default_test(model))
+    date = get_latest_available_date(
+        model, test_corpus, date_format=date_format, bucket=EMMAA_BUCKET_NAME)
+    return jsonify({'date': date})
 
 
 if __name__ == '__main__':
