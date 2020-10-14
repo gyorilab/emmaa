@@ -770,17 +770,20 @@ def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
     if not test_name:
         test_name = test_corpus
     if msg_type == 'stmts':
-        msg = (f'Today I learned {len(delta["added"])} new mechanisms. '
+        plural = 's' if len(delta['added']) > 1 else ''
+        msg = (f'Today I learned {len(delta["added"])} new mechanism{plural}. '
                f'See https://emmaa.indra.bio/dashboard/{model_name}'
                f'?tab=model&date={date} for more details.')
     elif msg_type == 'applied_tests':
-        msg = (f'Today I applied {len(delta["added"])} new tests in the '
-               f'{test_name}. See '
+        plural = 's' if len(delta['added']) > 1 else ''
+        msg = (f'Today I applied {len(delta["added"])} new test{plural} in '
+               f'the {test_name}. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date} for more details.')
     elif msg_type == 'passed_tests' and mc_type:
-        msg = (f'Today I explained {len(delta["added"])} new observations in '
-               f'the {test_name} with my '
+        plural = 's' if len(delta['added']) > 1 else ''
+        msg = (f'Today I explained {len(delta["added"])} new '
+               f'observation{plural} in the {test_name} with my '
                f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date} for more details.')
