@@ -18,6 +18,4 @@ def register_filter(function):
 @register_filter
 def filter_chem_mesh_go(agent):
     gr = agent.get_grounding()
-    if gr[0] in ['MESH', 'CHEBI', 'GO']:
-        return False
-    return True
+    return gr[0] not in {'MESH', 'CHEBI', 'GO', None}
