@@ -474,6 +474,11 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
           rotate: -45,
           format: '%Y-%m-%d-%H-%M-%S'
         }
+      },
+      y: {
+        min: 0,
+        max: 100,
+        padding: 0
       }
     },
     title: {
