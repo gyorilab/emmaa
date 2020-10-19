@@ -159,6 +159,29 @@ def _load_stmts_from_cache(model, date):
     return stmts
 
 
+def _load_model_stats_from_cache(model, date):
+    available_date, model_stats = model_stats_cache.get(model, (None, None))
+    if model_stats and date and available_date == date:
+        logger.info(f'Loaded model stats for {model} {date} from cache')
+        return model_stats
+    model_stats, _ = get_model_stats(model, 'model', date=date)
+    model_stats_cache[model] = (date, model_stats)
+    return model_stats
+
+
+def _load_test_stats_from_cache(model, test_corpus, date):
+    available_date, test_stats, file_key = test_stats_cache.get(
+        (model, test_corpus), (None, None, None))
+    if test_stats and date and available_date == date:
+        logger.info(f'Loaded test stats for {model} and {test_corpus} {date}'
+                    ' from cache')
+        return test_stats, file_key
+    test_stats, file_key = get_model_stats(model, 'test', tests=test_corpus,
+                                           date=date)
+    test_stats_cache[(model, test_corpus)] = (date, test_stats, file_key)
+    return test_stats, file_key
+
+
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
@@ -198,6 +221,8 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 model_cache = {}
 tests_cache = {}
 stmts_cache = {}
+model_stats_cache = {}
+test_stats_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -512,9 +537,8 @@ def get_model_dashboard(model):
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    model_stats, _ = get_model_stats(model, 'model', date=date)
-    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus,
-                                    date=date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
@@ -619,8 +643,8 @@ def get_model_tests_page(model):
     date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    test_stats, file_key = get_model_stats(
-        model, 'test', tests=test_corpus, date=date)
+    test_stats, file_key = _load_test_stats_from_cache(
+        model, test_corpus, date)
     if not test_stats:
         abort(Response(f'Data for {model} for {date} was not found', 404))
     try:
@@ -785,7 +809,8 @@ def get_statement_evidence_page():
         stmt_counts_dict = Counter()
         test_corpora = _get_test_corpora(model)
         for test_corpus in test_corpora:
-            test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+            test_stats, _ = _load_test_stats_from_cache(
+                model, test_corpus, date)
             stmt_counts = test_stats['test_round_summary'].get(
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
@@ -859,7 +884,7 @@ def get_all_statements_page(model):
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
     for test_corpus in test_corpora:
-        test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+        test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
         stmt_counts = test_stats['test_round_summary'].get(
             'path_stmt_counts', [])
         stmt_counts_dict += Counter(dict(stmt_counts))
