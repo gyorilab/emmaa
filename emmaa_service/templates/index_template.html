@@ -18,14 +18,14 @@
              ></a>
         <div class="card-body">
           <p class="card-text">{{ model_meta['description'] }}</p>
-          <div class="d-flex justify-content-between align-items-center">
+          <div class="justify-content-between align-items-center">
             <div class="btn-group">
               <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, tab='model') }}" target="_blank">Details</a>
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}" target="_blank">Query</a>
-              <a class="btn btn-sm btn-outline-secondary"
-                 href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank">View on NDEX</a>
+              <a class="btn btn-sm btn-outline-secondary" style="margin-left: 15px; ;" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}" target="_blank">Query</a>
+              <a class="btn btn-sm btn-outline-secondary" style="margin-left: 15px;" 
+                 href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank">NDEX</a>
               {% if 'twitter_link' in model_meta %}
-                <a href="{{ model_meta['twitter_link'] }}"  target="_blank" class="fa fa-twitter" style="size: ;"></a>
+              <a href="{{ model_meta['twitter_link'] }}"  target="_blank" class="fa fa-twitter" style="margin-left: 15px;"></a>
               {% endif %}
             </div>
           </div>
