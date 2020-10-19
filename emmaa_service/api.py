@@ -521,6 +521,7 @@ def get_model_dashboard(model):
         if mid == model:
             ndex_id = mmd['ndex']['network']
             description = mmd['description']
+            twitter_link = mmd.get('twitter_link')
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
@@ -534,6 +535,11 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
+    if twitter_link:
+        model_info_contents.append([
+            ('', 'Twitter', ''),
+            (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
+             "Click to see model's Twitter page")])
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
     if test_data:
