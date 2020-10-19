@@ -238,8 +238,13 @@
           <div class="checkbox-container">
             <div class="form-select">
               <select name="open-select" id="open-select" placeholder="Select models" multiple>
+              {% if preselected_val and preselected_name %}
+                <option value="{{ preselected_val }}" selected="{{ preselected_val }}">{{ preselected_name }}</option>
+              {% endif %}
               {% for model_id, config_json in model_data %}
+                {% if model_id != preselected_val %}
                 <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% endif %}
               {% endfor %}
               </select>
             </div>
