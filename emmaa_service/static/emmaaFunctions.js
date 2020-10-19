@@ -477,7 +477,7 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
       },
       y: {
         min: 0,
-        max: 100,
+        max: null,
         padding: 0
       }
     },
