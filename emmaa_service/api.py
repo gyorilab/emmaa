@@ -504,8 +504,11 @@ def get_model_dashboard(model):
         model, get_model_config(model)))
     if not test_corpus:
         abort(Response('Could not identify test corpus', 404))
-    date = request.args.get('date', get_latest_available_date(
-        model, test_corpus))
+    date = request.args.get('date')
+    latest_date = get_latest_available_date(
+        model, test_corpus)
+    if not date:
+        date = latest_date
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
@@ -525,7 +528,6 @@ def get_model_dashboard(model):
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
-    latest_date = get_latest_available_date(model, test_corpus)
     model_info_contents = [
         [('', 'Model Description', ''), ('', description, '')],
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
