@@ -20,8 +20,8 @@
           <p class="card-text">{{ model_meta['description'] }}</p>
           <div class="d-flex justify-content-between align-items-center">
             <div class="btn-group">
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, tab='model') }}">Details</a>
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}">Query</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, tab='model') }}" target="_blank">Details</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}" target="_blank">Query</a>
               <a class="btn btn-sm btn-outline-secondary"
                  href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank">View on NDEX</a>
               {% if 'twitter_link' in model_meta %}
