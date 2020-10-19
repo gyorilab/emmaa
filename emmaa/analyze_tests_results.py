@@ -773,20 +773,22 @@ def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
         plural = 's' if len(delta['added']) > 1 else ''
         msg = (f'Today I learned {len(delta["added"])} new mechanism{plural}. '
                f'See https://emmaa.indra.bio/dashboard/{model_name}'
-               f'?tab=model&date={date} for more details.')
+               f'?tab=model&date={date}#addedStmts for more details.')
     elif msg_type == 'applied_tests':
         plural = 's' if len(delta['added']) > 1 else ''
         msg = (f'Today I applied {len(delta["added"])} new test{plural} in '
                f'the {test_name}. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus}&date={date} for more details.')
+               f'&test_corpus={test_corpus}&date={date}#newAppliedTests for '
+               'more details.')
     elif msg_type == 'passed_tests' and mc_type:
         plural = 's' if len(delta['added']) > 1 else ''
         msg = (f'Today I explained {len(delta["added"])} new '
                f'observation{plural} in the {test_name} with my '
                f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus}&date={date} for more details.')
+               f'&test_corpus={test_corpus}&date={date}#newPassedTests for '
+               'more details.')
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
     return msg
