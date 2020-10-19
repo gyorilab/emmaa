@@ -10,6 +10,7 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
 from flask_jwt_extended import jwt_optional
 from urllib import parse
 from collections import defaultdict, Counter
+from copy import deepcopy
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -537,11 +538,13 @@ def get_model_dashboard(model):
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    model_stats = _load_model_stats_from_cache(model, date)
-    test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
-    if not model_stats or not test_stats:
+    model_stats_loaded = _load_model_stats_from_cache(model, date)
+    test_stats_loaded, _ = _load_test_stats_from_cache(model, test_corpus, date)
+    if not model_stats_loaded or not test_stats_loaded:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+    model_stats = deepcopy(model_stats_loaded)
+    test_stats = deepcopy(test_stats_loaded)
     ndex_id = 'None available'
     description = 'None available'
     for mid, mmd in model_meta_data:
@@ -643,10 +646,11 @@ def get_model_tests_page(model):
     date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    test_stats, file_key = _load_test_stats_from_cache(
+    test_stats_loaded, file_key = _load_test_stats_from_cache(
         model, test_corpus, date)
-    if not test_stats:
+    if not test_stats_loaded:
         abort(Response(f'Data for {model} for {date} was not found', 404))
+    test_stats = deepcopy(test_stats_loaded)
     try:
         current_test = \
             test_stats['test_round_summary']['all_test_results'][test_hash]
