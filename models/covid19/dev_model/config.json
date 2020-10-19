@@ -89,7 +89,11 @@
    "covid19_curated_tests",
    "covid19_mitre_tests"
   ],
-  "default_test_corpus": "covid19_curated_tests"
+  "default_test_corpus": "covid19_curated_tests",
+  "filters": {
+   "covid19_mitre_tests": "filter_chem_mesh_go",
+   "covid19_curated_tests": "filter_chem_mesh_go"
+  }
  },
  "description": "Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
  "make_tests": false,
