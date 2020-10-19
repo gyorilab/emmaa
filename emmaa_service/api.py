@@ -538,13 +538,11 @@ def get_model_dashboard(model):
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    model_stats_loaded = _load_model_stats_from_cache(model, date)
-    test_stats_loaded, _ = _load_test_stats_from_cache(model, test_corpus, date)
-    if not model_stats_loaded or not test_stats_loaded:
+    model_stats = _load_model_stats_from_cache(model, date)
+    test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
+    if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
-    model_stats = deepcopy(model_stats_loaded)
-    test_stats = deepcopy(test_stats_loaded)
     ndex_id = 'None available'
     description = 'None available'
     for mid, mmd in model_meta_data:
@@ -581,15 +579,15 @@ def get_model_dashboard(model):
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
-        cur = _set_curation(k, correct, incorrect)
-        v['test'].append(cur)
         if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
             continue
         else:
-            all_tests.append((k, v))
+            cur = _set_curation(k, correct, incorrect)
+            val = deepcopy(v)
+            val['test'].append(cur)
+            all_tests.append((k, val))
 
-    all_stmts = model_stats['model_summary']['all_stmts']
-    for st_hash, st_value in all_stmts.items():
+    def _update_stmt(st_hash, st_value):
         url_param = parse.urlencode(
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model,
              'date': date})
@@ -597,13 +595,23 @@ def get_model_dashboard(model):
         st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
+        return (st_value)
+
+    all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
-                        for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
+    top_stmts_counts = []
+    for st_hash, c in most_supported:
+        st_value = deepcopy(all_stmts[st_hash])
+        top_stmts_counts.append(
+            ((_update_stmt(st_hash, st_value)), ('', str(c), '')))
+
     if len(added_stmts_hashes) > 0:
-        added_stmts = [((all_stmts[h]),) for h in added_stmts_hashes]
+        added_stmts = []
+        for st_hash in added_stmts_hashes:
+            st_value = deepcopy(all_stmts[st_hash])
+            added_stmts.append((_update_stmt(st_hash, st_value),))
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
