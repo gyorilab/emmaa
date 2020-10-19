@@ -428,6 +428,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     lineChart.flush();
     areaChart.flush();
   });
+  // Finally send user to the linked loction if any
+  let detailedLink = window.location.href.split('#')[1];
+  if (detailedLink) {
+  window.location.href = `${window.location.href.split('#')[0]}#${detailedLink}`
+  }
 }
 
 /* c3 chart functions
