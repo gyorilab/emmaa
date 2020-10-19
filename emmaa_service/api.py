@@ -809,8 +809,9 @@ def get_statement_evidence_page():
         stmt_counts_dict = Counter()
         test_corpora = _get_test_corpora(model)
         for test_corpus in test_corpora:
+            test_date = get_latest_available_date(model, test_corpus)
             test_stats, _ = _load_test_stats_from_cache(
-                model, test_corpus, date)
+                model, test_corpus, test_date)
             stmt_counts = test_stats['test_round_summary'].get(
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
