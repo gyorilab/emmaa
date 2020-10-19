@@ -17,5 +17,9 @@ def register_filter(function):
 
 @register_filter
 def filter_chem_mesh_go(agent):
+    """Filter ungrounded agents and agents grounded to MESH, CHEBI, GO unless
+    also grounded to HMDB.
+    """
     gr = agent.get_grounding()
-    return gr[0] not in {'MESH', 'CHEBI', 'GO', None}
+    return gr[0] not in {'MESH', 'CHEBI', 'GO', None} or \
+        'HMDB' in agent.db_refs
