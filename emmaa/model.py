@@ -287,6 +287,40 @@ class EmmaaModel(object):
         new_stmts = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
+    def update_ids_to_hashes(self, ids_to_hashes):
+        """Update ids_to_stmt_hashes dictionary from new ids_to_hashes mapping.
+
+        Parameters
+        ----------
+        ids_to_hashes : dict
+            A dictionary mapping a paper id (e.g. PMID) to a set of hashes of
+            statements extracted from this paper.
+        """
+        for paper_id, stmt_hashes in ids_to_hashes:
+            if paper_id in self.ids_to_stmt_hashes:
+                self.ids_to_stmt_hashes[paper_id].update(stmt_hashes)
+            else:
+                self.ids_to_stmt_hashes[paper_id] = stmt_hashes
+
+    def update_ids_to_hashes_from_stmts(self, stmts):
+        """Update ids_to_stmt_hashes dictionary from a list of statements.
+        NOTE: this method gets PMIDs from statement evidence, it should be
+        probably used only for initial setting of the mapping.
+
+        Parameters
+        ----------
+        stmts : list[indra.statements.Statement]
+            A list of INDRA statements to create the mappings from.
+        """
+        for stmt in stmts:
+            stmt_hash = stmt.get_hash(refresh=True)
+            for evid in stmt.evidence:
+                if evid.pmid:
+                    if evid.pmid in self.ids_to_stmt_hashes:
+                        self.ids_to_stmt_hashes[evid.pmid].add(stmt_hash)
+                    else:
+                        self.ids_to_stmt_hashes[evid.pmid] = {stmt_hash}
+
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
         logger.info('Starting with %d raw EmmaaStatements' % len(self.stmts))
