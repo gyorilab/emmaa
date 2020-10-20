@@ -21,5 +21,4 @@ def filter_chem_mesh_go(agent):
     also grounded to HMDB.
     """
     gr = agent.get_grounding()
-    return gr[0] not in {'MESH', 'CHEBI', 'GO', None} or \
-        'HMDB' in agent.db_refs
+    return gr[0] not in {'MESH', 'CHEBI', 'GO', None}
