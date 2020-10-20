@@ -240,15 +240,21 @@ class EmmaaModel(object):
         for lit_source, reader in zip(lit_sources, readers):
             ids_to_terms = self.search_literature(lit_source, date_limit)
             if reader == 'aws':
-                estmts += read_pmid_search_terms(ids_to_terms)
+                new_estmts, ids_to_hashes = read_pmid_search_terms(
+                    ids_to_terms)
             elif reader == 'indra_db_pmid':
-                estmts += read_db_pmid_search_terms(ids_to_terms)
+                new_estmts, ids_to_hashes = read_db_pmid_search_terms(
+                    ids_to_terms)
             elif reader == 'indra_db_doi':
-                estmts += read_db_doi_search_terms(ids_to_terms)
+                new_estmts, ids_to_hashes = read_db_doi_search_terms(
+                    ids_to_terms)
             elif reader == 'elsevier_eidos':
-                estmts += read_elsevier_eidos_search_terms(ids_to_terms)
+                new_estmts, ids_to_hashes = read_elsevier_eidos_search_terms(
+                    ids_to_terms)
             else:
                 raise ValueError('Unknown reader: %s' % reader)
+            estmts += new_estmts
+            self.update_ids_to_hashes(ids_to_hashes)
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
@@ -364,6 +370,9 @@ class EmmaaModel(object):
         save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
         # Dump as json
         save_json_to_s3(self.stmts, bucket, key=fname+'.json')
+        # Save ids to stmt hashes mapping as json
+        id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
+        save_json_to_s3(self.ids_to_stmt_hashes, bucket, key=id_fname)
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
