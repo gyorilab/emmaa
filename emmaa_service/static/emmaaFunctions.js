@@ -387,8 +387,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     columns: passedRatioColumns,
     onclick: redirectToPast
   };
-
-  let lineChart = generateLineArea(pasRatId, lineDataParams, '');
+  var ratioTicks = [];
+  for (var i = 0; i <= 100; i+=10) {
+    ratioTicks.push(i);
+  }
+  let lineChart = generateLineArea(pasRatId, lineDataParams, '', ratioTicks);
 
   // Applied/passed area graph
   let appliedTests = test_json.changes_over_time.number_applied_tests;
@@ -470,7 +473,7 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   });
 }
 
-function generateLineArea(chartDivId, dataParams, chartTitle) {
+function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -483,8 +486,11 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
         }
       },
       y: {
-        min: 0
-      }
+        min: 0,
+        tick: {
+          values: yticks
+        }
+        }
     },
     title: {
       text: chartTitle
