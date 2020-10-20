@@ -59,7 +59,7 @@ class EmmaaModel(object):
     assembled_stmts : list[indra.statements.Statement]
         A list of assembled INDRA Statements
     """
-    def __init__(self, name, config):
+    def __init__(self, name, config, ids_to_stmt_hashes=None):
         self.name = name
         self.stmts = []
         self.assembly_config = {}
@@ -71,6 +71,10 @@ class EmmaaModel(object):
         self.human_readable_name = None
         self._load_config(config)
         self.assembled_stmts = []
+        if ids_to_stmt_hashes:
+            self.ids_to_stmt_hashes = ids_to_stmt_hashes
+        else:
+            ids_to_stmt_hashes = {}
 
     def add_statements(self, stmts):
         """"Add a set of EMMAA Statements to the model
