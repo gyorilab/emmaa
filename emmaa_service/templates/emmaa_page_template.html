@@ -41,6 +41,9 @@
   <!-- <link href="https://bigmech.s3.amazonaws.com/indra-db/indralabvue-dev/IndralabVue.css" rel="stylesheet"> -->
   <!-- <script src="https://bigmech.s3.amazonaws.com/indra-db/indralabvue-test/IndralabVue.umd.min.js"></script> -->
   <!-- <link href="https://bigmech.s3.amazonaws.com/indra-db/indralabvue-test/IndralabVue.css" rel="stylesheet">   -->
+
+  <!-- Add icon library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   {% block additional_scripts %}
   {% endblock %}
 
@@ -69,6 +72,15 @@
     a.btn {
       background-color: rgb(255, 255, 255);
     }
+    .btn-group .btn {
+      border-radius: 6px;
+    }
+    .btn-group>.btn-group:not(:last-child)>.btn , .btn-group>.btn:not(:last-child):not(.dropdown-toggle){
+      border-radius: 6px;
+    }
+    .btn-group>.btn-group:not(:first-child)>.btn, .btn-group>.btn:not(:first-child) {
+      border-radius: 6px;
+    }
     #query-submit {
       background-color: rgb(221, 221, 221);
     }
@@ -82,6 +94,17 @@
     .fa-times {color: #ff0000}
     .fa-ban {color: #a5a5a5}
     .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
+    .fa {
+      font-size:25px;
+      width: 30px;
+      text-align: center;
+      text-decoration: none;
+      padding: 0;
+    }
+    .fa-twitter {
+      background: white;
+      color:  #55ACEE;
+    }
   </style>
 </head>
 

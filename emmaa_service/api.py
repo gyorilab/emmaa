@@ -10,6 +10,7 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
 from flask_jwt_extended import jwt_optional
 from urllib import parse
 from collections import defaultdict, Counter
+from copy import deepcopy
 
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
@@ -159,6 +160,29 @@ def _load_stmts_from_cache(model, date):
     return stmts
 
 
+def _load_model_stats_from_cache(model, date):
+    available_date, model_stats = model_stats_cache.get(model, (None, None))
+    if model_stats and date and available_date == date:
+        logger.info(f'Loaded model stats for {model} {date} from cache')
+        return model_stats
+    model_stats, _ = get_model_stats(model, 'model', date=date)
+    model_stats_cache[model] = (date, model_stats)
+    return model_stats
+
+
+def _load_test_stats_from_cache(model, test_corpus, date):
+    available_date, test_stats, file_key = test_stats_cache.get(
+        (model, test_corpus), (None, None, None))
+    if test_stats and date and available_date == date:
+        logger.info(f'Loaded test stats for {model} and {test_corpus} {date}'
+                    ' from cache')
+        return test_stats, file_key
+    test_stats, file_key = get_model_stats(model, 'test', tests=test_corpus,
+                                           date=date)
+    test_stats_cache[(model, test_corpus)] = (date, test_stats, file_key)
+    return test_stats, file_key
+
+
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='models/',
@@ -198,6 +222,8 @@ def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
 model_cache = {}
 tests_cache = {}
 stmts_cache = {}
+model_stats_cache = {}
+test_stats_cache = {}
 if GLOBAL_PRELOAD:
     # Load all the model configs
     model_meta_data = _get_model_meta_data()
@@ -504,14 +530,16 @@ def get_model_dashboard(model):
         model, get_model_config(model)))
     if not test_corpus:
         abort(Response('Could not identify test corpus', 404))
-    date = request.args.get('date', get_latest_available_date(
-        model, test_corpus))
+    date = request.args.get('date')
+    latest_date = get_latest_available_date(
+        model, test_corpus)
+    if not date:
+        date = latest_date
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     model_meta_data = _get_model_meta_data()
-    model_stats, _ = get_model_stats(model, 'model', date=date)
-    test_stats, _ = get_model_stats(model, 'test', tests=test_corpus,
-                                    date=date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
@@ -521,10 +549,10 @@ def get_model_dashboard(model):
         if mid == model:
             ndex_id = mmd['ndex']['network']
             description = mmd['description']
+            twitter_link = mmd.get('twitter_link')
     if ndex_id == 'None available':
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
-    latest_date = get_latest_available_date(model, test_corpus)
     model_info_contents = [
         [('', 'Model Description', ''), ('', description, '')],
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
@@ -534,6 +562,11 @@ def get_model_dashboard(model):
         [('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
           'Click to see network on Ndex')]]
+    if twitter_link:
+        model_info_contents.append([
+            ('', 'Twitter', ''),
+            (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
+             "Click to see model's Twitter page")])
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
     if test_data:
@@ -546,15 +579,15 @@ def get_model_dashboard(model):
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
-        cur = _set_curation(k, correct, incorrect)
-        v['test'].append(cur)
         if all(v[mt][0].lower() == 'n_a' for mt in current_model_types):
             continue
         else:
-            all_tests.append((k, v))
+            cur = _set_curation(k, correct, incorrect)
+            val = deepcopy(v)
+            val['test'].append(cur)
+            all_tests.append((k, val))
 
-    all_stmts = model_stats['model_summary']['all_stmts']
-    for st_hash, st_value in all_stmts.items():
+    def _update_stmt(st_hash, st_value):
         url_param = parse.urlencode(
             {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model,
              'date': date})
@@ -562,13 +595,23 @@ def get_model_dashboard(model):
         st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
+        return (st_value)
+
+    all_stmts = model_stats['model_summary']['all_stmts']
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
-    top_stmts_counts = [((all_stmts[h]), ('', str(c), ''))
-                        for h, c in most_supported]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
+    top_stmts_counts = []
+    for st_hash, c in most_supported:
+        st_value = deepcopy(all_stmts[st_hash])
+        top_stmts_counts.append(
+            ((_update_stmt(st_hash, st_value)), ('', str(c), '')))
+
     if len(added_stmts_hashes) > 0:
-        added_stmts = [((all_stmts[h]),) for h in added_stmts_hashes]
+        added_stmts = []
+        for st_hash in added_stmts_hashes:
+            st_value = deepcopy(all_stmts[st_hash])
+            added_stmts.append((_update_stmt(st_hash, st_value),))
     else:
         added_stmts = 'No new statements were added'
     return render_template('model_template.html',
@@ -611,10 +654,11 @@ def get_model_tests_page(model):
     date = request.args.get('date')
     if model_type not in ALL_MODEL_TYPES:
         abort(Response(f'Model type {model_type} does not exist', 404))
-    test_stats, file_key = get_model_stats(
-        model, 'test', tests=test_corpus, date=date)
-    if not test_stats:
+    test_stats_loaded, file_key = _load_test_stats_from_cache(
+        model, test_corpus, date)
+    if not test_stats_loaded:
         abort(Response(f'Data for {model} for {date} was not found', 404))
+    test_stats = deepcopy(test_stats_loaded)
     try:
         current_test = \
             test_stats['test_round_summary']['all_test_results'][test_hash]
@@ -716,7 +760,13 @@ def get_query_page():
     tab = request.args.get('tab', 'model')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
-
+    preselected_name = None
+    preselected_val = request.args.get('preselected')
+    if preselected_val:
+        for model, config in model_meta_data:
+            if model == preselected_val:
+                preselected_name = config['human_readable_name']
+                break
     # Queried results
     immediate_table_headers, queried_results = get_immediate_queries(
         'path_property')
@@ -750,7 +800,9 @@ def get_query_page():
                            ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
-                           tab=tab)
+                           tab=tab,
+                           preselected_val=preselected_val,
+                           preselected_name=preselected_name)
 
 
 @app.route('/evidence')
@@ -769,7 +821,9 @@ def get_statement_evidence_page():
         stmt_counts_dict = Counter()
         test_corpora = _get_test_corpora(model)
         for test_corpus in test_corpora:
-            test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+            test_date = get_latest_available_date(model, test_corpus)
+            test_stats, _ = _load_test_stats_from_cache(
+                model, test_corpus, test_date)
             stmt_counts = test_stats['test_round_summary'].get(
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
@@ -843,7 +897,7 @@ def get_all_statements_page(model):
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
     for test_corpus in test_corpora:
-        test_stats, _ = get_model_stats(model, 'test', tests=test_corpus)
+        test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
         stmt_counts = test_stats['test_round_summary'].get(
             'path_stmt_counts', [])
         stmt_counts_dict += Counter(dict(stmt_counts))

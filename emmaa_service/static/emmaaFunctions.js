@@ -387,8 +387,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     columns: passedRatioColumns,
     onclick: redirectToPast
   };
-
-  let lineChart = generateLineArea(pasRatId, lineDataParams, '');
+  var ratioTicks = [];
+  for (var i = 0; i <= 100; i+=10) {
+    ratioTicks.push(i);
+  }
+  let lineChart = generateLineArea(pasRatId, lineDataParams, '', ratioTicks);
 
   // Applied/passed area graph
   let appliedTests = test_json.changes_over_time.number_applied_tests;
@@ -428,6 +431,18 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     lineChart.flush();
     areaChart.flush();
   });
+  $(function() {
+    //Executed on page load with URL containing an anchor tag.
+    if($(location.href.split("#")[1])) {
+        var target = $('#'+location.href.split("#")[1]);
+        if (target.length) {
+          $('html,body').animate({
+            scrollTop: target.offset().top - 70 //offset height of header here too.
+          }, 1000);
+          return false;
+        }
+      }
+  });
 }
 
 /* c3 chart functions
@@ -458,7 +473,7 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   });
 }
 
-function generateLineArea(chartDivId, dataParams, chartTitle) {
+function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -469,7 +484,13 @@ function generateLineArea(chartDivId, dataParams, chartTitle) {
           rotate: -45,
           format: '%Y-%m-%d-%H-%M-%S'
         }
-      }
+      },
+      y: {
+        min: 0,
+        tick: {
+          values: yticks
+        }
+        }
     },
     title: {
       text: chartTitle
