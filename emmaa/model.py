@@ -324,7 +324,7 @@ class EmmaaModel(object):
         ids_to_stmt_hashes = {}
         for estmt in stmts:
             stmt_hash = estmt.stmt.get_hash(refresh=True)
-            for evid in stmt.evidence:
+            for evid in estmt.stmt.evidence:
                 if evid.pmid:
                     if evid.pmid in ids_to_stmt_hashes:
                         ids_to_stmt_hashes[evid.pmid].add(stmt_hash)
