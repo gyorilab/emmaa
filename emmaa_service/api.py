@@ -12,6 +12,7 @@ from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
 
+from indra_db.exceptions import BadHashError
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
