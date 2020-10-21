@@ -1,6 +1,7 @@
 import time
 import logging
 import datetime
+from botocore.exceptions import ClientError
 from covid_19.emmaa_update import make_model_stmts
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
@@ -73,8 +74,11 @@ class EmmaaModel(object):
         self.assembled_stmts = []
         if ids_to_stmt_hashes:
             self.ids_to_stmt_hashes = ids_to_stmt_hashes
+        elif self.stmts:
+            self.ids_to_stmt_hashes = self.get_ids_to_hashes_from_stmts(
+                self.stmts)
         else:
-            ids_to_stmt_hashes = {}
+            self.ids_to_stmt_hashes = {}
 
     def add_statements(self, stmts):
         """"Add a set of EMMAA Statements to the model
@@ -308,24 +312,28 @@ class EmmaaModel(object):
             else:
                 self.ids_to_stmt_hashes[paper_id] = stmt_hashes
 
-    def update_ids_to_hashes_from_stmts(self, stmts):
-        """Update ids_to_stmt_hashes dictionary from a list of statements.
+    def get_ids_to_hashes_from_stmts(self, stmts):
+        """Get ids_to_stmt_hashes dictionary from a list of statements.
         NOTE: this method gets PMIDs from statement evidence, it should be
         probably used only for initial setting of the mapping.
+        TODO: update this to get data from other types of IDs in addition to
+        PMIDs.
 
         Parameters
         ----------
         stmts : list[indra.statements.Statement]
             A list of INDRA statements to create the mappings from.
         """
+        ids_to_stmt_hashes = {}
         for stmt in stmts:
             stmt_hash = stmt.get_hash(refresh=True)
             for evid in stmt.evidence:
                 if evid.pmid:
-                    if evid.pmid in self.ids_to_stmt_hashes:
-                        self.ids_to_stmt_hashes[evid.pmid].add(stmt_hash)
+                    if evid.pmid in ids_to_stmt_hashes:
+                        ids_to_stmt_hashes[evid.pmid].add(stmt_hash)
                     else:
-                        self.ids_to_stmt_hashes[evid.pmid] = {stmt_hash}
+                        ids_to_stmt_hashes[evid.pmid] = {stmt_hash}
+        return ids_to_stmt_hashes
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
@@ -561,7 +569,7 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
                                            extension='.pkl')
     logger.info(f'Loading model state from {latest_model_key}')
     stmts = load_pickle_from_s3(bucket, latest_model_key)
-    return stmts
+    return stmts, latest_model_key
 
 
 def _default_test(model, config=None, bucket=EMMAA_BUCKET_NAME):
