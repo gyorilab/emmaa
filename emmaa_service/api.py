@@ -420,9 +420,9 @@ def _label_curations(**kwargs):
     curations = get_curations(**kwargs)
     logger.info('Labeling curations')
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
-    correct = {str(c.pa_hash) for c in curations if c.tag in correct_tags}
-    incorrect = {str(c.pa_hash) for c in curations if
-                 str(c.pa_hash) not in correct}
+    correct = {str(c['pa_hash']) for c in curations if c['tag'] in correct_tags}
+    incorrect = {str(c['pa_hash']) for c in curations if
+                 str(c['pa_hash']) not in correct}
     logger.info('Labeled curations as correct or incorrect')
     return correct, incorrect
 
@@ -431,7 +431,7 @@ def _count_curations(curations, stmts_by_hash):
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     cur_counts = {}
     for cur in curations:
-        stmt_hash = str(cur.pa_hash)
+        stmt_hash = str(cur['pa_hash'])
         if stmt_hash not in stmts_by_hash:
             continue
         if stmt_hash not in cur_counts:
@@ -439,12 +439,12 @@ def _count_curations(curations, stmts_by_hash):
                 'this': defaultdict(int),
                 'other': defaultdict(int),
             }
-        if cur.tag in correct_tags:
+        if cur['tag'] in correct_tags:
             cur_tag = 'correct'
         else:
             cur_tag = 'incorrect'
-        if cur.source_hash in [evid.get_source_hash() for evid in
-                               stmts_by_hash[stmt_hash].evidence]:
+        if cur['source_hash'] in [evid.get_source_hash() for evid in
+                                  stmts_by_hash[stmt_hash].evidence]:
             cur_source = 'this'
         else:
             cur_source = 'other'
@@ -1208,8 +1208,8 @@ def get_statement_by_hash_model(model, date, hash_val):
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(
-            {'error_type': cur.tag})
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
     for st in stmts:
         if str(st.get_hash()) == str(hash_val):
             st_json = st.to_json()
@@ -1225,8 +1225,8 @@ def get_tests_by_hash(test_corpus, hash_val):
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
-        cur_dict[(cur.pa_hash, cur.source_hash)].append(
-            {'error_type': cur.tag})
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
     st_json = {}
     for test in tests:
         if str(test.stmt.get_hash()) == str(hash_val):
