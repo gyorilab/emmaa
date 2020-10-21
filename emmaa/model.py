@@ -74,9 +74,6 @@ class EmmaaModel(object):
         self.assembled_stmts = []
         if ids_to_stmt_hashes:
             self.ids_to_stmt_hashes = ids_to_stmt_hashes
-        elif self.stmts:
-            self.ids_to_stmt_hashes = self.get_ids_to_hashes_from_stmts(
-                self.stmts)
         else:
             self.ids_to_stmt_hashes = {}
 
@@ -321,12 +318,12 @@ class EmmaaModel(object):
 
         Parameters
         ----------
-        stmts : list[indra.statements.Statement]
-            A list of INDRA statements to create the mappings from.
+        stmts : list[emmaa.statements.EmmaaStatement]
+            A list of EMMAA statements to create the mappings from.
         """
         ids_to_stmt_hashes = {}
-        for stmt in stmts:
-            stmt_hash = stmt.get_hash(refresh=True)
+        for estmt in stmts:
+            stmt_hash = estmt.stmt.get_hash(refresh=True)
             for evid in stmt.evidence:
                 if evid.pmid:
                     if evid.pmid in ids_to_stmt_hashes:
@@ -411,6 +408,8 @@ class EmmaaModel(object):
             ids_to_hashes = None
         em = klass(model_name, config, ids_to_hashes)
         em.stmts = stmts
+        if not ids_to_hashes:
+            em.ids_to_stmt_hashes = em.get_ids_to_hashes_from_stmts(stmts)
         return em
 
     def get_entities(self):
