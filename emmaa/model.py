@@ -392,8 +392,16 @@ class EmmaaModel(object):
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
         config = load_config_from_s3(model_name, bucket=bucket)
-        stmts = load_stmts_from_s3(model_name, bucket=bucket)
-        em = klass(model_name, config)
+        stmts, stmts_key = load_stmts_from_s3(model_name, bucket=bucket)
+        date = strip_out_date(stmts_key)
+        # Stmts and papers should be from the same date
+        key = f'papers/{model_name}/paper_ids_{date}.json'
+        try:
+            ids_to_hashes = load_json_from_s3(bucket, key)
+        except ClientError as e:
+            logger.warning(f'Could not find ids_to_hashes mapping due to: {e}')
+            ids_to_hashes = None
+        em = klass(model_name, config, ids_to_hashes)
         em.stmts = stmts
         return em
 
