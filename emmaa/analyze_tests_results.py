@@ -18,7 +18,8 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'statements': 'get_stmt_hashes',
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
-    'paths': 'get_passed_test_hashes'}
+    'paths': 'get_passed_test_hashes',
+    'papers': 'get_all_paper_ids'}
 
 
 class Round(object):
@@ -101,9 +102,10 @@ class ModelRound(Round):
     date_str : str
         Time when ModelManager responsible for this round was created.
     """
-    def __init__(self, statements, date_str):
+    def __init__(self, statements, paper_data, date_str):
         super().__init__(date_str)
         self.statements = statements
+        self.paper_data = paper_data
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
@@ -112,7 +114,11 @@ class ModelRound(Round):
             return
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
-        return cls(statements, date_str)
+        try:
+            paper_data = mm.model.ids_to_stmt_hashes
+        except AttributeError:
+            paper_data = {}
+        return cls(statements, paper_data, date_str)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -170,6 +176,24 @@ class ModelRound(Round):
                 if evid.source_api:
                     sources_count[evid.source_api] += 1
         return sorted(sources_count.items(), key=lambda x: x[1], reverse=True)
+
+    def get_all_paper_ids(self, include_no_stmts=True):
+        """Return all paper IDs used in this round.
+
+        Parameters
+        ----------
+        include_no_stmts : bool
+            Whether paper IDs that were processed but the statements were not
+            found, should be included in the list.
+
+        Returns
+        -------
+        paper_ids : list[str]
+            A list of paper IDs.
+        """
+        if include_no_stmts:
+            return self.paper_data.keys()
+        return [k for (k, v) in paper_data.items() if len(v) > 0]
 
 
 class TestRound(Round):
