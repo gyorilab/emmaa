@@ -51,9 +51,21 @@
    "removed": []
   }
  },
+ "paper_summary": {
+  "number_of_papers": 1
+ },
+ "paper_delta": {
+  "paper_ids_delta": {
+    "added": [],
+    "removed": []
+   }
+ },
  "changes_over_time": {
   "number_of_statements": [
    2
+  ],
+  "number_of_papers": [
+   1
   ],
   "dates": [
    "2019-11-14-18-26-26"

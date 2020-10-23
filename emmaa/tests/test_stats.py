@@ -1,5 +1,7 @@
 import os
 import json
+from copy import deepcopy
+
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.analyze_tests_results import ModelRound, TestRound, \
@@ -47,8 +49,16 @@ new_stmts = previous_stmts + [
                                   source_api='test_source2')])]
 
 
+previous_papers = {'1234': {previous_stmts[0].get_hash(),
+                            previous_stmts[1].get_hash()}}
+
+new_papers = deepcopy(previous_papers)
+new_papers.update({'2345': {new_stmts[2].get_hash(), new_stmts[3].get_hash()},
+                   '3456': set()})
+
+
 def test_model_round():
-    mr = ModelRound(previous_stmts, '2020-01-01-00-00-00')
+    mr = ModelRound(previous_stmts, previous_papers, '2020-01-01-00-00-00')
     assert mr
     assert mr.get_total_statements() == 2
     assert len(mr.get_stmt_hashes()) == 2
@@ -58,7 +68,8 @@ def test_model_round():
     assert all((stmt_hash, 1) in mr.get_statements_by_evidence() for stmt_hash
                in mr.get_stmt_hashes())
     assert mr.get_sources_distribution() == [('assertion', 2)]
-    mr2 = ModelRound(new_stmts, '2020-01-02-00-00-00')
+    assert mr.get_number_papers() == 1
+    mr2 = ModelRound(new_stmts, new_papers, '2020-01-02-00-00-00')
     assert mr2
     assert mr2.get_total_statements() == 4
     assert len(mr2.get_stmt_hashes()) == 4
@@ -69,6 +80,12 @@ def test_model_round():
     assert len(mr2.find_delta_hashes(mr, 'statements')['added']) == 2
     assert all(source_tuple in mr2.get_sources_distribution() for source_tuple
                in [('assertion', 2), ('test_source1', 1), ('test_source2', 1)])
+    assert mr2.get_number_papers(include_no_stmts=True) == 3
+    assert mr2.get_number_papers(include_no_stmts=False) == 2
+    assert set(mr2.find_delta_hashes(mr, 'papers', include_no_stmts=True)[
+        'added']) == {'2345', '3456'}
+    assert mr2.find_delta_hashes(mr, 'papers', include_no_stmts=False)[
+        'added'] == ['2345']
 
 
 def test_test_round():
@@ -90,8 +107,9 @@ def test_test_round():
 
 
 def test_model_stats_generator():
-    latest_round = ModelRound(new_stmts, '2020-01-02-00-00-00')
-    previous_round = ModelRound(previous_stmts, '2020-01-01-00-00-00')
+    latest_round = ModelRound(new_stmts, new_papers, '2020-01-02-00-00-00')
+    previous_round = ModelRound(previous_stmts, previous_papers,
+                                '2020-01-01-00-00-00')
     sg = ModelStatsGenerator('test', latest_round=latest_round,
                              previous_round=previous_round,
                              previous_json_stats=previous_model_stats)
@@ -110,8 +128,13 @@ def test_model_stats_generator():
     assert len(model_summary['all_stmts']) == 4
     model_delta = sg.json_stats['model_delta']
     assert len(model_delta['statements_hashes_delta']['added']) == 2
+    paper_summary = sg.json_stats['paper_summary']
+    assert paper_summary['number_of_papers'] == 3
+    paper_delta = sg.json_stats['paper_delta']
+    assert len(paper_delta['paper_ids_delta']['added']) == 2
     changes = sg.json_stats['changes_over_time']
     assert changes['number_of_statements'] == [2, 4]
+    assert changes['number_of_papers'] == [1, 3], changes['number_of_papers']
     assert len(changes['dates']) == 2
 
 
