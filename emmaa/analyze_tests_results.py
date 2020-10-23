@@ -195,6 +195,9 @@ class ModelRound(Round):
             return self.paper_data.keys()
         return [k for (k, v) in paper_data.items() if len(v) > 0]
 
+    def get_number_papers(self, include_no_stmts=True):
+        return len(self.get_all_paper_ids)
+
 
 class TestRound(Round):
     """Analyzes the results of one test round.
@@ -483,6 +486,25 @@ class ModelStatsGenerator(StatsGenerator):
                                     self.latest_round.date_str[:10])
             if msg:
                 logger.info(msg)
+
+    def make_paper_summary(self):
+        """Add latest paper summary to json_stats."""
+        logger.info(f'Generating model summary for {self.model_name}.')
+        self.json_stats['paper_summary'] = {
+            'number_of_papers': self.latest_round.get_number_papers()
+        }
+
+    def make_paper_delta(self):
+        """Add paper delta between two latest model states to json_stats."""
+        logger.info(f'Generating paper delta for {self.model_name}.')
+        if not self.previous_round or not self.previous_round.paper_data:
+            self.json_stats['paper_delta'] = {
+                'paper_ids_delta': {'added': [], 'removed': []}}
+        else:
+            paper_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'papers')
+            self.json_stats['paper_delta'] = {'paper_ids_delta': paper_delta}
+            logger.info(f'Read {len(paper_delta['added'])} new papers.')
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
