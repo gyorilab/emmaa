@@ -193,10 +193,10 @@ class ModelRound(Round):
         """
         if include_no_stmts:
             return self.paper_data.keys()
-        return [k for (k, v) in paper_data.items() if len(v) > 0]
+        return [k for (k, v) in self.paper_data.items() if len(v) > 0]
 
     def get_number_papers(self, include_no_stmts=True):
-        return len(self.get_all_paper_ids)
+        return len(self.get_all_paper_ids(include_no_stmts))
 
 
 class TestRound(Round):
@@ -456,6 +456,8 @@ class ModelStatsGenerator(StatsGenerator):
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_model_delta()
+        self.make_paper_summary()
+        self.make_paper_delta()
         self.make_changes_over_time()
 
     def make_model_summary(self):
@@ -504,7 +506,7 @@ class ModelStatsGenerator(StatsGenerator):
             paper_delta = self.latest_round.find_delta_hashes(
                 self.previous_round, 'papers')
             self.json_stats['paper_delta'] = {'paper_ids_delta': paper_delta}
-            logger.info(f'Read {len(paper_delta['added'])} new papers.')
+            logger.info(f'Read {len(paper_delta["added"])} new papers.')
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -512,6 +514,8 @@ class ModelStatsGenerator(StatsGenerator):
         self.json_stats['changes_over_time'] = {
             'number_of_statements': self.get_over_time(
                 'model_summary', 'number_of_statements'),
+            'number_of_papers': self.get_over_time(
+                'paper_summary', 'number_of_papers'),
             'dates': self.get_dates()}
 
     def get_over_time(self, section, metrics, mc_type='pysb'):
@@ -522,7 +526,7 @@ class ModelStatsGenerator(StatsGenerator):
             previous_data = []
         else:
             previous_data = (
-                self.previous_json_stats['changes_over_time'][metrics])
+                self.previous_json_stats['changes_over_time'].get(metrics, []))
         previous_data.append(self.json_stats[section][metrics])
         return previous_data
 
