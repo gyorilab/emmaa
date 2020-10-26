@@ -49,12 +49,8 @@ new_stmts = previous_stmts + [
                                   source_api='test_source2')])]
 
 
-previous_papers = {'1234': {previous_stmts[0].get_hash(),
-                            previous_stmts[1].get_hash()}}
-
-new_papers = deepcopy(previous_papers)
-new_papers.update({'2345': {new_stmts[2].get_hash(), new_stmts[3].get_hash()},
-                   '3456': set()})
+previous_papers = {'1234'}
+new_papers = {'1234', '2345', '3456'}
 
 
 def test_model_round():
@@ -80,12 +76,9 @@ def test_model_round():
     assert len(mr2.find_delta_hashes(mr, 'statements')['added']) == 2
     assert all(source_tuple in mr2.get_sources_distribution() for source_tuple
                in [('assertion', 2), ('test_source1', 1), ('test_source2', 1)])
-    assert mr2.get_number_papers(include_no_stmts=True) == 3
-    assert mr2.get_number_papers(include_no_stmts=False) == 2
-    assert set(mr2.find_delta_hashes(mr, 'papers', include_no_stmts=True)[
-        'added']) == {'2345', '3456'}
-    assert mr2.find_delta_hashes(mr, 'papers', include_no_stmts=False)[
-        'added'] == ['2345']
+    assert mr2.get_number_papers() == 3
+    assert set(mr2.find_delta_hashes(mr, 'papers')['added']) == {
+        '2345', '3456'}
 
 
 def test_test_round():

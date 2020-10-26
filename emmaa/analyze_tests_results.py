@@ -102,10 +102,10 @@ class ModelRound(Round):
     date_str : str
         Time when ModelManager responsible for this round was created.
     """
-    def __init__(self, statements, paper_data, date_str):
+    def __init__(self, statements, paper_ids, date_str):
         super().__init__(date_str)
         self.statements = statements
-        self.paper_data = paper_data
+        self.paper_ids = paper_ids
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
@@ -115,10 +115,10 @@ class ModelRound(Round):
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
         try:
-            paper_data = mm.model.ids_to_stmt_hashes
+            paper_ids = mm.model.paper_ids
         except AttributeError:
-            paper_data = {}
-        return cls(statements, paper_data, date_str)
+            paper_ids = {}
+        return cls(statements, paper_ids, date_str)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -177,26 +177,13 @@ class ModelRound(Round):
                     sources_count[evid.source_api] += 1
         return sorted(sources_count.items(), key=lambda x: x[1], reverse=True)
 
-    def get_all_paper_ids(self, include_no_stmts=True):
-        """Return all paper IDs used in this round.
+    def get_all_paper_ids(self):
+        """Return all paper IDs used in this round."""
+        return self.paper_ids
 
-        Parameters
-        ----------
-        include_no_stmts : bool
-            Whether paper IDs that were processed but the statements were not
-            found, should be included in the list.
-
-        Returns
-        -------
-        paper_ids : list[str]
-            A list of paper IDs.
-        """
-        if include_no_stmts:
-            return self.paper_data.keys()
-        return [k for (k, v) in self.paper_data.items() if len(v) > 0]
-
-    def get_number_papers(self, include_no_stmts=True):
-        return len(self.get_all_paper_ids(include_no_stmts))
+    def get_number_papers(self):
+        """Return a total number of papers in this round."""
+        return len(self.paper_ids)
 
 
 class TestRound(Round):
@@ -499,7 +486,7 @@ class ModelStatsGenerator(StatsGenerator):
     def make_paper_delta(self):
         """Add paper delta between two latest model states to json_stats."""
         logger.info(f'Generating paper delta for {self.model_name}.')
-        if not self.previous_round or not self.previous_round.paper_data:
+        if not self.previous_round or not self.previous_round.paper_ids:
             self.json_stats['paper_delta'] = {
                 'paper_ids_delta': {'added': [], 'removed': []}}
         else:
