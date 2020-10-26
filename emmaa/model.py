@@ -61,7 +61,7 @@ class EmmaaModel(object):
     assembled_stmts : list[indra.statements.Statement]
         A list of assembled INDRA Statements
     """
-    def __init__(self, name, config, ids_to_stmt_hashes=None):
+    def __init__(self, name, config, paper_ids=None):
         self.name = name
         self.stmts = []
         self.assembly_config = {}
@@ -73,10 +73,10 @@ class EmmaaModel(object):
         self.human_readable_name = None
         self._load_config(config)
         self.assembled_stmts = []
-        if ids_to_stmt_hashes:
-            self.ids_to_stmt_hashes = ids_to_stmt_hashes
+        if paper_ids:
+            self.paper_ids = paper_ids
         else:
-            self.ids_to_stmt_hashes = {}
+            self.paper_ids = set()
 
     def add_statements(self, stmts):
         """"Add a set of EMMAA Statements to the model
@@ -242,25 +242,24 @@ class EmmaaModel(object):
         for lit_source, reader in zip(lit_sources, readers):
             ids_to_terms = self.search_literature(lit_source, date_limit)
             if reader == 'aws':
-                new_estmts, ids_to_hashes = read_pmid_search_terms(
+                new_estmts = read_pmid_search_terms(
                     ids_to_terms)
-                self.update_ids_to_hashes(ids_to_hashes, 'pmid')
+                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
             elif reader == 'indra_db_pmid':
-                new_estmts, ids_to_hashes = read_db_pmid_search_terms(
+                new_estmts = read_db_pmid_search_terms(
                     ids_to_terms)
-                self.update_ids_to_hashes(ids_to_hashes, 'pmid')
+                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
             elif reader == 'indra_db_doi':
-                new_estmts, ids_to_hashes = read_db_doi_search_terms(
+                new_estmts = read_db_doi_search_terms(
                     ids_to_terms)
-                self.update_ids_to_hashes(ids_to_hashes, 'doi')
+                self.add_paper_ids(ids_to_terms.keys(), 'doi')
             elif reader == 'elsevier_eidos':
-                new_estmts, ids_to_hashes = read_elsevier_eidos_search_terms(
+                new_estmts = read_elsevier_eidos_search_terms(
                     ids_to_terms)
-                self.update_ids_to_hashes(ids_to_hashes, 'pii')
+                self.add_paper_ids(ids_to_terms.keys(), 'pii')
             else:
                 raise ValueError('Unknown reader: %s' % reader)
             estmts += new_estmts
-            self.update_ids_to_hashes(ids_to_hashes)
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
@@ -299,50 +298,47 @@ class EmmaaModel(object):
         new_stmts = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
-    def update_ids_to_hashes(self, ids_to_hashes, id_type='pmid'):
-        """Update ids_to_stmt_hashes dictionary from new ids_to_hashes mapping.
+    def add_paper_ids(self, initial_ids, id_type='pmid'):
+        """Convert if needed and save paper IDs.
 
         Parameters
         ----------
-        ids_to_hashes : dict
-            A dictionary mapping a paper id (e.g. PMID) to a set of hashes of
-            statements extracted from this paper.
+        initial_ids : set(str)
+            A set of paper IDs.
         id_type : str
             What type the given IDs are (e.g. pmid, doi, pii). All IDs except
             for PIIs will be converted into TextRef IDs before saving.
         """
-        db = get_db('primary')
-        for paper_id, stmt_hashes in ids_to_hashes:
-            if id_type != 'pii':
-                paper_id = _get_trids(db, paper_id, id_type)
-            if paper_id in self.ids_to_stmt_hashes:
-                self.ids_to_stmt_hashes[paper_id].update(stmt_hashes)
-            else:
-                self.ids_to_stmt_hashes[paper_id] = stmt_hashes
+        if id_type == 'pii':
+            self.paper_ids.update(set(initial_ids))
+        else:
+            db = get_db('primary')
+            paper_ids = set([
+                _get_trids(db, paper_id, id_type) for paper_id in initial_ids])
+            self.paper_ids.update(paper_ids)
 
-    def get_ids_to_hashes_from_stmts(self, stmts):
-        """Get ids_to_stmt_hashes dictionary from a list of statements.
+    def get_paper_ids_from_stmts(self, stmts):
+        """Get initial set of paper IDs from a list of statements.
 
         Parameters
         ----------
         stmts : list[emmaa.statements.EmmaaStatement]
             A list of EMMAA statements to create the mappings from.
         """
-        main_id_type = self.reading_config.get('main_id_type', 'trid')
-        ids_to_stmt_hashes = {}
+        main_id_type = self.reading_config.get('main_id_type', 'TRID')
+        paper_ids = set()
         for estmt in stmts:
-            stmt_hash = estmt.stmt.get_hash(refresh=True)
             for evid in estmt.stmt.evidence:
                 if main_id_type == 'pii':
                     paper_id = evid.annotations.get('pii')
                 else:
                     paper_id = evid.text_refs.get(main_id_type)
-                    if paper_id:
-                        if paper_id in ids_to_stmt_hashes:
-                            ids_to_stmt_hashes[paper_id].add(stmt_hash)
-                        else:
-                            ids_to_stmt_hashes[paper_id] = {stmt_hash}
-        return ids_to_stmt_hashes
+                    # In some TextRefs the keys might be lowercase
+                    if not paper_id:
+                        paper_id = evid.text_refs.get(main_id_type.lower())
+                if paper_id:
+                    paper_ids.add(paper_id)
+        return paper_ids
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
@@ -414,14 +410,14 @@ class EmmaaModel(object):
         # Stmts and papers should be from the same date
         key = f'papers/{model_name}/paper_ids_{date}.json'
         try:
-            ids_to_hashes = load_json_from_s3(bucket, key)
+            paper_ids = load_json_from_s3(bucket, key)
         except ClientError as e:
-            logger.warning(f'Could not find ids_to_hashes mapping due to: {e}')
-            ids_to_hashes = None
-        em = klass(model_name, config, ids_to_hashes)
+            logger.warning(f'Could not find paper IDs mapping due to: {e}')
+            paper_ids = None
+        em = klass(model_name, config, paper_ids)
         em.stmts = stmts
-        if not ids_to_hashes:
-            em.ids_to_stmt_hashes = em.get_ids_to_hashes_from_stmts(stmts)
+        if not paper_ids:
+            em.paper_ids = em.get_paper_ids_from_stmts(stmts)
         return em
 
     def get_entities(self):
