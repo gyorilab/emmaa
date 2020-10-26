@@ -13,6 +13,7 @@ from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra_db.client.principal.curation import get_curations
+from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms, \
@@ -243,15 +244,19 @@ class EmmaaModel(object):
             if reader == 'aws':
                 new_estmts, ids_to_hashes = read_pmid_search_terms(
                     ids_to_terms)
+                self.update_ids_to_hashes(ids_to_hashes, 'pmid')
             elif reader == 'indra_db_pmid':
                 new_estmts, ids_to_hashes = read_db_pmid_search_terms(
                     ids_to_terms)
+                self.update_ids_to_hashes(ids_to_hashes, 'pmid')
             elif reader == 'indra_db_doi':
                 new_estmts, ids_to_hashes = read_db_doi_search_terms(
                     ids_to_terms)
+                self.update_ids_to_hashes(ids_to_hashes, 'doi')
             elif reader == 'elsevier_eidos':
                 new_estmts, ids_to_hashes = read_elsevier_eidos_search_terms(
                     ids_to_terms)
+                self.update_ids_to_hashes(ids_to_hashes, 'pii')
             else:
                 raise ValueError('Unknown reader: %s' % reader)
             estmts += new_estmts
@@ -294,7 +299,7 @@ class EmmaaModel(object):
         new_stmts = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
 
-    def update_ids_to_hashes(self, ids_to_hashes):
+    def update_ids_to_hashes(self, ids_to_hashes, id_type='pmid'):
         """Update ids_to_stmt_hashes dictionary from new ids_to_hashes mapping.
 
         Parameters
@@ -302,8 +307,14 @@ class EmmaaModel(object):
         ids_to_hashes : dict
             A dictionary mapping a paper id (e.g. PMID) to a set of hashes of
             statements extracted from this paper.
+        id_type : str
+            What type the given IDs are (e.g. pmid, doi, pii). All IDs except
+            for PIIs will be converted into TextRef IDs before saving.
         """
+        db = get_db('primary')
         for paper_id, stmt_hashes in ids_to_hashes:
+            if id_type != 'pii':
+                paper_id = _get_trids(db, paper_id, id_type)
             if paper_id in self.ids_to_stmt_hashes:
                 self.ids_to_stmt_hashes[paper_id].update(stmt_hashes)
             else:
@@ -311,25 +322,26 @@ class EmmaaModel(object):
 
     def get_ids_to_hashes_from_stmts(self, stmts):
         """Get ids_to_stmt_hashes dictionary from a list of statements.
-        NOTE: this method gets PMIDs from statement evidence, it should be
-        probably used only for initial setting of the mapping.
-        TODO: update this to get data from other types of IDs in addition to
-        PMIDs.
 
         Parameters
         ----------
         stmts : list[emmaa.statements.EmmaaStatement]
             A list of EMMAA statements to create the mappings from.
         """
+        main_id_type = self.reading_config.get('main_id_type', 'trid')
         ids_to_stmt_hashes = {}
         for estmt in stmts:
             stmt_hash = estmt.stmt.get_hash(refresh=True)
             for evid in estmt.stmt.evidence:
-                if evid.pmid:
-                    if evid.pmid in ids_to_stmt_hashes:
-                        ids_to_stmt_hashes[evid.pmid].add(stmt_hash)
-                    else:
-                        ids_to_stmt_hashes[evid.pmid] = {stmt_hash}
+                if main_id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                else:
+                    paper_id = evid.text_refs.get(main_id_type)
+                    if paper_id:
+                        if paper_id in ids_to_stmt_hashes:
+                            ids_to_stmt_hashes[paper_id].add(stmt_hash)
+                        else:
+                            ids_to_stmt_hashes[paper_id] = {stmt_hash}
         return ids_to_stmt_hashes
 
     def eliminate_copies(self):
