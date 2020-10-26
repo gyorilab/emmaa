@@ -295,8 +295,9 @@ class EmmaaModel(object):
             file_stmts = load_pickle_from_s3('indra-covid19', fname)
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             other_stmts += file_stmts
-        new_stmts = make_model_stmts(current_stmts, other_stmts)
+        new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
+        self.add_paper_ids(paper_ids, 'TRID')
 
     def add_paper_ids(self, initial_ids, id_type='pmid'):
         """Convert if needed and save paper IDs.
@@ -309,7 +310,7 @@ class EmmaaModel(object):
             What type the given IDs are (e.g. pmid, doi, pii). All IDs except
             for PIIs will be converted into TextRef IDs before saving.
         """
-        if id_type == 'pii':
+        if id_type in {'pii', 'TRID'}:
             self.paper_ids.update(set(initial_ids))
         else:
             db = get_db('primary')
