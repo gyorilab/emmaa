@@ -19,7 +19,8 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
     'paths': 'get_passed_test_hashes',
-    'papers': 'get_all_paper_ids'}
+    'raw_papers': 'get_all_raw_paper_ids',
+    'assembled_papers': 'get_all_assembled_paper_ids'}
 
 
 class Round(object):
@@ -102,10 +103,11 @@ class ModelRound(Round):
     date_str : str
         Time when ModelManager responsible for this round was created.
     """
-    def __init__(self, statements, paper_ids, date_str):
+    def __init__(self, statements, paper_ids, date_str, paper_id_type='TRID'):
         super().__init__(date_str)
         self.statements = statements
         self.paper_ids = paper_ids
+        self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
@@ -177,13 +179,47 @@ class ModelRound(Round):
                     sources_count[evid.source_api] += 1
         return sorted(sources_count.items(), key=lambda x: x[1], reverse=True)
 
-    def get_all_paper_ids(self):
+    def get_all_raw_paper_ids(self):
         """Return all paper IDs used in this round."""
         return self.paper_ids
 
-    def get_number_papers(self):
+    def get_number_raw_papers(self):
         """Return a total number of papers in this round."""
         return len(self.paper_ids)
+
+    def get_assembled_stmts_by_paper(self, id_type='TRID'):
+        """Get a mapping of paper IDs (TRID or PII) to assembled statements."""
+        logger.info('Mapping papers to statements')
+        stmts_by_papers = {}
+        for stmt in self.statements:
+            for evid in stmt.evidence:
+                if id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                if evid.text_refs:
+                    paper_id = evid.text_refs.get(id_type)
+                if paper_id:
+                    if paper_id in stmts_by_papers:
+                        stmts_by_papers[paper_id].add(stmt.get_hash())
+                    else:
+                        stmts_by_papers[paper_id] = set()
+        return stmts_by_papers
+
+    def get_all_assembled_paper_ids(self):
+        return self.stmts_by_papers.keys()
+
+    def get_number_assembled_papers(self):
+        if not self.stmts_by_papers:
+            self.get_assembled_stmts_by_paper(id_type=id_type)
+        return len(self.stmts_by_papers)
+
+    def get_papers_distribution(self):
+        """Return a sorted list of tuples containing a paper ID and a number
+        of unique statements extracted from that paper."""
+        logger.info('Finding paper distribution')
+        paper_stmt_count = {paper_id: len(stmts) for (paper_id, stmts) in
+                            self.stmts_by_papers}
+        return sorted(paper_stmt_count.items(), key=lambda x: x[1],
+                      reverse=True)
 
 
 class TestRound(Round):
@@ -480,7 +516,7 @@ class ModelStatsGenerator(StatsGenerator):
         """Add latest paper summary to json_stats."""
         logger.info(f'Generating model summary for {self.model_name}.')
         self.json_stats['paper_summary'] = {
-            'number_of_papers': self.latest_round.get_number_papers()
+            'number_of_raw_papers': self.latest_round.get_number_raw_papers()
         }
 
     def make_paper_delta(self):
