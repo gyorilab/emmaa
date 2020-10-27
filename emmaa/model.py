@@ -314,9 +314,12 @@ class EmmaaModel(object):
             self.paper_ids.update(set(initial_ids))
         else:
             db = get_db('primary')
-            paper_ids = set([
-                _get_trids(db, paper_id, id_type) for paper_id in initial_ids])
-            self.paper_ids.update(paper_ids)
+            new_paper_ids = set()
+            for paper_id in initial_ids:
+                trids = _get_trids(db, paper_id, id_type)
+                # Some papers might be not in the database yet
+                if trids:
+                    self.paper_ids.add(trids[0])
 
     def get_paper_ids_from_stmts(self, stmts):
         """Get initial set of paper IDs from a list of statements.
