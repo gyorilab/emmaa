@@ -1,0 +1,130 @@
+{
+ "search_terms": [
+  {
+   "type": "other",
+   "name": "covid-19",
+   "search_term": "covid-19",
+   "db_refs": {}
+  }
+ ],
+ "dev_only": true,
+ "human_readable_name": "Covid-19 Dev",
+ "assembly": [
+  {
+   "function": "filter_no_hypothesis"
+  },
+  {
+   "function": "ground_statements",
+   "kwargs": {
+    "mode": "local",
+    "ungrounded_only": true
+   }
+  },
+  {
+   "function": "ground_statements",
+   "kwargs": {
+    "mode": "local",
+    "sources": [
+     "sparser"
+    ],
+    "ungrounded_only": false
+   }
+  },
+  {
+   "function": "map_grounding",
+   "kwargs": {
+    "grounding_map": {
+     "function": "load_custom_grounding_map",
+     "args": [
+      "covid19_dev"
+     ]
+    },
+    "grounding_map_policy": "extend"
+   }
+  },
+  {
+   "function": "map_sequence"
+  },
+  {
+   "function": "filter_eidos_ungrounded"
+  },
+  {
+   "function": "run_preassembly",
+   "kwargs": {
+    "return_toplevel": false
+   }
+  },
+  {
+   "function": "filter_by_curation",
+   "args": [
+    {
+     "function": "get_curations"
+    },
+    "any",
+    [
+     "correct",
+     "act_vs_amt",
+     "hypothesis"
+    ]
+   ],
+   "kwargs": {
+    "update_belief": true
+   }
+  },
+  {
+   "function": "filter_top_level"
+  }
+ ],
+ "test": {
+  "statement_checking": {
+   "max_path_length": 10,
+   "max_paths": 1
+  },
+  "mc_types": [
+   "signed_graph",
+   "unsigned_graph"
+  ],
+  "make_links": true,
+  "test_corpus": [
+   "covid19_curated_tests",
+   "covid19_mitre_tests"
+  ],
+  "default_test_corpus": "covid19_curated_tests",
+  "filters": {
+   "covid19_mitre_tests": "filter_chem_mesh_go",
+   "covid19_curated_tests": "filter_chem_mesh_go"
+  }
+ },
+ "description": "Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
+ "make_tests": false,
+ "ndex": {
+  "network": "959c94cc-7503-11ea-aaef-0ac135e8bacf"
+ },
+ "run_daily_update": true,
+ "old_assembly": {
+  "ground_stmts": true,
+  "grounding_map": {
+   "policy": "extend"
+  },
+  "skip_filter_human": true
+ },
+ "reading": {
+  "literature_source": [
+   "pubmed",
+   "biorxiv"
+  ],
+  "reader": [
+   "indra_db_pmid",
+   "indra_db_doi"
+  ],
+  "cord19_update": {
+   "filenames": [
+    "drug_stmts_db_only.pkl",
+    "gordon_ndex_stmts.pkl",
+    "virhostnet_stmts.pkl",
+    "ctd_stmts.pkl"
+   ]
+  }
+ },
+ "save_parts": true
+}
