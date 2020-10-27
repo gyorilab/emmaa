@@ -102,11 +102,22 @@ class ModelRound(Round):
         A list of INDRA Statements used to assemble a model.
     date_str : str
         Time when ModelManager responsible for this round was created.
+    paper_ids : set(str)
+        A set of paper IDs used to get raw statements for this round.
+    paper_id_type : str
+        Type of paper ID used.
+
+    Attributes
+    ----------
+    stmts_by_papers : dict
+        A dictionary mapping the paper IDs to sets of hashes of assembled
+        statements with evidences retrieved from these papers.
     """
-    def __init__(self, statements, paper_ids, date_str, paper_id_type='TRID'):
+    def __init__(self, statements, date_str, paper_ids=None,
+                 paper_id_type='TRID'):
         super().__init__(date_str)
         self.statements = statements
-        self.paper_ids = paper_ids
+        self.paper_ids = paper_ids if paper_ids else set()
         self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
@@ -119,8 +130,9 @@ class ModelRound(Round):
         try:
             paper_ids = mm.model.paper_ids
         except AttributeError:
-            paper_ids = {}
-        return cls(statements, paper_ids, date_str)
+            paper_ids = None
+        paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
+        return cls(statements, date_str, paper_ids, paper_id_type)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
