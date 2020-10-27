@@ -125,5 +125,6 @@
     "ctd_stmts.pkl"
    ]
   }
- }
+ },
+ "save_parts": true
 }
