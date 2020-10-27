@@ -310,11 +310,11 @@ class EmmaaModel(object):
             What type the given IDs are (e.g. pmid, doi, pii). All IDs except
             for PIIs will be converted into TextRef IDs before saving.
         """
+        logger.info(f'Adding new paper IDs from {len(initial_ids)} {id_type}s')
         if id_type in {'pii', 'TRID'}:
             self.paper_ids.update(set(initial_ids))
         else:
             db = get_db('primary')
-            new_paper_ids = set()
             for paper_id in initial_ids:
                 trids = _get_trids(db, paper_id, id_type)
                 # Some papers might be not in the database yet
@@ -330,6 +330,7 @@ class EmmaaModel(object):
             A list of EMMAA statements to create the mappings from.
         """
         main_id_type = self.reading_config.get('main_id_type', 'TRID')
+        logger.info(f'Extracting {main_id_type}s from statements')
         paper_ids = set()
         for estmt in stmts:
             for evid in estmt.stmt.evidence:
@@ -342,6 +343,7 @@ class EmmaaModel(object):
                         paper_id = evid.text_refs.get(main_id_type.lower())
                 if paper_id:
                     paper_ids.add(paper_id)
+        logger.info(f'Got {len(paper_ids)} {main_id_type}s from statements')
         return paper_ids
 
     def eliminate_copies(self):
