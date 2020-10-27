@@ -528,7 +528,14 @@ class ModelStatsGenerator(StatsGenerator):
         """Add latest paper summary to json_stats."""
         logger.info(f'Generating model summary for {self.model_name}.')
         self.json_stats['paper_summary'] = {
-            'number_of_raw_papers': self.latest_round.get_number_raw_papers()
+            'raw_paper_ids': self.latest_round.get_all_raw_paper_ids(),
+            'number_of_raw_papers': self.latest_round.get_number_raw_papers(),
+            'assembled_paper_ids': (
+                self.latest_round.get_all_assembled_paper_ids()),
+            'number_of_assembled_papers': (
+                self.latest_round.get_number_assembled_papers()),
+            'stmts_by_paper': self.latest_round.stmts_by_papers,
+            'paper_distr': self.latest_round.get_papers_distribution()
         }
 
     def make_paper_delta(self):
@@ -536,12 +543,19 @@ class ModelStatsGenerator(StatsGenerator):
         logger.info(f'Generating paper delta for {self.model_name}.')
         if not self.previous_round or not self.previous_round.paper_ids:
             self.json_stats['paper_delta'] = {
-                'paper_ids_delta': {'added': [], 'removed': []}}
+                'raw_paper_ids_delta': {'added': [], 'removed': []},
+                'assembled_paper_ids_delta': {'added': [], 'removed': []}}
         else:
-            paper_delta = self.latest_round.find_delta_hashes(
-                self.previous_round, 'papers')
-            self.json_stats['paper_delta'] = {'paper_ids_delta': paper_delta}
-            logger.info(f'Read {len(paper_delta["added"])} new papers.')
+            raw_paper_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'raw_papers')
+            assembled_paper_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'assembled_papers')
+            self.json_stats['paper_delta'] = {
+                'raw_paper_ids_delta': raw_paper_delta
+                'assembled_paper_ids_delta': assembled_paper_delta}
+            logger.info(f'Read {len(raw_paper_delta["added"])} new papers.')
+            logger.info(f'Got assembled statements from '
+                        f'{len(assembled_paper_delta["added"])} new papers.')
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
