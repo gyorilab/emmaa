@@ -14,15 +14,12 @@ def create_upload_model(model_name, indra_stmts, config_file):
 
     Parameters
     ----------
-    short_name : str
-        Short name of the model to use on S3.
+    model_name : str
+        Name of the model to use on S3.
     indra_stmts : list of indra.statement
         INDRA Statements to be used to populate the EMMAA model.
-    ndex_id : str
-        UUID of the network corresponding to the model on NDex. If provided,
-        the NDex network will be updated with the latest model content.
-        If None (default), a new network will be created and the UUID stored
-        in the model config files on S3.
+    config_file : str
+        Path to the local config.json file.
     """
     emmaa_stmts = to_emmaa_stmts(indra_stmts, datetime.datetime.now(), [])
     # Load config information
