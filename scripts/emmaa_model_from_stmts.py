@@ -47,7 +47,7 @@ def create_upload_model(model_name, indra_stmts, config_file):
     emmaa_model.save_to_s3()
     # Upload config JSON
     s3_client = boto3.client('s3')
-    save_config_to_s3(model_name, config_dict)
+    save_config_to_s3(model_name, config_json)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
