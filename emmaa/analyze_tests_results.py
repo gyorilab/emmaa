@@ -117,7 +117,7 @@ class ModelRound(Round):
                  paper_id_type='TRID'):
         super().__init__(date_str)
         self.statements = statements
-        self.paper_ids = paper_ids if paper_ids else set()
+        self.paper_ids = paper_ids if paper_ids else []
         self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
