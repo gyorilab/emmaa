@@ -40,11 +40,13 @@ class EmmaaModel(object):
         The name of the model.
     config : dict
         A configuration dict that is typically loaded from a YAML file.
+    paper_ids : set(str) or None
+        A set of paper IDs used to get statements for the current state of the
+        model. With new reading results, new paper IDs will be added. If not
+        provided, initial set will be derived from existing statements.
 
     Attributes
     ----------
-    name : str
-        A string containing the name of the model
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
     assembly_config : dict
@@ -53,6 +55,8 @@ class EmmaaModel(object):
         Configurations for running tests on the model.
     reading_config : dict
         Configurations for reading the content.
+    query_config : dict
+        Configurations for running queries on the model.
     search_terms : list[emmaa.priors.SearchTerm]
         A list of SearchTerm objects containing the search terms used in the
         model.
