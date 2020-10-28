@@ -229,7 +229,7 @@ class ModelRound(Round):
         of unique statements extracted from that paper."""
         logger.info('Finding paper distribution')
         paper_stmt_count = {paper_id: len(stmts) for (paper_id, stmts) in
-                            self.stmts_by_papers}
+                            self.stmts_by_papers.items()}
         return sorted(paper_stmt_count.items(), key=lambda x: x[1],
                       reverse=True)
 
@@ -551,7 +551,7 @@ class ModelStatsGenerator(StatsGenerator):
             assembled_paper_delta = self.latest_round.find_delta_hashes(
                 self.previous_round, 'assembled_papers')
             self.json_stats['paper_delta'] = {
-                'raw_paper_ids_delta': raw_paper_delta
+                'raw_paper_ids_delta': raw_paper_delta,
                 'assembled_paper_ids_delta': assembled_paper_delta}
             logger.info(f'Read {len(raw_paper_delta["added"])} new papers.')
             logger.info(f'Got assembled statements from '
@@ -563,8 +563,10 @@ class ModelStatsGenerator(StatsGenerator):
         self.json_stats['changes_over_time'] = {
             'number_of_statements': self.get_over_time(
                 'model_summary', 'number_of_statements'),
-            'number_of_papers': self.get_over_time(
-                'paper_summary', 'number_of_papers'),
+            'number_of_raw_papers': self.get_over_time(
+                'paper_summary', 'number_of_raw_papers'),
+            'number_of_assembled_papers': self.get_over_time(
+                'paper_summary', 'number_of_assembled_papers'),
             'dates': self.get_dates()}
 
     def get_over_time(self, section, metrics, mc_type='pysb'):
