@@ -395,7 +395,7 @@ class EmmaaModel(object):
         save_json_to_s3(self.stmts, bucket, key=fname+'.json')
         # Save ids to stmt hashes mapping as json
         id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
-        save_json_to_s3(self.ids_to_stmt_hashes, bucket, key=id_fname)
+        save_json_to_s3(self.paper_ids, bucket, key=id_fname)
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
