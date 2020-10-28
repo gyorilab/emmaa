@@ -102,8 +102,8 @@ class ModelRound(Round):
         A list of INDRA Statements used to assemble a model.
     date_str : str
         Time when ModelManager responsible for this round was created.
-    paper_ids : set(str)
-        A set of paper IDs used to get raw statements for this round.
+    paper_ids : list(str)
+        A list of paper IDs used to get raw statements for this round.
     paper_id_type : str
         Type of paper ID used.
 
@@ -128,7 +128,7 @@ class ModelRound(Round):
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
         try:
-            paper_ids = mm.model.paper_ids
+            paper_ids = list(mm.model.paper_ids)
         except AttributeError:
             paper_ids = None
         paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
@@ -204,16 +204,18 @@ class ModelRound(Round):
         logger.info('Mapping papers to statements')
         stmts_by_papers = {}
         for stmt in self.statements:
+            stmt_hash = stmt.get_hash()
             for evid in stmt.evidence:
                 if id_type == 'pii':
                     paper_id = evid.annotations.get('pii')
                 if evid.text_refs:
                     paper_id = evid.text_refs.get(id_type)
                 if paper_id:
-                    if paper_id in stmts_by_papers:
-                        stmts_by_papers[paper_id].add(stmt.get_hash())
+                    if paper_id in stmts_by_papers and stmt_hash not in \
+                            stmts_by_papers[paper_id]:
+                        stmts_by_papers[paper_id].append(stmt_hash)
                     else:
-                        stmts_by_papers[paper_id] = {stmt.get_hash()}
+                        stmts_by_papers[paper_id] = [stmt_hash]
         return stmts_by_papers
 
     def get_all_assembled_paper_ids(self):

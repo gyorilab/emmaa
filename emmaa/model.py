@@ -41,7 +41,7 @@ class EmmaaModel(object):
     config : dict
         A configuration dict that is typically loaded from a YAML file.
     paper_ids : list(str) or None
-        A set of paper IDs used to get statements for the current state of the
+        A list of paper IDs used to get statements for the current state of the
         model. With new reading results, new paper IDs will be added. If not
         provided, initial set will be derived from existing statements.
 
