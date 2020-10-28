@@ -52,10 +52,23 @@
   }
  },
  "paper_summary": {
-  "number_of_papers": 1
+  "raw_paper_ids": ["1234"],
+  "number_of_raw_papers": 1,
+  "assembled_paper_ids": ["1234"],
+  "number_of_assembled_papers": 1,
+  "stmts_by_paper": {
+    "1234": ["-23078353002754841", "-34603994586320440"]
+  },
+  "paper_distr": [
+    ["1234", 2]
+  ]
  },
  "paper_delta": {
-  "paper_ids_delta": {
+  "raw_paper_ids_delta": {
+    "added": [],
+    "removed": []
+   },
+  "assembled_paper_ids_delta": {
     "added": [],
     "removed": []
    }
@@ -64,7 +77,10 @@
   "number_of_statements": [
    2
   ],
-  "number_of_papers": [
+  "number_of_raw_papers": [
+   1
+  ],
+  "number_of_assembled_papers": [
    1
   ],
   "dates": [
