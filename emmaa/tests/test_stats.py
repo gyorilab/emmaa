@@ -194,6 +194,13 @@ def test_twitter_msg():
     assert msg == ('Today I learned 2 new mechanisms. See '
                    'https://emmaa.indra.bio/dashboard/test?tab=model&date='
                    '2020-01-01#addedStmts for more details.'), msg
+    # New statements with new papers message
+    msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
+                            '2020-01-01', new_papers=5)
+    assert msg == ('Today I read 5 new publications and learned 2 new '
+                   'mechanisms. See '
+                   'https://emmaa.indra.bio/dashboard/test?tab=model&date='
+                   '2020-01-01#addedStmts for more details.'), msg
     # New applied tests message
     msg = _make_twitter_msg('test', 'applied_tests', {'added': [1234, 2345]},
                             '2020-01-01', test_corpus='simple_tests',
