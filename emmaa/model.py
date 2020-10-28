@@ -40,7 +40,7 @@ class EmmaaModel(object):
         The name of the model.
     config : dict
         A configuration dict that is typically loaded from a YAML file.
-    paper_ids : set(str) or None
+    paper_ids : list(str) or None
         A set of paper IDs used to get statements for the current state of the
         model. With new reading results, new paper IDs will be added. If not
         provided, initial set will be derived from existing statements.
@@ -78,7 +78,7 @@ class EmmaaModel(object):
         self._load_config(config)
         self.assembled_stmts = []
         if paper_ids:
-            self.paper_ids = paper_ids
+            self.paper_ids = set(paper_ids)
         else:
             self.paper_ids = set()
 
@@ -395,7 +395,7 @@ class EmmaaModel(object):
         save_json_to_s3(self.stmts, bucket, key=fname+'.json')
         # Save ids to stmt hashes mapping as json
         id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
-        save_json_to_s3(self.paper_ids, bucket, key=id_fname)
+        save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
