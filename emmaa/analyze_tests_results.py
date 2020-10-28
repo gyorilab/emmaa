@@ -219,7 +219,7 @@ class ModelRound(Round):
         return stmts_by_papers
 
     def get_all_assembled_paper_ids(self):
-        return self.stmts_by_papers.keys()
+        return list(self.stmts_by_papers.keys())
 
     def get_number_assembled_papers(self):
         if not self.stmts_by_papers:
