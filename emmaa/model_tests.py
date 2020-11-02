@@ -789,7 +789,9 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     test_description = (
         f'These tests were generated from the {em.human_readable_name} '
         f'on {date_str[:10]}')
-    test_dict = {'test_data': {'description': test_description},
+    test_name = f'{em.human_readable_name} model test corpus'
+    test_dict = {'test_data': {'description': test_description,
+                               'name': test_name},
                  'tests': tests}
     if upload:
         save_tests_to_s3(test_dict, bucket,
