@@ -537,12 +537,15 @@ def get_model_dashboard(model):
         date = latest_date
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
+    logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
+                f'at {date}.')
     model_meta_data = _get_model_meta_data()
     model_stats = _load_model_stats_from_cache(model, date)
     test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+    logger.info('Getting model information')
     ndex_id = 'None available'
     description = 'None available'
     for mid, mmd in model_meta_data:
@@ -567,6 +570,7 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
+    logger.info('Getting test information')
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
     if test_data:
@@ -575,7 +579,9 @@ def get_model_dashboard(model):
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
+    logger.info('Getting curations')
     correct, incorrect = _label_curations()
+    logger.info('Mapping curations to tests')
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
@@ -602,18 +608,21 @@ def get_model_dashboard(model):
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     top_stmts_counts = []
+    logger.info('Mapping curations to most supported statements')
     for st_hash, c in most_supported:
         st_value = deepcopy(all_stmts[st_hash])
         top_stmts_counts.append(
             ((_update_stmt(st_hash, st_value)), ('', str(c), '')))
 
     if len(added_stmts_hashes) > 0:
+        logger.info('Mapping curations to new added statements')
         added_stmts = []
         for st_hash in added_stmts_hashes:
             st_value = deepcopy(all_stmts[st_hash])
             added_stmts.append((_update_stmt(st_hash, st_value),))
     else:
         added_stmts = 'No new statements were added'
+    logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
