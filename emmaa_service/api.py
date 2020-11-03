@@ -599,17 +599,22 @@ def get_model_dashboard(model):
     if not all_tests[0][1]['test'][0]:
         add_test_links = True
 
-    def _update_stmt(st_hash, st_value):
-        url_param = parse.urlencode(
-            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model,
-             'date': date})
-        st_value[0] = f'/evidence?{url_param}'
-        st_value[2] = stmt_db_link_msg
+    def _update_stmt(st_hash, st_value, add_links=False):
+        if add_links:
+            url_param = parse.urlencode(
+                {'stmt_hash': st_hash, 'source': 'model_statement',
+                 'model': model, 'date': date})
+            st_value[0] = f'/evidence?{url_param}'
+            st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
         return (st_value)
 
     all_stmts = model_stats['model_summary']['all_stmts']
+    # Only add links in the api if they are missing from stats
+    add_model_links = False
+    if not all_stmts[list(all_stmts.keys())[0]][0]:
+        add_model_links = True
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
@@ -618,14 +623,16 @@ def get_model_dashboard(model):
     for st_hash, c in most_supported:
         st_value = deepcopy(all_stmts[st_hash])
         top_stmts_counts.append(
-            ((_update_stmt(st_hash, st_value)), ('', str(c), '')))
+            ((_update_stmt(st_hash, st_value, add_model_links)),
+             ('', str(c), '')))
 
     if len(added_stmts_hashes) > 0:
         logger.info('Mapping curations to new added statements')
         added_stmts = []
         for st_hash in added_stmts_hashes:
             st_value = deepcopy(all_stmts[st_hash])
-            added_stmts.append((_update_stmt(st_hash, st_value),))
+            added_stmts.append(
+                (_update_stmt(st_hash, st_value, add_model_links),))
     else:
         added_stmts = 'No new statements were added'
     logger.info('Rendering page')
