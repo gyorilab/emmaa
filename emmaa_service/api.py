@@ -286,7 +286,7 @@ def _make_query(query_dict):
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date,
-                       test_corpus):
+                       test_corpus, add_links=False):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -299,19 +299,20 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date,
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
     return _format_table_array(new_app_tests, model_types, model_name, date,
-                               test_corpus)
+                               test_corpus, add_links=add_links)
 
 
 def _format_table_array(tests_json, model_types, model_name, date,
-                        test_corpus):
+                        test_corpus, add_links=False):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        ev_url_par = parse.urlencode(
-            {'stmt_hash': th, 'source': 'test', 'model': model_name,
-             'test_corpus': test_corpus, 'date': date})
-        test['test'][0] = f'/evidence?{ev_url_par}'
-        test['test'][2] = stmt_db_link_msg
+        if add_links:
+            ev_url_par = parse.urlencode(
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                 'test_corpus': test_corpus, 'date': date})
+            test['test'][0] = f'/evidence?{ev_url_par}'
+            test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
@@ -360,7 +361,7 @@ def _format_dynamic_query_results(formatted_results):
 
 
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
-                      test_corpus):
+                      test_corpus, add_links=False):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -374,11 +375,12 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                      '')]]
         for th in new_passed_hashes:
             test = all_test_results[th]
-            ev_url_par = parse.urlencode(
-                {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                 'test_corpus': test_corpus, 'date': date})
-            test['test'][0] = f'/evidence?{ev_url_par}'
-            test['test'][2] = stmt_db_link_msg
+            if add_links:
+                ev_url_par = parse.urlencode(
+                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                     'test_corpus': test_corpus, 'date': date})
+                test['test'][0] = f'/evidence?{ev_url_par}'
+                test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
@@ -592,6 +594,10 @@ def get_model_dashboard(model):
             val = deepcopy(v)
             val['test'].append(cur)
             all_tests.append((k, val))
+    # Only add links in the api if they are missing from stats
+    add_test_links = False
+    if not all_tests[0][1]['test'][0]:
+        add_test_links = True
 
     def _update_stmt(st_hash, st_value):
         url_param = parse.urlencode(
@@ -641,13 +647,13 @@ def get_model_dashboard(model):
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
                                test_stats, current_model_types, model, date,
-                               test_corpus),
+                               test_corpus, add_test_links),
                            all_test_results=_format_table_array(
                                all_tests, current_model_types, model, date,
-                               test_corpus),
+                               test_corpus, add_test_links),
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date,
-                               test_corpus),
+                               test_corpus. add_test_links),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)
