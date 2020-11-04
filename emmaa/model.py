@@ -1,6 +1,7 @@
 import time
 import logging
 import datetime
+from botocore.exceptions import ClientError
 from covid_19.emmaa_update import make_model_stmts
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
@@ -12,6 +13,7 @@ from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra_db.client.principal.curation import get_curations
+from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms, \
@@ -38,11 +40,13 @@ class EmmaaModel(object):
         The name of the model.
     config : dict
         A configuration dict that is typically loaded from a YAML file.
+    paper_ids : list(str) or None
+        A list of paper IDs used to get statements for the current state of the
+        model. With new reading results, new paper IDs will be added. If not
+        provided, initial set will be derived from existing statements.
 
     Attributes
     ----------
-    name : str
-        A string containing the name of the model
     stmts : list[emmaa.EmmaaStatement]
         A list of EmmaaStatement objects representing the model
     assembly_config : dict
@@ -51,6 +55,8 @@ class EmmaaModel(object):
         Configurations for running tests on the model.
     reading_config : dict
         Configurations for reading the content.
+    query_config : dict
+        Configurations for running queries on the model.
     search_terms : list[emmaa.priors.SearchTerm]
         A list of SearchTerm objects containing the search terms used in the
         model.
@@ -59,7 +65,7 @@ class EmmaaModel(object):
     assembled_stmts : list[indra.statements.Statement]
         A list of assembled INDRA Statements
     """
-    def __init__(self, name, config):
+    def __init__(self, name, config, paper_ids=None):
         self.name = name
         self.stmts = []
         self.assembly_config = {}
@@ -71,6 +77,10 @@ class EmmaaModel(object):
         self.human_readable_name = None
         self._load_config(config)
         self.assembled_stmts = []
+        if paper_ids:
+            self.paper_ids = set(paper_ids)
+        else:
+            self.paper_ids = set()
 
     def add_statements(self, stmts):
         """"Add a set of EMMAA Statements to the model
@@ -236,15 +246,24 @@ class EmmaaModel(object):
         for lit_source, reader in zip(lit_sources, readers):
             ids_to_terms = self.search_literature(lit_source, date_limit)
             if reader == 'aws':
-                estmts += read_pmid_search_terms(ids_to_terms)
+                new_estmts = read_pmid_search_terms(
+                    ids_to_terms)
+                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
             elif reader == 'indra_db_pmid':
-                estmts += read_db_pmid_search_terms(ids_to_terms)
+                new_estmts = read_db_pmid_search_terms(
+                    ids_to_terms)
+                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
             elif reader == 'indra_db_doi':
-                estmts += read_db_doi_search_terms(ids_to_terms)
+                new_estmts = read_db_doi_search_terms(
+                    ids_to_terms)
+                self.add_paper_ids(ids_to_terms.keys(), 'doi')
             elif reader == 'elsevier_eidos':
-                estmts += read_elsevier_eidos_search_terms(ids_to_terms)
+                new_estmts = read_elsevier_eidos_search_terms(
+                    ids_to_terms)
+                self.add_paper_ids(ids_to_terms.keys(), 'pii')
             else:
                 raise ValueError('Unknown reader: %s' % reader)
+            estmts += new_estmts
         logger.info('Got a total of %d new EMMAA Statements from reading' %
                     len(estmts))
         self.extend_unique(estmts)
@@ -280,8 +299,56 @@ class EmmaaModel(object):
             file_stmts = load_pickle_from_s3('indra-covid19', fname)
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             other_stmts += file_stmts
-        new_stmts = make_model_stmts(current_stmts, other_stmts)
+        new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
+        self.add_paper_ids(paper_ids, 'TRID')
+
+    def add_paper_ids(self, initial_ids, id_type='pmid'):
+        """Convert if needed and save paper IDs.
+
+        Parameters
+        ----------
+        initial_ids : set(str)
+            A set of paper IDs.
+        id_type : str
+            What type the given IDs are (e.g. pmid, doi, pii). All IDs except
+            for PIIs will be converted into TextRef IDs before saving.
+        """
+        logger.info(f'Adding new paper IDs from {len(initial_ids)} {id_type}s')
+        if id_type in {'pii', 'TRID'}:
+            self.paper_ids.update(set(initial_ids))
+        else:
+            db = get_db('primary')
+            for paper_id in initial_ids:
+                trids = _get_trids(db, paper_id, id_type)
+                # Some papers might be not in the database yet
+                if trids:
+                    self.paper_ids.add(trids[0])
+
+    def get_paper_ids_from_stmts(self, stmts):
+        """Get initial set of paper IDs from a list of statements.
+
+        Parameters
+        ----------
+        stmts : list[emmaa.statements.EmmaaStatement]
+            A list of EMMAA statements to create the mappings from.
+        """
+        main_id_type = self.reading_config.get('main_id_type', 'TRID')
+        logger.info(f'Extracting {main_id_type}s from statements')
+        paper_ids = set()
+        for estmt in stmts:
+            for evid in estmt.stmt.evidence:
+                if main_id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                else:
+                    paper_id = evid.text_refs.get(main_id_type)
+                    # In some TextRefs the keys might be lowercase
+                    if not paper_id:
+                        paper_id = evid.text_refs.get(main_id_type.lower())
+                if paper_id:
+                    paper_ids.add(paper_id)
+        logger.info(f'Got {len(paper_ids)} {main_id_type}s from statements')
+        return paper_ids
 
     def eliminate_copies(self):
         """Filter out exact copies of the same Statement."""
@@ -326,6 +393,9 @@ class EmmaaModel(object):
         save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
         # Dump as json
         save_json_to_s3(self.stmts, bucket, key=fname+'.json')
+        # Save ids to stmt hashes mapping as json
+        id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
+        save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
@@ -345,9 +415,19 @@ class EmmaaModel(object):
             Latest instance of EmmaaModel with the given name, loaded from S3.
         """
         config = load_config_from_s3(model_name, bucket=bucket)
-        stmts = load_stmts_from_s3(model_name, bucket=bucket)
-        em = klass(model_name, config)
+        stmts, stmts_key = load_stmts_from_s3(model_name, bucket=bucket)
+        date = strip_out_date(stmts_key)
+        # Stmts and papers should be from the same date
+        key = f'papers/{model_name}/paper_ids_{date}.json'
+        try:
+            paper_ids = load_json_from_s3(bucket, key)
+        except ClientError as e:
+            logger.warning(f'Could not find paper IDs mapping due to: {e}')
+            paper_ids = None
+        em = klass(model_name, config, paper_ids)
         em.stmts = stmts
+        if not paper_ids:
+            em.paper_ids = em.get_paper_ids_from_stmts(stmts)
         return em
 
     def get_entities(self):
@@ -506,7 +586,7 @@ def load_stmts_from_s3(model_name, bucket=EMMAA_BUCKET_NAME):
                                            extension='.pkl')
     logger.info(f'Loading model state from {latest_model_key}')
     stmts = load_pickle_from_s3(bucket, latest_model_key)
-    return stmts
+    return stmts, latest_model_key
 
 
 def _default_test(model, config=None, bucket=EMMAA_BUCKET_NAME):

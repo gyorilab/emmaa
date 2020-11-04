@@ -6,17 +6,19 @@ from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
 
 
-def create_model(relevance=None):
+def create_model(relevance=None, paper_ids=None):
     indra_stmts = [
         Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
                    Agent('MAP2K1', db_refs={'HGNC': '6840'}),
                    evidence=[Evidence(text='BRAF activates MAP2K1.',
-                                      source_api='assertion')]),
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'})]),
         Activation(Agent('MAP2K1', db_refs={'HGNC': '6840'},
                          activity=ActivityCondition('activity', True)),
                    Agent('MAPK1', db_refs={'HGNC': '6871'}),
                    evidence=[Evidence(text='Active MAP2K1 activates MAPK1.',
-                                      source_api='assertion')])
+                                      source_api='assertion',
+                                      text_refs={'TRID': '2345'})])
         ]
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
     emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
@@ -42,7 +44,7 @@ def create_model(relevance=None):
     if relevance:
         config_dict['assembly'].append(
             {'function': 'filter_relevance', 'kwargs': {'policy': relevance}})
-    emmaa_model = EmmaaModel('test', config_dict)
+    emmaa_model = EmmaaModel('test', config_dict, paper_ids)
     emmaa_model.add_statements(emmaa_stmts)
     return emmaa_model
 
@@ -113,3 +115,18 @@ def test_filter_relevance():
     emmaa_model = create_model(relevance='prior_all')
     emmaa_model.run_assembly()
     assert len(emmaa_model.assembled_stmts) == 0
+
+
+def test_papers():
+    # Create model without previous paper stats and populate from statements
+    emmaa_model = create_model()
+    assert len(emmaa_model.paper_ids) == 0
+    emmaa_model.paper_ids = emmaa_model.get_paper_ids_from_stmts(
+        emmaa_model.stmts)
+    assert len(emmaa_model.paper_ids) == 2
+    # Create model with previous paper stats
+    emmaa_model = create_model(paper_ids={'1234', '2345', '3456'})
+    assert len(emmaa_model.paper_ids) == 3
+    # Add more paper_ids from reading
+    emmaa_model.add_paper_ids({'4567', '5678'}, id_type='TRID')
+    assert len(emmaa_model.paper_ids) == 5

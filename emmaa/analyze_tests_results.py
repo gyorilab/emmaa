@@ -18,7 +18,9 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'statements': 'get_stmt_hashes',
     'applied_tests': 'get_applied_test_hashes',
     'passed_tests': 'get_passed_test_hashes',
-    'paths': 'get_passed_test_hashes'}
+    'paths': 'get_passed_test_hashes',
+    'raw_papers': 'get_all_raw_paper_ids',
+    'assembled_papers': 'get_all_assembled_paper_ids'}
 
 
 class Round(object):
@@ -100,10 +102,23 @@ class ModelRound(Round):
         A list of INDRA Statements used to assemble a model.
     date_str : str
         Time when ModelManager responsible for this round was created.
+    paper_ids : list(str)
+        A list of paper IDs used to get raw statements for this round.
+    paper_id_type : str
+        Type of paper ID used.
+
+    Attributes
+    ----------
+    stmts_by_papers : dict
+        A dictionary mapping the paper IDs to sets of hashes of assembled
+        statements with evidences retrieved from these papers.
     """
-    def __init__(self, statements, date_str):
+    def __init__(self, statements, date_str, paper_ids=None,
+                 paper_id_type='TRID'):
         super().__init__(date_str)
         self.statements = statements
+        self.paper_ids = paper_ids if paper_ids else []
+        self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
     def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
@@ -112,7 +127,12 @@ class ModelRound(Round):
             return
         statements = mm.model.assembled_stmts
         date_str = mm.date_str
-        return cls(statements, date_str)
+        try:
+            paper_ids = list(mm.model.paper_ids)
+        except AttributeError:
+            paper_ids = None
+        paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
+        return cls(statements, date_str, paper_ids, paper_id_type)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -170,6 +190,50 @@ class ModelRound(Round):
                 if evid.source_api:
                     sources_count[evid.source_api] += 1
         return sorted(sources_count.items(), key=lambda x: x[1], reverse=True)
+
+    def get_all_raw_paper_ids(self):
+        """Return all paper IDs used in this round."""
+        return self.paper_ids
+
+    def get_number_raw_papers(self):
+        """Return a total number of papers in this round."""
+        return len(self.paper_ids)
+
+    def get_assembled_stmts_by_paper(self, id_type='TRID'):
+        """Get a mapping of paper IDs (TRID or PII) to assembled statements."""
+        logger.info('Mapping papers to statements')
+        stmts_by_papers = {}
+        for stmt in self.statements:
+            stmt_hash = stmt.get_hash()
+            for evid in stmt.evidence:
+                if id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                if evid.text_refs:
+                    paper_id = evid.text_refs.get(id_type)
+                if paper_id:
+                    if paper_id in stmts_by_papers and stmt_hash not in \
+                            stmts_by_papers[paper_id]:
+                        stmts_by_papers[paper_id].append(stmt_hash)
+                    else:
+                        stmts_by_papers[paper_id] = [stmt_hash]
+        return stmts_by_papers
+
+    def get_all_assembled_paper_ids(self):
+        return list(self.stmts_by_papers.keys())
+
+    def get_number_assembled_papers(self):
+        if not self.stmts_by_papers:
+            self.get_assembled_stmts_by_paper(id_type=id_type)
+        return len(self.stmts_by_papers)
+
+    def get_papers_distribution(self):
+        """Return a sorted list of tuples containing a paper ID and a number
+        of unique statements extracted from that paper."""
+        logger.info('Finding paper distribution')
+        paper_stmt_count = {paper_id: len(stmts) for (paper_id, stmts) in
+                            self.stmts_by_papers.items()}
+        return sorted(paper_stmt_count.items(), key=lambda x: x[1],
+                      reverse=True)
 
 
 class TestRound(Round):
@@ -429,6 +493,8 @@ class ModelStatsGenerator(StatsGenerator):
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_model_delta()
+        self.make_paper_summary()
+        self.make_paper_delta()
         self.make_changes_over_time()
 
     def make_model_summary(self):
@@ -460,12 +526,49 @@ class ModelStatsGenerator(StatsGenerator):
             if msg:
                 logger.info(msg)
 
+    def make_paper_summary(self):
+        """Add latest paper summary to json_stats."""
+        logger.info(f'Generating model summary for {self.model_name}.')
+        self.json_stats['paper_summary'] = {
+            'raw_paper_ids': self.latest_round.get_all_raw_paper_ids(),
+            'number_of_raw_papers': self.latest_round.get_number_raw_papers(),
+            'assembled_paper_ids': (
+                self.latest_round.get_all_assembled_paper_ids()),
+            'number_of_assembled_papers': (
+                self.latest_round.get_number_assembled_papers()),
+            'stmts_by_paper': self.latest_round.stmts_by_papers,
+            'paper_distr': self.latest_round.get_papers_distribution()
+        }
+
+    def make_paper_delta(self):
+        """Add paper delta between two latest model states to json_stats."""
+        logger.info(f'Generating paper delta for {self.model_name}.')
+        if not self.previous_round or not self.previous_round.paper_ids:
+            self.json_stats['paper_delta'] = {
+                'raw_paper_ids_delta': {'added': [], 'removed': []},
+                'assembled_paper_ids_delta': {'added': [], 'removed': []}}
+        else:
+            raw_paper_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'raw_papers')
+            assembled_paper_delta = self.latest_round.find_delta_hashes(
+                self.previous_round, 'assembled_papers')
+            self.json_stats['paper_delta'] = {
+                'raw_paper_ids_delta': raw_paper_delta,
+                'assembled_paper_ids_delta': assembled_paper_delta}
+            logger.info(f'Read {len(raw_paper_delta["added"])} new papers.')
+            logger.info(f'Got assembled statements from '
+                        f'{len(assembled_paper_delta["added"])} new papers.')
+
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
         logger.info(f'Comparing changes over time for {self.model_name}.')
         self.json_stats['changes_over_time'] = {
             'number_of_statements': self.get_over_time(
                 'model_summary', 'number_of_statements'),
+            'number_of_raw_papers': self.get_over_time(
+                'paper_summary', 'number_of_raw_papers'),
+            'number_of_assembled_papers': self.get_over_time(
+                'paper_summary', 'number_of_assembled_papers'),
             'dates': self.get_dates()}
 
     def get_over_time(self, section, metrics, mc_type='pysb'):
@@ -476,7 +579,7 @@ class ModelStatsGenerator(StatsGenerator):
             previous_data = []
         else:
             previous_data = (
-                self.previous_json_stats['changes_over_time'][metrics])
+                self.previous_json_stats['changes_over_time'].get(metrics, []))
         previous_data.append(self.json_stats[section][metrics])
         return previous_data
 

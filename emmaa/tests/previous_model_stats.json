@@ -51,9 +51,37 @@
    "removed": []
   }
  },
+ "paper_summary": {
+  "raw_paper_ids": ["1234"],
+  "number_of_raw_papers": 1,
+  "assembled_paper_ids": ["1234"],
+  "number_of_assembled_papers": 1,
+  "stmts_by_paper": {
+    "1234": ["-23078353002754841", "-34603994586320440"]
+  },
+  "paper_distr": [
+    ["1234", 2]
+  ]
+ },
+ "paper_delta": {
+  "raw_paper_ids_delta": {
+    "added": [],
+    "removed": []
+   },
+  "assembled_paper_ids_delta": {
+    "added": [],
+    "removed": []
+   }
+ },
  "changes_over_time": {
   "number_of_statements": [
    2
+  ],
+  "number_of_raw_papers": [
+   1
+  ],
+  "number_of_assembled_papers": [
+   1
   ],
   "dates": [
    "2019-11-14-18-26-26"
