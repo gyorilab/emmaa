@@ -206,10 +206,13 @@ class ModelRound(Round):
         for stmt in self.statements:
             stmt_hash = stmt.get_hash()
             for evid in stmt.evidence:
+                paper_id = None
                 if id_type == 'pii':
                     paper_id = evid.annotations.get('pii')
                 if evid.text_refs:
                     paper_id = evid.text_refs.get(id_type)
+                    if not paper_id:
+                        paper_id = evid.text_refs.get(id_type.lower())
                 if paper_id:
                     if paper_id in stmts_by_papers and stmt_hash not in \
                             stmts_by_papers[paper_id]:
@@ -222,8 +225,6 @@ class ModelRound(Round):
         return list(self.stmts_by_papers.keys())
 
     def get_number_assembled_papers(self):
-        if not self.stmts_by_papers:
-            self.get_assembled_stmts_by_paper(id_type=id_type)
         return len(self.stmts_by_papers)
 
     def get_papers_distribution(self):
