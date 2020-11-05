@@ -415,11 +415,14 @@ def _set_curation(stmt_hash, correct, incorrect):
 
 
 def _label_curations(**kwargs):
+    logger.info('Getting curations')
     curations = get_curations(**kwargs)
+    logger.info('Labeling curations')
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     correct = {str(c.pa_hash) for c in curations if c.tag in correct_tags}
     incorrect = {str(c.pa_hash) for c in curations if
                  str(c.pa_hash) not in correct}
+    logger.info('Labeled curations as correct or incorrect')
     return correct, incorrect
 
 
@@ -581,7 +584,6 @@ def get_model_dashboard(model):
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
-    logger.info('Getting curations')
     correct, incorrect = _label_curations()
     logger.info('Mapping curations to tests')
     # Filter out rows with all tests == 'n_a'
