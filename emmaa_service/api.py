@@ -662,7 +662,7 @@ def get_model_dashboard(model):
                                test_corpus, add_test_links),
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date,
-                               test_corpus. add_test_links),
+                               test_corpus, add_test_links),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)
