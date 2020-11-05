@@ -876,8 +876,8 @@ def get_statement_evidence_page():
         curations = get_curations(pa_hash=stmt_hashes)
         cur_dict = defaultdict(list)
         for cur in curations:
-            cur_dict[(cur.pa_hash, cur.source_hash)].append(
-                {'error_type': cur.tag})
+            cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+                {'error_type': cur['tag']})
         cur_counts = _count_curations(curations, stmts_by_hash)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
@@ -1278,8 +1278,7 @@ def submit_curation_endpoint(hash_val, **kwargs):
 @app.route('/curation/list/<stmt_hash>/<src_hash>', methods=['GET'])
 def list_curations(stmt_hash, src_hash):
     curations = get_curations(pa_hash=stmt_hash, source_hash=src_hash)
-    curation_json = [cur.to_json() for cur in curations]
-    return jsonify(curation_json)
+    return jsonify(curations)
 
 
 @app.route('/latest_statements/<model>', methods=['GET'])
