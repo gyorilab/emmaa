@@ -286,7 +286,7 @@ def _make_query(query_dict):
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date,
-                       test_corpus):
+                       test_corpus, add_links=False):
     # Extract new applied tests into:
     #   list of tests (one per row)
     #       each test is a list of tuples (one tuple per column)
@@ -299,19 +299,20 @@ def _new_applied_tests(test_stats_json, model_types, model_name, date,
         return 'No new tests were applied'
     new_app_tests = [(th, all_test_results[th]) for th in new_app_hashes]
     return _format_table_array(new_app_tests, model_types, model_name, date,
-                               test_corpus)
+                               test_corpus, add_links=add_links)
 
 
 def _format_table_array(tests_json, model_types, model_name, date,
-                        test_corpus):
+                        test_corpus, add_links=False):
     # tests_json needs to have the structure: [(test_hash, tests)]
     table_array = []
     for th, test in tests_json:
-        ev_url_par = parse.urlencode(
-            {'stmt_hash': th, 'source': 'test', 'model': model_name,
-             'test_corpus': test_corpus, 'date': date})
-        test['test'][0] = f'/evidence?{ev_url_par}'
-        test['test'][2] = stmt_db_link_msg
+        if add_links:
+            ev_url_par = parse.urlencode(
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                 'test_corpus': test_corpus, 'date': date})
+            test['test'][0] = f'/evidence?{ev_url_par}'
+            test['test'][2] = stmt_db_link_msg
         new_row = [(test['test'])]
         for mt in model_types:
             url_param = parse.urlencode(
@@ -360,7 +361,7 @@ def _format_dynamic_query_results(formatted_results):
 
 
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
-                      test_corpus):
+                      test_corpus, add_links=False):
     new_passed_tests = []
     all_test_results = test_stats_json['test_round_summary'][
         'all_test_results']
@@ -374,11 +375,12 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                      '')]]
         for th in new_passed_hashes:
             test = all_test_results[th]
-            ev_url_par = parse.urlencode(
-                {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                 'test_corpus': test_corpus, 'date': date})
-            test['test'][0] = f'/evidence?{ev_url_par}'
-            test['test'][2] = stmt_db_link_msg
+            if add_links:
+                ev_url_par = parse.urlencode(
+                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                     'test_corpus': test_corpus, 'date': date})
+                test['test'][0] = f'/evidence?{ev_url_par}'
+                test['test'][2] = stmt_db_link_msg
             path_loc = test[mt][1]
             if isinstance(path_loc, list):
                 path = path_loc[0]['path']
@@ -413,11 +415,14 @@ def _set_curation(stmt_hash, correct, incorrect):
 
 
 def _label_curations(**kwargs):
+    logger.info('Getting curations')
     curations = get_curations(**kwargs)
+    logger.info('Labeling curations')
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     correct = {str(c.pa_hash) for c in curations if c.tag in correct_tags}
     incorrect = {str(c.pa_hash) for c in curations if
                  str(c.pa_hash) not in correct}
+    logger.info('Labeled curations as correct or incorrect')
     return correct, incorrect
 
 
@@ -537,12 +542,15 @@ def get_model_dashboard(model):
         date = latest_date
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
+    logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
+                f'at {date}.')
     model_meta_data = _get_model_meta_data()
     model_stats = _load_model_stats_from_cache(model, date)
     test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+    logger.info('Getting model information')
     ndex_id = 'None available'
     description = 'None available'
     for mid, mmd in model_meta_data:
@@ -567,6 +575,7 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
+    logger.info('Getting test information')
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
     if test_data:
@@ -576,6 +585,7 @@ def get_model_dashboard(model):
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
     correct, incorrect = _label_curations()
+    logger.info('Mapping curations to tests')
     # Filter out rows with all tests == 'n_a'
     all_tests = []
     for k, v in test_stats['test_round_summary']['all_test_results'].items():
@@ -586,34 +596,48 @@ def get_model_dashboard(model):
             val = deepcopy(v)
             val['test'].append(cur)
             all_tests.append((k, val))
+    # Only add links in the api if they are missing from stats
+    add_test_links = False
+    if not all_tests[0][1]['test'][0]:
+        add_test_links = True
 
-    def _update_stmt(st_hash, st_value):
-        url_param = parse.urlencode(
-            {'stmt_hash': st_hash, 'source': 'model_statement', 'model': model,
-             'date': date})
-        st_value[0] = f'/evidence?{url_param}'
-        st_value[2] = stmt_db_link_msg
+    def _update_stmt(st_hash, st_value, add_links=False):
+        if add_links:
+            url_param = parse.urlencode(
+                {'stmt_hash': st_hash, 'source': 'model_statement',
+                 'model': model, 'date': date})
+            st_value[0] = f'/evidence?{url_param}'
+            st_value[2] = stmt_db_link_msg
         cur = _set_curation(st_hash, correct, incorrect)
         st_value.append(cur)
         return (st_value)
 
     all_stmts = model_stats['model_summary']['all_stmts']
+    # Only add links in the api if they are missing from stats
+    add_model_links = False
+    if not all_stmts[list(all_stmts.keys())[0]][0]:
+        add_model_links = True
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
     top_stmts_counts = []
+    logger.info('Mapping curations to most supported statements')
     for st_hash, c in most_supported:
         st_value = deepcopy(all_stmts[st_hash])
         top_stmts_counts.append(
-            ((_update_stmt(st_hash, st_value)), ('', str(c), '')))
+            ((_update_stmt(st_hash, st_value, add_model_links)),
+             ('', str(c), '')))
 
     if len(added_stmts_hashes) > 0:
+        logger.info('Mapping curations to new added statements')
         added_stmts = []
         for st_hash in added_stmts_hashes:
             st_value = deepcopy(all_stmts[st_hash])
-            added_stmts.append((_update_stmt(st_hash, st_value),))
+            added_stmts.append(
+                (_update_stmt(st_hash, st_value, add_model_links),))
     else:
         added_stmts = 'No new statements were added'
+    logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
                            model_data=model_meta_data,
@@ -632,13 +656,13 @@ def get_model_dashboard(model):
                                                   current_model_types]],
                            new_applied_tests=_new_applied_tests(
                                test_stats, current_model_types, model, date,
-                               test_corpus),
+                               test_corpus, add_test_links),
                            all_test_results=_format_table_array(
                                all_tests, current_model_types, model, date,
-                               test_corpus),
+                               test_corpus, add_test_links),
                            new_passed_tests=_new_passed_tests(
                                model, test_stats, current_model_types, date,
-                               test_corpus),
+                               test_corpus, add_test_links),
                            date=date,
                            latest_date=latest_date,
                            tab=tab)
