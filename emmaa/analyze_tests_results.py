@@ -876,10 +876,8 @@ def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
     plural = 's' if len(delta['added']) > 1 else ''
     if msg_type == 'stmts':
         if not new_papers:
-            msg = (f'Today I learned {len(delta["added"])} new mechanism'
-                   f'{plural}. See https://emmaa.indra.bio/dashboard/'
-                   f'{model_name}?tab=model&date={date}#addedStmts for more '
-                   'details.')
+            logger.info(f'No new papers found')
+            return
         else:
             paper_plural = 's' if new_papers > 1 else ''
             msg = (f'Today I read {new_papers} new publication{paper_plural} '
