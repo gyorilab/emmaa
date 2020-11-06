@@ -5,7 +5,7 @@ from emmaa.model import _default_test, load_config_from_s3, get_model_stats
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
-    FORMATTED_TYPE_NAMES, get_credentials, update_status
+    get_credentials, update_status
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -21,6 +21,12 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'paths': 'get_passed_test_hashes',
     'raw_papers': 'get_all_raw_paper_ids',
     'assembled_papers': 'get_all_assembled_paper_ids'}
+
+
+TWITTER_MODEL_TYPES = {'pysb': '@PySysBio',
+                       'pybel': '@pybelbio',
+                       'signed_graph': 'Signed Graph',
+                       'unsigned_graph': 'Unsigned Graph'}
 
 
 class Round(object):
@@ -894,7 +900,7 @@ def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
     elif msg_type == 'passed_tests' and mc_type:
         msg = (f'Today I explained {len(delta["added"])} new '
                f'observation{plural} in the {test_name} with my '
-               f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
+               f'{TWITTER_MODEL_TYPES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date}#newPassedTests for '
                'more details.')
