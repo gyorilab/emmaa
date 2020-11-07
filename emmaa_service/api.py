@@ -597,10 +597,8 @@ def get_model_dashboard(model):
             val = deepcopy(v)
             val['test'].append(cur)
             all_tests.append((k, val))
-    # Only add links in the api if they are missing from stats
-    add_test_links = False
-    if not all_tests[0][1]['test'][0]:
-        add_test_links = True
+    # Add links unless sure they are added in stats
+    add_test_links = test_stats.get('add_links', True)
 
     def _update_stmt(st_hash, st_value, add_links=False):
         if add_links:
@@ -614,10 +612,9 @@ def get_model_dashboard(model):
         return (st_value)
 
     all_stmts = model_stats['model_summary']['all_stmts']
-    # Only add links in the api if they are missing from stats
-    add_model_links = False
-    if not all_stmts[list(all_stmts.keys())[0]][0]:
-        add_model_links = True
+    # Add links unless sure they are added in stats
+    add_model_links = model_stats.get('add_links', True)
+
     most_supported = model_stats['model_summary']['stmts_by_evidence'][:10]
     added_stmts_hashes = \
         model_stats['model_delta']['statements_hashes_delta']['added']
