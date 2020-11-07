@@ -192,7 +192,7 @@ def test_twitter_msg():
     # No message with no new papers
     msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
                             '2020-01-01', new_papers=None)
-    assert not msg
+    assert not msg, msg
     # New statements with new papers message
     msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
                             '2020-01-01', new_papers=5)
