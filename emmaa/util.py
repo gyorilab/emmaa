@@ -13,7 +13,7 @@ from botocore import UNSIGNED
 from botocore.client import Config
 from inflection import camelize
 from zipfile import ZipFile
-from indra.util.aws import get_s3_file_tree, get_date_from_str
+from indra.util.aws import get_s3_file_tree, get_date_from_str, iter_s3_keys
 from indra.statements import get_all_descendants
 from indra.literature.s3_client import gzip_string
 from emmaa.subscription.email_service import email_bucket
@@ -66,13 +66,11 @@ def make_date_str(date=None):
 
 def list_s3_files(bucket, prefix, extension=None):
     client = get_s3_client()
-    resp = client.list_objects(Bucket=bucket, Prefix=prefix)
-    files = resp.get('Contents', [])
+    files = iter_s3_keys(client, bucket, prefix)
     if extension:
-        keys = [file['Key'] for file in files if
-                file['Key'].endswith(extension)]
+        keys = [f for f in files if f.endswith(extension)]
     else:
-        keys = [file['Key'] for file in files]
+        keys = list(files)
     return keys
 
 
