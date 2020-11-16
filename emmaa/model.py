@@ -484,6 +484,7 @@ class EmmaaModel(object):
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
+        logger.info('Converting a model to JSON')
         json_output = {'name': self.name,
                        'ndex_network': self.ndex_network,
                        'search_terms': [st.to_json() for st
