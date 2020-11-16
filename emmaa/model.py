@@ -394,12 +394,8 @@ class EmmaaModel(object):
         # Save ids to stmt hashes mapping as json
         id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
         save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
-        try:
-            # Dump as json
-            save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
-        except Exception as e:
-            logger.info(e)
-            pass
+        # Dump as json
+        save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
