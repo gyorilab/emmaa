@@ -37,7 +37,8 @@ jobs:
         cd ../indralab_web_templates
         pip install .
         cd ../..
-        pip install .[test]
+        pip install boto3 jsonpickle pygraphviz fnvhash sqlalchemy inflection pybel==0.14.10 flask_jwt_extended gilda tweepy nose coverage moto[iam] sqlalchemy_utils
+        pip install --no-dependencies .
         psql -c 'create database emmaadb_test;' -U postgres
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
