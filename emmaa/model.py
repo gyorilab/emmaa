@@ -395,7 +395,7 @@ class EmmaaModel(object):
         id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
         save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
         # Dump as json
-        save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
+        # save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
