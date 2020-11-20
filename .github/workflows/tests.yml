@@ -19,6 +19,9 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
+        wget https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
+        mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
+        unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         sudo apt-get install graphviz libgraphviz-dev pkg-config
         python -m pip install --upgrade pip
         pip install nose coverage flask pyyaml boto3 openpyxl
@@ -34,14 +37,6 @@ jobs:
         cd ../indralab_web_templates
         pip install .
         cd ../..
-        pip install boto3
-        pip install jsonpickle
-        pip install kappy==4.0.94
-        pip install pygraphviz
-        pip install fnvhash
-        pip install sqlalchemy
-        pip install inflection
-        pip install pybel==0.14.10
         pip install .[test]
         psql -c 'create database emmaadb_test;' -U postgres
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
@@ -51,7 +46,7 @@ jobs:
         export AWS_DEFAULT_REGION='us-east-1'
         export NOSEATTR="!notravis"
         export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
-        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19
+        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19:`pwd`/kappy
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export NOSEATTR="!notravis"
         export INDRA_WM_CACHE="."
