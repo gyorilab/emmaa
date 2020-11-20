@@ -1343,6 +1343,12 @@ def get_latest_date():
     return jsonify({'date': date})
 
 
+@app.route('/demos')
+@jwt_optional
+def get_demos_page():
+    return render_template('demos_template.html', link_list=link_list)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
     parser.add_argument('--host', default='0.0.0.0')
