@@ -1,0 +1,50 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nose coverage flask pyyaml boto3 openpyxl
+        pip install git+https://github.com/sorgerlab/indra.git
+        pip uninstall -y enum34
+        pip install git+https://github.com/indralab/indra_db.git
+        pip install git+https://github.com/indralab/indra_reading.git
+        pip install git+https://github.com/sorgerlab/bioagents.git
+        git clone https://github.com/indralab/covid-19.git
+        git clone https://github.com/indralab/ui_util.git
+        cd ui_util/indralab_auth_tools
+        pip install .
+        cd ../indralab_web_templates
+        pip install .
+        cd ../..
+        pip install .[test]
+        psql -c 'create database emmaadb_test;' -U postgres
+        wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
+        tar xzf bionetgen.tar.gz
+    - name: Run unit tests
+      run: |
+        export AWS_DEFAULT_REGION='us-east-1'
+        export NOSEATTR="!notravis"
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
+        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19
+        export BNGPATH=`pwd`/BioNetGen-2.4.0
+        export NOSEATTR="!notravis"
+        export INDRA_WM_CACHE="."
+        nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
+        nosetests -v -a $NOSEATTR --ignore-files='.*test_s3.py' --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
