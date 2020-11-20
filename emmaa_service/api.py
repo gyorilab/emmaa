@@ -1346,7 +1346,10 @@ def get_latest_date():
 @app.route('/demos')
 @jwt_optional
 def get_demos_page():
-    return render_template('demos_template.html', link_list=link_list)
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('demos_template.html', link_list=link_list,
+                           user_email=user_email)
 
 
 if __name__ == '__main__':
