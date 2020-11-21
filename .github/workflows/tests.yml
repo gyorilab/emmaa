@@ -5,14 +5,23 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11.6-alpine
+        env:
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
     - uses: actions/checkout@v2
-    #- uses: actions/cache@v2
-    #  with:
-    #    path: ~/.cache/pip
-    #    key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
-    #    restore-keys: |
-    #      ${{ runner.os }}-pip-
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
