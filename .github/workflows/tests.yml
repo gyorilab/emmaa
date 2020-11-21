@@ -10,6 +10,7 @@ jobs:
         image: postgres:9.6
         env:
           POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
         ports:
           - 5432:5432
         # needed because the postgres container does not provide a healthcheck
@@ -28,7 +29,8 @@ jobs:
         python-version: 3.7
     - name: Install dependencies
       run: |
-        psql -c 'create database emmaadb_test;' -U postgres
+        sudo apt-get install libpq-dev
+        psql -h localhost -c 'create database emmaadb_test;' -U postgres
         wget https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
         mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
@@ -53,6 +55,8 @@ jobs:
         tar xzf bionetgen.tar.gz
       env:
         POSTGRES_PORT: 5432
+        POSTGRES_PASSWORD: password
+        POSTGRES_USER: postgres
     - name: Run unit tests
       run: |
         export AWS_DEFAULT_REGION='us-east-1'
