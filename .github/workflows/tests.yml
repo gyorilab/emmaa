@@ -55,8 +55,7 @@ jobs:
         tar xzf bionetgen.tar.gz
       env:
         POSTGRES_PORT: 5432
-        POSTGRES_PASSWORD: password
-        POSTGRES_USER: postgres
+        PGPASSWORD: password
     - name: Run unit tests
       run: |
         export AWS_DEFAULT_REGION='us-east-1'
