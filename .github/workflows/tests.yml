@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Set up postgres
     services:
       postgres:
         image: postgres:9.6
@@ -16,21 +17,25 @@ jobs:
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
+    # Check out the repo
     - uses: actions/checkout@v2
+    # Cache pip packages
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
+    # Set up Python 3.7
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
         python-version: 3.7
+    # Install EMMAA/test dependencies
     - name: Install dependencies
       run: |
         sudo apt-get install libpq-dev
-        psql -h localhost -c 'create database emmaadb_test;' -U postgres
+        psql --no-password -h localhost -c 'create database emmaadb_test;' -U postgres
         wget https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
         mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
@@ -67,3 +72,6 @@ jobs:
         export INDRA_WM_CACHE="."
         nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
         nosetests -v -a $NOSEATTR --ignore-files='.*test_s3.py' --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
+      env:
+        POSTGRES_PORT: 5432
+        PGPASSWORD: password
