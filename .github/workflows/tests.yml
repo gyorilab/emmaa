@@ -75,3 +75,12 @@ jobs:
       env:
         POSTGRES_PORT: 5432
         PGPASSWORD: password
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}
+        INDRA_DB_REST_API_KEY: ${{ secrets.INDRA_DB_REST_API_KEY }}
+        INDRADB_JWT_SECRET: ${{ secrets.INDRADB_JWT_SECRET }}
+        INDRALAB_USERS_DB: ${{ secrets.INDRALAB_USERS_DB }}
+        EMMAADBTEST: ${{ secrets.EMMAADBTEST }}
+        EMAIL_SIGN_SECRET: ${{ secrets.EMAIL_SIGN_SECRET }}
