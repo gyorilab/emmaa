@@ -1,0 +1,86 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Set up postgres
+    services:
+      postgres:
+        image: postgres:9.6
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    # Check out the repo
+    - uses: actions/checkout@v2
+    # Cache pip packages
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    # Set up Python 3.7
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    # Install EMMAA/test dependencies
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libpq-dev
+        psql --no-password -h localhost -c 'create database emmaadb_test;' -U postgres
+        wget https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
+        mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
+        unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
+        sudo apt-get install graphviz libgraphviz-dev pkg-config
+        python -m pip install --upgrade pip
+        pip install nose coverage flask pyyaml boto3 openpyxl
+        pip install git+https://github.com/sorgerlab/indra.git
+        pip uninstall -y enum34
+        pip install git+https://github.com/indralab/indra_db.git
+        pip install git+https://github.com/indralab/indra_reading.git
+        pip install git+https://github.com/sorgerlab/bioagents.git
+        git clone https://github.com/indralab/covid-19.git
+        git clone https://github.com/indralab/ui_util.git
+        cd ui_util/indralab_auth_tools
+        pip install .
+        cd ../indralab_web_templates
+        pip install .
+        cd ../..
+        pip install boto3 jsonpickle pygraphviz fnvhash sqlalchemy inflection pybel==0.14.10 flask_jwt_extended gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor
+        pip install --no-dependencies .
+        wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
+        tar xzf bionetgen.tar.gz
+      env:
+        POSTGRES_PORT: 5432
+        PGPASSWORD: password
+    - name: Run unit tests
+      run: |
+        export AWS_DEFAULT_REGION='us-east-1'
+        export NOSEATTR="!notravis"
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
+        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19:`pwd`/kappy
+        export BNGPATH=`pwd`/BioNetGen-2.4.0
+        export NOSEATTR="!notravis"
+        export INDRA_WM_CACHE="."
+        nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
+        nosetests -v -a $NOSEATTR --ignore-files='.*test_s3.py' --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests
+      env:
+        POSTGRES_PORT: 5432
+        PGPASSWORD: password
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        INDRA_DB_REST_URL: ${{ secrets.INDRA_DB_REST_URL }}
+        INDRA_DB_REST_API_KEY: ${{ secrets.INDRA_DB_REST_API_KEY }}
+        INDRADB_JWT_SECRET: ${{ secrets.INDRADB_JWT_SECRET }}
+        INDRALAB_USERS_DB: ${{ secrets.INDRALAB_USERS_DB }}
+        EMMAADBTEST: ${{ secrets.EMMAADBTEST }}
+        EMAIL_SIGN_SECRET: ${{ secrets.EMAIL_SIGN_SECRET }}
