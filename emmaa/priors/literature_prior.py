@@ -105,10 +105,17 @@ class LiteraturePrior:
             }
         }
         if upload_to_s3:
-            from emmaa.util import save_json_to_s3
-            save_json_to_s3(config, bucket='emmaa',
-                            key=f'models/{self.name}/config.json')
+            from emmaa.model import save_config_to_s3
+            save_config_to_s3(self.name, config)
         return config
+
+    def make_model(self, upload_to_s3=False):
+        from emmaa.model import EmmaaModel
+        config = self.make_config(upload_to_s3=upload_to_s3)
+        model = EmmaaModel(name=self.name, config=config)
+        if upload_to_s3:
+            model.save_to_s3()
+        return model
 
 
 def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
