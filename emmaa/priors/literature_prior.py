@@ -1,3 +1,14 @@
+"""This module implements the LiteraturePrior class which automates
+some of the steps involved in starting a model around a set of
+literature searches. Example:
+
+lp = LiteraturePrior('some_disease', 'Some Disease',
+                     'This is a self-updating model of Some Disease',
+                     search_strings=['some disease'],
+                     assembly_config_template='nf')
+estmts = lp.get_statements()
+model = lp.make_model(estmts, upload_to_s3=True)
+"""
 import tqdm
 import logging
 import datetime
@@ -20,31 +31,36 @@ class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
                  search_strings=None, mesh_ids=None,
                  assembly_config_template=None):
+        """A class to construct a literture-based prior for an EMMAA model.
+
+        Parameters
+        ----------
+        name : str
+            The model name by which the model will be identified on S3.
+        human_readable_name : str
+            The human-readable display name for the model.
+        description : str
+            A human-readable description for the model.
+        search_strings : list of str
+            A list of search strings e.g., "diabetes" to find papers in the
+            literature.
+        mesh_ids : list of str
+            A list of MeSH IDs that are used to search the literature as
+            headings associated with papers.
+        assembly_config_template : Optional[str]
+            The name of another model from which the initial assembly
+            configuration should be adopted.
+        """
         self.name = name
         self.human_readable_name = human_readable_name
         self.description = description
         self.search_terms = \
-            self.make_search_terms(search_strings, mesh_ids)
+            make_search_terms(search_strings, mesh_ids)
         if assembly_config_template:
             self.assembly_config = \
                 self.get_config_from(assembly_config_template)
         else:
             self.assembly_config = {}
-
-    def make_search_terms(self, search_strings, mesh_ids):
-        search_terms = []
-        for search_string in search_strings:
-            search_term = SearchTerm(type='other', name=search_string,
-                                     db_refs={}, search_term=search_string)
-            search_terms.append(search_term)
-        for mesh_id in mesh_ids:
-            mesh_name = mesh_client.get_mesh_name(mesh_id)
-            suffix = 'mh' if mesh_id.startswith('D') else 'nm'
-            search_term = SearchTerm(type='mesh', name=mesh_name,
-                                     db_refs={'MESH': mesh_id},
-                                     search_term=f'{mesh_name} [{suffix}]')
-            search_terms.append(search_term)
-        return search_terms
 
     def get_statements(self, mode='all', batch_size=100):
         """Return EMMAA Statements for this prior's literature set.
@@ -229,3 +245,37 @@ def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
                 all_stmts[pmid] += stmts_from_json(stmt_jsons)
     all_stmts = dict(all_stmts)
     return all_stmts
+
+
+def make_search_terms(search_strings, mesh_ids):
+    """Return EMMAA SearchTerms based on search strings and MeSH IDs.
+
+    Parameters
+    ----------
+    search_strings : list of str
+        A list of search strings e.g., "diabetes" to find papers in the
+        literature.
+    mesh_ids : list of str
+        A list of MeSH IDs that are used to search the literature as headings
+        associated with papers.
+
+    Returns
+    -------
+    list of emmmaa.prior.SearchTerm
+        A list of EMMAA SearchTerm objects constructed from the search strings
+        and the MeSH IDs.
+    """
+    search_terms = []
+    for search_string in search_strings:
+        search_term = SearchTerm(type='other', name=search_string,
+                                 db_refs={}, search_term=search_string)
+        search_terms.append(search_term)
+    for mesh_id in mesh_ids:
+        mesh_name = mesh_client.get_mesh_name(mesh_id)
+        suffix = 'mh' if mesh_id.startswith('D') else 'nm'
+        search_term = SearchTerm(type='mesh', name=mesh_name,
+                                 db_refs={'MESH': mesh_id},
+                                 search_term=f'{mesh_name} [{suffix}]')
+        search_terms.append(search_term)
+    return search_terms
+
