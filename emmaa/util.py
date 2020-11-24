@@ -277,7 +277,6 @@ def save_pickle_to_s3(obj, bucket, key):
     obj_str = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info(f'Saving object to {key}')
     client.put_object(Body=obj_str, Bucket=bucket, Key=key)
-    del obj_str
 
 
 def load_json_from_s3(bucket, key):
@@ -294,7 +293,6 @@ def save_json_to_s3(obj, bucket, key, save_format='json'):
     logger.info(f'Uploading the {save_format} object to S3')
     client.put_object(Body=json_str.encode('utf8'),
                       Bucket=bucket, Key=key)
-    del json_str
 
 
 def load_zip_json_from_s3(bucket, key):
