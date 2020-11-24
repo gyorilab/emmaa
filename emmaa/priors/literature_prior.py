@@ -21,11 +21,15 @@ class LiteraturePrior:
                  search_strings=None, mesh_ids=None,
                  assembly_config_template=None):
         self.name = name
-        self.human_readable_name = human_readable_name,
+        self.human_readable_name = human_readable_name
         self.description = description
         self.search_terms = \
             self.make_search_terms(search_strings, mesh_ids)
-        self.assembly_config = self.get_config_from(assembly_config_template)
+        if assembly_config_template:
+            self.assembly_config = \
+                self.get_config_from(assembly_config_template)
+        else:
+            self.assembly_config = {}
 
     def make_search_terms(self, search_strings, mesh_ids):
         search_terms = []
@@ -109,10 +113,11 @@ class LiteraturePrior:
             save_config_to_s3(self.name, config)
         return config
 
-    def make_model(self, upload_to_s3=False):
+    def make_model(self, estmts, upload_to_s3=False):
         from emmaa.model import EmmaaModel
         config = self.make_config(upload_to_s3=upload_to_s3)
         model = EmmaaModel(name=self.name, config=config)
+        model.add_statements(estmts)
         if upload_to_s3:
             model.save_to_s3()
         return model
