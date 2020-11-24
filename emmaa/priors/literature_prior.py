@@ -47,6 +47,25 @@ class LiteraturePrior:
         return search_terms
 
     def get_statements(self, mode='all', batch_size=100):
+        """Return EMMAA Statements for this prior's literature set.
+
+        Parameters
+        ----------
+        mode : 'all' or 'distilled'
+            The 'distilled' mode makes sure that the "best", non-redundant
+            set of raw statements are found across potentially redundant text
+            contents and reader versions. The 'all' mode doesn't do such
+            distillation but is significantly faster.
+        batch_size : Optional[int]
+            Determines how many PMIDs to fetch statements for in each
+            iteration. Default: 100.
+
+        Returns
+        -------
+        list of EmmaaStatement
+            A list of EMMAA Statements corresponding to extractions from
+            the subset of literature defined by this prior's search terms.
+        """
         terms_to_pmids = \
             EmmaaModel.search_pubmed(search_terms=self.search_terms,
                                      date_limit=None)
@@ -68,11 +87,36 @@ class LiteraturePrior:
         return estmts
 
     def get_config_from(self, assembly_config_template):
+        """Return assembly config given a template model's name.
+
+        Parameters
+        ----------
+        assembly_config_template : str
+            The name of a model whose assembly config should be adopted.
+
+        Returns
+        -------
+        dict
+            The assembly config of the given template model.
+        """
         from emmaa.model import load_config_from_s3
         config = load_config_from_s3(assembly_config_template)
         return config.get('assembly')
 
     def make_config(self, upload_to_s3=False):
+        """Return a config dict fot the model, optionally upload to S3.
+
+        Parameters
+        ----------
+        upload_to_s3 : Optional[bool]
+            If True, the config is uploaded to S3 in the EMMAA bucket.
+            Default: False
+
+        Returns
+        -------
+        dict
+            A config data structure.
+        """
         config = {
             # These are provided by the user upon initialization
             'name': self.name,
@@ -114,6 +158,22 @@ class LiteraturePrior:
         return config
 
     def make_model(self, estmts, upload_to_s3=False):
+        """Return, and optionally upload to S3 an initial EMMAA Model.
+
+        Parameters
+        ----------
+        estmts : list of emmaa.statement.EmmaaStatement
+            A list of prior EMMAA Statements to initialize the model with.
+        upload_to_s3 : Optional[bool]
+            If True, the model and the config are uploaded to S3, otherwise
+            the model object is just returned without upload. Default: False
+
+        Returns
+        -------
+        emmaa.model.EmmaaModel
+            The EMMAA Model object constructed from the generated config
+            and the given EMMAA Statements.
+        """
         from emmaa.model import EmmaaModel
         config = self.make_config(upload_to_s3=upload_to_s3)
         model = EmmaaModel(name=self.name, config=config)
