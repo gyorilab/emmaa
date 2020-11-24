@@ -7,7 +7,6 @@ from indra_db import get_db
 from indra_db.util import distill_stmts
 from indra_db.client.principal import get_raw_stmt_jsons_from_papers
 from indra.databases import mesh_client
-from indra.literature import pubmed_client
 from indra.statements import stmts_from_json
 from . import SearchTerm
 from emmaa.model import EmmaaModel
@@ -19,12 +18,14 @@ logger = logging.getLogger(__name__)
 
 class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
-                 search_strings, mesh_ids):
+                 search_strings=None, mesh_ids=None,
+                 assembly_config_template=None):
         self.name = name
         self.human_readable_name = human_readable_name,
         self.description = description
         self.search_terms = \
             self.make_search_terms(search_strings, mesh_ids)
+        self.assembly_config = self.get_config_from(assembly_config_template)
 
     def make_search_terms(self, search_strings, mesh_ids):
         search_terms = []
@@ -50,7 +51,7 @@ class LiteraturePrior:
             for pmid in pmids:
                 pmids_to_terms[pmid].append(term)
         pmids_to_terms = dict(pmids_to_terms)
-        all_pmids = set(pmids_to_terms.values())
+        all_pmids = set(pmids_to_terms.keys())
         raw_statements_by_pmid = \
             get_raw_statements_for_pmids(all_pmids, mode=mode,
                                          batch_size=batch_size)
@@ -61,6 +62,53 @@ class LiteraturePrior:
                 estmts.append(EmmaaStatement(stmt, timestamp,
                                              pmids_to_terms[pmid]))
         return estmts
+
+    def get_config_from(self, assembly_config_template):
+        from emmaa.model import load_config_from_s3
+        config = load_config_from_s3(assembly_config_template)
+        return config.get('assembly')
+
+    def make_config(self, upload_to_s3=False):
+        config = {
+            # These are provided by the user upon initialization
+            'name': self.name,
+            'human_readable_name': self.human_readable_name,
+            'description': self.description,
+            # We don't make tests by default
+            'make_tests': False,
+            # We run daily upates by default
+            'run_daily_update': True,
+            # We first show the model just on dev
+            'dev_only': True,
+            # These are the search terms constructed upon
+            # initialization
+            'search_terms': [st.to_json()
+                             for st in self.search_terms],
+            # This is adopted from the template specified upon
+            # initialization
+            'assembly': self.assembly_config,
+            # We configure the large corpus tests by default
+            'test': {
+                'statement_checking': {
+                    'max_path_length': 10,
+                    'max_paths': 1
+                },
+                'mc_types': [
+                    'signed_graph', 'unsigned_graph'
+                ],
+                'make_links': True,
+                'test_corpus': ['large_corpus_tests'],
+                'default_test_corpus': 'large_corpus_tests',
+                'filters': {
+                    'large_corpus_tests': 'filter_chem_mesh_go'
+                }
+            }
+        }
+        if upload_to_s3:
+            from emmaa.util import save_json_to_s3
+            save_json_to_s3(config, bucket='emmaa',
+                            key=f'models/{self.name}/config.json')
+        return config
 
 
 def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
