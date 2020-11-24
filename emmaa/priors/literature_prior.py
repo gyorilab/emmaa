@@ -2,12 +2,15 @@
 some of the steps involved in starting a model around a set of
 literature searches. Example:
 
-lp = LiteraturePrior('some_disease', 'Some Disease',
-                     'This is a self-updating model of Some Disease',
-                     search_strings=['some disease'],
-                     assembly_config_template='nf')
-estmts = lp.get_statements()
-model = lp.make_model(estmts, upload_to_s3=True)
+.. code:: python
+
+    lp = LiteraturePrior('some_disease', 'Some Disease',
+                         'This is a self-updating model of Some Disease',
+                         search_strings=['some disease'],
+                         assembly_config_template='nf')
+    estmts = lp.get_statements()
+    model = lp.make_model(estmts, upload_to_s3=True)
+
 """
 import tqdm
 import logging
@@ -202,8 +205,8 @@ class LiteraturePrior:
 def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
     """Return EmmaaStatements based on extractions from given PMIDs.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     pmids : set or list of str
         A set of PMIDs to find raw INDRA Statements for in the INDRA DB.
     mode : 'all' or 'distilled'
