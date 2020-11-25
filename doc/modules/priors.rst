@@ -5,6 +5,13 @@ Priors (:py:mod:`emmaa.priors`)
     :members:
     :show-inheritance:
 
+Literature Prior (:py:mod:`emmaa.priors.literature_prior`)
+----------------------------------------------------------
+
+.. automodule:: emmaa.priors.literature_prior
+    :members:
+    :show-inheritance:
+
 TCGA Cancer Prior (:py:mod:`emmaa.priors.cancer_prior`)
 -------------------------------------------------------
 

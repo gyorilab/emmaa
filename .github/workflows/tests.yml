@@ -68,7 +68,6 @@ jobs:
         export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
         export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19:`pwd`/kappy
         export BNGPATH=`pwd`/BioNetGen-2.4.0
-        export NOSEATTR="!notravis"
         export INDRA_WM_CACHE="."
         nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
         nosetests -v -a $NOSEATTR --ignore-files='.*test_s3.py' --with-coverage --cover-inclusive --cover-package=emmaa -w emmaa/tests

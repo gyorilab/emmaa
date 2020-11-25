@@ -552,14 +552,17 @@ def get_model_dashboard(model):
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
     logger.info('Getting model information')
-    ndex_id = 'None available'
+    ndex_id = None
     description = 'None available'
     for mid, mmd in model_meta_data:
         if mid == model:
-            ndex_id = mmd['ndex']['network']
+            try:
+                ndex_id = mmd['ndex']['network']
+            except KeyError:
+                pass
             description = mmd['description']
             twitter_link = mmd.get('twitter_link')
-    if ndex_id == 'None available':
+    if ndex_id is None:
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
     model_info_contents = [
@@ -567,10 +570,12 @@ def get_model_dashboard(model):
         [('', 'Latest Data Available', ''), ('', latest_date, '')],
         [('', 'Data Displayed', ''),
          ('', date,
-          'Click on the point on time graph to see earlier results')],
-        [('', 'Network on Ndex', ''),
+          'Click on the point on time graph to see earlier results')]]
+    if ndex_id:
+        model_info_contents.append([
+         ('', 'Network on Ndex', ''),
          (f'http://www.ndexbio.org/#/network/{ndex_id}', ndex_id,
-          'Click to see network on Ndex')]]
+          'Click to see network on Ndex')])
     if twitter_link:
         model_info_contents.append([
             ('', 'Twitter', ''),
