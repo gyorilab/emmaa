@@ -290,6 +290,7 @@ def load_json_from_s3(bucket, key):
 def save_json_to_s3(obj, bucket, key, save_format='json'):
     client = get_s3_client(unsigned=False)
     json_str = _get_json_str(obj, save_format=save_format)
+    logger.info(f'Uploading the {save_format} object to S3')
     client.put_object(Body=json_str.encode('utf8'),
                       Bucket=bucket, Key=key)
 
@@ -320,6 +321,7 @@ def save_zip_json_to_s3(obj, bucket, key, save_format='json'):
 
 
 def _get_json_str(json_obj, save_format='json'):
+    logger.info(f'Dumping the {save_format} into a string')
     if save_format == 'json':
         json_str = json.dumps(json_obj, indent=1)
     elif save_format == 'jsonl':

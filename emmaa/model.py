@@ -391,11 +391,11 @@ class EmmaaModel(object):
         fname = f'models/{self.name}/model_{date_str}'
         # Dump as pickle
         save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
-        # Dump as json
-        save_json_to_s3(self.stmts, bucket, key=fname+'.json')
         # Save ids to stmt hashes mapping as json
         id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
         save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
+        # Dump as json
+        # save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
 
     @classmethod
     def load_from_s3(klass, model_name, bucket=EMMAA_BUCKET_NAME):
@@ -484,6 +484,7 @@ class EmmaaModel(object):
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
+        logger.info('Converting a model to JSON')
         json_output = {'name': self.name,
                        'ndex_network': self.ndex_network,
                        'search_terms': [st.to_json() for st
