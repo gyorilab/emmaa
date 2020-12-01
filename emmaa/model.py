@@ -458,6 +458,9 @@ class EmmaaModel(object):
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
         for exp_f in self.export_formats:
+            if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm', 'bngl',
+                             'sbgn', 'pysb_flat'}:
+                continue
             fname = f'{exp_f}_{self.date_str}.{exp_f}'
             pa.export_model(exp_f, fname)
             logger.info(f'Uploading {fname}')
@@ -473,13 +476,20 @@ class EmmaaModel(object):
         pybel_model = pba.make_model()
         return pybel_model
 
-    def assemble_signed_graph(self):
+    def assemble_signed_graph(self, bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into signed graph and return the assembled graph.
         """
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
         signed_graph = ia.make_model(graph_type='signed')
+        if 'signed_graph' in self.export_formats:
+            fname = f'signed_graph_{self.date_str}.tsv'
+            df = ia.make_df()
+            df.to_csv(fname, sep='\t', index=False)
+            logger.info(f'Uploading {fname}')
+            client = get_s3_client(unsigned=False)
+            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return signed_graph
 
     def assemble_unsigned_graph(self):

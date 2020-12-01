@@ -135,7 +135,14 @@ def _get_available_formats(model, date, bucket=EMMAA_BUCKET_NAME):
         key = find_latest_s3_file(
             bucket, f'assembled/{model}/statements_{date}', '.jsonl')
         formats['jsonl'] = f'https://{bucket}.s3.amazonaws.com/{key}'
-    formats.update({key.split('/')[2].split('_')[0]:
+
+    def get_export_format_key(key):
+        base_name = key.split('/')[-1]
+        exp_format = base_name.rsplit('_', maxsplit=1)[0]
+        exp_format = exp_format.replace('_', ' ')
+        return exp_format
+
+    formats.update({get_export_format_key(key):
                     f'https://{bucket}.s3.amazonaws.com/{key}'
                     for key in all_files if date in key})
     return formats
