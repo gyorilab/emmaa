@@ -56,3 +56,36 @@ release from the Children's Tumor Foundation can be found
 `here, <https://www.ctf.org/news/hack-for-nf-2020-winning-projects>`_
 and a video presentation describing our project can be found
 `here. <https://www.youtube.com/watch?v=WI-NnFEXY_Y>`_
+
+Downloading EMMAA models in alternative formats
+-----------------------------------------------
+The knowledge assembly approach in EMMAA allows exporting each model
+in multiple different modeling formalisms. In fact, EMMAA internally uses
+four different modeling formalisms (PySB, PyBEL, signed graph and
+unsigned graph) for querying and analysis. However, these formats, and
+other community standards have not been made available to users through the
+EMMAA dashboard.
+
+We added multiple exports for each model that are generated during each
+model update (typically daily) and are available through the EMMAA dashboard.
+Each model has the following export formats available:
+
+- `json.gz`: A gzipped INDRA Statement JSON dump.
+- `jsonl`: An uncompressed dump of INDRA Statement JSONs with one statement
+  per line.
+- `indranet`: A tabular (tsv) file where each row represents a single
+  binary interaction between two entities. This format is ideal for building
+  networks from an EMMAA model.
+
+Models that support PyBEL analysis provide a `pybel` export. In addition,
+models that support analysis at the rule-based executable
+level are exported into the following formats:
+
+- `bngl`: BioNetGen model representation (http://bionetgen.org/)
+- `kappa`: Kappa model representation (https://kappalanguage.org/)
+
+Finally, models that support reaction-network based analysis are exported
+into these formats:
+
+- `sbml`: Systems Biology Markup Language (http://sbml.org/)
+- `sbgn`: Systems Biology Graphical Notation (https://sbgn.github.io/)
