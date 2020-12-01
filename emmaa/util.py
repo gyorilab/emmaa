@@ -295,7 +295,7 @@ def save_json_to_s3(obj, bucket, key, save_format='json'):
                       Bucket=bucket, Key=key)
 
 
-def load_zip_json_from_s3(bucket, key):
+def load_gzip_json_from_s3(bucket, key):
     client = get_s3_client()
     # Newer files are zipped with gzip while older with zipfile
     try:
@@ -313,7 +313,7 @@ def load_zip_json_from_s3(bucket, key):
     return content
 
 
-def save_zip_json_to_s3(obj, bucket, key, save_format='json'):
+def save_gzip_json_to_s3(obj, bucket, key, save_format='json'):
     client = get_s3_client(unsigned=False)
     json_str = _get_json_str(obj, save_format=save_format)
     gz_str = gzip_string(json_str, f'assembled_stmts.{save_format}')

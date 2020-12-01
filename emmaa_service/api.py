@@ -124,6 +124,30 @@ def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
     return tests
 
 
+def _get_available_formats(model, date, bucket=EMMAA_BUCKET_NAME):
+    all_files = list_s3_files('emmaa', f'exports/{model}/')
+    formats = {}
+    if does_exist(bucket, f'assembled/{model}/statements_{date}', '.gz'):
+        key = find_latest_s3_file(
+            bucket, f'assembled/{model}/statements_{date}', '.gz')
+        formats['json'] = f'https://{bucket}.s3.amazonaws.com/{key}'
+    if does_exist(bucket, f'assembled/{model}/statements_{date}', '.jsonl'):
+        key = find_latest_s3_file(
+            bucket, f'assembled/{model}/statements_{date}', '.jsonl')
+        formats['jsonl'] = f'https://{bucket}.s3.amazonaws.com/{key}'
+
+    def get_export_format_key(key):
+        base_name = key.split('/')[-1]
+        exp_format = base_name.rsplit('_', maxsplit=1)[0]
+        exp_format = exp_format.replace('_', ' ')
+        return exp_format
+
+    formats.update({get_export_format_key(key):
+                    f'https://{bucket}.s3.amazonaws.com/{key}'
+                    for key in all_files if date in key})
+    return formats
+
+
 def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
     s3 = boto3.client('s3')
     resp = s3.list_objects(Bucket=bucket, Prefix='tests/',
@@ -640,6 +664,9 @@ def get_model_dashboard(model):
                 (_update_stmt(st_hash, st_value, add_model_links),))
     else:
         added_stmts = 'No new statements were added'
+
+    exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
+
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -668,7 +695,8 @@ def get_model_dashboard(model):
                                test_corpus, add_test_links),
                            date=date,
                            latest_date=latest_date,
-                           tab=tab)
+                           tab=tab,
+                           exp_formats=exp_formats)
 
 
 @app.route('/tests/<model>')

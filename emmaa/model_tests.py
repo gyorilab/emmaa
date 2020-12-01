@@ -27,7 +27,7 @@ from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
-    save_zip_json_to_s3
+    save_gzip_json_to_s3
 from emmaa.filter_functions import filter_functions
 
 
@@ -103,7 +103,7 @@ class ModelManager(object):
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
-        self.date_str = make_date_str()
+        self.date_str = self.model.date_str
         self.path_stmt_counts = defaultdict(int)
 
     def get_updated_mc(self, mc_type, stmts, add_ns=False):
@@ -586,11 +586,11 @@ class ModelManager(object):
             logger.info(f'Uploading assembled statements to {latest_obj_key}')
             save_json_to_s3(stmts_json, bucket, latest_obj_key, ext)
         dated_jsonl = dated_key + '.jsonl'
-        dated_zip = dated_key + '.zip'
+        dated_zip = dated_key + '.gz'
         logger.info(f'Uploading assembled statements to {dated_jsonl}')
         save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
         logger.info(f'Uploading assembled statements to {dated_zip}')
-        save_zip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
+        save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
 
 
 class TestManager(object):

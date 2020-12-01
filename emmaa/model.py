@@ -1,6 +1,7 @@
 import time
 import logging
 import datetime
+import pybel
 from botocore.exceptions import ClientError
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
@@ -22,7 +23,7 @@ from emmaa.readers.elsevier_eidos_reader import \
 from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
     EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, \
-    load_zip_json_from_s3
+    load_gzip_json_from_s3, get_s3_client
 from emmaa.statements import to_emmaa_stmts
 
 
@@ -31,7 +32,7 @@ register_pipeline(get_curations)
 
 
 class EmmaaModel(object):
-    """"Represents an EMMAA model.
+    """Represents an EMMAA model.
 
     Parameters
     ----------
@@ -74,15 +75,17 @@ class EmmaaModel(object):
         self.search_terms = []
         self.ndex_network = None
         self.human_readable_name = None
+        self.export_formats = []
         self._load_config(config)
         self.assembled_stmts = []
         if paper_ids:
             self.paper_ids = set(paper_ids)
         else:
             self.paper_ids = set()
+        self.date_str = make_date_str()
 
     def add_statements(self, stmts):
-        """"Add a set of EMMAA Statements to the model
+        """Add a set of EMMAA Statements to the model
 
         Parameters
         ----------
@@ -119,6 +122,7 @@ class EmmaaModel(object):
             self.query_config = config['query']
         if 'human_readable_name' in config:
             self.human_readable_name = config['human_readable_name']
+        self.export_formats = config.get('export_formats', [])
 
     def search_literature(self, lit_source, date_limit=None):
         """Search for the model's search terms in the literature.
@@ -388,12 +392,11 @@ class EmmaaModel(object):
 
     def save_to_s3(self, bucket=EMMAA_BUCKET_NAME):
         """Dump the model state to S3."""
-        date_str = make_date_str()
-        fname = f'models/{self.name}/model_{date_str}'
+        fname = f'models/{self.name}/model_{self.date_str}'
         # Dump as pickle
         save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
         # Save ids to stmt hashes mapping as json
-        id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
+        id_fname = f'papers/{self.name}/paper_ids_{self.date_str}.json'
         save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
         # Dump as json
         # save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
@@ -448,30 +451,52 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self):
+    def assemble_pysb(self, bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into PySB and return the assembled model."""
         if not self.assembled_stmts:
             self.run_assembly()
         pa = PysbAssembler()
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
+        for exp_f in self.export_formats:
+            if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm', 'bngl',
+                             'sbgn', 'pysb_flat'}:
+                continue
+            fname = f'{exp_f}_{self.date_str}.{exp_f}'
+            pa.export_model(exp_f, fname)
+            logger.info(f'Uploading {fname}')
+            client = get_s3_client(unsigned=False)
+            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pysb_model
 
-    def assemble_pybel(self):
+    def assemble_pybel(self, bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into PyBEL and return the assembled model."""
         if not self.assembled_stmts:
             self.run_assembly()
         pba = PybelAssembler(self.assembled_stmts)
         pybel_model = pba.make_model()
+        if 'pybel' in self.export_formats:
+            fname = f'pybel_{self.date_str}.bel.nodelink.json.gz'
+            pybel.dump(pybel_model, fname)
+            logger.info(f'Uploading {fname}')
+            client = get_s3_client(unsigned=False)
+            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pybel_model
 
-    def assemble_signed_graph(self):
+    def assemble_signed_graph(self, bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into signed graph and return the assembled graph.
         """
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
         signed_graph = ia.make_model(graph_type='signed')
+        if 'indranet' in self.export_formats:
+            fname = f'indranet_{self.date_str}.tsv'
+            df = ia.make_df()
+            df.to_csv(fname, sep='\t', index=False)
+            logger.info(f'Uploading {fname}')
+            client = get_s3_client(unsigned=False)
+            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return signed_graph
 
     def assemble_unsigned_graph(self):
@@ -762,16 +787,19 @@ def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
         prefix = f'assembled/{model}/statements_'
     else:
         prefix = f'assembled/{model}/statements_{date}'
-    # Try loading zip file
-    latest_file_key = find_latest_s3_file(bucket, prefix, '.zip')
+    # Try loading gzip file
+    latest_file_key = find_latest_s3_file(bucket, prefix, '.gz')
+    if not latest_file_key:
+        # Could be saved with .zip extension
+        latest_file_key = find_latest_s3_file(bucket, prefix, '.zip')
     if latest_file_key:
-        stmt_jsons = load_zip_json_from_s3(bucket, latest_file_key)
+        stmt_jsons = load_gzip_json_from_s3(bucket, latest_file_key)
     else:
         # Try loading json file
         latest_file_key = find_latest_s3_file(bucket, prefix, '.json')
         if latest_file_key:
             stmt_jsons = load_json_from_s3(bucket, latest_file_key)
-        # Didn't get zip or json
+        # Didn't get gzip, zip or json
         else:
             logger.info(f'No assembled statements found for {model}.')
             return None, None
