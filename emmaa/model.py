@@ -1,6 +1,7 @@
 import time
 import logging
 import datetime
+import pybel
 from botocore.exceptions import ClientError
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
@@ -31,7 +32,7 @@ register_pipeline(get_curations)
 
 
 class EmmaaModel(object):
-    """"Represents an EMMAA model.
+    """Represents an EMMAA model.
 
     Parameters
     ----------
@@ -84,7 +85,7 @@ class EmmaaModel(object):
         self.date_str = make_date_str()
 
     def add_statements(self, stmts):
-        """"Add a set of EMMAA Statements to the model
+        """Add a set of EMMAA Statements to the model
 
         Parameters
         ----------
@@ -468,12 +469,18 @@ class EmmaaModel(object):
             client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pysb_model
 
-    def assemble_pybel(self):
+    def assemble_pybel(self, bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into PyBEL and return the assembled model."""
         if not self.assembled_stmts:
             self.run_assembly()
         pba = PybelAssembler(self.assembled_stmts)
         pybel_model = pba.make_model()
+        if 'pybel' in self.export_formats:
+            fname = f'pybel_{self.date_str}.bel.nodelink.json.gz'
+            pybel.dump(pybel_model, fname)
+            logger.info(f'Uploading {fname}')
+            client = get_s3_client(unsigned=False)
+            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pybel_model
 
     def assemble_signed_graph(self, bucket=EMMAA_BUCKET_NAME):
