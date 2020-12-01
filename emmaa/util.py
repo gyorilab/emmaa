@@ -274,7 +274,7 @@ def load_pickle_from_s3(bucket, key):
 def save_pickle_to_s3(obj, bucket, key):
     client = get_s3_client(unsigned=False)
     logger.info('Pickling object')
-    obj_str = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
+    obj_str = pickle.dumps(obj, protocol=4)
     logger.info(f'Saving object to {key}')
     client.put_object(Body=obj_str, Bucket=bucket, Key=key)
 
