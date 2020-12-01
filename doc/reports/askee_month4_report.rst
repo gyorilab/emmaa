@@ -67,7 +67,8 @@ automatically identifies relevant publications, and collects all statements
 from text mining that were extracted from these papers. The model is then
 uploaded to AWS and is available for daily updates and access via the
 dashboard. We used this method to start two new EMMAA models, for
-`vitiligo` and `multiple sclerosis`. 
+`vitiligo <https://emmaa.indra.bio/dashboard/vitiligo?tab=model>`_ and
+`multiple sclerosis <https://emmaa.indra.bio/dashboard/ms?tab=model>`_.
 
 Downloading EMMAA models in alternative formats
 -----------------------------------------------
