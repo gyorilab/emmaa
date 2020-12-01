@@ -57,6 +57,18 @@ release from the Children's Tumor Foundation can be found
 and a video presentation describing our project can be found
 `here. <https://www.youtube.com/watch?v=WI-NnFEXY_Y>`_
 
+Rapid initialization of EMMAA models from literature for two new diseases
+-------------------------------------------------------------------------
+The new `Literature Prior module <https://emmaa.readthedocs.io/en/latest/modules/priors.html#literature-prior-emmaa-priors-literature-prior>`_ module makes
+the instantion of EMMAA models based on a subset of the scientific
+literature straightforward. As input, the class takes a list of PubMed
+search terms and optionally a list of Medical Subject Headings. It then
+automatically identifies relevant publications, and collects all statements
+from text mining that were extracted from these papers. The model is then
+uploaded to AWS and is available for daily updates and access via the
+dashboard. We used this method to start two new EMMAA models, for
+`vitiligo` and `multiple sclerosis`. 
+
 Downloading EMMAA models in alternative formats
 -----------------------------------------------
 The knowledge assembly approach in EMMAA allows exporting each model
@@ -89,3 +101,4 @@ into these formats:
 
 - `sbml`: Systems Biology Markup Language (http://sbml.org/)
 - `sbgn`: Systems Biology Graphical Notation (https://sbgn.github.io/)
+
