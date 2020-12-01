@@ -2,7 +2,6 @@ import time
 import logging
 import datetime
 from botocore.exceptions import ClientError
-from covid_19.emmaa_update import make_model_stmts
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
@@ -285,6 +284,8 @@ class EmmaaModel(object):
 
     def update_with_cord19(self):
         """Update model with new CORD19 dataset statements."""
+        # Using local import to avoid dependency
+        from covid_19.emmaa_update import make_model_stmts
         current_stmts = self.get_indra_stmts()
         default_filenames = [
             'drug_stmts_v2.pkl', 'gordon_ndex_stmts.pkl',
