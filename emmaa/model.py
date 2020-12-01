@@ -483,8 +483,8 @@ class EmmaaModel(object):
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
         signed_graph = ia.make_model(graph_type='signed')
-        if 'signed_graph' in self.export_formats:
-            fname = f'signed_graph_{self.date_str}.tsv'
+        if 'indranet' in self.export_formats:
+            fname = f'indranet_{self.date_str}.tsv'
             df = ia.make_df()
             df.to_csv(fname, sep='\t', index=False)
             logger.info(f'Uploading {fname}')
