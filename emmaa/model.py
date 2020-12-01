@@ -395,7 +395,7 @@ class EmmaaModel(object):
         # Dump as pickle
         save_pickle_to_s3(self.stmts, bucket, key=fname+'.pkl')
         # Save ids to stmt hashes mapping as json
-        id_fname = f'papers/{self.name}/paper_ids_{date_str}.json'
+        id_fname = f'papers/{self.name}/paper_ids_{self.date_str}.json'
         save_json_to_s3(list(self.paper_ids), bucket, key=id_fname)
         # Dump as json
         # save_json_to_s3(self.to_json(), bucket, key=fname+'.json')
