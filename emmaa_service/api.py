@@ -127,9 +127,9 @@ def _get_test_corpora(model, bucket=EMMAA_BUCKET_NAME):
 def _get_available_formats(model, date, bucket=EMMAA_BUCKET_NAME):
     all_files = list_s3_files('emmaa', f'exports/{model}/')
     formats = {}
-    if does_exist(bucket, f'assembled/{model}/statements_{date}', '.json'):
+    if does_exist(bucket, f'assembled/{model}/statements_{date}', '.gz'):
         key = find_latest_s3_file(
-            bucket, f'assembled/{model}/statements_{date}', '.json')
+            bucket, f'assembled/{model}/statements_{date}', '.gz')
         formats['json'] = f'https://{bucket}.s3.amazonaws.com/{key}'
     if does_exist(bucket, f'assembled/{model}/statements_{date}', '.jsonl'):
         key = find_latest_s3_file(
