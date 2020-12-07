@@ -80,7 +80,7 @@ class ModelManager(object):
     date_str : str
         Time when this object was created.
     """
-    def __init__(self, model):
+    def __init__(self, model, mode='local'):
         self.model = model
         self.mc_mapping = {
             'pysb': (self.model.assemble_pysb, PysbModelChecker,
@@ -96,7 +96,7 @@ class ModelManager(object):
         self.mc_types = {}
         for mc_type in model.test_config.get('mc_types', ['pysb']):
             self.mc_types[mc_type] = {}
-            assembled_model = self.mc_mapping[mc_type][0]()
+            assembled_model = self.mc_mapping[mc_type][0](mode=mode)
             self.mc_types[mc_type]['model'] = assembled_model
             self.mc_types[mc_type]['model_checker'] = (
                 self.mc_mapping[mc_type][1](assembled_model))
