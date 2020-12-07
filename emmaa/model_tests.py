@@ -21,6 +21,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json
 from indra.util.statement_presentation import group_and_sort_statements
+from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
@@ -681,6 +682,24 @@ class ScopeTestConnector(TestConnector):
         return not te_names - me_names
 
 
+class RefinementTestConnector(ScopeTestConnector):
+    """Determines applicability of a test to a model by checking if test
+    entities or their refinements are in the model.
+    """
+    @staticmethod
+    def applicable(model, test):
+        """Return True of all test entities are in the set of model entities"""
+        model_entities = model.entities
+        test_entities = test.get_entities()
+        test_extended_entities = deepcopy(test_entities)
+        for me in model_entities:
+            for te in test_entities:
+                if me.refinement_of(te, bio_ontology):
+                    test_extended_entities.append(me)
+        return RefinementTestConnector._overlap(model_entities,
+                                                test_extended_entities)
+
+
 class EmmaaTest(object):
     """Represent an EMMAA test condition"""
     def get_entities(self):
@@ -870,7 +889,12 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         tests = test_dict
         test_data = None
     tm = TestManager([mm], tests)
-    tm.make_tests(ScopeTestConnector())
+    tc = mm.model.test_config.get('test_connector', 'refinement')
+    if tc == 'scope':
+        test_connector = ScopeTestConnector()
+    elif tc == 'refinement':
+        test_connector = RefinementTestConnector()
+    tm.make_tests(test_connector)
     filter_func = None
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
