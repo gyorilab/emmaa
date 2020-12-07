@@ -10,7 +10,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     model = EmmaaModel.load_from_s3(args.model)
-    mm = ModelManager(model)
+    mm = ModelManager(model, mode='s3')
     mm.model.update_to_ndex()
     mm.save_assembled_statements()
     save_model_manager_to_s3(args.model, mm)
