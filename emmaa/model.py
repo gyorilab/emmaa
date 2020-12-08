@@ -451,31 +451,33 @@ class EmmaaModel(object):
             agents += [a for a in stmt.agent_list() if a is not None]
         return agents
 
-    def assemble_pysb(self, bucket=EMMAA_BUCKET_NAME):
+    def assemble_pysb(self, mode='local', bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into PySB and return the assembled model."""
         if not self.assembled_stmts:
             self.run_assembly()
         pa = PysbAssembler()
         pa.add_statements(self.assembled_stmts)
         pysb_model = pa.make_model()
-        for exp_f in self.export_formats:
-            if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm', 'bngl',
-                             'sbgn', 'pysb_flat'}:
-                continue
-            fname = f'{exp_f}_{self.date_str}.{exp_f}'
-            pa.export_model(exp_f, fname)
-            logger.info(f'Uploading {fname}')
-            client = get_s3_client(unsigned=False)
-            client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
+        if mode == 's3':
+            for exp_f in self.export_formats:
+                if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm',
+                                 'bngl', 'sbgn', 'pysb_flat'}:
+                    continue
+                fname = f'{exp_f}_{self.date_str}.{exp_f}'
+                pa.export_model(exp_f, fname)
+                logger.info(f'Uploading {fname}')
+                client = get_s3_client(unsigned=False)
+                client.upload_file(fname, bucket,
+                                   f'exports/{self.name}/{fname}')
         return pysb_model
 
-    def assemble_pybel(self, bucket=EMMAA_BUCKET_NAME):
+    def assemble_pybel(self, mode='local', bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into PyBEL and return the assembled model."""
         if not self.assembled_stmts:
             self.run_assembly()
         pba = PybelAssembler(self.assembled_stmts)
         pybel_model = pba.make_model()
-        if 'pybel' in self.export_formats:
+        if mode == 's3' and 'pybel' in self.export_formats:
             fname = f'pybel_{self.date_str}.bel.nodelink.json.gz'
             pybel.dump(pybel_model, fname)
             logger.info(f'Uploading {fname}')
@@ -483,14 +485,14 @@ class EmmaaModel(object):
             client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pybel_model
 
-    def assemble_signed_graph(self, bucket=EMMAA_BUCKET_NAME):
+    def assemble_signed_graph(self, mode='local', bucket=EMMAA_BUCKET_NAME):
         """Assemble the model into signed graph and return the assembled graph.
         """
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
         signed_graph = ia.make_model(graph_type='signed')
-        if 'indranet' in self.export_formats:
+        if mode == 's3' and 'indranet' in self.export_formats:
             fname = f'indranet_{self.date_str}.tsv'
             df = ia.make_df()
             df.to_csv(fname, sep='\t', index=False)
@@ -499,7 +501,7 @@ class EmmaaModel(object):
             client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return signed_graph
 
-    def assemble_unsigned_graph(self):
+    def assemble_unsigned_graph(self, **kwargs):
         """Assemble the model into unsigned graph and return the assembled
         graph."""
         if not self.assembled_stmts:

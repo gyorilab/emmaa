@@ -80,7 +80,7 @@ class ModelManager(object):
     date_str : str
         Time when this object was created.
     """
-    def __init__(self, model):
+    def __init__(self, model, mode='local'):
         self.model = model
         self.mc_mapping = {
             'pysb': (self.model.assemble_pysb, PysbModelChecker,
@@ -96,7 +96,7 @@ class ModelManager(object):
         self.mc_types = {}
         for mc_type in model.test_config.get('mc_types', ['pysb']):
             self.mc_types[mc_type] = {}
-            assembled_model = self.mc_mapping[mc_type][0]()
+            assembled_model = self.mc_mapping[mc_type][0](mode=mode)
             self.mc_types[mc_type]['model'] = assembled_model
             self.mc_types[mc_type]['model_checker'] = (
                 self.mc_mapping[mc_type][1](assembled_model))
@@ -105,6 +105,19 @@ class ModelManager(object):
         self.applicable_tests = []
         self.date_str = self.model.date_str
         self.path_stmt_counts = defaultdict(int)
+
+    @classmethod
+    def load_from_statements(cls, model_name, mode='local',
+                             bucket=EMMAA_BUCKET_NAME):
+        model = EmmaaModel.load_from_s3(model_name, bucket=bucket)
+        # No need to store raw statements
+        model.stmts = []
+        # Loading assembled statements to avoid reassembly
+        stmts, fname = get_assembled_statements(model_name, bucket=bucket)
+        model.assembled_stmts = stmts
+        model.date_str = strip_out_date(fname, 'datetime')
+        mm = cls(model, mode=mode)
+        return mm
 
     def get_updated_mc(self, mc_type, stmts, add_ns=False):
         """Update the ModelChecker and graph with stmts for tests/queries."""
@@ -757,8 +770,19 @@ def load_model_manager_from_s3(model_name=None, key=None,
                 model_manager.model.assembled_stmts = stmts
             return model_manager
         except Exception as e:
-            logger.info('Could not load the model manager')
+            logger.info('Could not load the model manager directly')
             logger.info(e)
+            if model_name:
+                logger.info('Trying to load model manager from statements')
+                try:
+                    model_manager = ModelManager.load_from_statements(
+                        model_name)
+                    return model_manager
+                except Exception as e:
+                    logger.info('Could not load the model manager from '
+                                'statements')
+                    logger.info(e)
+                    return None
     # Now try find the latest key for given model
     if model_name:
         # Versioned
@@ -767,7 +791,8 @@ def load_model_manager_from_s3(model_name=None, key=None,
         if key is None:
             # Non-versioned
             key = f'results/{model_name}/latest_model_manager.pkl'
-        return load_model_manager_from_s3(key=key, bucket=bucket)
+        return load_model_manager_from_s3(model_name=model_name, key=key,
+                                          bucket=bucket)
     # Could not find either from key or from model name.
     logger.info('Could not find the model manager.')
     return None
