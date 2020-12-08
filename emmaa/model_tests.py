@@ -113,8 +113,9 @@ class ModelManager(object):
         # No need to store raw statements
         model.stmts = []
         # Loading assembled statements to avoid reassembly
-        stmts, _ = get_assembled_statements(model_name, bucket=bucket)
+        stmts, fname = get_assembled_statements(model_name, bucket=bucket)
         model.assembled_stmts = stmts
+        model.date_str = strip_out_date(fname, 'datetime')
         mm = cls(model, mode=mode)
         return mm
 
