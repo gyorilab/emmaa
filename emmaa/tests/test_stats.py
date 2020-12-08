@@ -186,12 +186,18 @@ def test_test_stats_generator():
 
 def test_twitter_msg():
     # No message when no delta
-    msg = _make_twitter_msg('test', 'stmts', {'added': []}, '2020-01-01')
+    msg = _make_twitter_msg('test', 'stmts', {'added': []}, '2020-01-01',
+                            new_papers=2)
     assert not msg
-    # New statements message
+    # No message with no new papers
     msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
-                            '2020-01-01')
-    assert msg == ('Today I learned 2 new mechanisms. See '
+                            '2020-01-01', new_papers=None)
+    assert not msg, msg
+    # New statements with new papers message
+    msg = _make_twitter_msg('test', 'stmts', {'added': [1234, 2345]},
+                            '2020-01-01', new_papers=5)
+    assert msg == ('Today I read 5 new publications and learned 2 new '
+                   'mechanisms. See '
                    'https://emmaa.indra.bio/dashboard/test?tab=model&date='
                    '2020-01-01#addedStmts for more details.'), msg
     # New applied tests message
@@ -207,7 +213,7 @@ def test_twitter_msg():
                             '2020-01-01', 'pysb', test_corpus='simple_tests',
                             test_name='Simple tests corpus')
     assert msg == ('Today I explained 2 new observations in the Simple tests '
-                   'corpus with my PySB model. See '
+                   'corpus with my @PySysBio model. See '
                    'https://emmaa.indra.bio/dashboard/test?tab=tests'
                    '&test_corpus=simple_tests&date=2020-01-01#newPassedTests '
                    'for more details.'), msg

@@ -5,7 +5,7 @@ from emmaa.model import _default_test, load_config_from_s3, get_model_stats
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
-    FORMATTED_TYPE_NAMES, get_credentials, update_status
+    get_credentials, update_status
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -21,6 +21,12 @@ CONTENT_TYPE_FUNCTION_MAPPING = {
     'paths': 'get_passed_test_hashes',
     'raw_papers': 'get_all_raw_paper_ids',
     'assembled_papers': 'get_all_assembled_paper_ids'}
+
+
+TWITTER_MODEL_TYPES = {'pysb': '@PySysBio',
+                       'pybel': '@pybelbio',
+                       'signed_graph': 'Signed Graph',
+                       'unsigned_graph': 'Unsigned Graph'}
 
 
 class Round(object):
@@ -867,29 +873,34 @@ def generate_stats_on_s3(
 
 
 def _make_twitter_msg(model_name, msg_type, delta, date, mc_type=None,
-                      test_corpus=None, test_name=None):
+                      test_corpus=None, test_name=None, new_papers=None):
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
     if not test_name:
         test_name = test_corpus
+    plural = 's' if len(delta['added']) > 1 else ''
     if msg_type == 'stmts':
-        plural = 's' if len(delta['added']) > 1 else ''
-        msg = (f'Today I learned {len(delta["added"])} new mechanism{plural}. '
-               f'See https://emmaa.indra.bio/dashboard/{model_name}'
-               f'?tab=model&date={date}#addedStmts for more details.')
+        if not new_papers:
+            logger.info(f'No new papers found')
+            return
+        else:
+            paper_plural = 's' if new_papers > 1 else ''
+            msg = (f'Today I read {new_papers} new publication{paper_plural} '
+                   f'and learned {len(delta["added"])} new mechanism{plural}. '
+                   f'See https://emmaa.indra.bio/dashboard/{model_name}'
+                   f'?tab=model&date={date}#addedStmts for more '
+                   'details.')
     elif msg_type == 'applied_tests':
-        plural = 's' if len(delta['added']) > 1 else ''
         msg = (f'Today I applied {len(delta["added"])} new test{plural} in '
                f'the {test_name}. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date}#newAppliedTests for '
                'more details.')
     elif msg_type == 'passed_tests' and mc_type:
-        plural = 's' if len(delta['added']) > 1 else ''
         msg = (f'Today I explained {len(delta["added"])} new '
                f'observation{plural} in the {test_name} with my '
-               f'{FORMATTED_TYPE_NAMES[mc_type]} model. See '
+               f'{TWITTER_MODEL_TYPES[mc_type]} model. See '
                f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
                f'&test_corpus={test_corpus}&date={date}#newPassedTests for '
                'more details.')
@@ -917,7 +928,10 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
         logger.warning('Twitter credentials are not found, not tweeting')
     # Model message
     stmts_delta = model_stats['model_delta']['statements_hashes_delta']
-    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta, date)
+    paper_delta = model_stats['paper_delta']['raw_paper_ids_delta']
+    new_papers = len(paper_delta['added'])
+    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta, date,
+                                  new_papers=new_papers)
     if stmts_msg:
         logger.info(stmts_msg)
         if twitter_cred:
