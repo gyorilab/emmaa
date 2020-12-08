@@ -782,6 +782,7 @@ def load_model_manager_from_s3(model_name=None, key=None,
                     logger.info('Could not load the model manager from '
                                 'statements')
                     logger.info(e)
+                    return None
     # Now try find the latest key for given model
     if model_name:
         # Versioned
