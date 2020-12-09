@@ -668,9 +668,6 @@ class ScopeTestConnector(TestConnector):
         """Return True of all test entities are in the set of model entities"""
         model_entities = model.entities
         test_entities = test.get_entities()
-        # TODO
-        # After adding entities as an attribute to StatementCheckingTest(), use
-        # test_entities = test.entities
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
     @staticmethod
@@ -682,7 +679,7 @@ class ScopeTestConnector(TestConnector):
         return not te_names - me_names
 
 
-class RefinementTestConnector(ScopeTestConnector):
+class RefinementTestConnector(TestConnector):
     """Determines applicability of a test to a model by checking if test
     entities or their refinements are in the model.
     """
@@ -691,13 +688,31 @@ class RefinementTestConnector(ScopeTestConnector):
         """Return True of all test entities are in the set of model entities"""
         model_entities = model.entities
         test_entities = test.get_entities()
-        test_extended_entities = deepcopy(test_entities)
-        for me in model_entities:
-            for te in test_entities:
-                if me.refinement_of(te, bio_ontology):
-                    test_extended_entities.append(me)
+        test_entity_groups = []
+        for te in test_entities:
+            te_group = [te]
+            ns, gr = te.get_grounding()
+            children = bio_ontology.get_children(ns, gr)
+            for ns, gr in children:
+                name = bio_ontology.get_name(ns, gr)
+                ag = Agent(name, db_refs={ns: gr})
+                te_group.append(ag)
+            test_entity_groups.append(te_group)
         return RefinementTestConnector._overlap(model_entities,
-                                                test_extended_entities)
+                                                test_entity_groups)
+
+    @staticmethod
+    def _ref_group_overlap(model_entities, test_entity_group):
+        me_names = {e.name for e in model_entities}
+        te_names = {e.name for e in test_entity_group}
+        # We need at least one intersection between these groups
+        return me_names.intersection(te_names)
+
+    @staticmethod
+    def _overlap(model_entities, test_entity_groups):
+        # We need to get overlap with each test entity group
+        return all([RefinementTestConnector._ref_group_overlap(
+            model_entities, te_group) for te_group in test_entity_groups])
 
 
 class EmmaaTest(object):
