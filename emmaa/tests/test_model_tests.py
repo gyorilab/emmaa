@@ -6,7 +6,7 @@ from indra.explanation.model_checker import PathResult, PysbModelChecker, \
 from indra.statements.statements import Statement, Agent
 from emmaa.model import EmmaaModel
 from emmaa.model_tests import StatementCheckingTest, ModelManager, \
-    ScopeTestConnector, TestManager
+    ScopeTestConnector, TestManager, RefinementTestConnector
 from emmaa.analyze_tests_results import TestRound, StatsGenerator
 from emmaa.tests.test_model import create_model
 
@@ -53,3 +53,23 @@ def test_run_tests():
     assert len(mm.mc_types['signed_graph']['test_results']) == 1
     assert len(mm.mc_types['unsigned_graph']['test_results']) == 1
     assert isinstance(mm.mc_types['pysb']['test_results'][0], PathResult)
+
+
+def test_applicability():
+    model = create_model()
+    tests = [StatementCheckingTest(
+                Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                           Agent('MAPK1', db_refs={'UP': 'P28482'}))),
+             StatementCheckingTest(
+                Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                           Agent('ERK', db_refs={'FPLX': 'ERK'})))]
+    mm = ModelManager(model)
+    tm = TestManager([mm], tests)
+    # Only first test is applicable with ScopeTestConnector
+    tm.make_tests(ScopeTestConnector())
+    assert len(mm.applicable_tests) == 1
+    assert mm.applicable_tests[0] == tests[0]
+    # Both tests are applicable with RefinementTestConnector
+    mm.applicable_tests = []
+    tm.make_tests(RefinementTestConnector())
+    assert len(mm.applicable_tests) == 2
