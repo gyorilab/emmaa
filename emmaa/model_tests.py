@@ -20,7 +20,8 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json
-from indra.util.statement_presentation import group_and_sort_statements
+from indra.util.statement_presentation import group_and_sort_statements, \
+    make_string_from_sort_key
 from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
@@ -244,32 +245,10 @@ class ModelManager(object):
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
         date = strip_out_date(self.date_str, 'date')
-        if merge:
+        if merge and isinstance(stmts[0], Statement):
             groups = group_and_sort_statements(stmts)
-            for group in groups:
-                group_stmts = group[-1]
-                stmt_type = group[0][-1]
-                agent_names = group[0][1]
-                if len(agent_names) < 2:
-                    continue
-                if stmt_type == 'Influence':
-                    stmt = get_class_from_name(stmt_type, Statement)(
-                        Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])))
-                elif stmt_type == 'Conversion':
-                    stmt = get_class_from_name(stmt_type, Statement)(
-                        Agent(agent_names[0]),
-                        [Agent(ag) for ag in agent_names[1]],
-                        [Agent(ag) for ag in agent_names[2]])
-                else:
-                    try:
-                        stmt = get_class_from_name(stmt_type, Statement)(
-                            Agent(agent_names[0]), Agent(agent_names[1]))
-                    except ValueError:
-                        stmt = get_class_from_name(stmt_type, Statement)(
-                            [Agent(ag_name) for ag_name in agent_names])
-                ea = EnglishAssembler([stmt])
-                sentence = ea.make_model()
+            for key, verb, group_stmts in groups:
+                sentence = make_string_from_sort_key(key, verb) + '.'
                 stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
