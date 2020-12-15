@@ -14,7 +14,7 @@ from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
-    pybel_edge_to_english
+    pybel_edge_to_english, RefEdge
 from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
@@ -192,18 +192,19 @@ class ModelManager(object):
                 if len(step) < 1:
                     continue
                 stmt_type = type(step[0]).__name__
-                if stmt_type == 'PybelEdge':
+                if stmt_type in ('PybelEdge', 'RefEdge'):
                     source, target = step[0].source, step[0].target
                     edge_nodes.append(source.name)
                     edge_nodes.append(u"\u2192")
                     edge_nodes.append(target.name)
-                    hashes.append(['not a statement'])
+                    hashes.append({'type': stmt_type})
                 else:
                     step_hashes = []
                     for stmt in step:
                         self.path_stmt_counts[stmt.get_hash()] += 1
                         step_hashes.append(stmt.get_hash())
-                    hashes.append(step_hashes)
+                    hashes.append({'type': 'statements',
+                                   'hashes': step_hashes})
                     agents = [ag.name if ag is not None else None
                               for ag in step[0].agent_list()]
                     # For complexes make sure that the agent from the
@@ -259,6 +260,9 @@ class ModelManager(object):
             for stmt in stmts:
                 if isinstance(stmt, PybelEdge):
                     sentence = pybel_edge_to_english(stmt)
+                    sentences.append(('', sentence, ''))
+                elif isinstance(stmt, RefEdge):
+                    sentence = stmt.to_english()
                     sentences.append(('', sentence, ''))
                 else:
                     ea = EnglishAssembler([stmt])

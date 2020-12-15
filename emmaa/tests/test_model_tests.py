@@ -74,7 +74,7 @@ def test_applicability():
     assert len(mm.applicable_tests) == 2
 
 
-def test_paths_content():
+def test_results_json():
     model = create_model()
     model.run_assembly()
     # Add statements with similar subject and object to test grouping
@@ -88,13 +88,18 @@ def test_paths_content():
     model.assembled_stmts += [phos, phos_t185, phos_y187, inc, inh]
     mm = ModelManager(model)
     tests = [StatementCheckingTest(
-             Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
-                        Agent('MAPK1', db_refs={'UP': 'P28482'})))]
+                Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                           Agent('MAPK1', db_refs={'UP': 'P28482'}))),
+             StatementCheckingTest(
+                 Phosphorylation(
+                     Agent('MEK', db_refs={'TEXT': 'MEK', 'FPLX': 'MEK'}),
+                     Agent('ERK', db_refs={'TEXT': 'ERK', 'FPLX': 'ERK'})))]
     tm = TestManager([mm], tests)
-    tm.make_tests(ScopeTestConnector())
+    tm.make_tests(RefinementTestConnector())
     tm.run_tests()
     result_json, json_lines = mm.results_to_json()
-    assert len(result_json) == 2
+    assert len(result_json) == 3
+    # Looking at the first result
     assert len(result_json[1]) == 6, len(result_json[1])
     # The second edge will be supported differently in different model types
     assert result_json[1]['pysb']['path_json'][0]['path'] == \
@@ -132,13 +137,45 @@ def test_paths_content():
                                           'MAPK1.')
     assert second_edge['stmts'][3][0].count('stmt_hash') == 1
     # Test JSONL representation
-    assert len(json_lines) == 3
+    assert len(json_lines) == 6, len(json_lines)
     for path_dict in json_lines:
-        assert len(path_dict['edges']) == 2
-        assert len(path_dict['edges'][0]) == 1
-        if path_dict['graph_type'] == 'pysb':
-            assert len(path_dict['edges'][1]) == 1
-        elif path_dict['graph_type'] == 'signed_graph':
-            assert len(path_dict['edges'][1]) == 2
-        elif path_dict['graph_type'] == 'unsigned_graph':
-            assert len(path_dict['edges'][1]) == 6
+        # First test
+        if path_dict['test'] == 13165736649758742:
+            assert len(path_dict['edges']) == 2
+            assert path_dict['edges'][0]['type'] == 'statements'
+            assert len(path_dict['edges'][0]['hashes']) == 1
+            if path_dict['graph_type'] == 'pysb':
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 1
+            elif path_dict['graph_type'] == 'signed_graph':
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 2
+            elif path_dict['graph_type'] == 'unsigned_graph':
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 6
+        # Second test
+        else:
+            if path_dict['graph_type'] == 'pysb':
+                assert len(path_dict['edges']) == 3
+                assert path_dict['edges'][0]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][0]
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 1
+                assert path_dict['edges'][2]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][2]
+            elif path_dict['graph_type'] == 'pybel':
+                assert len(path_dict['edges']) == 3
+                assert path_dict['edges'][0]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][0]
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 1
+                assert path_dict['edges'][2]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][2]
+            elif path_dict['graph_type'] == 'unsigned_graph':
+                assert len(path_dict['edges']) == 3
+                assert path_dict['edges'][0]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][0]
+                assert path_dict['edges'][1]['type'] == 'statements'
+                assert len(path_dict['edges'][1]['hashes']) == 6
+                assert path_dict['edges'][2]['type'] == 'RefEdge'
+                assert 'hashes' not in path_dict['edges'][2]
