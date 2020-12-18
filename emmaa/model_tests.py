@@ -350,19 +350,18 @@ class ModelManager(object):
     def open_query_per_mc(self, mc_type, mc, query, max_path_length,
                           max_paths):
         g = mc.get_graph()
-        subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
-            query.path_stmt)
+        subj_nodes, obj_nodes, res_code = mc.process_statement(query.path_stmt)
         if res_code:
             return self.hash_response_list(RESULT_CODES[res_code])
         else:
             if query.entity_role == 'subject':
                 reverse = False
-                assert subj_nodes is not None
-                nodes = subj_nodes
+                assert subj_nodes.all_nodes
+                nodes = subj_nodes.all_nodes
             else:
                 reverse = True
-                assert obj_nodes is not None
-                nodes = obj_nodes
+                assert obj_nodes
+                nodes = obj_nodes.all_nodes
             sign = query.get_sign(mc_type)
             if mc_type == 'pysb':
                 terminal_ns = None
