@@ -8,11 +8,11 @@ in-vitro drug screening experiments, we found that some of the explanations
 included causal mechanisms that were not consistent with the nature of
 the experimental context being studied. For instance, in an experiment
 where a single drug is added in a controlled manner, a mechanism that involves
-another drug (for instance via drug-drug interaction) is not appropriate.
+another drug (for instance via a drug-drug interaction) is not appropriate.
 Similarly, for an in-vitro experiment, higher-level societal factors are
 semantically not appropriate as intermediate concepts on a causal path.
 
-Motivated by this, we implemented an approach to applying semantic filter
+Motivated by this, we implemented an approach to applying semantic filters
 to mechanistic paths that allow encoding constraints on what is and isn't
 allowed on paths when explaining a given observation. These
 constraints derive from what is known about the experimental context in which
@@ -63,19 +63,19 @@ problematic with the large number of viral species and strains that contain
 protein chains with identical or similar names. Current machine reading systems
 including Reach typically cannot disambiguate across these choices and produce
 highly ambiguous groundings for these viral proteins. Therefore, contextual
-information needs to be brought in externally to select which organism
-to prioritize when selection a grounding produced by Reach. To this end,
+information needs to be brought in externally to decide which organism
+to prioritize when selecting a grounding produced by Reach. To this end,
 we implemented an organism prioritization scheme whereby the user (or some
 external automated process) can supply a ranked list of organism identifiers
-to represent priority. This list is then used to guide how to select the
-grounding of proteins and protein chains. For example, if a paper is known
-to describe SARS-CoV-2 and human biology, one can supply an organism
+to represent priority. This list is then used to guide how to the
+grounding of proteins and protein chains is selected. For example, if a paper
+is known to describe SARS-CoV-2 and human biology, one can supply an organism
 priority list including the identifiers of these two organisms to exclude or
 de-prioritize any spurious groundings from e.g., other viral strains that are
-irrelevant in the given context. Further, the organisms which a paper
-describes can be obtained from annotations that are either provided
-directly with the paper in PubMed or can be obtained using dedicated NLP
-systems set up for this task e.g, the MTI system.
+irrelevant in the given context. Further, the organisms which a paper describes
+can be obtained from annotations that are either provided directly with the
+paper in PubMed or can be obtained using dedicated NLP systems set up for this
+task e.g, the MTI system.
 
 Going forward, we will re-process the COVID-19 papers with these features
 in place and expect that the quality of reading, extraction and assembly for
