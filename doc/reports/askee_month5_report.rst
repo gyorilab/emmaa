@@ -3,7 +3,25 @@ ASKE-E Month 5 Milestone Report
 
 Semantic filters to improve model analysis
 ------------------------------------------
+Examining the explanations produced by the COVID-19 EMMAA model for
+in-vitro drug screening experiments, we found that some of the explanations
+included causal mechanisms that were not consistent with the nature of
+the experimental context being studied. For instance, in an experiment
+where a single drug is added in a controlled manner, a mechanism that involves
+another drug (for instance via drug-drug interaction) is not appropriate.
+Similarly, for an in-vitro experiment, higher-level societal factors are
+semantically not appropriate as intermediate concepts on a causal path.
 
+Motivated by this, we implemented an approach to applying semantic filter
+to mechanistic paths that allow encoding constraints on what is and isn't
+allowed on paths when explaining a given observation. These
+constraints derive from what is known about the experimental context in which
+that observation was made. For the observations used as test conditions
+for the COVID-19 model, we created constraints to exclude small molecules
+other than the drug that is used in the given experiment and higher level
+concepts including phenotypes, organisms and diseases. We found that the
+quality of explanations found improved substantially and is now more
+appropriate semantically with respect to the experimental context.
 
 Model analysis exploiting ontological relationships
 ---------------------------------------------------
@@ -35,7 +53,33 @@ protein entries). We developed a semi-automated approach to find and curate
 these mappings. We used `Gilda <https://github.com/indralab/gilda>`_ to find
 lexical overlaps between the two ontologies and put these as predictions into
 the `Biomappings repository and curation tool
-<https://github.com/biomappings/biomappings>`.
+<https://github.com/biomappings/biomappings>`. We then curated these mappings
+to confirm correct ones and remove incorrect ones. These mappings were then
+propagated into the INDRA Ontology graph to be used for standardization.
+
+Second, we found that the names of protein chains (similar to the names
+of full proteins) are ambiguous across organisms. This is especially
+problematic with the large number of viral species and strains that contain
+protein chains with identical or similar names. Current machine reading systems
+including Reach typically cannot disambiguate across these choices and produce
+highly ambiguous groundings for these viral proteins. Therefore, contextual
+information needs to be brought in externally to select which organism
+to prioritize when selection a grounding produced by Reach. To this end,
+we implemented an organism prioritization scheme whereby the user (or some
+external automated process) can supply a ranked list of organism identifiers
+to represent priority. This list is then used to guide how to select the
+grounding of proteins and protein chains. For example, if a paper is known
+to describe SARS-CoV-2 and human biology, one can supply an organism
+priority list including the identifiers of these two organisms to exclude or
+de-prioritize any spurious groundings from e.g., other viral strains that are
+irrelevant in the given context. Further, the organisms which a paper
+describes can be obtained from annotations that are either provided
+directly with the paper in PubMed or can be obtained using dedicated NLP
+systems set up for this task e.g, the MTI system.
+
+Going forward, we will re-process the COVID-19 papers with these features
+in place and expect that the quality of reading, extraction and assembly for
+virus-host interactions will improve significantly.
 
 Bio ontology optimized for visualization
 ----------------------------------------
