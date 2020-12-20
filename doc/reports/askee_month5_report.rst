@@ -85,7 +85,7 @@ protein entries). We developed a semi-automated approach to find and curate
 these mappings. We used `Gilda <https://github.com/indralab/gilda>`_ to find
 lexical overlaps between the two ontologies and put these as predictions into
 the `Biomappings repository and curation tool
-<https://github.com/biomappings/biomappings>`. We then curated these mappings
+<https://github.com/biomappings/biomappings>`_. We then curated these mappings
 to confirm correct ones and remove incorrect ones. These mappings were then
 propagated into the INDRA Ontology graph to be used for standardization.
 
