@@ -33,18 +33,43 @@ the model. However we noticed that in many cases models tended to consist of
 highly specific entities (e.g., individual proteins like KRAS, HRAS, and NRAS),
 whereas literature mining often picked up tests involving higher-level
 ontological concepts (e.g., the RAS protein family). The limitation of this
-approach is that we could only return a path if exact matches of test entities
-were present in the model and if there was a path between them.
+approach was that we could only return a path based on exact matches between
+test and model entities, even when the model contained a path among more
+specific entities that would serve as a test explanation.
 
-In the new approach we allow
-the paths to be found between more specific versions of test entities (e.g. a
-member of a protein family is a more specific version of a family entity; an
-entity with modification (e.g. phosphorylated gene) is a more specific version
-of the same entity without modification, etc.). We use the INDRA ontology to
-map between generic and specific versions of entities. This information is used
-to determine which tests can be applied to the model and to find the paths. If
-the path found starts or ends with a more specific version of a test entity, we
-add a special "is a refinement of" or "has a refinement" edge to the path.
+In the new approach we allow relations among more specific concepts to serve as
+explanations for relations among more general concepts (but not the reverse).
+Specificity is determined not only by hierarchical levels in the ontology (e.g.
+a member of a protein family is more specific than the family entity), but also
+by the amount of contextual information supplied for an entity (e.g., a protein
+with a phosphorylation is a more specific version of the same entity without a
+phosphorylation). This information is used to determine which tests can be
+applied to the model and also to find explanatory paths. To make this
+relationship explicit in our explanations, when a path found starts or ends
+with a more specific version of a test entity, we add a special "is a
+refinement of" or "has a refinement" edge to the path.
+
+We applied this new testing approach to the EMMAA COVID-19 model. For the tests
+from the MITRE Therapeutic Information Browser Corpus ("MITRE Tests"), 174 new
+tests were determined to be relevant to the model when taking refinements into
+account. For these tests, which generally take the form "drug X inhibits virus
+Y", we found relevant, more specific agents both for drugs (e.g.,
+"rifampicin" is a type of "RNA polymerase inhibitor") and viruses (e.g.,
+"infectious bronchitis virus" is a type of "gammacoronavirus"). Of these new
+tests, 95 passed in the signed graph network.
+
+An example new passing test is shown in the figure below for the test condition
+"anticoagulant inhibits SARS-CoV-2", which was previously determined to not be
+relevant to the model due to the fact that the model did not contain the
+specific entity for "anticoagulant" (CHEBI:50249). The model contains
+the information that heparin (CHEBI:28304), a type of anticoagulant, inhibits
+SARS-CoV-2, and the system now returns the explanation that "anticoagulant has
+refinement heparin; heparin inhibits SARS-CoV-2."
+
+.. image:: ../_static/images/covid_test_refinement.png
+    :scale: 30%
+    :align: center
+
 
 Improved reading and assembly of protein chains and fragments
 -------------------------------------------------------------
