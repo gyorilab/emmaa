@@ -25,18 +25,25 @@ appropriate semantically with respect to the experimental context.
 
 Model analysis exploiting ontological relationships
 ---------------------------------------------------
-We extended the way EMMAA models are tested against the set of experimental
-observations. In the past we were only finding the paths between the entities
-provided in the tests. The limitation of this approach is that we could only
-return a path if exact matches of test entities were present in the model and
-if there was a path between them. In the new approach we allow the paths to
-be found between more specific versions of test entities (e.g. a member of
-a protein family is a more specific version of a family entity; an entity with
-modification (e.g. phosphorylated gene) is a more specific version of the same
-entity without modification, etc.). We use the INDRA ontology to map between
-generic and specific versions of entities. This information is used to
-determine which tests can be applied to the model and to find the paths. If the
-path found starts or ends with a more specific version of a test entity, we
+
+During this reporting period we extended the way EMMAA models are tested
+against experimental observations. Previously, we applied tests to models based
+on a strict match between the entities in the test and the set of entities in
+the model. However we noticed that in many cases models tended to consist of
+highly specific entities (e.g., individual proteins like KRAS, HRAS, and NRAS),
+whereas literature mining often picked up tests involving higher-level
+ontological concepts (e.g., the RAS protein family). The limitation of this
+approach is that we could only return a path if exact matches of test entities
+were present in the model and if there was a path between them.
+
+In the new approach we allow
+the paths to be found between more specific versions of test entities (e.g. a
+member of a protein family is a more specific version of a family entity; an
+entity with modification (e.g. phosphorylated gene) is a more specific version
+of the same entity without modification, etc.). We use the INDRA ontology to
+map between generic and specific versions of entities. This information is used
+to determine which tests can be applied to the model and to find the paths. If
+the path found starts or ends with a more specific version of a test entity, we
 add a special "is a refinement of" or "has a refinement" edge to the path.
 
 Improved reading and assembly of protein chains and fragments
