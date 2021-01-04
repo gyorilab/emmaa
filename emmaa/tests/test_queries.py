@@ -196,7 +196,7 @@ def test_grounding_from_gilda():
     agent = get_agent_from_gilda('BRAF')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
-    assert agent.db_refs == {'TEXT': 'BRAF', 'EGID': '673',
+    assert agent.db_refs == {'TEXT': 'BRAF', 'EGID': '673', 'MESH': 'C482119',
                              'HGNC': '1097', 'UP': 'P15056'}, agent.db_refs
 
 
