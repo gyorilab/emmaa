@@ -255,11 +255,12 @@ class ModelManager(object):
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
         date = strip_out_date(self.date_str, 'date')
-        if merge and isinstance(stmts[0], Statement):
-            groups = group_and_sort_statements(stmts)
-            for _, agent_names, rel_key, group_stmts, _, _ in groups:
+        if merge:
+            groups = group_and_sort_statements(stmts, grouping_level='relation')
+            for _, rel_key, group_stmts, _ in groups:
                 sentence = make_string_from_relation_key(rel_key) + '.'
-                stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
+                stmt_hashes = [gr_st.get_hash()
+                               for _, _, gr_st, _ in group_stmts]
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                      'model': self.model.name, 'date': date}, doseq=True)
