@@ -1,6 +1,8 @@
 {% extends "emmaa_page_template.html" %}
 {% from "tabs/model_tab.html" import model_tab %}
 {% from "tabs/tests_tab.html" import test_tab %}
+{% from "tabs/paper_tab.html" import paper_tab %}
+{% from "tabs/curation_tab.html" import curation_tab %}
 
 {% block additional_scripts %}
 <script>
@@ -56,9 +58,23 @@
       {% if tab == 'model' %}
       <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
-      {% else %}
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'tests' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link active" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="true">Tests</a>
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'papers' %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      <a class="nav-item nav-link active" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="true">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'curation' %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link active" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="true">Curation</a>      
       {% endif %}  
     </div>
   </nav>
@@ -68,19 +84,38 @@
   <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
   {% else %}
   <div class="tab-pane" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
-  {% endif %} 
-    <!-- Model stuff goes here -->
-    {{ model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts) }}
+  {% endif %}
+
+  <!-- Model stuff goes here -->
+  {{ model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts) }}
 
   </div>
-  {% if tab == 'model' %}
-  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
-  {% else %}
+  {% if tab == 'tests' %}
   <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">  
   {% endif %}
-    <!-- Test stuff goes here -->
-  {{ test_tab(available_tests, test_corpus, test_info_contents, model_types, new_applied_tests, new_passed_tests, all_test_results) }}
   
+  <!-- Test stuff goes here -->
+  {{ test_tab(available_tests, test_corpus, test_info_contents, model_types, new_applied_tests, new_passed_tests, all_test_results) }}
+
   </div>
+  {% if tab == 'papers' %}
+  <div class="tab-pane fade show active" id="nav-papers" role="tabpanel" aria-labelledby="nav-papers-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-papers" role="tabpanel" aria-labelledby="nav-papers-tab">  
+  {% endif %}
+
+  {{ paper_tab() }}
+
+  </div>
+  {% if tab == 'curation' %}
+  <div class="tab-pane fade show active" id="nav-curation" role="tabpanel" aria-labelledby="nav-curation-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-curation" role="tabpanel" aria-labelledby="nav-curation-tab">  
+  {% endif %}
+
+  {{ curation_tab() }}
+
 </div>
 {% endblock %}
