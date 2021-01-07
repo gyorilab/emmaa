@@ -1,0 +1,85 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers) -%}
+  <!-- Static Queries -->
+  <div class="container" id="query-container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+      </div>
+      <div class="card-body">
+
+        <!-- model selection -->
+        <h6><b>Model selection</b></h6>
+        <div class="checkbox-container">
+          <div class="form-select">
+            <select name="model-select" id="model-select" placeholder="Select models" multiple>
+            {% for model_id, config_json in model_data %}
+              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+            {% endfor %}
+            </select>
+          </div>
+        </div>
+        <!-- stmt type select -->
+        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+        <div class="form-container" style="display: inline-block; vertical-align: top;">
+          <div class="text" style="display: table;">
+            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+              <div class="row" style="align-items: center">
+                <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                  <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                    changed in the rest API and query handling -->
+                  <select class="custom-select" style="width: 400px;" id="typeSelection">
+                    <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                    {% for stmt_type in stmt_types %}
+                    <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <!-- subject -->
+                <div class="col" style="padding-right: 2px">
+                  <input class="form-control" id="subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
+                </div>
+                <!-- object -->
+                <div class="col" style="padding-left: 2px; padding-right: 2px">
+                  <input class="form-control" id="objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
+                </div>
+              </div>
+              <!-- indra docs text -->
+              <div class="text-container row">
+                <i class="col">To read more about statement types, read the <a
+                    href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+              </div>
+              <!-- formsubmit -->
+              <div class="row">
+                <div class="container">
+                  <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-query" style="padding-top: 3000px;"><label
+                      for="register-query">Subscribe To Query</label>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="container">
+          <div class="container">
+            <div id="query-status-gif" style="display: none;">
+              <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
+            </div>
+            <span><i id="query-status"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Query results -->
+  <div class="container">
+    {{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
+  </div>
+  <!-- List user queries -->
+  <div class="container">
+    {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
+  </div>
+{%- endmacro %}

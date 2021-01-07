@@ -1,0 +1,59 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts) -%}
+<!-- This table displays model data -->
+  <div class="container">
+  {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
+  {% if exp_formats %}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Download as</h4>
+    </div>
+    <div class="card-body">
+    {% for exp_f, link in exp_formats.items() %}
+    <a href='{{ link }}' download>
+      <button class="btn btn-outline-secondary" type="button">{{ exp_f }}</button>
+    </a>
+    {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="modelTestResultBody"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentDistr"></div>
+    </div>
+  </div>
+  {% if 'sources' in model_stats_json['model_summary'] %}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Knowledge Sources</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="sourceDistr"></div>
+    </div>
+  </div>
+  {% endif %}
+  {% set show_all = url_for('get_all_statements_page', model=model, sort_by='evidence', page=1, filter_curated=false, date=date) %}
+  {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidence", ["Statement", "Evidence Count"], "stmtEvidenceTable", show_all=show_all) }}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="stmtsOverTime"></div>
+    </div>
+  </div>
+  {{ path_card(added_stmts, "New Added Statements", "addedStmts", ["Statement"], "addedStmtsTable") }}
+  </div>
+{%- endmacro %}
