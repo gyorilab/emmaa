@@ -14,13 +14,15 @@ from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
     stmts_from_pybel_path, stmts_from_indranet_path, PybelEdge, \
-    pybel_edge_to_english
+    pybel_edge_to_english, RefEdge
 from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json
-from indra.util.statement_presentation import group_and_sort_statements
+from indra.util.statement_presentation import group_and_sort_statements, \
+    make_string_from_sort_key
+from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
@@ -190,18 +192,19 @@ class ModelManager(object):
                 if len(step) < 1:
                     continue
                 stmt_type = type(step[0]).__name__
-                if stmt_type == 'PybelEdge':
+                if stmt_type in ('PybelEdge', 'RefEdge'):
                     source, target = step[0].source, step[0].target
                     edge_nodes.append(source.name)
                     edge_nodes.append(u"\u2192")
                     edge_nodes.append(target.name)
-                    hashes.append(['not a statement'])
+                    hashes.append({'type': stmt_type})
                 else:
                     step_hashes = []
                     for stmt in step:
                         self.path_stmt_counts[stmt.get_hash()] += 1
                         step_hashes.append(stmt.get_hash())
-                    hashes.append(step_hashes)
+                    hashes.append({'type': 'statements',
+                                   'hashes': step_hashes})
                     agents = [ag.name if ag is not None else None
                               for ag in step[0].agent_list()]
                     # For complexes make sure that the agent from the
@@ -243,32 +246,10 @@ class ModelManager(object):
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
         date = strip_out_date(self.date_str, 'date')
-        if merge:
+        if merge and isinstance(stmts[0], Statement):
             groups = group_and_sort_statements(stmts)
-            for group in groups:
-                group_stmts = group[-1]
-                stmt_type = group[0][-1]
-                agent_names = group[0][1]
-                if len(agent_names) < 2:
-                    continue
-                if stmt_type == 'Influence':
-                    stmt = get_class_from_name(stmt_type, Statement)(
-                        Event(Concept(agent_names[0])),
-                        Event(Concept(agent_names[1])))
-                elif stmt_type == 'Conversion':
-                    stmt = get_class_from_name(stmt_type, Statement)(
-                        Agent(agent_names[0]),
-                        [Agent(ag) for ag in agent_names[1]],
-                        [Agent(ag) for ag in agent_names[2]])
-                else:
-                    try:
-                        stmt = get_class_from_name(stmt_type, Statement)(
-                            Agent(agent_names[0]), Agent(agent_names[1]))
-                    except ValueError:
-                        stmt = get_class_from_name(stmt_type, Statement)(
-                            [Agent(ag_name) for ag_name in agent_names])
-                ea = EnglishAssembler([stmt])
-                sentence = ea.make_model()
+            for key, verb, group_stmts in groups:
+                sentence = make_string_from_sort_key(key, verb) + '.'
                 stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
@@ -279,6 +260,9 @@ class ModelManager(object):
             for stmt in stmts:
                 if isinstance(stmt, PybelEdge):
                     sentence = pybel_edge_to_english(stmt)
+                    sentences.append(('', sentence, ''))
+                elif isinstance(stmt, RefEdge):
+                    sentence = stmt.to_english()
                     sentences.append(('', sentence, ''))
                 else:
                     ea = EnglishAssembler([stmt])
@@ -366,19 +350,18 @@ class ModelManager(object):
     def open_query_per_mc(self, mc_type, mc, query, max_path_length,
                           max_paths):
         g = mc.get_graph()
-        subj_nodes, obj_nodes, res_code = mc.get_all_subjects_objects(
-            query.path_stmt)
+        subj_nodes, obj_nodes, res_code = mc.process_statement(query.path_stmt)
         if res_code:
             return self.hash_response_list(RESULT_CODES[res_code])
         else:
             if query.entity_role == 'subject':
                 reverse = False
-                assert subj_nodes is not None
-                nodes = subj_nodes
+                assert subj_nodes.all_nodes
+                nodes = subj_nodes.all_nodes
             else:
                 reverse = True
-                assert obj_nodes is not None
-                nodes = obj_nodes
+                assert obj_nodes
+                nodes = obj_nodes.all_nodes
             sign = query.get_sign(mc_type)
             if mc_type == 'pysb':
                 terminal_ns = None
@@ -667,9 +650,6 @@ class ScopeTestConnector(TestConnector):
         """Return True of all test entities are in the set of model entities"""
         model_entities = model.entities
         test_entities = test.get_entities()
-        # TODO
-        # After adding entities as an attribute to StatementCheckingTest(), use
-        # test_entities = test.entities
         return ScopeTestConnector._overlap(model_entities, test_entities)
 
     @staticmethod
@@ -679,6 +659,42 @@ class ScopeTestConnector(TestConnector):
         # If all test entities are in model entities, we get an empty set here
         # so we return True
         return not te_names - me_names
+
+
+class RefinementTestConnector(TestConnector):
+    """Determines applicability of a test to a model by checking if test
+    entities or their refinements are in the model.
+    """
+    @staticmethod
+    def applicable(model, test):
+        """Return True of all test entities are in the set of model entities"""
+        model_entities = model.entities
+        test_entities = test.get_entities()
+        test_entity_groups = []
+        for te in test_entities:
+            te_group = [te]
+            ns, gr = te.get_grounding()
+            children = bio_ontology.get_children(ns, gr)
+            for ns, gr in children:
+                name = bio_ontology.get_name(ns, gr)
+                ag = Agent(name, db_refs={ns: gr})
+                te_group.append(ag)
+            test_entity_groups.append(te_group)
+        return RefinementTestConnector._overlap(model_entities,
+                                                test_entity_groups)
+
+    @staticmethod
+    def _ref_group_overlap(model_entities, test_entity_group):
+        me_names = {e.name for e in model_entities}
+        te_names = {e.name for e in test_entity_group}
+        # We need at least one intersection between these groups
+        return me_names.intersection(te_names)
+
+    @staticmethod
+    def _overlap(model_entities, test_entity_groups):
+        # We need to get overlap with each test entity group
+        return all([RefinementTestConnector._ref_group_overlap(
+            model_entities, te_group) for te_group in test_entity_groups])
 
 
 class EmmaaTest(object):
@@ -870,7 +886,12 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         tests = test_dict
         test_data = None
     tm = TestManager([mm], tests)
-    tm.make_tests(ScopeTestConnector())
+    tc = mm.model.test_config.get('test_connector', 'refinement')
+    if tc == 'scope':
+        test_connector = ScopeTestConnector()
+    elif tc == 'refinement':
+        test_connector = RefinementTestConnector()
+    tm.make_tests(test_connector)
     filter_func = None
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
