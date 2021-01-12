@@ -180,7 +180,8 @@ MOCK_MODULES = [
     'bioagents.tra.tra', 'indra.pipeline',
     'indra_reading', 'indra_reading.scripts', 'indra_reading.batch',
     'indra_reading.batch.monitor',
-    'indra_reading.scripts.submit_reading_pipeline'
+    'indra_reading.scripts.submit_reading_pipeline',
+    'indra.explanation.reporting'
 ]
 
 for mod_name in MOCK_MODULES:
