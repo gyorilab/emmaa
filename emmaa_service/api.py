@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -13,6 +14,7 @@ from collections import defaultdict, Counter
 from copy import deepcopy
 
 from indra_db.exceptions import BadHashError
+from indra_db import get_db
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
     RemoveModification, get_statement_by_name
@@ -528,6 +530,40 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     return badges
 
 
+def get_title(trid):
+    db = get_db('primary')
+    ref_dict = db.select_one(db.TextRef, db.TextRef.id == trid).get_ref_dict()
+    if 'PMID' in ref_dict:
+        db_name = 'pubmed'
+        db_id = ref_dict['PMID']
+    elif 'PMCID' in ref_dict:
+        db_name = 'pmc'
+        db_id = ref_dict['PMCID'][3:]
+    else:
+        logger.warning(f'Could not get title for {ref_dict}')
+        return 'Title unavailable'
+    entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
+    params = parse.urlencode({'id': db_id, 'db': db_name, 'retmode': 'json'})
+    url = f'{entrez_url}?{params}'
+    res = requests.post(url)
+    result = res.json()['result'][db_id]
+    if result.get('error'):
+        logger.warning(f'Could not get title for {ref_dict}')
+        return 'Title unavailable'
+    return result["title"]
+
+
+def get_new_papers(model_stats):
+    trid_counts = [
+        (trid, len(model_stats['paper_summary']['stmts_by_paper'][str(trid)]))
+        for trid in model_stats['paper_delta']['assembled_paper_ids_delta'][
+            'added']]
+    trid_counts = sorted(trid_counts, key=lambda x: x[1], reverse=True)
+    new_papers = [[('', get_title(trid), ''), ('', str(count), '')]
+                  for trid, count in trid_counts]
+    return new_papers
+
+
 # Deletes session after the specified time
 @app.before_request
 def session_expiration_check():
@@ -667,6 +703,9 @@ def get_model_dashboard(model):
 
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
+    paper_distr = [[('', get_title(trid), ''), ('', str(c), '')] for trid, c
+                   in model_stats['paper_summary']['paper_distr'][:10]]
+    new_papers = get_new_papers(model_stats)
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -696,7 +735,9 @@ def get_model_dashboard(model):
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
-                           exp_formats=exp_formats)
+                           exp_formats=exp_formats,
+                           paper_distr=paper_distr,
+                           new_papers=new_papers)
 
 
 @app.route('/tests/<model>')

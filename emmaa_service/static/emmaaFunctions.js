@@ -272,6 +272,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let agDist = '#agentDistr';
   let stmtTime = '#stmtsOverTime';
   let sources = '#sourceDistr';
+  let paperTime = '#papersOverTime';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -420,6 +421,23 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
+  // Papers over Time line graph
+  let rawPaperOverTime = model_json.changes_over_time.number_of_raw_papers;
+  let assembledPaperOverTime = model_json.changes_over_time.number_of_assembled_papers;
+  rawPaperOverTime.unshift('Processed Papers');
+  assembledPaperOverTime.unshift('Papers with Statements');
+  paper_dates = model_dates.slice(- (rawPaperOverTime.length - 1))
+  paper_dates.unshift('x')
+
+  paperColumns = [paper_dates, rawPaperOverTime, assembledPaperOverTime]
+  let paperCountDataParams = {
+    x: 'x',
+    xFormat: '%Y-%m-%d-%H-%M-%S',
+    columns: paperColumns,
+    onclick: redirectToPast
+  };
+
+  let paperCountChart = generateLineArea(paperTime, paperCountDataParams, '');
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
@@ -430,6 +448,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     stmtsCountChart.flush();
     lineChart.flush();
     areaChart.flush();
+    paperCountChart.flush();
   });
   $(function() {
     //Executed on page load with URL containing an anchor tag.
