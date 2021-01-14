@@ -1,6 +1,9 @@
 import logging
 import jsonpickle
+import requests
+from urllib import parse
 from collections import defaultdict
+from time import sleep
 from emmaa.model import _default_test, load_config_from_s3, get_model_stats
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
@@ -9,6 +12,8 @@ from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
+from indra.literature.crossref_client import get_metadata
+from indra_db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -124,6 +129,7 @@ class ModelRound(Round):
         super().__init__(date_str)
         self.statements = statements
         self.paper_ids = paper_ids if paper_ids else []
+        self.paper_id_type = paper_id_type
         self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
@@ -240,6 +246,52 @@ class ModelRound(Round):
                             self.stmts_by_papers.items()}
         return sorted(paper_stmt_count.items(), key=lambda x: x[1],
                       reverse=True)
+
+    def get_paper_titles(self):
+        """Return a dictionary mapping paper IDs to their titles."""
+        if self.paper_id_type == 'pii':
+            return {}
+        trids = self.stmts_by_papers.keys()
+        db = get_db('primary')
+        trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
+        ref_dicts = [tr.get_ref_dict() for tr in trs]
+        trid_to_title = {}
+        check_in_db = []
+        # Try getting the titles from PubMed or Crossref client
+        for ref_dict in ref_dicts:
+            if any([db_id in ref_dict for db_id in ('PMID', 'PMCID')]):
+                if 'PMID' in ref_dict:
+                    db_name = 'pubmed'
+                    db_id = ref_dict['PMID']
+                elif 'PMCID' in ref_dict:
+                    db_name = 'pmc'
+                    db_id = ref_dict['PMCID'][3:]
+                entrez_url = ('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
+                              'esummary.fcgi')
+                params = parse.urlencode({'id': db_id, 'db': db_name,
+                                          'retmode': 'json'})
+                url = f'{entrez_url}?{params}'
+                sleep(0.5)
+                res = requests.post(url)
+                result = res.json()['result'][db_id]
+                title = result.get('title')
+            elif 'DOI' in ref_dict:
+                m = get_metadata(ref_dict['DOI'])
+                title = m['title'][0]
+            if title:
+                trid_to_title[ref_dict['TRID']] = title
+            # Store the trids without titles
+            else:
+                check_in_db.append(ref_dict['TRID'])
+        # Try getting remaining titles from db
+        if check_in_db:
+            tcs = db.select_all(db.TextContent,
+                                db.TextContent.text_ref_id.in_(check_in_db),
+                                db.TextContent.text_type == 'title')
+            for tc in tcs:
+                title = unpack(tc.content)
+                trid_to_title[tc.text_ref_id] = title
+        return trid_to_title
 
 
 class TestRound(Round):
@@ -543,7 +595,8 @@ class ModelStatsGenerator(StatsGenerator):
             'number_of_assembled_papers': (
                 self.latest_round.get_number_assembled_papers()),
             'stmts_by_paper': self.latest_round.stmts_by_papers,
-            'paper_distr': self.latest_round.get_papers_distribution()
+            'paper_distr': self.latest_round.get_papers_distribution(),
+            'assembled_paper_titles': self.latest_round.get_paper_titles()
         }
 
     def make_paper_delta(self):
