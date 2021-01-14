@@ -220,11 +220,10 @@ class ModelRound(Round):
                     if not paper_id:
                         paper_id = evid.text_refs.get(id_type.lower())
                 if paper_id:
-                    if paper_id in stmts_by_papers and stmt_hash not in \
-                            stmts_by_papers[paper_id]:
-                        stmts_by_papers[paper_id].append(stmt_hash)
+                    if paper_id in stmts_by_papers:
+                        stmts_by_papers[paper_id].add(stmt_hash)
                     else:
-                        stmts_by_papers[paper_id] = [stmt_hash]
+                        stmts_by_papers[paper_id] = {stmt_hash}
         return stmts_by_papers
 
     def get_all_assembled_paper_ids(self):
