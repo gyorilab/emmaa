@@ -272,6 +272,7 @@ class EmmaaModel(object):
         self.extend_unique(estmts)
         if self.reading_config.get('cord19_update'):
             self.update_with_cord19()
+        self.eliminate_copies()
 
     def extend_unique(self, estmts):
         """Extend model statements only if it is not already there."""
