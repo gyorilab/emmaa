@@ -446,7 +446,8 @@ def _label_curations(**kwargs):
     curations = get_curations(**kwargs)
     logger.info('Labeling curations')
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
-    correct = {str(c['pa_hash']) for c in curations if c['tag'] in correct_tags}
+    correct = {str(c['pa_hash']) for c in curations if
+               c['tag'] in correct_tags}
     incorrect = {str(c['pa_hash']) for c in curations if
                  str(c['pa_hash']) not in correct}
     logger.info('Labeled curations as correct or incorrect')
@@ -530,38 +531,54 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     return badges
 
 
-def get_title(trid):
-    db = get_db('primary')
-    ref_dict = db.select_one(db.TextRef, db.TextRef.id == trid).get_ref_dict()
-    if 'PMID' in ref_dict:
-        db_name = 'pubmed'
-        db_id = ref_dict['PMID']
-    elif 'PMCID' in ref_dict:
-        db_name = 'pmc'
-        db_id = ref_dict['PMCID'][3:]
-    else:
-        logger.warning(f'Could not get title for {ref_dict}')
-        return 'Title unavailable'
-    entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
-    params = parse.urlencode({'id': db_id, 'db': db_name, 'retmode': 'json'})
-    url = f'{entrez_url}?{params}'
-    res = requests.post(url)
-    result = res.json()['result'][db_id]
-    if result.get('error'):
-        logger.warning(f'Could not get title for {ref_dict}')
-        return 'Title unavailable'
-    return result["title"]
+def get_title(paper_id, model_stats):
+    id_to_title = model_stats['paper_summary'].get('assembled_paper_titles')
+    if id_to_title:
+        title = id_to_title.get(paper_id, 'Title not available')
+        return title
+    return 'Title not available'
 
 
-def get_new_papers(model_stats):
-    trid_counts = [
-        (trid, len(model_stats['paper_summary']['stmts_by_paper'][str(trid)]))
-        for trid in model_stats['paper_delta']['assembled_paper_ids_delta'][
-            'added']]
-    trid_counts = sorted(trid_counts, key=lambda x: x[1], reverse=True)
-    new_papers = [[('', get_title(trid), ''), ('', str(count), '')]
-                  for trid, count in trid_counts]
+def get_paper_link(paper_id, model_stats, date):
+    stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
+    stmt_hashes = [
+        str(st_hash) for st_hash in stmts_by_paper_id[str(paper_id)]]
+    model = model_stats['model_summary']['model_name']
+    url_param = parse.urlencode(
+        {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
+    url = f'/statements_from_paper/{model}?{url_param}'
+    return url
+
+
+def get_new_papers(model_stats, date):
+    paper_id_counts = [
+        (paper_id,
+         len(model_stats['paper_summary']['stmts_by_paper'][str(paper_id)]))
+        for paper_id in model_stats['paper_delta'][
+            'assembled_paper_ids_delta']['added']]
+    paper_id_counts = sorted(paper_id_counts, key=lambda x: x[1], reverse=True)
+    new_papers = [[(get_paper_link(paper_id, model_stats, date),
+                    get_title(paper_id, model_stats),
+                    'Click to see statements from this paper'),
+                   ('', str(count), '')]
+                  for paper_id, count in paper_id_counts[:10]]
     return new_papers
+
+
+def filter_evidence(stmt, paper_id, paper_id_type):
+    stmt2 = deepcopy(stmt)
+    stmt2.evidence = []
+    for evid in stmt.evidence:
+        evid_paper_id = None
+        if paper_id_type == 'pii':
+            evid_paper_id = evid.annotations.get('pii')
+        if evid.text_refs:
+            evid_paper_id = evid.text_refs.get(paper_id_type.upper())
+            if not evid_paper_id:
+                evid_paper_id = evid.text_refs.get(paper_id_type.lower())
+        if evid_paper_id and str(evid_paper_id) == str(paper_id):
+            stmt2.evidence.append(evid)
+    return stmt2
 
 
 # Deletes session after the specified time
@@ -703,9 +720,10 @@ def get_model_dashboard(model):
 
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
-    paper_distr = [[('', get_title(trid), ''), ('', str(c), '')] for trid, c
-                   in model_stats['paper_summary']['paper_distr'][:10]]
-    new_papers = get_new_papers(model_stats)
+    paper_distr = [[('', get_title(paper_id, model_stats), ''), ('', str(c), '')]
+                   for paper_id, c in
+                   model_stats['paper_summary']['paper_distr'][:10]]
+    new_papers = get_new_papers(model_stats, date)
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -738,6 +756,45 @@ def get_model_dashboard(model):
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
                            new_papers=new_papers)
+
+
+@app.route('/statements_from_paper/<model>')
+def get_statements_from_paper(model):
+    date = request.args.get('date')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
+    all_stmts = _load_stmts_from_cache(model, date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][paper_id]
+    paper_stmts = [stmt for stmt in all_stmts
+                   if stmt.get_hash() in paper_hashes]
+    updated_stmts = [filter_evidence(stmt, paper_id, paper_id_type)
+                     for stmt in paper_stmts]
+    stmt_rows = []
+    stmts_by_hash = {}
+    for stmt in updated_stmts:
+        stmts_by_hash[str(stmt.get_hash())] = stmt
+    curations = get_curations(pa_hash=paper_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
+    cur_counts = _count_curations(curations, stmts_by_hash)
+    if len(updated_stmts) > 1:
+        with_evid = False
+    else:
+        with_evid = True
+    for stmt in updated_stmts:
+        stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
+                                 date, None, None, cur_dict, with_evid)
+        stmt_rows.append(stmt_row)
+    paper_title = get_title(paper_id, model_stats)
+    table_title = f'Statements from the paper {paper_title}'
+    return render_template('evidence_template.html',
+                           stmt_rows=stmt_rows,
+                           model=model,
+                           source='model_statement',
+                           table_title=table_title)
 
 
 @app.route('/tests/<model>')
