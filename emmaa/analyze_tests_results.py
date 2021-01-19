@@ -278,10 +278,22 @@ class ModelRound(Round):
                 params = parse.urlencode({'id': db_id, 'db': db_name,
                                           'retmode': 'json'})
                 url = f'{entrez_url}?{params}'
-                sleep(0.5)
-                res = requests.post(url)
-                result = res.json()['result'][db_id]
-                title = result.get('title')
+                try:
+                    sleep(0.5)
+                    res = requests.post(url)
+                    result = res.json()['result'][db_id]
+                    title = result.get('title')
+                except Exception as e:
+                    try:
+                        logger.info(f'Got {e} after 1 attempt for {db_id},'
+                                    'trying again')
+                        sleep(0.5)
+                        res = requests.post(url)
+                        result = res.json()['result'][db_id]
+                        title = result.get('title')
+                    except Exception as e:
+                        logger.info(f'Got {e} after 2 attempts for {db_id}')
+                        title = None
             elif 'DOI' in ref_dict:
                 m = get_metadata(ref_dict['DOI'])
                 title = m['title'][0]
