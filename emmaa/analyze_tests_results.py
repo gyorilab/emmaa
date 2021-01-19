@@ -4,7 +4,8 @@ import requests
 from urllib import parse
 from collections import defaultdict
 from time import sleep
-from emmaa.model import _default_test, load_config_from_s3, get_model_stats
+from emmaa.model import _default_test, load_config_from_s3, get_model_stats, \
+    load_stmts_from_s3
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
@@ -14,6 +15,7 @@ from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.literature.crossref_client import get_metadata
 from indra_db import get_db
+from indra_db.client.principal.curation import get_curations
 
 
 logger = logging.getLogger(__name__)
@@ -125,15 +127,17 @@ class ModelRound(Round):
         statements with evidences retrieved from these papers.
     """
     def __init__(self, statements, date_str, paper_ids=None,
-                 paper_id_type='TRID'):
+                 paper_id_type='TRID', emmaa_statements=None):
         super().__init__(date_str)
         self.statements = statements
         self.paper_ids = paper_ids if paper_ids else []
         self.paper_id_type = paper_id_type
+        self.emmaa_statements = emmaa_statements if emmaa_statements else []
         self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
-    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
+    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME,
+                         load_estmts=False):
         mm = load_model_manager_from_s3(key=key, bucket=bucket)
         if not mm:
             return
@@ -144,7 +148,10 @@ class ModelRound(Round):
         except AttributeError:
             paper_ids = None
         paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
-        return cls(statements, date_str, paper_ids, paper_id_type)
+        estmts = None
+        if load_estmts:
+            estmts = load_stmts_from_s3(mm.model.name, bucket)
+        return cls(statements, date_str, paper_ids, paper_id_type, estmts)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -292,6 +299,39 @@ class ModelRound(Round):
                 title = unpack(tc.content)
                 trid_to_title[tc.text_ref_id] = title
         return trid_to_title
+
+    def get_curation_stats(self):
+        if not self.emmaa_statements:
+            logger.info('Did not load raw EMMAA statements')
+            return
+        curations = get_curations()
+        curators_ev = defaultdict(set)
+        curators_stmt = defaultdict(set)
+        curators_ev_counts = {}
+        curators_stmt_counts = {}
+        curs_by_tags = defaultdict(int)
+        curs_by_hash = defaultdict(list)
+        for cur in curations:
+            curs_by_hash[cur['source_hash']].append(cur)
+        for estmt in self.emmaa_statements:
+            for ev in estmt.stmt.evidence:
+                source_hash = ev.get_source_hash()
+                curs_for_hash = curs_by_hash.get(source_hash)
+                if curs_for_hash:
+                    for cur in curs_for_hash:
+                        curators_ev[cur['curator']].add(cur['source_hash'])
+                        curators_stmt[cur['curator']].add(cur['pa_hash'])
+                        curs_by_tags[cur['tag']] += 1
+        for cur, entries in curators_ev.items():
+            curators_ev_counts[cur] = len(entries)
+        for cur, entries in curators_stmt.items():
+            curators_stmt_counts[cur] = len(entries)
+        cur_stats = {
+            'curators_ev_counts': curators_ev_counts,
+            'curators_stmt_counts': curators_stmt_counts,
+            'curs_by_tags': curs_by_tags
+        }
+        return cur_stats
 
 
 class TestRound(Round):
@@ -618,6 +658,12 @@ class ModelStatsGenerator(StatsGenerator):
             logger.info(f'Got assembled statements from '
                         f'{len(assembled_paper_delta["added"])} new papers.')
 
+    def make_curation_summary(self):
+        """Add latest curation summary to json_stats."""
+        logger.info(f'Generating curation summary for { self.model_name}.')
+        cur_stats = self.latest_round.get_curation_stats()
+        self.json_stats['curation_summary'] = cur_stats
+
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
         logger.info(f'Comparing changes over time for {self.model_name}.')
@@ -657,7 +703,7 @@ class ModelStatsGenerator(StatsGenerator):
                         f'for {self.model_name} model.')
             return
         logger.info(f'Loading latest round from {latest_key}')
-        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket)
+        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket, True)
         return mr
 
     def _get_previous_round(self):
