@@ -556,6 +556,8 @@ def get_new_papers(model_stats, date):
          len(model_stats['paper_summary']['stmts_by_paper'][str(paper_id)]))
         for paper_id in model_stats['paper_delta'][
             'assembled_paper_ids_delta']['added']]
+    if not paper_id_counts:
+        return 'Did not get statements from new papers'
     paper_id_counts = sorted(paper_id_counts, key=lambda x: x[1], reverse=True)
     new_papers = [[(get_paper_link(paper_id, model_stats, date),
                     get_title(paper_id, model_stats),
@@ -720,10 +722,16 @@ def get_model_dashboard(model):
 
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
-    paper_distr = [[('', get_title(paper_id, model_stats), ''), ('', str(c), '')]
-                   for paper_id, c in
-                   model_stats['paper_summary']['paper_distr'][:10]]
-    new_papers = get_new_papers(model_stats, date)
+    if not model_stats['paper_summary'].get('assembled_paper_titles'):
+        paper_distr = 'Paper titles are not currently available'
+        new_papers = 'Paper titles are not currently available'
+    else:
+        paper_distr = [[(get_paper_link(paper_id, model_stats, date),
+                        get_title(paper_id, model_stats), ''),
+                        ('', str(c), '')] for paper_id, c in
+                       model_stats['paper_summary']['paper_distr'][:10]]
+        new_papers = get_new_papers(model_stats, date)
+
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -759,7 +767,7 @@ def get_model_dashboard(model):
 
 
 @app.route('/statements_from_paper/<model>')
-def get_statements_from_paper(model):
+def get_paper_statements(model):
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
@@ -785,7 +793,7 @@ def get_statements_from_paper(model):
     else:
         with_evid = True
     for stmt in updated_stmts:
-        stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
+        stmt_row = _get_stmt_row(stmt, 'paper', model, cur_counts,
                                  date, None, None, cur_dict, with_evid)
         stmt_rows.append(stmt_row)
     paper_title = get_title(paper_id, model_stats)
@@ -793,8 +801,11 @@ def get_statements_from_paper(model):
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
-                           source='model_statement',
-                           table_title=table_title)
+                           source='paper',
+                           table_title=table_title,
+                           date=date,
+                           paper_id=paper_id,
+                           paper_id_type=paper_id_type)
 
 
 @app.route('/tests/<model>')
@@ -1364,6 +1375,25 @@ def get_tests_by_hash(test_corpus, hash_val):
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 
+
+@app.route('/statements/from_paper/<model>/<paper_id>/<paper_id_type>/'
+           '<date>/<hash_val>', methods=['GET'])
+def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
+    stmts = _load_stmts_from_cache(model, date)
+    st_json = {}
+    curations = get_curations(pa_hash=hash_val)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
+    for st in stmts:
+        if str(st.get_hash()) == str(hash_val):
+            stmt = filter_evidence(st, paper_id, paper_id_type)
+            st_json = stmt.to_json()
+            ev_list = _format_evidence_text(
+                stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
+            st_json['evidence'] = ev_list
+    return {'statements': {hash_val: st_json}}
 
 @app.route('/curation/submit/<hash_val>', methods=['POST'])
 @jwt_optional
