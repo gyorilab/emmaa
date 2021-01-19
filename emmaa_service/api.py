@@ -480,7 +480,8 @@ def _count_curations(curations, stmts_by_hash):
 
 
 def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
-                  path_counts=None, cur_dict=None, with_evid=False):
+                  path_counts=None, cur_dict=None, with_evid=False,
+                  paper_id=None, paper_id_type=None):
     stmt_hash = str(stmt.get_hash())
     english = _format_stmt_text(stmt)
     evid_count = len(stmt.evidence)
@@ -492,6 +493,10 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
               'format': 'json', 'date': date}
     if test_corpus:
         params.update({'test_corpus': test_corpus})
+    if source == 'paper' and paper_id:
+        params.update({'paper_id': paper_id})
+        if paper_id_type:
+            params.update({'paper_id_type': paper_id_type})
     url_param = parse.urlencode(params)
     json_link = f'/evidence?{url_param}'
     path_count = 0
@@ -794,7 +799,8 @@ def get_paper_statements(model):
         with_evid = True
     for stmt in updated_stmts:
         stmt_row = _get_stmt_row(stmt, 'paper', model, cur_counts,
-                                 date, None, None, cur_dict, with_evid)
+                                 date, None, None, cur_dict, with_evid,
+                                 paper_id, paper_id_type)
         stmt_rows.append(stmt_row)
     paper_title = get_title(paper_id, model_stats)
     table_title = f'Statements from the paper {paper_title}'
@@ -977,6 +983,8 @@ def get_statement_evidence_page():
     test_corpus = request.args.get('test_corpus', '')
     date = request.args.get('date')
     display_format = request.args.get('format', 'html')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
     stmts = []
     if not date:
         date = get_latest_available_date(model, _default_test(model))
@@ -996,6 +1004,12 @@ def get_statement_evidence_page():
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
                     stmts.append(stmt)
+    elif source == 'paper':
+        all_stmts = _load_stmts_from_cache(model, date)
+        for stmt in all_stmts:
+            for stmt_hash in stmt_hashes:
+                if str(stmt.get_hash()) == str(stmt_hash):
+                    stmts.append(filter_evidence(stmt, paper_id, paper_id_type))
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -1394,6 +1408,7 @@ def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
                 stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
+
 
 @app.route('/curation/submit/<hash_val>', methods=['POST'])
 @jwt_optional
