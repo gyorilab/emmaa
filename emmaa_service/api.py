@@ -539,7 +539,7 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
 def get_title(paper_id, model_stats):
     id_to_title = model_stats['paper_summary'].get('assembled_paper_titles')
     if id_to_title:
-        title = id_to_title.get(paper_id, 'Title not available')
+        title = id_to_title.get(str(paper_id), 'Title not available')
         return title
     return 'Title not available'
 
@@ -783,6 +783,8 @@ def get_paper_statements(model):
                    if stmt.get_hash() in paper_hashes]
     updated_stmts = [filter_evidence(stmt, paper_id, paper_id_type)
                      for stmt in paper_stmts]
+    updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
+                           reverse=True)
     stmt_rows = []
     stmts_by_hash = {}
     for stmt in updated_stmts:
