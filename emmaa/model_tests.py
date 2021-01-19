@@ -118,7 +118,10 @@ class ModelManager(object):
         else:
             prefix = f'papers/{model_name}/paper_ids_'
         paper_key = find_latest_s3_file(bucket, prefix, 'json')
-        paper_ids = load_json_from_s3(bucket, paper_key)
+        if paper_key:
+            paper_ids = load_json_from_s3(bucket, paper_key)
+        else:
+            paper_ids = None
         model = EmmaaModel(model_name, config, paper_ids)
         # Loading assembled statements to avoid reassembly
         stmts, fname = get_assembled_statements(model_name, date, bucket)
