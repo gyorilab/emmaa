@@ -238,6 +238,8 @@ class ModelRound(Round):
                         stmts_by_papers[paper_id].add(stmt_hash)
                     else:
                         stmts_by_papers[paper_id] = {stmt_hash}
+        for k, v in stmts_by_papers.items():
+            stmts_by_papers[k] = list(v)
         return stmts_by_papers
 
     def get_all_assembled_paper_ids(self):
