@@ -16,6 +16,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.literature.crossref_client import get_metadata
 from indra_db import get_db
 from indra_db.client.principal.curation import get_curations
+from indra_db.util import unpack
 
 
 logger = logging.getLogger(__name__)
@@ -150,7 +151,7 @@ class ModelRound(Round):
         paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
         estmts = None
         if load_estmts:
-            estmts = load_stmts_from_s3(mm.model.name, bucket)
+            estmts, _ = load_stmts_from_s3(mm.model.name, bucket)
         return cls(statements, date_str, paper_ids, paper_id_type, estmts)
 
     def get_total_statements(self):
@@ -605,6 +606,7 @@ class ModelStatsGenerator(StatsGenerator):
         self.make_model_delta()
         self.make_paper_summary()
         self.make_paper_delta()
+        self.make_curation_summary()
         self.make_changes_over_time()
 
     def make_model_summary(self):
@@ -715,7 +717,8 @@ class ModelStatsGenerator(StatsGenerator):
                         f'for {self.model_name} model.')
             return
         logger.info(f'Loading latest round from {latest_key}')
-        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket, True)
+        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket,
+                                         load_estmts=True)
         return mr
 
     def _get_previous_round(self):
