@@ -1,6 +1,7 @@
 import os
 import json
 from copy import deepcopy
+from nose.plugins.attrib import attr
 
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
@@ -107,6 +108,7 @@ def test_test_round():
     assert len(tr2.find_delta_hashes(tr, 'paths')['added']) == 1
 
 
+@attr('notravis', 'nonpublic')
 def test_model_stats_generator():
     latest_round = ModelRound(new_stmts, '2020-01-02-00-00-00', new_papers)
     previous_round = ModelRound(previous_stmts, '2020-01-01-00-00-00',
@@ -135,7 +137,11 @@ def test_model_stats_generator():
     assert set(paper_summary['assembled_paper_ids']) == {'1234', '2345'}
     assert paper_summary['number_of_assembled_papers'] == 2
     assert all(paper_tuple in paper_summary['paper_distr'] for
-               paper_tuple in [('1234', 2), ('2345', 2)]), latest_round.stmts_by_papers
+               paper_tuple in [('1234', 2), ('2345', 2)])
+    assert set(paper_summary['stmts_by_paper']['1234']) == {
+        29000400098290256, -20714390795236750}
+    assert set(paper_summary['stmts_by_paper']['2345']) == {
+        2874381165909177, -13855132444206450}
     paper_delta = sg.json_stats['paper_delta']
     assert len(paper_delta['raw_paper_ids_delta']['added']) == 2
     assert len(paper_delta['assembled_paper_ids_delta']['added']) == 1
