@@ -301,10 +301,10 @@ class ModelRound(Round):
                 m = get_metadata(ref_dict['DOI'])
                 title = m['title'][0]
             if title:
-                trid_to_title[ref_dict['TRID']] = title
+                trid_to_title[str(ref_dict['TRID'])] = title
             # Store the trids without titles
             else:
-                check_in_db.append(ref_dict['TRID'])
+                check_in_db.append(str(ref_dict['TRID']))
         # Try getting remaining titles from db
         if check_in_db:
             tcs = db.select_all(db.TextContent,
@@ -312,7 +312,7 @@ class ModelRound(Round):
                                 db.TextContent.text_type == 'title')
             for tc in tcs:
                 title = unpack(tc.content)
-                trid_to_title[tc.text_ref_id] = title
+                trid_to_title[str(tc.text_ref_id)] = title
         return trid_to_title
 
     def get_curation_stats(self):
