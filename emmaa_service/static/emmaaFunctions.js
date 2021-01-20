@@ -450,9 +450,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let raw_cur_array = [];
   let raw_cur_freq = ['Curations count'];
 
-  for (var cur in curData.curators_ev_counts) {
-    raw_cur_array.push(cur);
-    raw_cur_freq.push(curData.curators_ev_counts[cur])
+  for (let pair of curData.curators_ev_counts) {
+    raw_cur_array.push(pair[0]);
+    raw_cur_freq.push(pair[1])
   }
 
   let rawCurDataParams = {
@@ -468,9 +468,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let stmt_cur_array = [];
   let stmt_cur_freq = ['Curations count'];
 
-  for (var cur in curData.curators_stmt_counts) {
-    stmt_cur_array.push(cur);
-    stmt_cur_freq.push(curData.curators_stmt_counts[cur])
+  for (let pair of curData.curators_stmt_counts) {
+    stmt_cur_array.push(pair[0]);
+    stmt_cur_freq.push(pair[1])
   }
 
   let stmtCurDataParams = {
@@ -486,9 +486,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let tag_cur_array = [];
   let tag_cur_freq = ['Curations count'];
 
-  for (var tag in curData.curs_by_tags) {
-    tag_cur_array.push(tag);
-    tag_cur_freq.push(curData.curs_by_tags[tag])
+  for (let pair of curData.curs_by_tags) {
+    tag_cur_array.push(pair[0]);
+    tag_cur_freq.push(pair[1])
   }
 
   let tagCurDataParams = {
