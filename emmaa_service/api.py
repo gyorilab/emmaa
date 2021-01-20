@@ -805,7 +805,7 @@ def get_paper_statements(model):
                                  paper_id, paper_id_type)
         stmt_rows.append(stmt_row)
     paper_title = get_title(paper_id, model_stats)
-    table_title = f'Statements from the paper {paper_title}'
+    table_title = f'Statements from the paper "{paper_title}"'
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
