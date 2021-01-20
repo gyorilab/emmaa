@@ -273,6 +273,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let stmtTime = '#stmtsOverTime';
   let sources = '#sourceDistr';
   let paperTime = '#papersOverTime';
+  let evidCur = '#evidCurations';
+  let stmtCur = '#stmtCurations';
+  let tagCur = '#tagCurations';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -421,6 +424,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
+  // Paper Tab
   // Papers over Time line graph
   let rawPaperOverTime = model_json.changes_over_time.number_of_raw_papers;
   let assembledPaperOverTime = model_json.changes_over_time.number_of_assembled_papers;
@@ -439,6 +443,63 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let paperCountChart = generateLineArea(paperTime, paperCountDataParams, '');
 
+  // Curation Tab
+  let curData = model_json.curation_summary;
+
+  // Raw evidences curations bar chart
+  let raw_cur_array = [];
+  let raw_cur_freq = ['Curations count'];
+
+  for (var cur in curData.curators_ev_counts) {
+    raw_cur_array.push(cur);
+    raw_cur_freq.push(curData.curators_ev_counts[cur])
+  }
+
+  let rawCurDataParams = {
+    columns: [
+      raw_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let rawCurChart = generateBar(evidCur, rawCurDataParams, raw_cur_array, '');  
+
+  // Statement curations bar chart
+  let stmt_cur_array = [];
+  let stmt_cur_freq = ['Curations count'];
+
+  for (var cur in curData.curators_stmt_counts) {
+    stmt_cur_array.push(cur);
+    stmt_cur_freq.push(curData.curators_stmt_counts[cur])
+  }
+
+  let stmtCurDataParams = {
+    columns: [
+      stmt_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let stmtCurChart = generateBar(stmtCur, stmtCurDataParams, stmt_cur_array, '');  
+
+  // Curation types bar chart
+  let tag_cur_array = [];
+  let tag_cur_freq = ['Curations count'];
+
+  for (var tag in curData.curs_by_tags) {
+    tag_cur_array.push(tag);
+    tag_cur_freq.push(curData.curs_by_tags[tag])
+  }
+
+  let tagCurDataParams = {
+    columns: [
+      tag_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let tagCurChart = generateBar(tagCur, tagCurDataParams, tag_cur_array, ''); 
+
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
@@ -449,6 +510,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     lineChart.flush();
     areaChart.flush();
     paperCountChart.flush();
+    rawCurChart.flush();
+    stmtCurChart.flush();
+    tagCurChart.flush();
   });
   $(function() {
     //Executed on page load with URL containing an anchor tag.
