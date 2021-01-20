@@ -100,22 +100,25 @@ def get_latest_available_date(
     if not test_corpus:
         logger.error('Test corpus is missing, cannot find latest date')
         return
-    # First try to just get last updated dates for model stats and test stats
-    model_date = last_updated_date(model, 'model_stats', extension='.json',
-                                   date_format=date_format, bucket=bucket)
-    test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
-                                  extension='.json', date_format=date_format,
-                                  bucket=bucket)
-    if model_date == test_date:
-        logger.info(f'Latest available date for {model} model and '
-                    f'{test_corpus} is {model_date}.')
-        return model_date
-    # If last dates don't match, try to match to the earlier of them
-    min_date = min(model_date, test_date)
-    if is_available(model, test_corpus, min_date, bucket=bucket):
-        logger.info(f'Latest available date for {model} model and '
-                    f'{test_corpus} is {min_date}.')
-        return min_date
+    for n in range(5):
+        # First try to get last updated dates for model stats and test stats
+        model_date = last_updated_date(model, 'model_stats', extension='.json',
+                                       n=n, date_format=date_format,
+                                       bucket=bucket)
+        test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
+                                      extension='.json', n=n,
+                                      date_format=date_format,
+                                      bucket=bucket)
+        if model_date == test_date:
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {model_date}.')
+            return model_date
+        # If last dates don't match, try to match to the earlier of them
+        min_date = min(model_date, test_date)
+        if is_available(model, test_corpus, min_date, bucket=bucket):
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {min_date}.')
+            return min_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
 
@@ -625,6 +628,7 @@ def get_model_dashboard(model):
         model, test_corpus)
     if not date:
         date = latest_date
+    print("DATE!!!!!!!!!", date)
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
