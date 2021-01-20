@@ -342,9 +342,12 @@ class ModelRound(Round):
         for cur, entries in curators_stmt.items():
             curators_stmt_counts[cur] = len(entries)
         cur_stats = {
-            'curators_ev_counts': curators_ev_counts,
-            'curators_stmt_counts': curators_stmt_counts,
-            'curs_by_tags': curs_by_tags
+            'curators_ev_counts': sorted(
+                curators_ev_counts.items(), key=lambda x: x[1], reverse=True),
+            'curators_stmt_counts': sorted(
+                curators_stmt_counts.items(), key=lambda x: x[1], reverse=True),
+            'curs_by_tags': sorted(
+                curs_by_tags.items(), key=lambda x: x[1], reverse=True),
         }
         return cur_stats
 
