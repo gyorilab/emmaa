@@ -628,7 +628,6 @@ def get_model_dashboard(model):
         model, test_corpus)
     if not date:
         date = latest_date
-    print("DATE!!!!!!!!!", date)
     tab = request.args.get('tab', 'model')
     user, roles = resolve_auth(dict(request.args))
     logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
