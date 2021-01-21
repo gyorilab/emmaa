@@ -674,6 +674,8 @@ def get_model_dashboard(model):
     if test_data:
         test_info_contents = [[('', ' '.join(k.split('_')).capitalize(), ''),
                                ('', v, '')] for k, v in test_data.items()]
+    else:
+        test_stats['test_round_summary']['test_data'] = ''
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
