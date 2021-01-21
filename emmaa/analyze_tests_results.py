@@ -257,11 +257,10 @@ class ModelRound(Round):
         return sorted(paper_stmt_count.items(), key=lambda x: x[1],
                       reverse=True)
 
-    def get_paper_titles(self):
+    def get_paper_titles(self, trids):
         """Return a dictionary mapping paper IDs to their titles."""
         if self.paper_id_type == 'pii':
             return {}
-        trids = self.stmts_by_papers.keys()
         db = get_db('primary')
         trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
         ref_dicts = [tr.get_ref_dict() for tr in trs]
@@ -609,8 +608,8 @@ class ModelStatsGenerator(StatsGenerator):
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_model_delta()
-        self.make_paper_summary()
         self.make_paper_delta()
+        self.make_paper_summary()
         self.make_curation_summary()
         self.make_changes_over_time()
 
@@ -654,9 +653,21 @@ class ModelStatsGenerator(StatsGenerator):
             'number_of_assembled_papers': (
                 self.latest_round.get_number_assembled_papers()),
             'stmts_by_paper': self.latest_round.stmts_by_papers,
-            'paper_distr': self.latest_round.get_papers_distribution(),
-            'assembled_paper_titles': self.latest_round.get_paper_titles()
+            'paper_distr': self.latest_round.get_papers_distribution()
         }
+        if self.previous_json_stats.get('paper_summary') and \
+                self.previous_json_stats['paper_summary'].get(
+                    'assembled_paper_titles'):
+            titles = self.previous_json_stats['paper_summary'][
+                'assembled_paper_titles']
+            new_trids = self.json_stats['paper_delta'][
+                'assembled_paper_ids_delta']['added']
+            new_titles = self.latest_round.get_paper_titles(new_trids)
+            titles.update(new_titles)
+        else:
+            all_trids = self.latest_round.stmts_by_papers.keys()
+            titles = self.latest_round.get_paper_titles(all_trids)
+        self.json_stats['paper_summary']['assembled_paper_titles'] = titles
 
     def make_paper_delta(self):
         """Add paper delta between two latest model states to json_stats."""

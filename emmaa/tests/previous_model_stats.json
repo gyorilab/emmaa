@@ -61,7 +61,10 @@
   },
   "paper_distr": [
     ["1234", 2]
-  ]
+  ],
+  "assembled_paper_titles": {
+    "1234": "Paper 1"
+  }
  },
  "paper_delta": {
   "raw_paper_ids_delta": {
