@@ -13,7 +13,7 @@ from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
-from indra.literature.crossref_client import get_metadata
+from indra.literature import pubmed_client, crossref_client
 from indra_db import get_db
 from indra_db.client.principal.curation import get_curations
 from indra_db.util import unpack
@@ -265,47 +265,55 @@ class ModelRound(Round):
         trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
         ref_dicts = [tr.get_ref_dict() for tr in trs]
         trid_to_title = {}
+        trid_to_pmids = {}
+        trid_to_pmcids = {}
+        trid_to_dois = {}
         check_in_db = []
-        # Try getting the titles from PubMed or Crossref client
+        # Map TRIDs to available PMIDs, DOIs, PMCIDs in this order
         for ref_dict in ref_dicts:
-            if any([db_id in ref_dict for db_id in ('PMID', 'PMCID')]):
-                if 'PMID' in ref_dict:
-                    db_name = 'pubmed'
-                    db_id = ref_dict['PMID']
-                elif 'PMCID' in ref_dict:
-                    db_name = 'pmc'
-                    db_id = ref_dict['PMCID'][3:]
-                entrez_url = ('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
-                              'esummary.fcgi')
-                params = parse.urlencode({'id': db_id, 'db': db_name,
-                                          'retmode': 'json'})
-                url = f'{entrez_url}?{params}'
-                try:
-                    sleep(0.5)
-                    res = requests.post(url)
-                    result = res.json()['result'][db_id]
-                    title = result.get('title')
-                except Exception as e:
-                    try:
-                        logger.info(f'Got {e} after 1 attempt for {db_id},'
-                                    'trying again')
-                        sleep(0.5)
-                        res = requests.post(url)
-                        result = res.json()['result'][db_id]
-                        title = result.get('title')
-                    except Exception as e:
-                        logger.info(f'Got {e} after 2 attempts for {db_id}')
-                        title = None
+            if 'PMID' in ref_dict:
+                trid_to_pmids[ref_dict['TRID']] = ref_dict['PMID']
             elif 'DOI' in ref_dict:
-                m = get_metadata(ref_dict['DOI'])
-                title = m['title'][0]
-            if title:
-                trid_to_title[str(ref_dict['TRID'])] = title
-            # Store the trids without titles
+                trid_to_dois[ref_dict['TRID']] = ref_dict['DOI']
+            elif 'PMCID' in ref_dict:
+                trid_to_pmcids[ref_dict['TRID']] = ref_dict['PMCID']
+
+        logger.info(f'From {len(trids)} TRIDs got {len(trid_to_pmids)} PMIDs,'
+                    f' {len(trid_to_dois)} DOIs, {len(trid_to_pmcids)} PMCIDs')
+
+        # First get titles for available PMIDs
+        logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
+        pmids = list(trid_to_pmids.values())
+        pmids_to_titles = _get_pmid_titles(pmids)
+
+        for trid, pmid in trid_to_pmids.items():
+            if pmid in pmids_to_titles:
+                trid_to_title[str(trid)] = pmids_to_titles[pmid]
             else:
-                check_in_db.append(str(ref_dict['TRID']))
+                check_in_db.append(trid)
+
+        # Then get titles for available DOIs
+        logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
+        for trid, doi in trid_to_dois.items():
+            title = _get_doi_title(doi)
+            if title:
+                trid_to_title[str(trid)] = title
+            else:
+                check_in_db.append(trid)
+
+        # Then get titles for available PMCIDs
+        logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
+        for trid, pmcid in trid_to_pmcids.items():
+            title = _get_pmcid_title(pmcid)
+            if title:
+                trid_to_title[str(trid)] = title
+            else:
+                check_in_db.append(trid)
+
         # Try getting remaining titles from db
         if check_in_db:
+            logger.info(f'Getting titles for {len(check_in_db)} remaining '
+                        'TRIDs from DB')
             tcs = db.select_all(db.TextContent,
                                 db.TextContent.text_ref_id.in_(check_in_db),
                                 db.TextContent.text_type == 'title')
@@ -1095,3 +1103,49 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
                         update_status(passed_msg, twitter_cred)
 
     logger.info('Done tweeting')
+
+
+def _get_pmid_titles(pmids):
+    pmids_to_titles = {}
+    n = 200
+    n_batches = len(pmids) // n
+    if not len(pmids) % n:
+        n_batches += 1
+    for i in range(n_batches):
+        start = n * i
+        end = start + n
+        batch = pmids[start: end]
+        m = pubmed_client.get_metadata_for_ids(batch)
+        for pmid, metadata in m.items():
+            pmids_to_titles[pmid] = metadata['title']
+    return pmids_to_titles
+
+
+def _get_doi_title(doi):
+    m = crossref_client.get_metadata(doi)
+    title = m.get(['title'])
+    if title:
+        return title[0]
+
+
+def _get_pmcid_title(pmcid):
+    if pmcid.startswith('PMC'):
+        pmcid = pmcid[3:]
+    entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
+    params = parse.urlencode({'id': pmcid, 'db': 'pmc', 'retmode': 'json'})
+    url = f'{entrez_url}?{params}'
+    try:
+        res = requests.post(url)
+        result = res.json()['result'][pmcid]
+        title = result.get('title')
+    except Exception as e:
+        try:
+            logger.info(f'Got {e} after 1 attempt for {pmcid}, trying again')
+            sleep(0.5)
+            res = requests.post(url)
+            result = res.json()['result'][pmcid]
+            title = result.get('title')
+        except Exception as e:
+            logger.info(f'Got {e} after 2 attempts for {dbpmcid_id}')
+            title = None
+    return title
