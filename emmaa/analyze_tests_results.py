@@ -257,6 +257,26 @@ class ModelRound(Round):
         return sorted(paper_stmt_count.items(), key=lambda x: x[1],
                       reverse=True)
 
+    def get_raw_paper_counts(self):
+        logger.info('Finding raw statement count per paper')
+        if not self.emmaa_statements:
+            logger.info('Did not load raw EMMAA statements')
+            return {}
+        raw_by_papers = defaultdict(int)
+        for estmt in self.emmaa_statements:
+            for evid in estmt.stmt.evidence:
+                paper_id = None
+                id_type = self.paper_id_type
+                if id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                if evid.text_refs:
+                    paper_id = evid.text_refs.get(id_type)
+                    if not paper_id:
+                        paper_id = evid.text_refs.get(id_type.lower())
+                if paper_id:
+                    raw_by_papers[paper_id] += 1
+        return raw_by_papers
+
     def get_paper_titles(self, trids):
         """Return a dictionary mapping paper IDs to their titles."""
         if self.paper_id_type == 'pii':
@@ -661,7 +681,8 @@ class ModelStatsGenerator(StatsGenerator):
             'number_of_assembled_papers': (
                 self.latest_round.get_number_assembled_papers()),
             'stmts_by_paper': self.latest_round.stmts_by_papers,
-            'paper_distr': self.latest_round.get_papers_distribution()
+            'paper_distr': self.latest_round.get_papers_distribution(),
+            'raw_paper_counts': self.latest_round.get_raw_paper_counts()
         }
         freq_trids = [pair[0] for pair in
                       self.json_stats['paper_summary']['paper_distr'][:10]]
