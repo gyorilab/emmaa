@@ -663,19 +663,13 @@ class ModelStatsGenerator(StatsGenerator):
             'stmts_by_paper': self.latest_round.stmts_by_papers,
             'paper_distr': self.latest_round.get_papers_distribution()
         }
-        if self.previous_json_stats.get('paper_summary') and \
-                self.previous_json_stats['paper_summary'].get(
-                    'assembled_paper_titles'):
-            titles = self.previous_json_stats['paper_summary'][
-                'assembled_paper_titles']
-            new_trids = self.json_stats['paper_delta'][
-                'assembled_paper_ids_delta']['added']
-            new_titles = self.latest_round.get_paper_titles(new_trids)
-            titles.update(new_titles)
-        else:
-            all_trids = self.latest_round.stmts_by_papers.keys()
-            titles = self.latest_round.get_paper_titles(all_trids)
-        self.json_stats['paper_summary']['assembled_paper_titles'] = titles
+        freq_trids = [pair[0] for pair in
+                      self.json_stats['paper_summary']['paper_distr'][:10]]
+        new_trids = self.json_stats['paper_delta']['raw_paper_ids_delta'][
+            'added']
+        trids = list(set(freq_trids).union(set(new_trids)))
+        titles = self.latest_round.get_paper_titles(trids)
+        self.json_stats['paper_summary']['paper_titles'] = titles
 
     def make_paper_delta(self):
         """Add paper delta between two latest model states to json_stats."""
