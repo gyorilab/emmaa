@@ -1138,9 +1138,10 @@ def _get_pmid_titles(pmids):
 
 def _get_doi_title(doi):
     m = crossref_client.get_metadata(doi)
-    title = m.get(['title'])
-    if title:
-        return title[0]
+    if m:
+        title = m.get('title')
+        if title:
+            return title[0]
 
 
 def _get_pmcid_title(pmcid):
