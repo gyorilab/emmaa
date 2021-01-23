@@ -560,7 +560,7 @@ def get_new_papers(model_stats, date):
     return new_papers
 
 
-def _get_title(paper_id, model_stat):
+def _get_title(paper_id, model_stats):
     id_to_title = model_stats['paper_summary'].get('paper_titles')
     if id_to_title:
         title = id_to_title.get(str(paper_id), 'Title not available')
