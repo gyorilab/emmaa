@@ -13,7 +13,7 @@ from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.sources.indra_db_rest.api import get_statement_queries
-from indra.literature import pubmed_client, crossref_client
+from indra.literature import pubmed_client, crossref_client, pmc_client
 from indra_db import get_db
 from indra_db.client.principal.curation import get_curations
 from indra_db.util import unpack
@@ -1145,23 +1145,36 @@ def _get_doi_title(doi):
 
 
 def _get_pmcid_title(pmcid):
-    if pmcid.startswith('PMC'):
-        pmcid = pmcid[3:]
-    entrez_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
-    params = parse.urlencode({'id': pmcid, 'db': 'pmc', 'retmode': 'json'})
-    url = f'{entrez_url}?{params}'
-    try:
-        res = requests.post(url)
-        result = res.json()['result'][pmcid]
-        title = result.get('title')
-    except Exception as e:
-        try:
-            logger.info(f'Got {e} after 1 attempt for {pmcid}, trying again')
-            sleep(0.5)
-            res = requests.post(url)
-            result = res.json()['result'][pmcid]
-            title = result.get('title')
-        except Exception as e:
-            logger.info(f'Got {e} after 2 attempts for {dbpmcid_id}')
-            title = None
-    return title
+    # title = pmc_client.get_title(pmcid)
+    # return title
+
+    # Temporarily implement pmc_client.get_title here to be able to run from
+    # the branch before merging INDRA PR
+    from lxml import etree
+
+    xml_string = pmc_client.get_xml(pmcid)
+    if not xml_string:
+        return
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    # Remove namespaces if any exist
+    if tree.tag.startswith('{'):
+        for element in tree.getiterator():
+            # The following code will throw a ValueError for some
+            # exceptional tags such as comments and processing instructions.
+            # It's safe to just leave these tag names unchanged.
+            try:
+                element.tag = etree.QName(element).localname
+            except ValueError:
+                continue
+        etree.cleanup_namespaces(tree)
+    # Strip out latex
+    pmc_client._remove_elements_by_tag(tree, 'tex-math')
+    # Strip out all content in unwanted elements except the captions
+    pmc_client._replace_unwanted_elements_with_their_captions(tree)
+    # First process front element. Titles alt-titles and abstracts
+    # are pulled from here.
+    front_elements = pmc_client._select_from_top_level(tree, 'front')
+    title_xpath = './article-meta/title-group/article-title'
+    for front_element in front_elements:
+        for element in front_element.xpath(title_xpath):
+            return ' '.join(element.itertext())
