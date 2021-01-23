@@ -560,12 +560,17 @@ def get_new_papers(model_stats, date):
     return new_papers
 
 
-def _get_paper_title_tuple(paper_id, model_stats, date):
+def _get_title(paper_id, model_stat):
     id_to_title = model_stats['paper_summary'].get('paper_titles')
     if id_to_title:
         title = id_to_title.get(str(paper_id), 'Title not available')
     else:
         title = 'Title not available'
+    return title
+
+
+def _get_paper_title_tuple(paper_id, model_stats, date):
+    title = _get_title(paper_id, model_stats)
     stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
     stmt_hashes = [
         str(st_hash) for st_hash in stmts_by_paper_id.get(str(paper_id), [])]
@@ -827,7 +832,7 @@ def get_paper_statements(model):
                                  date, None, None, cur_dict, with_evid,
                                  paper_id, paper_id_type)
         stmt_rows.append(stmt_row)
-    paper_title = get_title(paper_id, model_stats)
+    paper_title = _get_title(paper_id, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
