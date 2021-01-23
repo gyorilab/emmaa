@@ -539,40 +539,58 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     return badges
 
 
-def get_title(paper_id, model_stats):
-    id_to_title = model_stats['paper_summary'].get('assembled_paper_titles')
+def get_new_papers(model_stats, date):
+    paper_id_counts = []
+    trids = model_stats['paper_delta']['raw_paper_ids_delta']['added']
+    for paper_id in trids:
+        assembled_count = len(model_stats['paper_summary'][
+            'stmts_by_paper'].get(str(paper_id), []))
+        raw_count = model_stats['paper_summary']['raw_paper_counts'].get(
+            str(paper_id), 0)
+        paper_id_counts.append((paper_id, assembled_count, raw_count))
+    paper_id_counts = sorted(paper_id_counts, key=lambda x: (x[1], x[2]),
+                             reverse=True)
+    if not paper_id_counts:
+        return 'Did not process new papers'
+    new_papers = [[_get_paper_title_tuple(paper_id, model_stats, date),
+                   _get_external_paper_link(paper_id, model_stats),
+                   ('', str(assembled_count), ''),
+                   ('', str(raw_count), '')]
+                  for paper_id, assembled_count, raw_count in paper_id_counts]
+    return new_papers
+
+
+def _get_paper_title_tuple(paper_id, model_stats, date):
+    id_to_title = model_stats['paper_summary'].get('paper_titles')
     if id_to_title:
         title = id_to_title.get(str(paper_id), 'Title not available')
-        return title
-    return 'Title not available'
-
-
-def get_paper_link(paper_id, model_stats, date):
+    else:
+        title = 'Title not available'
     stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
     stmt_hashes = [
-        str(st_hash) for st_hash in stmts_by_paper_id[str(paper_id)]]
-    model = model_stats['model_summary']['model_name']
-    url_param = parse.urlencode(
-        {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
-    url = f'/statements_from_paper/{model}?{url_param}'
-    return url
+        str(st_hash) for st_hash in stmts_by_paper_id.get(str(paper_id), [])]
+    if not stmt_hashes:
+        url = None
+    else:
+        model = model_stats['model_summary']['model_name']
+        url_param = parse.urlencode(
+            {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
+        url = f'/statements_from_paper/{model}?{url_param}'
+    if url:
+        paper_tuple = (url, title, 'Click to see statements from this paper')
+    else:
+        paper_tuple = ('', title, '')
+    return paper_tuple
 
 
-def get_new_papers(model_stats, date):
-    paper_id_counts = [
-        (paper_id,
-         len(model_stats['paper_summary']['stmts_by_paper'][str(paper_id)]))
-        for paper_id in model_stats['paper_delta'][
-            'assembled_paper_ids_delta']['added']]
-    if not paper_id_counts:
-        return 'Did not get statements from new papers'
-    paper_id_counts = sorted(paper_id_counts, key=lambda x: x[1], reverse=True)
-    new_papers = [[(get_paper_link(paper_id, model_stats, date),
-                    get_title(paper_id, model_stats),
-                    'Click to see statements from this paper'),
-                   ('', str(count), '')]
-                  for paper_id, count in paper_id_counts[:10]]
-    return new_papers
+def _get_external_paper_link(paper_id, model_stats):
+    trid_to_link = model_stats['paper_summary'].get('paper_links', {})
+    if trid_to_link.get(str(paper_id)):
+        link, name = trid_to_link[str(paper_id)]
+        paper_tuple = (link, name, 'Click to view this paper')
+    else:
+        paper_tuple = ('', 'N/A', '')
+    return paper_tuple
 
 
 def filter_evidence(stmt, paper_id, paper_id_type):
@@ -732,14 +750,14 @@ def get_model_dashboard(model):
 
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
-    if not model_stats['paper_summary'].get('assembled_paper_titles'):
+    if not model_stats['paper_summary'].get('paper_titles'):
         paper_distr = 'Paper titles are not currently available'
         new_papers = 'Paper titles are not currently available'
     else:
-        paper_distr = [[(get_paper_link(paper_id, model_stats, date),
-                        get_title(paper_id, model_stats), ''),
-                        ('', str(c), '')] for paper_id, c in
-                       model_stats['paper_summary']['paper_distr'][:10]]
+        trids_counts = model_stats['paper_summary']['paper_distr'][:10]
+        paper_distr = [[_get_paper_title_tuple(paper_id, model_stats, date),
+                        _get_external_paper_link(paper_id, model_stats),
+                        ('', str(c), '')] for paper_id, c in trids_counts]
         new_papers = get_new_papers(model_stats, date)
 
     logger.info('Rendering page')

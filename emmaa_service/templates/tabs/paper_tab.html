@@ -10,7 +10,7 @@
       <div class="container" id="papersOverTime"></div>
       </div>
     </div>
-    {{ path_card(paper_distr, "Papers with Largest Number of Statements", "paperStmt", ["Paper", "Statement Count"], "paperStmtTable") }}
-    {{ path_card(new_papers, "New Papers with Statements", "newPaperStmt", ["Paper", "Statement Count"], "newPaperStmtTable") }}
+    {{ path_card(paper_distr, "Papers with Largest Number of Statements", "paperStmt", ["Paper Title", "Link", "Statement Count"], "paperStmtTable") }}
+    {{ path_card(new_papers, "New Papers", "newPaperStmt", ["Paper Title", "Link", "Assembled Statements", "Raw Statements"], "newPaperStmtTable") }}
   </div>
 {%- endmacro %}

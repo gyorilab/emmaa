@@ -1194,4 +1194,4 @@ def _get_publication_link(paper_id, paper_id_type):
     elif paper_id_type == 'DOI':
         name = 'DOI'
         link = f'https://dx.doi.org/{paper_id}'
-    return (name, link)
+    return (link, name)
