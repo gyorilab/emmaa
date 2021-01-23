@@ -1,10 +1,7 @@
 import logging
 import jsonpickle
-import requests
-from urllib import parse
 from collections import defaultdict
-from time import sleep
-from emmaa.model import _default_test, load_config_from_s3, get_model_stats, \
+from emmaa.model import load_config_from_s3, get_model_stats, \
     load_stmts_from_s3
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
@@ -12,7 +9,6 @@ from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     get_credentials, update_status
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
-from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.literature import pubmed_client, crossref_client, pmc_client
 from indra_db import get_db
 from indra_db.client.principal.curation import get_curations
