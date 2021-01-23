@@ -273,7 +273,7 @@ class ModelRound(Round):
                     raw_by_papers[paper_id] += 1
         return raw_by_papers
 
-    def get_paper_titles(self, trids):
+    def get_paper_titles_and_links(self, trids):
         """Return a dictionary mapping paper IDs to their titles."""
         if self.paper_id_type == 'pii':
             return {}
@@ -281,6 +281,7 @@ class ModelRound(Round):
         trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
         ref_dicts = [tr.get_ref_dict() for tr in trs]
         trid_to_title = {}
+        trid_to_link = {}
         trid_to_pmids = {}
         trid_to_pmcids = {}
         trid_to_dois = {}
@@ -289,15 +290,15 @@ class ModelRound(Round):
         for ref_dict in ref_dicts:
             if 'PMID' in ref_dict:
                 trid_to_pmids[ref_dict['TRID']] = ref_dict['PMID']
-            elif 'DOI' in ref_dict:
-                trid_to_dois[ref_dict['TRID']] = ref_dict['DOI']
             elif 'PMCID' in ref_dict:
                 trid_to_pmcids[ref_dict['TRID']] = ref_dict['PMCID']
+            elif 'DOI' in ref_dict:
+                trid_to_dois[ref_dict['TRID']] = ref_dict['DOI']
 
         logger.info(f'From {len(trids)} TRIDs got {len(trid_to_pmids)} PMIDs,'
-                    f' {len(trid_to_dois)} DOIs, {len(trid_to_pmcids)} PMCIDs')
+                    f' {len(trid_to_pmcids)} PMCIDs, {len(trid_to_dois)} DOIs')
 
-        # First get titles for available PMIDs
+        # First get titles and links for available PMIDs
         logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
         pmids = list(trid_to_pmids.values())
         pmids_to_titles = _get_pmid_titles(pmids)
@@ -307,17 +308,10 @@ class ModelRound(Round):
                 trid_to_title[str(trid)] = pmids_to_titles[pmid]
             else:
                 check_in_db.append(trid)
+            link = _get_publication_link(pmid, 'PMID')
+            trid_to_link[str(trid)] = link
 
-        # Then get titles for available DOIs
-        logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
-        for trid, doi in trid_to_dois.items():
-            title = _get_doi_title(doi)
-            if title:
-                trid_to_title[str(trid)] = title
-            else:
-                check_in_db.append(trid)
-
-        # Then get titles for available PMCIDs
+        # Then get titles and links for available PMCIDs
         logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
         for trid, pmcid in trid_to_pmcids.items():
             title = _get_pmcid_title(pmcid)
@@ -325,6 +319,19 @@ class ModelRound(Round):
                 trid_to_title[str(trid)] = title
             else:
                 check_in_db.append(trid)
+            link = _get_publication_link(pmcid, 'PMCID')
+            trid_to_link[str(trid)] = link
+
+        # Then get titles and links for available DOIs
+        logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
+        for trid, doi in trid_to_dois.items():
+            title = _get_doi_title(doi)
+            if title:
+                trid_to_title[str(trid)] = title
+            else:
+                check_in_db.append(trid)
+            link = _get_publication_link(doi, 'DOI')
+            trid_to_link[str(trid)] = link
 
         # Try getting remaining titles from db
         if check_in_db:
@@ -336,7 +343,7 @@ class ModelRound(Round):
             for tc in tcs:
                 title = unpack(tc.content)
                 trid_to_title[str(tc.text_ref_id)] = title
-        return trid_to_title
+        return trid_to_title, trid_to_link
 
     def get_curation_stats(self):
         if not self.emmaa_statements:
@@ -685,8 +692,9 @@ class ModelStatsGenerator(StatsGenerator):
         new_trids = self.json_stats['paper_delta']['raw_paper_ids_delta'][
             'added']
         trids = list(set(freq_trids).union(set(new_trids)))
-        titles = self.latest_round.get_paper_titles(trids)
+        titles, links = self.latest_round.get_paper_titles_and_links(trids)
         self.json_stats['paper_summary']['paper_titles'] = titles
+        self.json_stats['paper_summary']['paper_links'] = links
 
     def make_paper_delta(self):
         """Add paper delta between two latest model states to json_stats."""
@@ -1174,3 +1182,16 @@ def _get_pmcid_title(pmcid):
     for front_element in front_elements:
         for element in front_element.xpath(title_xpath):
             return ' '.join(element.itertext())
+
+
+def _get_publication_link(paper_id, paper_id_type):
+    if paper_id_type == 'PMID':
+        name = 'PubMed'
+        link = f'https://pubmed.ncbi.nlm.nih.gov/{paper_id}'
+    elif paper_id_type == 'PMCID':
+        name = 'PMC'
+        link = f'https://www.ncbi.nlm.nih.gov/pmc/articles/{paper_id}'
+    elif paper_id_type == 'DOI':
+        name = 'DOI'
+        link = f'https://dx.doi.org/{paper_id}'
+    return (name, link)
