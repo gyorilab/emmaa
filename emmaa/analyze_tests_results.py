@@ -299,39 +299,42 @@ class ModelRound(Round):
                     f' {len(trid_to_pmcids)} PMCIDs, {len(trid_to_dois)} DOIs')
 
         # First get titles and links for available PMIDs
-        logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
-        pmids = list(trid_to_pmids.values())
-        pmids_to_titles = _get_pmid_titles(pmids)
+        if trid_to_pmids:
+            logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
+            pmids = list(trid_to_pmids.values())
+            pmids_to_titles = _get_pmid_titles(pmids)
 
-        for trid, pmid in trid_to_pmids.items():
-            if pmid in pmids_to_titles:
-                trid_to_title[str(trid)] = pmids_to_titles[pmid]
-            else:
-                check_in_db.append(trid)
-            link = _get_publication_link(pmid, 'PMID')
-            trid_to_link[str(trid)] = link
+            for trid, pmid in trid_to_pmids.items():
+                if pmid in pmids_to_titles:
+                    trid_to_title[str(trid)] = pmids_to_titles[pmid]
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(pmid, 'PMID')
+                trid_to_link[str(trid)] = link
 
         # Then get titles and links for available PMCIDs
-        logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
-        for trid, pmcid in trid_to_pmcids.items():
-            title = _get_pmcid_title(pmcid)
-            if title:
-                trid_to_title[str(trid)] = title
-            else:
-                check_in_db.append(trid)
-            link = _get_publication_link(pmcid, 'PMCID')
-            trid_to_link[str(trid)] = link
+        if trid_to_pmcids:
+            logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
+            for trid, pmcid in trid_to_pmcids.items():
+                title = _get_pmcid_title(pmcid)
+                if title:
+                    trid_to_title[str(trid)] = title
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(pmcid, 'PMCID')
+                trid_to_link[str(trid)] = link
 
         # Then get titles and links for available DOIs
-        logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
-        for trid, doi in trid_to_dois.items():
-            title = _get_doi_title(doi)
-            if title:
-                trid_to_title[str(trid)] = title
-            else:
-                check_in_db.append(trid)
-            link = _get_publication_link(doi, 'DOI')
-            trid_to_link[str(trid)] = link
+        if trid_to_dois:
+            logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
+            for trid, doi in trid_to_dois.items():
+                title = _get_doi_title(doi)
+                if title:
+                    trid_to_title[str(trid)] = title
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(doi, 'DOI')
+                trid_to_link[str(trid)] = link
 
         # Try getting remaining titles from db
         if check_in_db:
@@ -1128,7 +1131,7 @@ def _get_pmid_titles(pmids):
     pmids_to_titles = {}
     n = 200
     n_batches = len(pmids) // n
-    if not len(pmids) % n:
+    if len(pmids) % n:
         n_batches += 1
     for i in range(n_batches):
         start = n * i
