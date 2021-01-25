@@ -276,6 +276,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let evidCur = '#evidCurations';
   let stmtCur = '#stmtCurations';
   let tagCur = '#tagCurations';
+  let curTime = '#dateCurations';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -500,6 +501,30 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let tagCurChart = generateBar(tagCur, tagCurDataParams, tag_cur_array, ''); 
 
+  // Curations over Time line graph
+  var curCountChart = NaN;
+  if (curData.cur_stmt_dates) {
+    let evCurDate = ['Curated Evidences'];
+    let stmtCurDate = ['Curated Statements'];
+    let curDates = ['x'];
+    for (pair of curData.cur_ev_dates) {
+      curDates.push(pair[0]);
+      evCurDate.push(pair[1]);
+    }
+    for (pair of curData.cur_stmt_dates) {
+      stmtCurDate.push(pair[1]);
+    }
+
+    curColumns = [curDates, evCurDate, stmtCurDate]
+    let curCountDataParams = {
+      x: 'x',
+      xFormat: '%Y-%m-%d-%H-%M-%S',
+      columns: curColumns
+    };
+
+    var curCountChart = generateLineArea(curTime, curCountDataParams, '', format='%Y-%m-%d');
+  }
+
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
@@ -513,6 +538,9 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     rawCurChart.flush();
     stmtCurChart.flush();
     tagCurChart.flush();
+    if (curCountChart) {
+      curCountChart.flush();
+    }
   });
   $(function() {
     //Executed on page load with URL containing an anchor tag.
@@ -556,7 +584,7 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   });
 }
 
-function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
+function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null, format='%Y-%m-%d-%H-%M-%S') {
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -565,7 +593,7 @@ function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
         type: 'timeseries',
         tick: {
           rotate: -45,
-          format: '%Y-%m-%d-%H-%M-%S'
+          format: format
         }
       },
       y: {
