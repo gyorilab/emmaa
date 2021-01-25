@@ -359,6 +359,10 @@ class ModelRound(Round):
         curators_stmt_counts = {}
         curs_by_tags = defaultdict(int)
         curs_by_hash = defaultdict(list)
+        cur_ev_dates = defaultdict(set)
+        cur_stmt_dates = defaultdict(set)
+        cur_ev_date_sum = []
+        cur_stmt_date_sum = []
         for cur in curations:
             curs_by_hash[cur['source_hash']].append(cur)
         for estmt in self.emmaa_statements:
@@ -370,10 +374,23 @@ class ModelRound(Round):
                         curators_ev[cur['curator']].add(cur['source_hash'])
                         curators_stmt[cur['curator']].add(cur['pa_hash'])
                         curs_by_tags[cur['tag']] += 1
+                        cur_ev_dates[cur['date'].isoformat()[:10]].add(
+                            cur['source_hash'])
+                        cur_stmt_dates[cur['date'].isoformat()[:10]].add(
+                            cur['pa_hash'])
         for cur, entries in curators_ev.items():
             curators_ev_counts[cur] = len(entries)
         for cur, entries in curators_stmt.items():
             curators_stmt_counts[cur] = len(entries)
+        current_ev_sum = 0
+        current_stmt_sum = 0
+        for date, entries in sorted(cur_ev_dates.items()):
+            current_ev_sum += len(entries)
+            cur_ev_date_sum.append((date, current_ev_sum))
+        for date, entries in sorted(cur_stmt_dates.items()):
+            current_stmt_sum += len(entries)
+            cur_stmt_date_sum.append((date, current_stmt_sum))
+
         cur_stats = {
             'curators_ev_counts': sorted(
                 curators_ev_counts.items(), key=lambda x: x[1], reverse=True),
@@ -381,6 +398,8 @@ class ModelRound(Round):
                 curators_stmt_counts.items(), key=lambda x: x[1], reverse=True),
             'curs_by_tags': sorted(
                 curs_by_tags.items(), key=lambda x: x[1], reverse=True),
+            'cur_ev_dates': cur_ev_date_sum,
+            'cur_stmt_dates': cur_stmt_date_sum
         }
         return cur_stats
 
