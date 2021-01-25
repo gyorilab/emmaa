@@ -365,6 +365,7 @@ class ModelRound(Round):
         cur_stmt_date_sum = []
         for cur in curations:
             curs_by_hash[cur['source_hash']].append(cur)
+        df = '%Y-%m-%d-00-00-00'
         for estmt in self.emmaa_statements:
             for ev in estmt.stmt.evidence:
                 source_hash = ev.get_source_hash()
@@ -374,9 +375,9 @@ class ModelRound(Round):
                         curators_ev[cur['curator']].add(cur['source_hash'])
                         curators_stmt[cur['curator']].add(cur['pa_hash'])
                         curs_by_tags[cur['tag']] += 1
-                        cur_ev_dates[cur['date'].isoformat()[:10]].add(
+                        cur_ev_dates[cur['date'].strftime(df)].add(
                             cur['source_hash'])
-                        cur_stmt_dates[cur['date'].isoformat()[:10]].add(
+                        cur_stmt_dates[cur['date'].strftime(df)].add(
                             cur['pa_hash'])
         for cur, entries in curators_ev.items():
             curators_ev_counts[cur] = len(entries)
