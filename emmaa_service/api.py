@@ -15,9 +15,10 @@ from copy import deepcopy
 
 from indra_db.exceptions import BadHashError
 from indra_db import get_db
+from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
-    RemoveModification, get_statement_by_name
+    RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
@@ -799,20 +800,33 @@ def get_model_dashboard(model):
                            new_papers=new_papers)
 
 
-@app.route('/statements_from_paper/<model>')
+@app.route('/statements_from_paper/<model>', methods=['GET', 'POST'])
 def get_paper_statements(model):
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
+    display_format = request.args.get('format', 'html')
+    if paper_id_type == 'TRID':
+        trid = paper_id
+    else:
+        db = get_db('primary')
+        trids = _get_trids(db, paper_id, paper_id_type.lower())
+        if trids:
+            trid = str(trids[0])
+        else:
+            abort(Response(f'Invalid paper ID: {paper_id}', 400))
     all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
-    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][paper_id]
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
     paper_stmts = [stmt for stmt in all_stmts
                    if stmt.get_hash() in paper_hashes]
-    updated_stmts = [filter_evidence(stmt, paper_id, paper_id_type)
+    updated_stmts = [filter_evidence(stmt, trid, 'TRID')
                      for stmt in paper_stmts]
     updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
                            reverse=True)
+    if display_format == 'json':
+        resp = {'statements': stmts_to_json(updated_stmts)}
+        return resp
     stmt_rows = []
     stmts_by_hash = {}
     for stmt in updated_stmts:
@@ -830,9 +844,9 @@ def get_paper_statements(model):
     for stmt in updated_stmts:
         stmt_row = _get_stmt_row(stmt, 'paper', model, cur_counts,
                                  date, None, None, cur_dict, with_evid,
-                                 paper_id, paper_id_type)
+                                 trid, 'TRID')
         stmt_rows.append(stmt_row)
-    paper_title = _get_title(paper_id, model_stats)
+    paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
