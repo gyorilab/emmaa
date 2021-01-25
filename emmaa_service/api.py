@@ -584,6 +584,8 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
         url = f'/statements_from_paper/{model}?{url_param}'
     if url:
         paper_tuple = (url, title, 'Click to see statements from this paper')
+    # DB url for statements from paper will be available soon
+    # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
     else:
         paper_tuple = ('', title, '')
     return paper_tuple
