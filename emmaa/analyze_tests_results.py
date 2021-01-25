@@ -1152,39 +1152,8 @@ def _get_doi_title(doi):
 
 
 def _get_pmcid_title(pmcid):
-    # title = pmc_client.get_title(pmcid)
-    # return title
-
-    # Temporarily implement pmc_client.get_title here to be able to run from
-    # the branch before merging INDRA PR
-    from lxml import etree
-
-    xml_string = pmc_client.get_xml(pmcid)
-    if not xml_string:
-        return
-    tree = etree.fromstring(xml_string.encode('utf-8'))
-    # Remove namespaces if any exist
-    if tree.tag.startswith('{'):
-        for element in tree.getiterator():
-            # The following code will throw a ValueError for some
-            # exceptional tags such as comments and processing instructions.
-            # It's safe to just leave these tag names unchanged.
-            try:
-                element.tag = etree.QName(element).localname
-            except ValueError:
-                continue
-        etree.cleanup_namespaces(tree)
-    # Strip out latex
-    pmc_client._remove_elements_by_tag(tree, 'tex-math')
-    # Strip out all content in unwanted elements except the captions
-    pmc_client._replace_unwanted_elements_with_their_captions(tree)
-    # First process front element. Titles alt-titles and abstracts
-    # are pulled from here.
-    front_elements = pmc_client._select_from_top_level(tree, 'front')
-    title_xpath = './article-meta/title-group/article-title'
-    for front_element in front_elements:
-        for element in front_element.xpath(title_xpath):
-            return ' '.join(element.itertext())
+    title = pmc_client.get_title(pmcid)
+    return title
 
 
 def _get_publication_link(paper_id, paper_id_type):
