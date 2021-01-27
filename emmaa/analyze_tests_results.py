@@ -276,7 +276,7 @@ class ModelRound(Round):
     def get_paper_titles_and_links(self, trids):
         """Return a dictionary mapping paper IDs to their titles."""
         if self.paper_id_type == 'pii':
-            return {}
+            return {}, {}
         db = get_db('primary')
         trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
         ref_dicts = [tr.get_ref_dict() for tr in trs]
