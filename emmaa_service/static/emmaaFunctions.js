@@ -272,6 +272,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let agDist = '#agentDistr';
   let stmtTime = '#stmtsOverTime';
   let sources = '#sourceDistr';
+  let paperTime = '#papersOverTime';
+  let evidCur = '#evidCurations';
+  let stmtCur = '#stmtCurations';
+  let tagCur = '#tagCurations';
+  let curTime = '#dateCurations';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -420,6 +425,112 @@ function populateTestResultTable(tableBody, model_json, test_json) {
 
   let areaChart = generateLineArea(pasAppId, passedAppliedParams, '');
 
+  // Paper Tab
+  // Papers over Time line graph
+  let rawPaperOverTime = model_json.changes_over_time.number_of_raw_papers;
+  let assembledPaperOverTime = model_json.changes_over_time.number_of_assembled_papers;
+  rawPaperOverTime.unshift('Processed Papers');
+  assembledPaperOverTime.unshift('Papers with Statements');
+  paper_dates = model_dates.slice(- (rawPaperOverTime.length - 1))
+  paper_dates.unshift('x')
+
+  paperColumns = [paper_dates, rawPaperOverTime, assembledPaperOverTime]
+  let paperCountDataParams = {
+    x: 'x',
+    xFormat: '%Y-%m-%d-%H-%M-%S',
+    columns: paperColumns,
+    onclick: redirectToPast
+  };
+
+  let paperCountChart = generateLineArea(paperTime, paperCountDataParams, '');
+
+  // Curation Tab
+  let curData = model_json.curation_summary;
+
+  // Raw evidences curations bar chart
+  let raw_cur_array = [];
+  let raw_cur_freq = ['Curations count'];
+
+  for (let pair of curData.curators_ev_counts) {
+    raw_cur_array.push(pair[0]);
+    raw_cur_freq.push(pair[1])
+  }
+
+  let rawCurDataParams = {
+    columns: [
+      raw_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let rawCurChart = generateBar(evidCur, rawCurDataParams, raw_cur_array, '');  
+
+  // Statement curations bar chart
+  let stmt_cur_array = [];
+  let stmt_cur_freq = ['Curations count'];
+
+  for (let pair of curData.curators_stmt_counts) {
+    stmt_cur_array.push(pair[0]);
+    stmt_cur_freq.push(pair[1])
+  }
+
+  let stmtCurDataParams = {
+    columns: [
+      stmt_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let stmtCurChart = generateBar(stmtCur, stmtCurDataParams, stmt_cur_array, '');  
+
+  // Curation types bar chart
+  let tag_cur_array = [];
+  let tag_cur_freq = ['Curations count'];
+
+  for (let pair of curData.curs_by_tags) {
+    tag_cur_array.push(pair[0]);
+    tag_cur_freq.push(pair[1])
+  }
+
+  let tagCurDataParams = {
+    columns: [
+      tag_cur_freq
+    ],
+    type: 'bar'
+  };
+
+  let tagCurChart = generateBar(tagCur, tagCurDataParams, tag_cur_array, ''); 
+
+  // Curations over Time line graph
+  var curCountChart = NaN;
+  if (curData.cur_stmt_dates) {
+    let evCurDate = ['Curated Evidences'];
+    let stmtCurDate = ['Curated Statements'];
+    let curDates = ['x'];
+    for (pair of curData.cur_ev_dates) {
+      curDates.push(pair[0]);
+      evCurDate.push(pair[1]);
+    }
+    for (pair of curData.cur_stmt_dates) {
+      stmtCurDate.push(pair[1]);
+    }
+
+    curColumns = [curDates, evCurDate, stmtCurDate]
+    let curCountDataParams = {
+      x: 'x',
+      xFormat: '%Y-%m-%d-%H-%M-%S',
+      columns: curColumns
+    };
+
+    let maxVal = evCurDate[evCurDate.length - 1];
+    let interval = Math.floor(maxVal / 10);
+    var curTicks = [];
+    for (var i = 0; i <= maxVal; i+=interval) {
+      curTicks.push(i);
+    }  
+
+    var curCountChart = generateLineArea(curTime, curCountDataParams, '', curTicks, format='%Y-%m-%d');
+  }
 
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
@@ -430,6 +541,13 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     stmtsCountChart.flush();
     lineChart.flush();
     areaChart.flush();
+    paperCountChart.flush();
+    rawCurChart.flush();
+    stmtCurChart.flush();
+    tagCurChart.flush();
+    if (curCountChart) {
+      curCountChart.flush();
+    }
   });
   $(function() {
     //Executed on page load with URL containing an anchor tag.
@@ -473,7 +591,7 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
   });
 }
 
-function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
+function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null, format='%Y-%m-%d-%H-%M-%S') {
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
@@ -482,7 +600,7 @@ function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null) {
         type: 'timeseries',
         tick: {
           rotate: -45,
-          format: '%Y-%m-%d-%H-%M-%S'
+          format: format
         }
       },
       y: {

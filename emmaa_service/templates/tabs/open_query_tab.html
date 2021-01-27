@@ -1,0 +1,107 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers) -%}
+  <!-- Open Search Queries -->
+  <div class="container" id="open-container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+      </div>
+      <div class="card-body">
+
+        <!-- model selection -->
+        <h6><b>Model selection</b></h6>
+        <div class="checkbox-container">
+          <div class="form-select">
+            <select name="open-select" id="open-select" placeholder="Select models" multiple>
+            {% if preselected_val and preselected_name %}
+              <option value="{{ preselected_val }}" selected="{{ preselected_val }}">{{ preselected_name }}</option>
+            {% endif %}
+            {% for model_id, config_json in model_data %}
+              {% if model_id != preselected_val %}
+              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% endif %}
+            {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
+        <div class="form-container" style="display: inline-block; vertical-align: top;">
+          <div class="text" style="display: table;">
+            <form onsubmit="postQuery(document.getElementById('open-container')); return false;">
+              <div class="row" style="align-items: center">
+                <div class="dropdown col" style="display: table-cell; padding-right: 2px">
+                  <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
+                    changed in the rest API and query handling -->
+                  <select class="custom-select" style="width: 400px;" id="stmtTypeSelection">
+                    <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
+                    {% for stmt_type in stmt_types %}
+                    <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <!-- agent -->
+                <div class="col" style="padding-right: 2px; width: 300px;">
+                  <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent">
+                </div>
+                <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
+                  <select class="custom-select" id="roleSelection" style="width: 300px">
+                    <option value="" selected="selected" disabled="disabled" hidden="hidden">select agent's role</option>
+                    {% for role, descr in {'subject': 'subject (downstream search)', 'object': 'object (upstream search)'}.items() %}
+                    <option value="{{ role }}">{{ descr }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <!-- indra docs text -->
+              <div class="text-container row">
+                <i class="col" style="margin-top: 5px; margin-bottom: 5px;">To read more about statement types, read the <a
+                    href="https://indra.readthedocs.io/en/latest/modules/statements.html" target="_blank">INDRA documentation</a>.</i>
+              </div>
+              <div class="checkbox-container">
+                <div class="form-select">
+                  <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
+                    <option value="" disabled="disabled" hidden="hidden">Limit entity types to (optional)</option>
+                  {% for group, options in ns_groups.items() %}
+                    <option value="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
+                  {% endfor %}
+                  </select>
+                </div>
+              </div>               
+
+
+              <!-- formsubmit -->
+              <div class="row">
+                <div class="container">
+                  <input class="btn" style="margin-top: 5px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-open-query" style="padding-top: 3000px;"><label
+                    for="register-open-query">  Subscribe To Query</label>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="container">
+          <div class="container">
+            <div id="open-query-status-gif" style="display: none;">
+              <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
+            </div>
+            <span><i id="open-query-status"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Query results -->
+  <div class="container">
+    {{ path_card(open_immediate_results, 'Query Results', 'open-query-results', open_immediate_headers, 'openQueryResults') }}
+  </div>
+  <!-- List user queries -->
+  <div class="container">
+    {{ path_card(subscribed_open_results, 'Subscribed Queries', 'open-user-queries', subscribed_open_headers, 'open-old-results') }}
+  </div>
+</div>
+{%- endmacro %}

@@ -1,0 +1,16 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro paper_tab(paper_distr, new_papers) -%}
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Number of Papers over Time</h4>
+      </div>
+      <div class="card-body">
+      <div class="container" id="papersOverTime"></div>
+      </div>
+    </div>
+    {{ path_card(paper_distr, "Papers with Largest Number of Statements", "paperStmt", ["Paper Title", "Link", "Statement Count"], "paperStmtTable") }}
+    {{ path_card(new_papers, "New Papers", "newPaperStmt", ["Paper Title", "Link", "Assembled Statements", "Raw Statements"], "newPaperStmtTable") }}
+  </div>
+{%- endmacro %}

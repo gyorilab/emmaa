@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -13,9 +14,11 @@ from collections import defaultdict, Counter
 from copy import deepcopy
 
 from indra_db.exceptions import BadHashError
+from indra_db import get_db
+from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, \
-    RemoveModification, get_statement_by_name
+    RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
@@ -98,22 +101,25 @@ def get_latest_available_date(
     if not test_corpus:
         logger.error('Test corpus is missing, cannot find latest date')
         return
-    # First try to just get last updated dates for model stats and test stats
-    model_date = last_updated_date(model, 'model_stats', extension='.json',
-                                   date_format=date_format, bucket=bucket)
-    test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
-                                  extension='.json', date_format=date_format,
-                                  bucket=bucket)
-    if model_date == test_date:
-        logger.info(f'Latest available date for {model} model and '
-                    f'{test_corpus} is {model_date}.')
-        return model_date
-    # If last dates don't match, try to match to the earlier of them
-    min_date = min(model_date, test_date)
-    if is_available(model, test_corpus, min_date, bucket=bucket):
-        logger.info(f'Latest available date for {model} model and '
-                    f'{test_corpus} is {min_date}.')
-        return min_date
+    for n in range(5):
+        # First try to get last updated dates for model stats and test stats
+        model_date = last_updated_date(model, 'model_stats', extension='.json',
+                                       n=n, date_format=date_format,
+                                       bucket=bucket)
+        test_date = last_updated_date(model, 'test_stats', tests=test_corpus,
+                                      extension='.json', n=n,
+                                      date_format=date_format,
+                                      bucket=bucket)
+        if model_date == test_date:
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {model_date}.')
+            return model_date
+        # If last dates don't match, try to match to the earlier of them
+        min_date = min(model_date, test_date)
+        if is_available(model, test_corpus, min_date, bucket=bucket):
+            logger.info(f'Latest available date for {model} model and '
+                        f'{test_corpus} is {min_date}.')
+            return min_date
     logger.info(f'Could not find latest available date for {model} model '
                 f'and {test_corpus}.')
 
@@ -444,7 +450,8 @@ def _label_curations(**kwargs):
     curations = get_curations(**kwargs)
     logger.info('Labeling curations')
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
-    correct = {str(c['pa_hash']) for c in curations if c['tag'] in correct_tags}
+    correct = {str(c['pa_hash']) for c in curations if
+               c['tag'] in correct_tags}
     incorrect = {str(c['pa_hash']) for c in curations if
                  str(c['pa_hash']) not in correct}
     logger.info('Labeled curations as correct or incorrect')
@@ -477,7 +484,8 @@ def _count_curations(curations, stmts_by_hash):
 
 
 def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
-                  path_counts=None, cur_dict=None, with_evid=False):
+                  path_counts=None, cur_dict=None, with_evid=False,
+                  paper_id=None, paper_id_type=None):
     stmt_hash = str(stmt.get_hash())
     english = _format_stmt_text(stmt)
     evid_count = len(stmt.evidence)
@@ -489,6 +497,10 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
               'format': 'json', 'date': date}
     if test_corpus:
         params.update({'test_corpus': test_corpus})
+    if source == 'paper' and paper_id:
+        params.update({'paper_id': paper_id})
+        if paper_id_type:
+            params.update({'paper_id_type': paper_id_type})
     url_param = parse.urlencode(params)
     json_link = f'/evidence?{url_param}'
     path_count = 0
@@ -526,6 +538,83 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
              'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
              'title': 'Curated as incorrect outside of this model'}]
     return badges
+
+
+def get_new_papers(model_stats, date):
+    paper_id_counts = []
+    trids = model_stats['paper_delta']['raw_paper_ids_delta']['added']
+    for paper_id in trids:
+        assembled_count = len(model_stats['paper_summary'][
+            'stmts_by_paper'].get(str(paper_id), []))
+        raw_count = model_stats['paper_summary']['raw_paper_counts'].get(
+            str(paper_id), 0)
+        paper_id_counts.append((paper_id, assembled_count, raw_count))
+    paper_id_counts = sorted(paper_id_counts, key=lambda x: (x[1], x[2]),
+                             reverse=True)
+    if not paper_id_counts:
+        return 'Did not process new papers'
+    new_papers = [[_get_paper_title_tuple(paper_id, model_stats, date),
+                   _get_external_paper_link(paper_id, model_stats),
+                   ('', str(assembled_count), ''),
+                   ('', str(raw_count), '')]
+                  for paper_id, assembled_count, raw_count in paper_id_counts]
+    return new_papers
+
+
+def _get_title(paper_id, model_stats):
+    id_to_title = model_stats['paper_summary'].get('paper_titles')
+    if id_to_title:
+        title = id_to_title.get(str(paper_id), 'Title not available')
+    else:
+        title = 'Title not available'
+    return title
+
+
+def _get_paper_title_tuple(paper_id, model_stats, date):
+    title = _get_title(paper_id, model_stats)
+    stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
+    stmt_hashes = [
+        str(st_hash) for st_hash in stmts_by_paper_id.get(str(paper_id), [])]
+    if not stmt_hashes:
+        url = None
+    else:
+        model = model_stats['model_summary']['model_name']
+        url_param = parse.urlencode(
+            {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
+        url = f'/statements_from_paper/{model}?{url_param}'
+    if url:
+        paper_tuple = (url, title, 'Click to see statements from this paper')
+    # DB url for statements from paper will be available soon
+    # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
+    else:
+        paper_tuple = ('', title, '')
+    return paper_tuple
+
+
+def _get_external_paper_link(paper_id, model_stats):
+    trid_to_link = model_stats['paper_summary'].get('paper_links', {})
+    if trid_to_link.get(str(paper_id)):
+        link, name = trid_to_link[str(paper_id)]
+        paper_tuple = (link, name, 'Click to view this paper')
+    else:
+        paper_tuple = ('', 'N/A', '')
+    return paper_tuple
+
+
+def filter_evidence(stmt, paper_id, paper_id_type):
+    stmt2 = deepcopy(stmt)
+    stmt2.evidence = []
+    for evid in stmt.evidence:
+        evid_paper_id = None
+        if paper_id_type == 'pii':
+            evid_paper_id = evid.annotations.get('pii')
+        if evid.text_refs:
+            evid_paper_id = evid.text_refs.get(paper_id_type.upper())
+            if not evid_paper_id:
+                evid_paper_id = evid.text_refs.get(paper_id_type.lower())
+        if evid_paper_id and str(evid_paper_id) == str(paper_id):
+            stmt2.evidence.append(evid)
+    return stmt2
 
 
 # Deletes session after the specified time
@@ -611,6 +700,8 @@ def get_model_dashboard(model):
     if test_data:
         test_info_contents = [[('', ' '.join(k.split('_')).capitalize(), ''),
                                ('', v, '')] for k, v in test_data.items()]
+    else:
+        test_stats['test_round_summary']['test_data'] = ''
     current_model_types = [mt for mt in ALL_MODEL_TYPES if mt in
                            test_stats['test_round_summary']]
     # Get correct and incorrect curation hashes to pass it per stmt
@@ -667,6 +758,16 @@ def get_model_dashboard(model):
 
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
+    if not model_stats['paper_summary'].get('paper_titles'):
+        paper_distr = 'Paper titles are not currently available'
+        new_papers = 'Paper titles are not currently available'
+    else:
+        trids_counts = model_stats['paper_summary']['paper_distr'][:10]
+        paper_distr = [[_get_paper_title_tuple(paper_id, model_stats, date),
+                        _get_external_paper_link(paper_id, model_stats),
+                        ('', str(c), '')] for paper_id, c in trids_counts]
+        new_papers = get_new_papers(model_stats, date)
+
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -696,7 +797,67 @@ def get_model_dashboard(model):
                            date=date,
                            latest_date=latest_date,
                            tab=tab,
-                           exp_formats=exp_formats)
+                           exp_formats=exp_formats,
+                           paper_distr=paper_distr,
+                           new_papers=new_papers)
+
+
+@app.route('/statements_from_paper/<model>', methods=['GET', 'POST'])
+def get_paper_statements(model):
+    date = request.args.get('date')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
+    display_format = request.args.get('format', 'html')
+    if paper_id_type == 'TRID':
+        trid = paper_id
+    else:
+        db = get_db('primary')
+        trids = _get_trids(db, paper_id, paper_id_type.lower())
+        if trids:
+            trid = str(trids[0])
+        else:
+            abort(Response(f'Invalid paper ID: {paper_id}', 400))
+    all_stmts = _load_stmts_from_cache(model, date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
+    paper_stmts = [stmt for stmt in all_stmts
+                   if stmt.get_hash() in paper_hashes]
+    updated_stmts = [filter_evidence(stmt, trid, 'TRID')
+                     for stmt in paper_stmts]
+    updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
+                           reverse=True)
+    if display_format == 'json':
+        resp = {'statements': stmts_to_json(updated_stmts)}
+        return resp
+    stmt_rows = []
+    stmts_by_hash = {}
+    for stmt in updated_stmts:
+        stmts_by_hash[str(stmt.get_hash())] = stmt
+    curations = get_curations(pa_hash=paper_hashes)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
+    cur_counts = _count_curations(curations, stmts_by_hash)
+    if len(updated_stmts) > 1:
+        with_evid = False
+    else:
+        with_evid = True
+    for stmt in updated_stmts:
+        stmt_row = _get_stmt_row(stmt, 'paper', model, cur_counts,
+                                 date, None, None, cur_dict, with_evid,
+                                 trid, 'TRID')
+        stmt_rows.append(stmt_row)
+    paper_title = _get_title(trid, model_stats)
+    table_title = f'Statements from the paper "{paper_title}"'
+    return render_template('evidence_template.html',
+                           stmt_rows=stmt_rows,
+                           model=model,
+                           source='paper',
+                           table_title=table_title,
+                           date=date,
+                           paper_id=paper_id,
+                           paper_id_type=paper_id_type)
 
 
 @app.route('/tests/<model>')
@@ -868,6 +1029,8 @@ def get_statement_evidence_page():
     test_corpus = request.args.get('test_corpus', '')
     date = request.args.get('date')
     display_format = request.args.get('format', 'html')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
     stmts = []
     if not date:
         date = get_latest_available_date(model, _default_test(model))
@@ -887,6 +1050,12 @@ def get_statement_evidence_page():
             for stmt_hash in stmt_hashes:
                 if str(stmt.get_hash()) == str(stmt_hash):
                     stmts.append(stmt)
+    elif source == 'paper':
+        all_stmts = _load_stmts_from_cache(model, date)
+        for stmt in all_stmts:
+            for stmt_hash in stmt_hashes:
+                if str(stmt.get_hash()) == str(stmt_hash):
+                    stmts.append(filter_evidence(stmt, paper_id, paper_id_type))
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -1263,6 +1432,26 @@ def get_tests_by_hash(test_corpus, hash_val):
             st_json = test.stmt.to_json()
             ev_list = _format_evidence_text(
                 test.stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
+            st_json['evidence'] = ev_list
+    return {'statements': {hash_val: st_json}}
+
+
+@app.route('/statements/from_paper/<model>/<paper_id>/<paper_id_type>/'
+           '<date>/<hash_val>', methods=['GET'])
+def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
+    stmts = _load_stmts_from_cache(model, date)
+    st_json = {}
+    curations = get_curations(pa_hash=hash_val)
+    cur_dict = defaultdict(list)
+    for cur in curations:
+        cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+            {'error_type': cur['tag']})
+    for st in stmts:
+        if str(st.get_hash()) == str(hash_val):
+            stmt = filter_evidence(st, paper_id, paper_id_type)
+            st_json = stmt.to_json()
+            ev_list = _format_evidence_text(
+                stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
             st_json['evidence'] = ev_list
     return {'statements': {hash_val: st_json}}
 

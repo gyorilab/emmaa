@@ -286,7 +286,7 @@ def test_model_to_tests():
     assert 'tests' in loaded_tests
 
 
-@attr('nonpublic')
+@attr('notravis', 'nonpublic')
 @mock_s3
 def test_generate_stats_on_s3():
     # Local imports are recommended when using moto

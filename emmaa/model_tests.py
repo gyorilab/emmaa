@@ -24,7 +24,8 @@ from indra.util.statement_presentation import group_and_sort_statements, \
     make_string_from_sort_key
 from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
-from emmaa.model import EmmaaModel, get_assembled_statements
+from emmaa.model import EmmaaModel, get_assembled_statements, \
+    load_config_from_s3
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
@@ -109,13 +110,21 @@ class ModelManager(object):
         self.path_stmt_counts = defaultdict(int)
 
     @classmethod
-    def load_from_statements(cls, model_name, mode='local',
+    def load_from_statements(cls, model_name, mode='local', date=None,
                              bucket=EMMAA_BUCKET_NAME):
-        model = EmmaaModel.load_from_s3(model_name, bucket=bucket)
-        # No need to store raw statements
-        model.stmts = []
+        config = load_config_from_s3(model_name, bucket=bucket)
+        if date:
+            prefix = f'papers/{model_name}/paper_ids_{date}'
+        else:
+            prefix = f'papers/{model_name}/paper_ids_'
+        paper_key = find_latest_s3_file(bucket, prefix, 'json')
+        if paper_key:
+            paper_ids = load_json_from_s3(bucket, paper_key)
+        else:
+            paper_ids = None
+        model = EmmaaModel(model_name, config, paper_ids)
         # Loading assembled statements to avoid reassembly
-        stmts, fname = get_assembled_statements(model_name, bucket=bucket)
+        stmts, fname = get_assembled_statements(model_name, date, bucket)
         model.assembled_stmts = stmts
         model.date_str = strip_out_date(fname, 'datetime')
         mm = cls(model, mode=mode)
@@ -788,17 +797,19 @@ def load_model_manager_from_s3(model_name=None, key=None,
         except Exception as e:
             logger.info('Could not load the model manager directly')
             logger.info(e)
-            if model_name:
-                logger.info('Trying to load model manager from statements')
-                try:
-                    model_manager = ModelManager.load_from_statements(
-                        model_name)
-                    return model_manager
-                except Exception as e:
-                    logger.info('Could not load the model manager from '
-                                'statements')
-                    logger.info(e)
-                    return None
+            if not model_name:
+                model_name = key.split('/')[1]
+            date = strip_out_date(key, 'date')
+            logger.info('Trying to load model manager from statements')
+            try:
+                model_manager = ModelManager.load_from_statements(
+                    model_name, date=date, bucket=bucket)
+                return model_manager
+            except Exception as e:
+                logger.info('Could not load the model manager from '
+                            'statements')
+                logger.info(e)
+                return None
     # Now try find the latest key for given model
     if model_name:
         # Versioned

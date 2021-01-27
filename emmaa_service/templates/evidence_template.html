@@ -78,8 +78,10 @@
 <div class="container" id="app">
   {% if source == 'model_statement' %}
   {% set url = url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') %}
-  {% else %}
+  {% elif source == 'test' %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
+  {% elif source == 'paper' %}
+  {% set url = url_for('get_statement_by_paper', model=model, paper_id=paper_id, paper_id_type=paper_id_type, date=date, hash_val='') %}
   {% endif %}
   {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
 </div>

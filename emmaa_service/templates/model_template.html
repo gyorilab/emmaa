@@ -1,5 +1,8 @@
 {% extends "emmaa_page_template.html" %}
-{% from "path_macros.html" import path_table, path_card %}
+{% from "tabs/model_tab.html" import model_tab %}
+{% from "tabs/tests_tab.html" import test_tab %}
+{% from "tabs/paper_tab.html" import paper_tab %}
+{% from "tabs/curation_tab.html" import curation_tab %}
 
 {% block additional_scripts %}
 <script>
@@ -55,9 +58,23 @@
       {% if tab == 'model' %}
       <a class="nav-item nav-link active" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="true">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
-      {% else %}
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'tests' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link active" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="true">Tests</a>
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'papers' %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      <a class="nav-item nav-link active" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="true">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      {% elif tab == 'curation' %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link active" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="true">Curation</a>      
       {% endif %}  
     </div>
   </nav>
@@ -67,118 +84,38 @@
   <div class="tab-pane fade show active" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
   {% else %}
   <div class="tab-pane" id="nav-model" role="tabpanel" aria-labelledby="nav-model-tab">
-  {% endif %} 
-    <!-- Model stuff goes here -->
-
-    <!-- This table displays model data -->
-    <div class="container">
-      {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
-      {% if exp_formats %}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Download as</h4>
-        </div>
-        <div class="card-body">
-          {% for exp_f, link in exp_formats.items() %}
-          <a href='{{ link }}' download>
-            <button class="btn btn-outline-secondary" type="button">{{ exp_f }}</button>
-          </a>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="modelTestResultBody"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Top 10 Agents</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="agentDistr"></div>
-        </div>
-      </div>
-      {% if 'sources' in model_stats_json['model_summary'] %}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Knowledge Sources</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="sourceDistr"></div>
-        </div>
-      </div>
-      {% endif %}
-      {% set show_all = url_for('get_all_statements_page', model=model, sort_by='evidence', page=1, filter_curated=false, date=date) %}
-      {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidence", ["Statement", "Evidence Count"], "stmtEvidenceTable", show_all=show_all) }}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="stmtsOverTime"></div>
-        </div>
-      </div>
-      {{ path_card(added_stmts, "New Added Statements", "addedStmts", ["Statement"], "addedStmtsTable") }}
-    </div>
-
-  </div>
-  {% if tab == 'model' %}
-  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
-  {% else %}
-  <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
   {% endif %}
-    <!-- Test stuff goes here -->
 
-    <div class="container" id="modelTestResult">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Test Corpus Selection</h4>
-        </div>
-        <div class="card-body">
-          <select class="custom-select" id="testSelectDD" aria-label="Example select with button addon" style="width: 300px">
-            <option selected disabled hidden>Select test...</option>
-            {% for test in available_tests %}
-              {% if test == test_corpus %}
-                <option selected value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
-              {% else %}
-                <option value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
-              {% endif %}
-            {% endfor %}
-          </select>
-          <div class="d-inline-flex button-container p-2">
-            <button class="btn btn-outline-secondary" onClick="testRedirect(document.getElementById('testSelectDD'))" type="button">Load Test Results</button>
-          </div>
-        </div>
-      </div>
-      {% if test_info_contents %}
-        {{ path_card(test_info_contents, "Test Corpus Info", "testInfoTable", ["Item", "Details"], "testInfoTableBody") }}
-      {% endif %}
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Percentage of Tests Passed</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="passedRatio"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Passed and Applied Tests</h4>
-        </div>
-        <div class="card-body">
-          <div class="container" id="passedApplied"></div>
-        </div>
-      </div>
-      {{ path_card(new_applied_tests, "New Applied Tests", "newAppliedTests", model_types, "newAppliedTestsTable") }}
-      {{ path_card(new_passed_tests, "New Passed Tests", "newPassedTests", ["Test", "Top Path"], "newPassedTestsTable", true)}}
-      {{ path_card(all_test_results, "All Test Results", "allTestResults", model_types, "allTestResultsTable") }}
-    </div>
+  <!-- Model stuff goes here -->
+  {{ model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts) }}
 
   </div>
+  {% if tab == 'tests' %}
+  <div class="tab-pane fade show active" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-tests" role="tabpanel" aria-labelledby="nav-tests-tab">  
+  {% endif %}
+  
+  <!-- Test stuff goes here -->
+  {{ test_tab(available_tests, test_corpus, test_info_contents, model_types, new_applied_tests, new_passed_tests, all_test_results) }}
+
+  </div>
+  {% if tab == 'papers' %}
+  <div class="tab-pane fade show active" id="nav-papers" role="tabpanel" aria-labelledby="nav-papers-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-papers" role="tabpanel" aria-labelledby="nav-papers-tab">  
+  {% endif %}
+
+  {{ paper_tab(paper_distr, new_papers) }}
+
+  </div>
+  {% if tab == 'curation' %}
+  <div class="tab-pane fade show active" id="nav-curation" role="tabpanel" aria-labelledby="nav-curation-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-curation" role="tabpanel" aria-labelledby="nav-curation-tab">  
+  {% endif %}
+
+  {{ curation_tab(model_stats_json) }}
+
 </div>
 {% endblock %}

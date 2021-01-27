@@ -1,0 +1,40 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro curation_tab(model_stats_json) -%}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Number of Evidences Curated</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="evidCurations"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Number of Unique Statements Curated</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="stmtCurations"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Curation Types</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="tagCurations"></div>
+    </div>
+  </div>
+  {% if 'cur_stmt_dates' in model_stats_json['curation_summary'] %}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Curations Over Time</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="dateCurations"></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{%- endmacro %}

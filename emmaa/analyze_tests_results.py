@@ -1,14 +1,18 @@
 import logging
 import jsonpickle
 from collections import defaultdict
-from emmaa.model import _default_test, load_config_from_s3, get_model_stats
+from emmaa.model import load_config_from_s3, get_model_stats, \
+    load_stmts_from_s3
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
     get_credentials, update_status
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
-from indra.sources.indra_db_rest.api import get_statement_queries
+from indra.literature import pubmed_client, crossref_client, pmc_client
+from indra_db import get_db
+from indra_db.client.principal.curation import get_curations
+from indra_db.util import unpack
 
 
 logger = logging.getLogger(__name__)
@@ -120,14 +124,17 @@ class ModelRound(Round):
         statements with evidences retrieved from these papers.
     """
     def __init__(self, statements, date_str, paper_ids=None,
-                 paper_id_type='TRID'):
+                 paper_id_type='TRID', emmaa_statements=None):
         super().__init__(date_str)
         self.statements = statements
         self.paper_ids = paper_ids if paper_ids else []
+        self.paper_id_type = paper_id_type
+        self.emmaa_statements = emmaa_statements if emmaa_statements else []
         self.stmts_by_papers = self.get_assembled_stmts_by_paper(paper_id_type)
 
     @classmethod
-    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME):
+    def load_from_s3_key(cls, key, bucket=EMMAA_BUCKET_NAME,
+                         load_estmts=False):
         mm = load_model_manager_from_s3(key=key, bucket=bucket)
         if not mm:
             return
@@ -138,7 +145,10 @@ class ModelRound(Round):
         except AttributeError:
             paper_ids = None
         paper_id_type = mm.model.reading_config.get('main_id_type', 'TRID')
-        return cls(statements, date_str, paper_ids, paper_id_type)
+        estmts = None
+        if load_estmts:
+            estmts, _ = load_stmts_from_s3(mm.model.name, bucket)
+        return cls(statements, date_str, paper_ids, paper_id_type, estmts)
 
     def get_total_statements(self):
         """Return a total number of statements in a model."""
@@ -220,11 +230,12 @@ class ModelRound(Round):
                     if not paper_id:
                         paper_id = evid.text_refs.get(id_type.lower())
                 if paper_id:
-                    if paper_id in stmts_by_papers and stmt_hash not in \
-                            stmts_by_papers[paper_id]:
-                        stmts_by_papers[paper_id].append(stmt_hash)
+                    if paper_id in stmts_by_papers:
+                        stmts_by_papers[paper_id].add(stmt_hash)
                     else:
-                        stmts_by_papers[paper_id] = [stmt_hash]
+                        stmts_by_papers[paper_id] = {stmt_hash}
+        for k, v in stmts_by_papers.items():
+            stmts_by_papers[k] = list(v)
         return stmts_by_papers
 
     def get_all_assembled_paper_ids(self):
@@ -241,6 +252,157 @@ class ModelRound(Round):
                             self.stmts_by_papers.items()}
         return sorted(paper_stmt_count.items(), key=lambda x: x[1],
                       reverse=True)
+
+    def get_raw_paper_counts(self):
+        logger.info('Finding raw statement count per paper')
+        if not self.emmaa_statements:
+            logger.info('Did not load raw EMMAA statements')
+            return {}
+        raw_by_papers = defaultdict(int)
+        for estmt in self.emmaa_statements:
+            for evid in estmt.stmt.evidence:
+                paper_id = None
+                id_type = self.paper_id_type
+                if id_type == 'pii':
+                    paper_id = evid.annotations.get('pii')
+                if evid.text_refs:
+                    paper_id = evid.text_refs.get(id_type)
+                    if not paper_id:
+                        paper_id = evid.text_refs.get(id_type.lower())
+                if paper_id:
+                    raw_by_papers[paper_id] += 1
+        return raw_by_papers
+
+    def get_paper_titles_and_links(self, trids):
+        """Return a dictionary mapping paper IDs to their titles."""
+        if self.paper_id_type == 'pii':
+            return {}, {}
+        db = get_db('primary')
+        trs = db.select_all(db.TextRef, db.TextRef.id.in_(trids))
+        ref_dicts = [tr.get_ref_dict() for tr in trs]
+        trid_to_title = {}
+        trid_to_link = {}
+        trid_to_pmids = {}
+        trid_to_pmcids = {}
+        trid_to_dois = {}
+        check_in_db = []
+        # Map TRIDs to available PMIDs, DOIs, PMCIDs in this order
+        for ref_dict in ref_dicts:
+            if 'PMID' in ref_dict:
+                trid_to_pmids[ref_dict['TRID']] = ref_dict['PMID']
+            elif 'PMCID' in ref_dict:
+                trid_to_pmcids[ref_dict['TRID']] = ref_dict['PMCID']
+            elif 'DOI' in ref_dict:
+                trid_to_dois[ref_dict['TRID']] = ref_dict['DOI']
+
+        logger.info(f'From {len(trids)} TRIDs got {len(trid_to_pmids)} PMIDs,'
+                    f' {len(trid_to_pmcids)} PMCIDs, {len(trid_to_dois)} DOIs')
+
+        # First get titles and links for available PMIDs
+        if trid_to_pmids:
+            logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
+            pmids = list(trid_to_pmids.values())
+            pmids_to_titles = _get_pmid_titles(pmids)
+
+            for trid, pmid in trid_to_pmids.items():
+                if pmid in pmids_to_titles:
+                    trid_to_title[str(trid)] = pmids_to_titles[pmid]
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(pmid, 'PMID')
+                trid_to_link[str(trid)] = link
+
+        # Then get titles and links for available PMCIDs
+        if trid_to_pmcids:
+            logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
+            for trid, pmcid in trid_to_pmcids.items():
+                title = _get_pmcid_title(pmcid)
+                if title:
+                    trid_to_title[str(trid)] = title
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(pmcid, 'PMCID')
+                trid_to_link[str(trid)] = link
+
+        # Then get titles and links for available DOIs
+        if trid_to_dois:
+            logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
+            for trid, doi in trid_to_dois.items():
+                title = _get_doi_title(doi)
+                if title:
+                    trid_to_title[str(trid)] = title
+                else:
+                    check_in_db.append(trid)
+                link = _get_publication_link(doi, 'DOI')
+                trid_to_link[str(trid)] = link
+
+        # Try getting remaining titles from db
+        if check_in_db:
+            logger.info(f'Getting titles for {len(check_in_db)} remaining '
+                        'TRIDs from DB')
+            tcs = db.select_all(db.TextContent,
+                                db.TextContent.text_ref_id.in_(check_in_db),
+                                db.TextContent.text_type == 'title')
+            for tc in tcs:
+                title = unpack(tc.content)
+                trid_to_title[str(tc.text_ref_id)] = title
+        return trid_to_title, trid_to_link
+
+    def get_curation_stats(self):
+        if not self.emmaa_statements:
+            logger.info('Did not load raw EMMAA statements')
+            return
+        curations = get_curations()
+        curators_ev = defaultdict(set)
+        curators_stmt = defaultdict(set)
+        curators_ev_counts = {}
+        curators_stmt_counts = {}
+        curs_by_tags = defaultdict(int)
+        curs_by_hash = defaultdict(list)
+        cur_ev_dates = defaultdict(set)
+        cur_stmt_dates = defaultdict(set)
+        cur_ev_date_sum = []
+        cur_stmt_date_sum = []
+        for cur in curations:
+            curs_by_hash[cur['source_hash']].append(cur)
+        df = '%Y-%m-%d-00-00-00'
+        for estmt in self.emmaa_statements:
+            for ev in estmt.stmt.evidence:
+                source_hash = ev.get_source_hash()
+                curs_for_hash = curs_by_hash.get(source_hash)
+                if curs_for_hash:
+                    for cur in curs_for_hash:
+                        curators_ev[cur['curator']].add(cur['source_hash'])
+                        curators_stmt[cur['curator']].add(cur['pa_hash'])
+                        curs_by_tags[cur['tag']] += 1
+                        cur_ev_dates[cur['date'].strftime(df)].add(
+                            cur['source_hash'])
+                        cur_stmt_dates[cur['date'].strftime(df)].add(
+                            cur['pa_hash'])
+        for cur, entries in curators_ev.items():
+            curators_ev_counts[cur] = len(entries)
+        for cur, entries in curators_stmt.items():
+            curators_stmt_counts[cur] = len(entries)
+        current_ev_sum = 0
+        current_stmt_sum = 0
+        for date, entries in sorted(cur_ev_dates.items()):
+            current_ev_sum += len(entries)
+            cur_ev_date_sum.append((date, current_ev_sum))
+        for date, entries in sorted(cur_stmt_dates.items()):
+            current_stmt_sum += len(entries)
+            cur_stmt_date_sum.append((date, current_stmt_sum))
+
+        cur_stats = {
+            'curators_ev_counts': sorted(
+                curators_ev_counts.items(), key=lambda x: x[1], reverse=True),
+            'curators_stmt_counts': sorted(
+                curators_stmt_counts.items(), key=lambda x: x[1], reverse=True),
+            'curs_by_tags': sorted(
+                curs_by_tags.items(), key=lambda x: x[1], reverse=True),
+            'cur_ev_dates': cur_ev_date_sum,
+            'cur_stmt_dates': cur_stmt_date_sum
+        }
+        return cur_stats
 
 
 class TestRound(Round):
@@ -500,8 +662,9 @@ class ModelStatsGenerator(StatsGenerator):
         logger.info(f'Generating stats for {self.model_name}.')
         self.make_model_summary()
         self.make_model_delta()
-        self.make_paper_summary()
         self.make_paper_delta()
+        self.make_paper_summary()
+        self.make_curation_summary()
         self.make_changes_over_time()
 
     def make_model_summary(self):
@@ -544,8 +707,17 @@ class ModelStatsGenerator(StatsGenerator):
             'number_of_assembled_papers': (
                 self.latest_round.get_number_assembled_papers()),
             'stmts_by_paper': self.latest_round.stmts_by_papers,
-            'paper_distr': self.latest_round.get_papers_distribution()
+            'paper_distr': self.latest_round.get_papers_distribution(),
+            'raw_paper_counts': self.latest_round.get_raw_paper_counts()
         }
+        freq_trids = [pair[0] for pair in
+                      self.json_stats['paper_summary']['paper_distr'][:10]]
+        new_trids = self.json_stats['paper_delta']['raw_paper_ids_delta'][
+            'added']
+        trids = list(set(freq_trids).union(set(new_trids)))
+        titles, links = self.latest_round.get_paper_titles_and_links(trids)
+        self.json_stats['paper_summary']['paper_titles'] = titles
+        self.json_stats['paper_summary']['paper_links'] = links
 
     def make_paper_delta(self):
         """Add paper delta between two latest model states to json_stats."""
@@ -565,6 +737,12 @@ class ModelStatsGenerator(StatsGenerator):
             logger.info(f'Read {len(raw_paper_delta["added"])} new papers.')
             logger.info(f'Got assembled statements from '
                         f'{len(assembled_paper_delta["added"])} new papers.')
+
+    def make_curation_summary(self):
+        """Add latest curation summary to json_stats."""
+        logger.info(f'Generating curation summary for { self.model_name}.')
+        cur_stats = self.latest_round.get_curation_stats()
+        self.json_stats['curation_summary'] = cur_stats
 
     def make_changes_over_time(self):
         """Add changes to model over time to json_stats."""
@@ -605,7 +783,8 @@ class ModelStatsGenerator(StatsGenerator):
                         f'for {self.model_name} model.')
             return
         logger.info(f'Loading latest round from {latest_key}')
-        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket)
+        mr = ModelRound.load_from_s3_key(latest_key, bucket=self.bucket,
+                                         load_estmts=True)
         return mr
 
     def _get_previous_round(self):
@@ -966,3 +1145,45 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
                         update_status(passed_msg, twitter_cred)
 
     logger.info('Done tweeting')
+
+
+def _get_pmid_titles(pmids):
+    pmids_to_titles = {}
+    n = 200
+    n_batches = len(pmids) // n
+    if len(pmids) % n:
+        n_batches += 1
+    for i in range(n_batches):
+        start = n * i
+        end = start + n
+        batch = pmids[start: end]
+        m = pubmed_client.get_metadata_for_ids(batch)
+        for pmid, metadata in m.items():
+            pmids_to_titles[pmid] = metadata['title']
+    return pmids_to_titles
+
+
+def _get_doi_title(doi):
+    m = crossref_client.get_metadata(doi)
+    if m:
+        title = m.get('title')
+        if title:
+            return title[0]
+
+
+def _get_pmcid_title(pmcid):
+    title = pmc_client.get_title(pmcid)
+    return title
+
+
+def _get_publication_link(paper_id, paper_id_type):
+    if paper_id_type == 'PMID':
+        name = 'PubMed'
+        link = f'https://pubmed.ncbi.nlm.nih.gov/{paper_id}'
+    elif paper_id_type == 'PMCID':
+        name = 'PMC'
+        link = f'https://www.ncbi.nlm.nih.gov/pmc/articles/{paper_id}'
+    elif paper_id_type == 'DOI':
+        name = 'DOI'
+        link = f'https://dx.doi.org/{paper_id}'
+    return (link, name)
