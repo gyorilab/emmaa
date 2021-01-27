@@ -522,7 +522,14 @@ function populateTestResultTable(tableBody, model_json, test_json) {
       columns: curColumns
     };
 
-    var curCountChart = generateLineArea(curTime, curCountDataParams, '', format='%Y-%m-%d');
+    let maxVal = evCurDate[evCurDate.length - 1];
+    let interval = Math.floor(maxVal / 10);
+    var curTicks = [];
+    for (var i = 0; i <= maxVal; i+=interval) {
+      curTicks.push(i);
+    }  
+
+    var curCountChart = generateLineArea(curTime, curCountDataParams, '', curTicks, format='%Y-%m-%d');
   }
 
   // Force redraw of charts to prevent chart overflow
