@@ -127,15 +127,16 @@ def test_results_json():
     second_edge = result_json[1]['unsigned_graph']['path_json'][0][
         'edge_list'][1]
     assert len(second_edge['stmts']) == 4
-    assert second_edge['stmts'][0][1] == 'MAP2K1 activates MAPK1.'
-    assert second_edge['stmts'][0][0].count('stmt_hash') == 1
-    assert second_edge['stmts'][1][1] == 'MAP2K1 phosphorylates MAPK1.'
-    assert second_edge['stmts'][1][0].count('stmt_hash') == 3
-    assert second_edge['stmts'][2][1] == 'MAP2K1 inhibits MAPK1.'
-    assert second_edge['stmts'][2][0].count('stmt_hash') == 1
-    assert second_edge['stmts'][3][1] == ('MAP2K1 increases the amount of '
-                                          'MAPK1.')
-    assert second_edge['stmts'][3][0].count('stmt_hash') == 1
+    sentence_counts = {pair[1]: pair[0].count('stmt_hash')
+                       for pair in second_edge['stmts']}
+    assert 'MAP2K1 activates MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 activates MAPK1.'] == 1
+    assert 'MAP2K1 phosphorylates MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 phosphorylates MAPK1.'] == 3
+    assert 'MAP2K1 inhibits MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 inhibits MAPK1.'] == 1
+    assert 'MAP2K1 increases the amount of MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 increases the amount of MAPK1.'] == 1
     # Test JSONL representation
     assert len(json_lines) == 6, len(json_lines)
     for path_dict in json_lines:
