@@ -255,7 +255,7 @@ class ModelManager(object):
     def _make_path_stmts(self, stmts, merge=False):
         sentences = []
         date = strip_out_date(self.date_str, 'date')
-        if merge:
+        if merge and isinstance(stmts[0], Statement):
             groups = group_and_sort_statements(stmts, grouping_level='relation')
             for _, rel_key, group_stmts, _ in groups:
                 sentence = make_string_from_relation_key(rel_key) + '.'
