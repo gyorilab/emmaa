@@ -118,7 +118,7 @@ predate the pandemic and the model creation. This is due to the fact the
 COVID-19 model also integrates a set of older papers on coronaviruses, and some
 statements from those papers were curated earlier.
 
-.. figure:: ../_static/images/curation_types.png
+.. figure:: ../_static/images/curation_over_time.png
   :align: center
 
   *Curations over time*
