@@ -964,7 +964,7 @@ def get_paper_statements(model):
                                  trid, 'TRID')
         stmt_rows.append(stmt_row)
     if not stmt_rows:
-        if trid in raw_paper_ids:
+        if int(trid) in raw_paper_ids:
             stmt_rows = 'We did not get assembled statements from this paper'
         else:
             stmt_rows = 'We did not process this paper in this model'
