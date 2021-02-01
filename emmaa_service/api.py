@@ -930,7 +930,8 @@ def get_paper_statements(model):
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
     all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
-    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
+    all_papers = model_stats['paper_summary']['raw_paper_ids']
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
     paper_stmts = [stmt for stmt in all_stmts
                    if stmt.get_hash() in paper_hashes]
     updated_stmts = [filter_evidence(stmt, trid, 'TRID')
@@ -959,6 +960,11 @@ def get_paper_statements(model):
                                  date, None, None, cur_dict, with_evid,
                                  trid, 'TRID')
         stmt_rows.append(stmt_row)
+    if not stmt_rows:
+        if trid in raw_paper_ids:
+            stmt_rows = 'We did not get assembled statements from this paper'
+        else:
+            stmt_rows = 'We did not process this paper in this model'
     paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
 
