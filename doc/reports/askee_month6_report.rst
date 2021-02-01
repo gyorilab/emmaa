@@ -52,19 +52,18 @@ distinct ways in which our models and REST services can be used to obtain
 subsets of knowledge on COVID-19 mechanisms, and to extend them using expert
 knowledge.
 
-First, the EMMAA
-COVID-19 model can be queried in at least two ways: using a paper-oriented or
-an entity-oriented approach. In the paper-oriented case, one searches for
-elements ot the EMMAA COVID-19 model that have support from one or more
-specific publications. In the entity-oriented case, one defines a list
-of entities of interest, and queries for all model statements that involve
-one or more of those entities. The advantage of the paper-oriented approach
-is that one does not need to curate a specific entity list up front, but due
-to potential recall issues with automated reading, there is no guarantee that
-a mechanism of interest will have been extracted from any specific paper.
-In contrast, the entity-oriented approach provides more reliable coverage for
-the given set of entities while potentially, inadvertently ignoring other
-relevant mechanisms.
+First, the EMMAA COVID-19 model can be queried in at least two ways: using a
+paper-oriented or an entity-oriented approach. In the paper-oriented case, one
+searches for elements of the EMMAA COVID-19 model that have support from one or
+more specific publications. In the entity-oriented case, one defines a list of
+entities of interest, and queries for all model statements that involve one or
+more of those entities. The advantage of the paper-oriented approach is that
+one does not need to curate a specific entity list up front, but due to
+potential recall issues with automated reading, there is no guarantee that a
+mechanism of interest will have been extracted from any specific paper.  In
+contrast, the entity-oriented approach provides more reliable coverage for the
+given set of entities while potentially, inadvertently ignoring other relevant
+mechanisms.
 
 Second, the general INDRA DB can be used to query for information. The REST API
 supports both entity-oriented and paper-oriented queries here as well. The
@@ -85,18 +84,19 @@ endpoints.
 Reporting curation statistics
 -----------------------------
 
-While update and assembly of EMMAA models are automated, we manually curate
-model statements to improve model the quality of knowledge extraction and
-provide better mechanistic explanations. Previously, EMMAA dashboard allowed to
-submit and browse individual curations, but we did not have a way to view and 
-analyze curations at the model level. To address this we added a new "Curation"
-tab on EMMAA model dashboard. In this tab we show the number of curations
-submitted by individual curators for statements that are part of a given model.
-We look at the counts for individual evidences and unique assembled statements.
-This differentiation is important because each assembled statement may be supported
-by multiple evidences. In addition, curation information affects the assembly
-process - all statements that have been curated as incorrect and do not any
-evidences curated as correct are filtered out from the model.
+While the update and assembly of EMMAA models is automated, users can manually
+curate model statements to remove any incorrect extractions and provide better
+mechanistic explanations. Previously, the EMMAA dashboard allowed submitting
+and browsing individual curations, but we did not have UI support for users to
+see statistics on curations at the model level. To address this, we added a new
+"Curation" tab on the EMMAA model dashboard. In this tab we show the number of
+curations submitted by individual curators for statements that are part of a
+given model.  We display the counts for both individual evidences and unique
+assembled statements.  This differentiation is important because each assembled
+statement may be supported by multiple evidences. In addition, curation
+information affects the assembly process: all statements that have been curated
+as incorrect and do not have any evidences curated as correct are filtered out
+from the model.
 
 .. figure:: ../_static/images/curators.png
   :align: center
@@ -104,7 +104,7 @@ evidences curated as correct are filtered out from the model.
   *Curators of COVID19 EMMAA model*
 
 We also report the number of curations grouped by their type. This shows what
-errors are the most frequent and helps prioritize the further work.
+errors are the most frequent and helps prioritize further development.
 
 .. figure:: ../_static/images/curation_types.png
   :align: center
@@ -112,11 +112,11 @@ errors are the most frequent and helps prioritize the further work.
   *Curations grouped by type*
 
 Another aspect of curations we report is how the number of curated statements
-and evidence changed over time. The figure below shows the time series plot of 
-number of curations in COVID19 model. The first few points here predate the
-pandemics and the model creation. This is due to the fact the COVID19 model was 
-initially built with a set of all relevant papers that were already a part of
-INDRA database and some of them were curated earlier.
+and evidence changed over time. The figure below shows the time series plot of
+the number of curations for the COVID-19 model. The first few points here
+predate the pandemic and the model creation. This is due to the fact the
+COVID-19 model also integrates a set of older papers on coronaviruses, and some
+statements from those papers were curated earlier.
 
 .. figure:: ../_static/images/curation_types.png
   :align: center
@@ -127,39 +127,41 @@ INDRA database and some of them were curated earlier.
 Reporting paper level statistics
 --------------------------------
 
-INDRA processes thousands of publications daily. The previous EMMAA interface
-allowed browsing the evidences of assembled statements and linked out to
-original papers but had the following limitations:
+INDRA processes thousands of publications daily and different EMMAA models
+make use of different subsets of these. Previously, the EMMAA dashboard
+didn't provide a dedicated interface for examining the papers that have
+contributed to each model. In particular, some of the limitations were:
 1) It was only possible to see evidences/links to publications for statements
 that were included in the model after assembly.
-2) The evidences/links to publications were grouped by an interaction and not
+2) The evidences/links to publications were grouped by interaction and not
 by paper.
-3) It was not possible to view the papers that either produced statements
-that were filtered during assembly or did not produce statements at all.
+3) It was not possible to view the papers that produced statements
+that were filtered out during assembly or papers from which no statements were
+extracted at all.
 
-In this reporting period we added a new "Papers" tab on EMMAA model dashboard
-and a new page "statements from paper". 
+In this reporting period we added a new "Papers" tab on each EMMAA model
+page, and also created a new "statements from paper" service endpoint.
 
-On a "Papers" tab we show the changes in number of processed papers and number 
-of papers we get assembled statements from over time.
+On the "Papers" tab we show the changes in the number of processed papers and
+the number of papers we get assembled statements from over time.
 
 .. figure:: ../_static/images/papers_over_time.png
   :align: center
 
   *Number of processed papers and papers with assembled model statements over time*
 
-We also show the list of papers with the largest number of statements and the
-list of newly processed papers. 
+We also show the list of papers with the largest number of statements as well
+as the list of newly processed papers.
 
 .. figure:: ../_static/images/new_papers.png
   :align: center
 
   *Example of new processed papers table*
 
-Each paper title here is linking out to a new page that shows the model statements
-extracted from a given paper. This provides a way to explore different statements
-from the same paper. The second column in this table has an external link to
-the original publication. 
+Each paper title here links out to a new page that shows the model statements
+extracted from that given paper. This provides a way to explore statements that
+were all extracted from the same paper. The second column in this table
+provides a link to the original publication as an external resource.
 
 Integrating non-textual evidence with EMMAA models
 --------------------------------------------------
