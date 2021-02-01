@@ -98,15 +98,19 @@
   
     </div>
     <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">  
-    {% for fig_title, fig_bytes in fig_list %}
-      <br>
-      {% if fig_title %}
-      {{ fig_title }}
-      <br>
-      {% endif %}
-      <img src="data:image/jpg;base64, {{ fig_bytes }}">
-      <br>
-    {% endfor %}
+    {% if fig_list %}
+      {% for fig_title, fig_bytes in fig_list %}
+        <br>
+        {% if fig_title %}
+        {{ fig_title }}
+        <br>
+        {% endif %}
+        <img src="data:image/jpg;base64, {{ fig_bytes }}">
+        <br>
+      {% endfor %}
+    {% else %}
+      "Could not get any figures and tables for this paper"
+    {% endif %}
   {% endif %}
 
 </div>
