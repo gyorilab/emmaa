@@ -37,6 +37,7 @@ from emmaa.subscription.email_util import verify_email_signature,\
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, Query
 from emmaa.xdd import get_document_figures
+from emmaa.analyze_tests_results import _get_trid_title
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -592,24 +593,16 @@ def get_new_papers(model, model_stats, date):
     return new_papers
 
 
-def _get_trid_title_from_db(trid):
-    db = get_db('primary')
-    tc = db.select_one(db.TextContent,
-                       db.TextContent.text_ref_id == trid,
-                       db.TextContent.text_type == 'title')
-    if tc:
-        title = unpack(tc.content)
-        return title
-
-
 def _get_title(paper_id, model_stats):
     id_to_title = model_stats['paper_summary'].get('paper_titles')
     title = None
     if id_to_title:
         title = id_to_title.get(str(paper_id))
     if title is None:
-        title = _get_trid_title_from_db(paper_id)
-    return title
+        title = _get_trid_title(paper_id)
+    if title:
+        return title
+    return "Title not available"
 
 
 def _get_paper_title_tuple(paper_id, model_stats, date):
