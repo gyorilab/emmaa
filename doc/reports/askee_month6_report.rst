@@ -82,6 +82,85 @@ and process these into INDRA Statements.
 We provided pointers to the Uncharted team for invoking all of these service
 endpoints.
 
+Reporting curation statistics
+-----------------------------
+
+While update and assembly of EMMAA models are automated, we manually curate
+model statements to improve model the quality of knowledge extraction and
+provide better mechanistic explanations. Previously, EMMAA dashboard allowed to
+submit and browse individual curations, but we did not have a way to view and 
+analyze curations at the model level. To address this we added a new "Curation"
+tab on EMMAA model dashboard. In this tab we show the number of curations
+submitted by individual curators for statements that are part of a given model.
+We look at the counts for individual evidences and unique assembled statements.
+This differentiation is important because each assembled statement may be supported
+by multiple evidences. In addition, curation information affects the assembly
+process - all statements that have been curated as incorrect and do not any
+evidences curated as correct are filtered out from the model.
+
+.. figure:: ../_static/images/curators.png
+  :align: center
+
+  *Curators of COVID19 EMMAA model*
+
+We also report the number of curations grouped by their type. This shows what
+errors are the most frequent and helps prioritize the further work.
+
+.. figure:: ../_static/images/curation_types.png
+  :align: center
+
+  *Curations grouped by type*
+
+Another aspect of curations we report is how the number of curated statements
+and evidence changed over time. The figure below shows the time series plot of 
+number of curations in COVID19 model. The first few points here predate the
+pandemics and the model creation. This is due to the fact the COVID19 model was 
+initially built with a set of all relevant papers that were already a part of
+INDRA database and some of them were curated earlier.
+
+.. figure:: ../_static/images/curation_types.png
+  :align: center
+
+  *Curations over time*
+
+
+Reporting paper level statistics
+--------------------------------
+
+INDRA processes thousands of publications daily. The previous EMMAA interface
+allowed browsing the evidences of assembled statements and linked out to
+original papers but had the following limitations:
+1) It was only possible to see evidences/links to publications for statements
+that were included in the model after assembly.
+2) The evidences/links to publications were grouped by an interaction and not
+by paper.
+3) It was not possible to view the papers that either produced statements
+that were filtered during assembly or did not produce statements at all.
+
+In this reporting period we added a new "Papers" tab on EMMAA model dashboard
+and a new page "statements from paper". 
+
+On a "Papers" tab we show the changes in number of processed papers and number 
+of papers we get assembled statements from over time.
+
+.. figure:: ../_static/images/papers_over_time.png
+  :align: center
+
+  *Number of processed papers and papers with assembled model statements over time*
+
+We also show the list of papers with the largest number of statements and the
+list of newly processed papers. 
+
+.. figure:: ../_static/images/new_papers.png
+  :align: center
+
+  *Example of new processed papers table*
+
+Each paper title here is linking out to a new page that shows the model statements
+extracted from a given paper. This provides a way to explore different statements
+from the same paper. The second column in this table has an external link to
+the original publication. 
+
 Integrating non-textual evidence with EMMAA models
 --------------------------------------------------
 
