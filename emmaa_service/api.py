@@ -36,6 +36,7 @@ from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, Query
+from emmaa.xdd import get_document_figures
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -915,7 +916,7 @@ def get_paper_statements(model):
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
     display_format = request.args.get('format', 'html')
-    if paper_id_type == 'TRID':
+    if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
         db = get_db('primary')
@@ -957,6 +958,8 @@ def get_paper_statements(model):
         stmt_rows.append(stmt_row)
     paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
+
+    fig_list = get_document_figures(paper_id, paper_id_type)
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -964,7 +967,8 @@ def get_paper_statements(model):
                            table_title=table_title,
                            date=date,
                            paper_id=paper_id,
-                           paper_id_type=paper_id_type)
+                           paper_id_type=paper_id_type,
+                           fig_list=fig_list)
 
 
 @app.route('/tests/<model>')
