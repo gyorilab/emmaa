@@ -46,11 +46,11 @@ The EMMAA COVID-19 model is considerably large since it is configured to
 monitor all of the COVID-19 literature without any further restrictions on
 model scope. Consequently, for more focused (e.g., pathway-specific) studies,
 it makes sense to start with subsets of this overall knowledge, and
-demonstrating this
-type of more focused model-driven analysis is one of the goals at the upcoming
-stakeholder meeting. To prepare for this, we defined six distinct ways in which our models and
-REST services can be used to obtain subsets of knowledge on COVID-19
-mechanisms, and to extend them using expert knowledge.
+demonstrating this type of more focused model-driven analysis is one of the
+goals at the upcoming stakeholder meeting. To prepare for this, we defined six
+distinct ways in which our models and REST services can be used to obtain
+subsets of knowledge on COVID-19 mechanisms, and to extend them using expert
+knowledge.
 
 First, the EMMAA
 COVID-19 model can be queried in at least two ways: using a paper-oriented or
@@ -70,8 +70,8 @@ Second, the general INDRA DB can be used to query for information. The REST API
 supports both entity-oriented and paper-oriented queries here as well. The
 main difference compared to querying the EMMAA model is that the INDRA DB
 results are unfiltered (they can statements that have been marked as incorrect,
- ungrounded entities, statements out of scope, etc.) and may require
- post-processing to get good quality results for a focused modeling study.
+ungrounded entities, statements out of scope, etc.) and may require
+post-processing to get good quality results for a focused modeling study.
 
 Finally, we provide features for experts to build models from scratch or
 extend automatically initialized models. For instance, the INDRA API provides an
@@ -81,3 +81,40 @@ and process these into INDRA Statements.
 
 We provided pointers to the Uncharted team for invoking all of these service
 endpoints.
+
+Integrating non-textual evidence with EMMAA models
+--------------------------------------------------
+
+An important goal in extending EMMAA is to tie the causal mechanisms models are
+built of to evidence not only in text but also figures and tables. The xDD
+platform developed at UW provides multiple entry points for querying figures
+and tables. One approach is to search by entities (e.g., "ACE2, TMPRSS2") to
+find relevant figures from multiple papers relevant for these entities.
+Another approach is to search for any figures and tables available for a given
+paper.
+
+As a proof of principle or integration, we created a client for the second
+query approach (i.e., find figures and tables by paper identifier) in EMMAA.
+When displaying the set of statements in an EMMAA model from a given paper,
+the "Statements" tab allows examining the individual EMMAA statements with
+their supporting (textual) evidence. A new "Figures" tab contains relevant
+figures fetched from xDD that can provide additional context and evidence
+for the model statements.
+
+.. image:: ../_static/images/xdd_figure_integration.png
+    :scale: 75%
+
+The figure above shows an initial proof of principle for the paper
+"Investigating Ketone Bodies as Immunometabolic Countermeasures against
+Respiratory Viral Infections". On the left, the Statements tab highlights
+the statement "NFkappaB binds HCAR2" and an evidence sentence describing
+"...BHB interaction with HCAR2 and Nf-kB...". On the right, the Figures
+tab shows a directly relevant figure of the interaction between NF-kappaB,
+HCAR2, and BHB. The visual nature of the figure clearly complements the
+textual evidence here and may provide users with a richer overall
+understanding of mechanisms of interest.
+
+This feature is not yet deployed on the main EMMAA dashboard. We are continuing
+to work on the modes in which figure/table information is integrated with EMMAA
+and are exploring the possibility of making use of entity-oriented queries to
+connect figures/tables to EMMAA models.
