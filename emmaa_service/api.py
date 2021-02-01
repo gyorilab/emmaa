@@ -930,7 +930,7 @@ def get_paper_statements(model):
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
     all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
-    all_papers = model_stats['paper_summary']['raw_paper_ids']
+    raw_paper_ids = model_stats['paper_summary']['raw_paper_ids']
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
     paper_stmts = [stmt for stmt in all_stmts
                    if stmt.get_hash() in paper_hashes]
