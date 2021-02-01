@@ -928,16 +928,19 @@ def get_paper_statements(model):
             trid = str(trids[0])
         else:
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
-    all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
     raw_paper_ids = model_stats['paper_summary']['raw_paper_ids']
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
-    paper_stmts = [stmt for stmt in all_stmts
-                   if stmt.get_hash() in paper_hashes]
-    updated_stmts = [filter_evidence(stmt, trid, 'TRID')
-                     for stmt in paper_stmts]
-    updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
-                           reverse=True)
+    if paper_hashes:
+        all_stmts = _load_stmts_from_cache(model, date)
+        paper_stmts = [stmt for stmt in all_stmts
+                       if stmt.get_hash() in paper_hashes]
+        updated_stmts = [filter_evidence(stmt, trid, 'TRID')
+                         for stmt in paper_stmts]
+        updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
+                               reverse=True)
+    else:
+        updated_stmts = []
     if display_format == 'json':
         resp = {'statements': stmts_to_json(updated_stmts)}
         return resp
