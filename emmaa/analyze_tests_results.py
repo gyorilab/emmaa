@@ -1193,7 +1193,7 @@ def _get_trid_title(trid):
         if title:
             return title
     if 'DOI' in ref_dict:
-        title = _get_doi_title(doi)
+        title = _get_doi_title(ref_dict['DOI'])
         if title:
             return title
 
