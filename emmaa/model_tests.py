@@ -21,7 +21,7 @@ from indra.sources.indra_db_rest.api import get_statement_queries
 from indra.statements import Statement, Agent, Concept, Event, \
     stmts_to_json
 from indra.util.statement_presentation import group_and_sort_statements, \
-    make_string_from_sort_key
+    make_string_from_relation_key
 from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements, \
@@ -256,10 +256,11 @@ class ModelManager(object):
         sentences = []
         date = strip_out_date(self.date_str, 'date')
         if merge and isinstance(stmts[0], Statement):
-            groups = group_and_sort_statements(stmts)
-            for key, verb, group_stmts in groups:
-                sentence = make_string_from_sort_key(key, verb) + '.'
-                stmt_hashes = [gr_st.get_hash() for gr_st in group_stmts]
+            groups = group_and_sort_statements(stmts, grouping_level='relation')
+            for _, rel_key, group_stmts, _ in groups:
+                sentence = make_string_from_relation_key(rel_key) + '.'
+                stmt_hashes = [gr_st.get_hash()
+                               for _, _, gr_st, _ in group_stmts]
                 url_param = parse.urlencode(
                     {'stmt_hash': stmt_hashes, 'source': 'model_statement',
                      'model': self.model.name, 'date': date}, doseq=True)
