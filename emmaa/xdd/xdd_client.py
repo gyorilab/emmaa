@@ -1,8 +1,10 @@
 import os
 import requests
+import logging
 from indra_db import get_db
 
 
+logger = logging.getLogger()
 api_key = os.environ.get('XDD_API_KEY')
 doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
 obj_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/object/'
@@ -12,6 +14,9 @@ def get_document_objects(doi):
     res = requests.get(doc_url, params={'doi': doi, 'api_key': api_key})
     rj = res.json()
     if 'objects' not in rj:
+        logger.warning(f'Could not get objects for {doi}')
+        if 'error' in rj:
+            logger.warning(rj['error'])
         return
     objects = [
         obj for obj in rj['objects'] if obj['cls'] in ['Figure', 'Table']]
@@ -30,10 +35,24 @@ def get_figure(obj_dict):
 
 
 def get_document_figures(paper_id, paper_id_type):
+    paper_id_type = paper_id_type.upper()
     if paper_id_type == 'DOI':
         doi = paper_id
-
+    else:
+        db = get_db('primary')
+        if paper_id_type == 'TRID':
+            tr = db.select_one(db.TextRef, db.TextRef.id == paper_id)
+        elif paper_id_type == 'PMID':
+            tr = db.select_one(db.TextRef, db.TextRef.pmid == paper_id)
+        elif paper_id_type == 'PMCID':
+            tr = db.select_one(db.TextRef, db.TextRef.pmcid == paper_id)
+        ref_dict = tr.get_ref_dict()
+        doi = ref_dict.get('DOI')
+    if not doi:
+        return []
     objects = get_document_objects(doi)
+    if not objects:
+        return []
     fig_list = []
     for obj in objects:
         fig_list.append(get_figure(obj))
