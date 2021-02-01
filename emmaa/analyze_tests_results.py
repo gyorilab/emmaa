@@ -1181,7 +1181,7 @@ def _get_trid_title(trid):
     if tc:
         title = unpack(tc.content)
         return title
-    tr = db.select_all(db.TextRef, db.TextRef.id == trid)
+    tr = db.select_one(db.TextRef, db.TextRef.id == trid)
     ref_dict = tr.get_ref_dict()
     if 'PMID' in ref_dict:
         pmid = ref_dict['PMID']
