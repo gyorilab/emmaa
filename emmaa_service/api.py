@@ -592,12 +592,23 @@ def get_new_papers(model, model_stats, date):
     return new_papers
 
 
+def _get_trid_title_from_db(trid):
+    db = get_db('primary')
+    tc = db.select_one(db.TextContent,
+                       db.TextContent.text_ref_id == trid,
+                       db.TextContent.text_type == 'title')
+    if tc:
+        title = unpack(tc.content)
+        return title
+
+
 def _get_title(paper_id, model_stats):
     id_to_title = model_stats['paper_summary'].get('paper_titles')
+    title = None
     if id_to_title:
-        title = id_to_title.get(str(paper_id), 'Title not available')
-    else:
-        title = 'Title not available'
+        title = id_to_title.get(str(paper_id))
+    if title is None:
+        title = _get_trid_title_from_db(paper_id)
     return title
 
 
@@ -606,19 +617,11 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
     stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
     stmt_hashes = [
         str(st_hash) for st_hash in stmts_by_paper_id.get(str(paper_id), [])]
-    if not stmt_hashes:
-        url = None
-    else:
-        model = model_stats['model_summary']['model_name']
-        url_param = parse.urlencode(
-            {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
-        url = f'/statements_from_paper/{model}?{url_param}'
-    if url:
-        paper_tuple = (url, title, 'Click to see statements from this paper')
-    # DB url for statements from paper will be available soon
-    # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
-    else:
-        paper_tuple = ('', title, '')
+    model = model_stats['model_summary']['model_name']
+    url_param = parse.urlencode(
+        {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
+    url = f'/statements_from_paper/{model}?{url_param}'
+    paper_tuple = (url, title, 'Click to see statements from this paper')
     return paper_tuple
 
 
