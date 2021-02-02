@@ -24,7 +24,8 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
-from indra_db.client.principal.curation import get_curations, submit_curation
+from indra.sources.indra_db_rest import submit_curation
+from indra_db.client.principal.curation import get_curations
 
 from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
@@ -1721,7 +1722,6 @@ def submit_curation_endpoint(hash_val, **kwargs):
             res_dict = {"result": "failure",
                         "reason": "POST with API key requires a user email."}
             return jsonify(res_dict), 400
-
     logger.info("Adding curation for statement %s." % hash_val)
     ev_hash = request.json.get('ev_hash')
     source_api = request.json.pop('source', 'EMMAA')
@@ -1732,11 +1732,11 @@ def submit_curation_endpoint(hash_val, **kwargs):
     if not is_test:
         assert tag != 'test'
         try:
-            dbid = submit_curation(hash_val, tag, email, ip, text, ev_hash,
-                                   source_api)
+            resp = submit_curation(hash_val, tag, email, text,
+                                   source=source_api, ev_hash=ev_hash)
         except BadHashError as e:
             abort(Response("Invalid hash: %s." % e.mk_hash, 400))
-        res = {'result': 'success', 'ref': {'id': dbid}}
+        res = {'result': 'success', 'ref': None}
     else:
         res = {'result': 'test passed', 'ref': None}
     logger.info("Got result: %s" % str(res))
