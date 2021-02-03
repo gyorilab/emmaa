@@ -3,7 +3,6 @@ import json
 import boto3
 import logging
 import argparse
-import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -23,7 +22,7 @@ from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
 
-from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
+from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, load_json_from_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
