@@ -2,7 +2,7 @@ sphinx
 sphinx_rtd_theme
 mock
 boto3
-indra
+git+https://github.com/sorgerlab/indra.git
 jsonpickle
 kappy
 fnvhash
