@@ -1574,6 +1574,47 @@ def get_demos_page():
                            user_email=user_email)
 
 
+@app.route('/models', methods=['GET', 'POST'])
+def get_models():
+    model_meta_data = _get_model_meta_data()
+    models = [model for (model, config) in model_meta_data]
+    return {'models': models}
+
+
+@app.route('/model_info/<model>', methods=['GET', 'POST'])
+def get_model_info(model):
+    config = get_model_config(model)
+    info = {'name': model,
+            'human_readable_name': config.get('human_readable_name'),
+            'description': config.get('description')}
+    if 'ndex' in config:
+        info['ndex'] = config['ndex'].get('network')
+    if 'twitter_link' in config:
+        info['twitter'] = config['twitter_link']
+    return info
+
+
+@app.route('/tests/<model>', methods=['GET', 'POST'])
+def get_tests(model):
+    tests = _get_test_corpora(model)
+    return {'test_corpora': list(tests)}
+
+
+@app.route('/tests_info/<test_corpus>', methods=['GET', 'POST'])
+def get_tests_info(test_corpus):
+    model_meta_data = _get_model_meta_data()
+    for (model, config) in model_meta_data:
+        tests = _get_test_corpora(model)
+        if test_corpus in tests:
+            tested_model = model
+            break
+    test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus, None)
+    info = test_stats['test_round_summary'].get('test_data')
+    if not info:
+        info = {'error': f'Test info for {test_corpus} is not available'}
+    return info
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
     parser.add_argument('--host', default='0.0.0.0')
