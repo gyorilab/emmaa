@@ -1,33 +1,48 @@
 EMMAA Models Page
 =================
 
-The models page contains detailed information about the selected model in two
-tabs: *Model* and *Tests*. At the top of the page the selected model is
-shown in a drop-down menu. Another model can also be selected and loaded from
-the menu.
+The models page contains detailed information about the selected model in four
+tabs: *Model*, *Tests*, *Papers*, and *Curation*. At the top of the page the
+selected model is shown in a drop-down menu. Another model can also be selected
+and loaded from the menu.
 
-Link to sources
----------------
+Link to statement details
+-------------------------
 
-To see further details regarding a mechanism, links to content databases are
-generated for all statements where possible.
+To see further details regarding a mechanism, links to a separate page are
+generated for all statements where possible. To read more about that page, see:
+:ref:`statement_evidence`.
 
 .. figure:: ../_static/images/linkout.png
   :align: center
   :figwidth: 75 %
 
-  *Link to content database*
+  *Link to statement evidence page*
 
 Model Tab
 ---------
 
-The model tab contains model info with the date the model was last updated and
-links to the NDEx website where a network view of the model can be examined.
+The model tab contains model info with the model description, the date the 
+model was last updated and the date when the displayed state of the model was 
+generated. By default the latest available state of the model is displayed but 
+the user has an option to explore earlier states by clicking on earlier time
+point on any of the time plots across the tabs 
+(for more details see: :ref:`dashboard_models_load_previous`).
+Links to the NDEx website where a network view of the
+model can be examined and to the Twitter account if available are provided.
+It is possible to download the models in various formats and the corresponding
+buttons are placed next.
+
 The page also displays properties of the current state of the model, namely,
-the distribution of statement types, the top 10 agents in the model, and the
-statements with the most support from various knowledge bases. Further, the
-page shows how the number of statements in the model has evolved over time,
-and which statements were added to the model during the most recent update.
+the distribution of statement types, the top 10 agents in the model, the 
+distribution of knowledge sources (reading systems and databases) of model
+statements and the statements with the most support from various knowledge bases.
+The table with most supported statements also has a button "All statements"
+clicking on which a user can be redirected to a page showing all statements in
+the model: :ref:`all_statements`.
+Further, the page shows how the number of statements in the model has evolved
+over time, and which statements were added to the model during the most recent
+update.
 
 .. figure:: ../_static/images/aml_model_tab.png
   :align: center
@@ -49,8 +64,8 @@ will display all available test corpora for the current model. Clicking
   :align: center
   :figwidth: 100 %
 
-  *The results from different test corpora can be loaded. Here "Large Corpus
-  Tests", "Rasmachine Tests" and "Skcm test" are available.*
+  *The results from different test corpora can be loaded. Here "Rasmodel Tests",
+  "Skcm tests", "Rasmachine Tests", and "Large Corpus Tests" are available.*
 
 The tests tab contains two related plots: one showing the evolution over time
 of the percentage of applicable tests that passed, and another showing the
@@ -104,6 +119,71 @@ status, linking to detailed test results page.
   *Part of the list showing all applied tests with a status indicator for
   passed/failed*
 
+.. _dashboard_models_papers_tab:
+
+Papers Tab
+----------
+
+Papers tab shows statistics for both processed papers and papers that support
+assembled model statements. At the top of the papers tab the time series plot
+shows the changes in the counts of both paper groups over time.
+
+.. figure:: ../_static/images/papers_over_time.png
+  :align: center
+  :figwidth: 100 %
+
+  *Number of processed papers and papers with assembled model statements over time*
+
+Further down, papers with the largest number of assembled statements are shown.
+The statements extracted for each paper can be viewed by clicking on a paper
+title (see: :ref: `paper_page`).
+
+Finally, a list of papers processed after the previos update is displayed. The
+table is sorted first by the number of assembled statements and then by the 
+number of raw statements extracted from the paper. One or both of these numbers
+can be zero. Zero assembled statements with a positive number of raw statements
+means that the raw statements were filtered from the model during assembly
+process. Two zeros mean that the paper was processed but no statements were
+extracted from it. The second column in this table provides a link to the
+original publication as an external resource.
+
+.. figure:: ../_static/images/new_papers.png
+  :align: center
+  :figwidth: 100 %
+
+  *Example of new processed papers table*
+
+.. _dashboard_models_curation_tab:
+
+Curation Tab
+------------
+
+Curation tab demonstates statistics related to curations of the statements
+that are part of the statements. At the top of the tab two barplots are placed
+showing the counts of evidences and assembled statements curated by individual
+curators.  
+
+.. figure:: ../_static/images/curators.png
+  :align: center
+  :figwidth: 100 %
+  *Counts of evidences and statements curated by individual curators*
+
+The next plot shows the number of curations grouped by type.
+
+.. figure:: ../_static/images/curation_types.png
+  :align: center
+  :figwidth: 100 %
+
+  *Curations grouped by type*
+
+Finally, the number of curated statements and evidences over time is shown.
+
+.. figure:: ../_static/images/curation_over_time.png
+  :align: center
+  :figwidth: 100 %
+
+  *Curations over time*
+
 .. _dashboard_models_load_previous:
 
 Load Previous State of Model
@@ -111,7 +191,7 @@ Load Previous State of Model
 
 To view the state of the selected model together with the test results for a
 particualar date, click on any data point for the desired date in any of the
-time series shown on either the Model tab or the Tests tab.
+time series shown on either the Model tab, the Tests tab or the Papers tab.
 
 .. figure:: ../_static/images/time_machine_selection_cropped.png
   :align: center
