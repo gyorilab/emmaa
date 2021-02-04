@@ -136,7 +136,7 @@ shows the changes in the counts of both paper groups over time.
 
 Further down, papers with the largest number of assembled statements are shown.
 The statements extracted for each paper can be viewed by clicking on a paper
-title (see: :ref: `paper_page`).
+title (see: :ref:`paper_page`).
 
 Finally, a list of papers processed after the previos update is displayed. The
 table is sorted first by the number of assembled statements and then by the 
@@ -166,6 +166,7 @@ curators.
 .. figure:: ../_static/images/curators.png
   :align: center
   :figwidth: 100 %
+  
   *Counts of evidences and statements curated by individual curators*
 
 The next plot shows the number of curations grouped by type.
