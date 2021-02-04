@@ -1623,7 +1623,7 @@ def get_model_info(model):
     return info
 
 
-@app.route('/tests/<model>', methods=['GET', 'POST'])
+@app.route('/test_corpora/<model>', methods=['GET', 'POST'])
 def get_tests(model):
     """Get a list of available test corpora for model."""
     tests = _get_test_corpora(model)
