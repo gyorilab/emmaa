@@ -523,12 +523,15 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     };
 
     let maxVal = evCurDate[evCurDate.length - 1];
-    let interval = Math.floor(maxVal / 10);
-    var curTicks = [];
-    for (var i = 0; i <= maxVal; i+=interval) {
-      curTicks.push(i);
+    if (maxVal > 10) {
+      let interval = Math.floor(maxVal / 10);
+      var curTicks = [];
+      for (var i = 0; i <= maxVal; i+=interval) {
+        curTicks.push(i);
+      }  
+    } else {
+      var curTicks = [maxVal];
     }  
-
     var curCountChart = generateLineArea(curTime, curCountDataParams, '', curTicks, format='%Y-%m-%d');
   }
 
