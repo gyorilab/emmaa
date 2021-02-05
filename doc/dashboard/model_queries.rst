@@ -4,8 +4,8 @@ EMMAA Model Queries
 ===================
 The Queries page can be accessed by clicking the "Queries" link at the top
 of the Dashboard website. The page contains the forms to submit queries and
-results of queries in two tabs *Static* and *Dynamic* corresponding to two
-currently supported query types.
+results of queries in three tabs *Static*, *Dynamic*, and *Open Search* 
+corresponding to three currently supported query types.
 
 Static Queries
 --------------
@@ -89,6 +89,53 @@ of the observable's time cours during the simulation.
   :figwidth: 100 %
 
   *The above query resolved, showing the result per model.*
+
+
+.. _dashboard_open_query:
+
+Open Search Queries
+-------------------
+
+This tab allows submitting and viewing the results of open search queries
+that involve finding mechanistic paths upstream or downstream of an entity of
+interest. Similar to static queries, open search queries are run against
+four model types: PySB, PyBEL, signed graph, and unsigned graph.
+
+Submitting a Query
+~~~~~~~~~~~~~~~~~~
+
+The model queries page can answer direct queries about one or more models.
+An open search query consists of a statement type, an agent (entity), and 
+an agent's role (subject for downstream search and object for upstream search).
+Optionally, a user can also limit the search results to only include paths to
+or from genes/proteins, small molecules, or biological processes.
+Together with the query, at least one model needs to be selected for the query
+submission to be valid.
+
+.. figure:: ../_static/images/open_query.png
+  :align: center
+  :figwidth: 100 %
+
+  *The query ready to be submitted that asks what small molecules inhibit
+  ACE2 in Covid-19 model*
+
+
+If the query is badly formatted or is missing information, an error will be
+shown stating the type of error.
+
+Viewing the results
+~~~~~~~~~~~~~~~~~~~
+
+The query is received by the query service which returns a response in a
+format similar to the result of static queries.
+
+.. figure:: ../_static/images/open_query_result.png
+  :align: center
+  :figwidth: 100 %
+
+  *The above query resolved, showing the result per model and model type.
+  Detailed results can be viewed by clicking on a green/red mark. Grey circles
+  mean that these model types are not available for a selected model.*
 
 Waiting for results
 -------------------
