@@ -15,12 +15,12 @@ different sources can be browsed and curated.
 
 At the top of the table, the statement itself is presented followed by a list
 of sentences supporting this statement. There are several badges that represent
-additional information about the statement. Blue badge with a flag in the example
-above shows have many paths this statement is a part of. Green or red badge with
+additional information about the statement. The blue badge with a flag in the example
+above shows have many paths this statement is a part of. A green or a red badge with
 a pencil shows how many times this statement was curated as correct or incorrect
-respectively. Grey badge shows the number of loaded evidence and the total
-number of evidences supporting this statement. Clicking on JSON badge opens a
-new page containing JSON representation of the statement. For each evidence the
+respectively. The grey badge shows the number of loaded evidence and the total
+number of evidences supporting this statement. Clicking on the JSON badge opens a
+new page containing the JSON representation of the statement. For each evidence the
 knowledge source and external link to the publication is given.
-Clicking at the pencil badge to the left of the evidence, a user can curate
+Clicking on the pencil badge to the left of the evidence, a user can curate
 this evidence.

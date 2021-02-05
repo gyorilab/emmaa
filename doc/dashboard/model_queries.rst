@@ -96,9 +96,9 @@ of the observable's time cours during the simulation.
 Open Search Queries
 -------------------
 
-This tab allows to submit queries and view the results for open search queries
-that involve finding mechanistic paths upstream or downstream of entity of
-interest. Similarly to static queries, open search queries are run against
+This tab allows submitting and viewing the results of open search queries
+that involve finding mechanistic paths upstream or downstream of an entity of
+interest. Similar to static queries, open search queries are run against
 four model types: PySB, PyBEL, signed graph, and unsigned graph.
 
 Submitting a Query
@@ -120,14 +120,14 @@ submission to be valid.
   ACE2 in Covid-19 model*
 
 
-If the query is badly formatted or missing information, an error will be
+If the query is badly formatted or is missing information, an error will be
 shown stating the type of error.
 
 Viewing the results
 ~~~~~~~~~~~~~~~~~~~
 
-The query will be received by the query service and return a response which has
-the format similar to the result of static queries.
+The query is received by the query service which returns a response in a
+format similar to the result of static queries.
 
 .. figure:: ../_static/images/open_query_result.png
   :align: center

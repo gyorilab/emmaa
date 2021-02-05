@@ -6,14 +6,14 @@ The EMMAA Dashboard is accessible at
 `http://emmaa.indra.bio <http://emmaa.indra.bio>`_.
 
 The EMMAA Dashboard is the main entrypoint for users to interact
-with models. Each card on a dashboard represents a model. Currently, users can
+with models. Each card on the dashboard represents a model. Currently, users can
 browse and link out to interactive, searchable network views of multiple
 disease and pathways models, as well as details of
 the latest tests applied to the models. The user can also navigate to a
 queries page where queries about the models can be answered. Users are able
 to sign up for specific notifications about one or more automatically
 built, tested and analyzed models. Some models also have a Twitter account and
-a link to it is provided on the dashboard if available.
+a link to it is provided on the dashboard if available
 
 
 .. image:: ../_static/images/dashboard_top.png

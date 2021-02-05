@@ -25,8 +25,8 @@ Model Tab
 The model tab contains model info with the model description, the date the 
 model was last updated and the date when the displayed state of the model was 
 generated. By default the latest available state of the model is displayed but 
-the user has an option to explore earlier states by clicking on earlier time
-point on any of the time plots across the tabs 
+the user has an option to explore earlier states by clicking on an earlier time
+point on any of the time plots across the tabs
 (for more details see: :ref:`dashboard_models_load_previous`).
 Links to the NDEx website where a network view of the
 model can be examined and to the Twitter account if available are provided.
@@ -124,8 +124,8 @@ status, linking to detailed test results page.
 Papers Tab
 ----------
 
-Papers tab shows statistics for both processed papers and papers that support
-assembled model statements. At the top of the papers tab the time series plot
+The Papers tab shows statistics for both processed papers and papers that support
+assembled model statements. At the top of the Papers tab the time series plot
 shows the changes in the counts of both paper groups over time.
 
 .. figure:: ../_static/images/papers_over_time.png
@@ -142,7 +142,7 @@ Finally, a list of papers processed after the previos update is displayed. The
 table is sorted first by the number of assembled statements and then by the 
 number of raw statements extracted from the paper. One or both of these numbers
 can be zero. Zero assembled statements with a positive number of raw statements
-means that the raw statements were filtered from the model during assembly
+means that the raw statements were filtered from the model during the assembly
 process. Two zeros mean that the paper was processed but no statements were
 extracted from it. The second column in this table provides a link to the
 original publication as an external resource.
@@ -158,9 +158,9 @@ original publication as an external resource.
 Curation Tab
 ------------
 
-Curation tab demonstates statistics related to curations of the statements
-that are part of the statements. At the top of the tab two barplots are placed
-showing the counts of evidences and assembled statements curated by individual
+The Curation tab summarizes statistics related to curations for statements
+that are part of the model. At the top of the tab two barplots
+show the counts of evidences and assembled statements curated by individual
 curators.  
 
 .. figure:: ../_static/images/curators.png
