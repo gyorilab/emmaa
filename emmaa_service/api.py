@@ -3,7 +3,6 @@ import json
 import boto3
 import logging
 import argparse
-import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -23,7 +22,7 @@ from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
 
-from emmaa.util import find_latest_s3_file, strip_out_date, does_exist, \
+from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, load_json_from_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
@@ -201,7 +200,7 @@ def _load_model_stats_from_cache(model, date):
     return model_stats
 
 
-def _load_test_stats_from_cache(model, test_corpus, date):
+def _load_test_stats_from_cache(model, test_corpus, date=None):
     available_date, test_stats, file_key = test_stats_cache.get(
         (model, test_corpus), (None, None, None))
     if test_stats and date and available_date == date:
@@ -645,6 +644,7 @@ def get_home():
 @app.route('/dashboard/<model>')
 @jwt_optional
 def get_model_dashboard(model):
+    """Render model dashboard page."""
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
@@ -804,6 +804,21 @@ def get_model_dashboard(model):
 
 @app.route('/statements_from_paper/<model>', methods=['GET', 'POST'])
 def get_paper_statements(model):
+    """Return statements per paper as JSON or HTML page.
+
+    Parameters
+    ----------
+    model : str
+        A name of a model to get statements from.
+    date : str
+        Date in the format "YYYY-MM-DD" to load the model state.
+    paper_id : str
+        ID of a paper to get statements from.
+    paper_id_type : str
+        Type of paper ID (e.g. TRID, PMID, PMCID, DOI).
+    format : str
+        Format to return the result as ('json' or 'html').
+    """
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
@@ -862,6 +877,7 @@ def get_paper_statements(model):
 
 @app.route('/tests/<model>')
 def get_model_tests_page(model):
+    """Render page displaying results of individual test."""
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
     test_corpus = request.args.get('test_corpus')
@@ -971,6 +987,7 @@ def get_subscribed_queries(query_type, user_email=None):
 @app.route('/query')
 @jwt_optional
 def get_query_page():
+    """Render queries page."""
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
     tab = request.args.get('tab', 'model')
@@ -1023,6 +1040,8 @@ def get_query_page():
 
 @app.route('/evidence')
 def get_statement_evidence_page():
+    """Render page displaying evidence for statement or return statement JSON.
+    """
     stmt_hashes = request.args.getlist('stmt_hash')
     source = request.args.get('source')
     model = request.args.get('model')
@@ -1099,6 +1118,7 @@ def get_statement_evidence_page():
 
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
+    """Render page with all statements for the model."""
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
@@ -1188,6 +1208,7 @@ def get_all_statements_page(model):
 
 @app.route('/query/<model>')
 def get_query_tests_page(model):
+    """Render page displaying results of individual query."""
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
     order = int(request.args.get('order', 1))
@@ -1232,6 +1253,7 @@ def get_query_tests_page(model):
 @app.route('/query/submit', methods=['POST'])
 @jwt_optional
 def process_query():
+    """Get result for a query."""
     # Print inputs.
     logger.info('Got model query')
     logger.info("Args -----------")
@@ -1402,6 +1424,7 @@ def email_unsubscribe_post():
 
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
+    """Get model statement JSON by hash."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
@@ -1420,6 +1443,7 @@ def get_statement_by_hash_model(model, date, hash_val):
 
 @app.route('/tests/from_hash/<test_corpus>/<hash_val>', methods=['GET'])
 def get_tests_by_hash(test_corpus, hash_val):
+    """Get test statement JSON by hash."""
     tests = _load_tests_from_cache(test_corpus)
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
@@ -1439,6 +1463,7 @@ def get_tests_by_hash(test_corpus, hash_val):
 @app.route('/statements/from_paper/<model>/<paper_id>/<paper_id_type>/'
            '<date>/<hash_val>', methods=['GET'])
 def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
+    """Get model statement by hash and paper ID."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
@@ -1502,6 +1527,7 @@ def list_curations(stmt_hash, src_hash):
 
 @app.route('/latest_statements/<model>', methods=['GET'])
 def load_latest_statements(model):
+    """Return model latest statements and link to S3 latest statements file."""
     if does_exist(EMMAA_BUCKET_NAME,
                   f'assembled/{model}/latest_statements_{model}'):
         fkey = f'assembled/{model}/latest_statements_{model}.json'
@@ -1521,6 +1547,7 @@ def load_latest_statements(model):
 
 @app.route('/latest_statements_url/<model>', methods=['GET'])
 def get_latest_statements_url(model):
+    """Return a link to model latest statements file on S3."""
     if does_exist(EMMAA_BUCKET_NAME,
                   f'assembled/{model}/latest_statements_{model}'):
         fkey = f'assembled/{model}/latest_statements_{model}.json'
@@ -1572,6 +1599,51 @@ def get_demos_page():
     user_email = user.email if user else ""
     return render_template('demos_template.html', link_list=link_list,
                            user_email=user_email)
+
+
+@app.route('/models', methods=['GET', 'POST'])
+def get_models():
+    """Get a list of all available models."""
+    model_meta_data = _get_model_meta_data()
+    models = [model for (model, config) in model_meta_data]
+    return {'models': models}
+
+
+@app.route('/model_info/<model>', methods=['GET', 'POST'])
+def get_model_info(model):
+    """Get metadata for model."""
+    config = get_model_config(model)
+    info = {'name': model,
+            'human_readable_name': config.get('human_readable_name'),
+            'description': config.get('description')}
+    if 'ndex' in config:
+        info['ndex'] = config['ndex'].get('network')
+    if 'twitter_link' in config:
+        info['twitter'] = config['twitter_link']
+    return info
+
+
+@app.route('/test_corpora/<model>', methods=['GET', 'POST'])
+def get_tests(model):
+    """Get a list of available test corpora for model."""
+    tests = _get_test_corpora(model)
+    return {'test_corpora': list(tests)}
+
+
+@app.route('/tests_info/<test_corpus>', methods=['GET', 'POST'])
+def get_tests_info(test_corpus):
+    """Get test corpus metadata."""
+    model_meta_data = _get_model_meta_data()
+    for (model, config) in model_meta_data:
+        tests = _get_test_corpora(model)
+        if test_corpus in tests:
+            tested_model = model
+            break
+    test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
+    info = test_stats['test_round_summary'].get('test_data')
+    if not info:
+        info = {'error': f'Test info for {test_corpus} is not available'}
+    return info
 
 
 if __name__ == '__main__':
