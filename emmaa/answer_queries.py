@@ -64,7 +64,7 @@ class QueryManager(object):
                 mm = self.get_model_manager(model_name)
                 response_list = mm.answer_query(
                     query, use_kappa=use_kappa, bucket=bucket)
-                for (mc_type, response) in response_list:
+                for (mc_type, response, paths) in response_list:
                     results_to_store.append((query, mc_type, response))
                 self.db.put_results(model_name, results_to_store)
         return {query_type: query_hashes}
