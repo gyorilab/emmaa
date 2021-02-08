@@ -4,17 +4,29 @@ import json
 import gzip
 import pandas
 import networkx
-from collections import defaultdict
 from indra.databases import uniprot_client
 from indra.ontology.bio import bio_ontology
 from indra.resources import get_resource_path
 
 
 def is_human_protein(bio_ontology, node):
-    if bio_ontology.get_ns(node) in {'HGNC', 'FPLX'}:
+    if bio_ontology.get_ns(node) == 'HGNC':
         return True
     elif bio_ontology.get_ns(node) == 'UP' and \
             uniprot_client.is_human(bio_ontology.get_id(node)):
+        return True
+    return False
+
+
+def is_protein_family(bio_ontology, node):
+    if bio_ontology.get_ns(node) == 'FPLX':
+        return True
+    return False
+
+
+def has_fplx_parents(bio_ontology, node):
+    parents = bio_ontology.get_parents(*bio_ontology.get_ns_id(node))
+    if any(p[0] == 'FPLX' for p in parents):
         return True
     return False
 
@@ -38,7 +50,21 @@ def add_protein_parents(bio_ontology):
         edges_to_add.append((category_label, human_root, {'type': 'isa'}))
 
     for node in bio_ontology.nodes():
-        if is_human_protein(bio_ontology, node):
+        if is_protein_family(bio_ontology, node):
+            if has_fplx_parents(bio_ontology, node):
+                continue
+            else:
+                categoriesx = get_categories(node)
+                if not categoriesx:
+                    edges_to_add.append((node, human_root, {'type': 'isa'}))
+                else:
+                    for category in categoriesx:
+                        edges_to_add.append((node, category_map[category],
+                                             {'type': 'isa'}))
+
+        elif is_human_protein(bio_ontology, node):
+            if has_fplx_parents(bio_ontology, node):
+                continue
             category_node = get_category(node)
             if not category_node:
                 edges_to_add.append((node, human_root, {'type': 'isa'}))
@@ -56,6 +82,15 @@ def get_category(node):
         category_node = category_map[category]
         return category_node
     return None
+
+
+def get_categories(fplx_node):
+    children = bio_ontology.get_children(*bio_ontology.get_ns_id(fplx_node),
+                                         ns_filter='HGNC')
+    children_names = {bio_ontology.get_name(*ch) for ch in children}
+    child_categories = {categories[name] for name in children_names
+                        if name in categories}
+    return child_categories
 
 
 def _process_categories():
