@@ -1041,13 +1041,17 @@ def get_query_page():
 @app.route('/run_query', methods=['POST'])
 def run_query():
     qj_str = request.args.get('query_json')
-    print(qj_str)
     qj = json.loads(qj_str, encoding='utf8')
-    models = request.args.getlist('models')
+    model = request.args.get('model')
     query = Query._from_json(qj)
-    qh_dict = qm.answer_immediate_query('', None, query, models, False)
-    for qtype, query_hashes in qh_dict.items():
-        results = qm.retrieve_results_from_hashes(query_hashes, qtype)
+    mm = load_model_manager_from_cache(model)
+    full_results = mm.answer_query(query)
+    results = {}
+    for mc_type, resp, paths in full_results:
+        if mc_type:
+            results[mc_type] = paths
+        else:
+            results['all_types'] = paths
     return results
 
 
