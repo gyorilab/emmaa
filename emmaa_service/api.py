@@ -32,7 +32,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery
+    DynamicProperty, OpenSearchQuery, Query
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -1036,6 +1036,19 @@ def get_query_page():
                            tab=tab,
                            preselected_val=preselected_val,
                            preselected_name=preselected_name)
+
+
+@app.route('/run_query', methods=['POST'])
+def run_query():
+    qj_str = request.args.get('query_json')
+    print(qj_str)
+    qj = json.loads(qj_str, encoding='utf8')
+    models = request.args.getlist('models')
+    query = Query._from_json(qj)
+    qh_dict = qm.answer_immediate_query('', None, query, models, False)
+    for qtype, query_hashes in qh_dict.items():
+        results = qm.retrieve_results_from_hashes(query_hashes, qtype)
+    return results
 
 
 @app.route('/evidence')
