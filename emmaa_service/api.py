@@ -1731,15 +1731,16 @@ def submit_curation_endpoint(hash_val, **kwargs):
             return jsonify(res_dict), 400
     logger.info("Adding curation for statement %s." % hash_val)
     ev_hash = request.json.get('ev_hash')
-    source_api = request.json.pop('source', 'EMMAA')
     tag = request.json.get('tag')
     text = request.json.get('text')
     is_test = 'test' in request.args
     if not is_test:
         assert tag != 'test'
         try:
+            api_key = roles[0].api_key
             res = submit_curation(hash_val, tag, email, text,
-                                  source=source_api, ev_hash=ev_hash)
+                                  source='EMMAA', ev_hash=ev_hash,
+                                  api_key=api_key)
         except BadHashError as e:
             abort(Response("Invalid hash: %s." % e.mk_hash, 400))
     else:
