@@ -307,12 +307,13 @@ class ModelManager(object):
                     mode='query', mc_type=mc_type, default_paths=5)
                 result = mc.check_statement(
                     query.path_stmt, max_paths, max_path_length)
-                results.append(
-                    (mc_type, self.process_response(mc_type, result)))
+                hashed_res, path_lines = self.process_response(mc_type, result)
+                results.append((mc_type, hashed_res, path_lines))
             return results
         else:
             return [('', self.hash_response_list(
-                RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+                RESULT_CODES['QUERY_NOT_APPLICABLE']),
+                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
 
     def answer_dynamic_query(self, query, use_kappa=False,
                              bucket=EMMAA_BUCKET_NAME):
@@ -335,7 +336,7 @@ class ModelManager(object):
                          'kpat': kpat, 'fig_path': s3_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
-        return [('pysb', self.hash_response_list(resp_json))]
+        return [('pysb', self.hash_response_list(resp_json), resp_json)]
 
     def answer_open_query(self, query):
         """Answer user open search query with found paths."""
@@ -349,13 +350,14 @@ class ModelManager(object):
                 if query.terminal_ns:
                     add_ns = True
                 mc = self.get_updated_mc(mc_type, [query.path_stmt], add_ns)
-                res = self.open_query_per_mc(
+                res, paths = self.open_query_per_mc(
                     mc_type, mc, query, max_path_length, max_paths)
-                results.append((mc_type, res))
+                results.append((mc_type, res, paths))
             return results
         else:
             return [('', self.hash_response_list(
-                RESULT_CODES['QUERY_NOT_APPLICABLE']))]
+                RESULT_CODES['QUERY_NOT_APPLICABLE']),
+                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
 
     def open_query_per_mc(self, mc_type, mc, query, max_path_length,
                           max_paths):
@@ -410,7 +412,7 @@ class ModelManager(object):
             # Dynamic queries need to be answered individually, while for
             # path and open queries some parts can be shared
             if isinstance(query, DynamicProperty):
-                mc_type, response = self.answer_dynamic_query(
+                mc_type, response, resp_json = self.answer_dynamic_query(
                     query, **kwargs)[0]
                 responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
@@ -440,9 +442,9 @@ class ModelManager(object):
                 results = mc.check_model(
                     max_path_length=max_path_length, max_paths=max_paths)
                 for ix, (_, result) in enumerate(results):
+                    resp, paths = self.process_response(mc_type, result)
                     responses.append(
-                        (applicable_queries[ix], mc_type,
-                         self.process_response(mc_type, result)))
+                        (applicable_queries[ix], mc_type, resp))
 
         # Open queries
         if applicable_open_queries:
@@ -452,7 +454,7 @@ class ModelManager(object):
                     default_length=2)
                 mc = self.get_updated_mc(mc_type, applicable_open_stmts, True)
                 for query in applicable_open_queries:
-                    res = self.open_query_per_mc(
+                    res, paths = self.open_query_per_mc(
                         mc_type, mc, query, max_path_length, max_paths)
                     responses.append((query, mc_type, res))
 
@@ -494,17 +496,19 @@ class ModelManager(object):
         sentence.
         """
         if result.paths:
-            response, _ = self.make_path_json(mc_type, result.paths)
+            response, path_lines = self.make_path_json(mc_type, result.paths)
+            return self.hash_response_list(response), path_lines
         else:
             response = self.make_result_code(result)
-        return self.hash_response_list(response)
+            return self.hash_response_list(response), response
 
     def process_open_query_response(self, mc_type, paths):
         if paths:
-            response, _ = self.make_path_json(mc_type, paths)
+            response, path_lines = self.make_path_json(mc_type, paths)
+            return self.hash_response_list(response), path_lines
         else:
             response = 'No paths found that satisfy this query'
-        return self.hash_response_list(response)
+            return self.hash_response_list(response), response
 
     def hash_response_list(self, response):
         """Return a dictionary mapping a hash with a response in a response

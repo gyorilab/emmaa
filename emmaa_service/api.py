@@ -32,7 +32,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery
+    DynamicProperty, OpenSearchQuery, Query
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -1036,6 +1036,79 @@ def get_query_page():
                            tab=tab,
                            preselected_val=preselected_val,
                            preselected_name=preselected_name)
+
+
+@app.route('/run_query', methods=['POST'])
+def run_query():
+    """Run a query.
+
+    Parameters
+    ----------
+    query_json : str(dict)
+        A JSON dump of a standard query JSON representation. The structure of
+        a query json depends on a query type. All query JSONs have to contain
+        a "type" (path_property, dynamic_property, or open_search_query).
+
+        Path (static) query JSON has to contain keys "type" (path_property)
+        and "path" (formatted as INDRA Statement JSON).
+
+        Open search query JSON has to contain keys "type" (open_search_query),
+        "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
+        object), and "stmt_type"; optionally "terminal_ns" (a list of
+        namespaces to filter the result).
+
+        Dynamic query JSON has to contain keys "type" (dynamic_property),
+        "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
+        "always_value", "no_change", "eventual_value", "sometime_value",
+        "sustained", "transient"), and "quant_value" ("high" or "low", only
+        required when "pattern_type" is one of "always_value",
+        "eventual_value", "sometime_value").
+    model : str
+        A name of a model to run a query against.
+
+    Returns
+    -------
+    results : dict
+        A dictionary mapping the model type to either paths or result code.
+    """
+    qj = request.json.get('query_json')
+    if 'type' not in qj:
+        msg = ('All query JSONs have to contain a "type" '
+               '(path_property, dynamic_property, or open_search_query).')
+        abort(Response(msg, 400))
+    if qj['type'] == 'path_property':
+        msg = ('Path (static) query JSON has to contain keys "type" and "path"'
+               ' (formatted as INDRA Statement JSON).')
+        if 'path' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'open_search_query':
+        msg = ('Open search query JSON has to contain keys "type", "entity" '
+               '(formatted as INDRA Agent JSON), "entity_role" (subject or '
+               'object), and "stmt_type"; optionally "terminal_ns" (a list of '
+               'namespaces to filter the result).')
+        if 'entity' not in qj or 'entity_role' not in qj or \
+                'stmt_type' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'dynamic_property':
+        msg = ('Dynamic query JSON has to contain keys "type", "entity" '
+               '(formatted as INDRA Agent JSON), "pattern_type" (one of '
+               '"always_value", "no_change", "eventual_value", '
+               '"sometime_value", "sustained", "transient"), and "quant_value"'
+               ' ("high" or "low", only required when "pattern_type" is one of'
+               ' "always_value", "eventual_value", "sometime_value".')
+        if 'entity' not in qj or 'pattern_type' not in qj:
+            abort(Response(msg, 400))
+    model = request.json.get('model')
+    query = Query._from_json(qj)
+    mm = load_model_manager_from_cache(model)
+    full_results = mm.answer_query(query)
+    results = {}
+    for mc_type, resp, paths in full_results:
+        if mc_type:
+            results[mc_type] = paths
+        else:
+            results['all_types'] = paths
+    return results
 
 
 @app.route('/evidence')
