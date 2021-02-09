@@ -1075,12 +1075,12 @@ def run_query():
     if 'type' not in qj:
         msg = ('All query JSONs have to contain a "type" '
                '(path_property, dynamic_property, or open_search_query).')
-        abort(Response(msg, 404))
+        abort(Response(msg, 400))
     if qj['type'] == 'path_property':
         msg = ('Path (static) query JSON has to contain keys "type" and "path"'
                ' (formatted as INDRA Statement JSON).')
         if 'path' not in qj:
-            abort(Response(msg, 404))
+            abort(Response(msg, 400))
     elif qj['type'] == 'open_search_query':
         msg = ('Open search query JSON has to contain keys "type", "entity" '
                '(formatted as INDRA Agent JSON), "entity_role" (subject or '
@@ -1088,7 +1088,7 @@ def run_query():
                'namespaces to filter the result).')
         if 'entity' not in qj or 'entity_role' not in qj or \
                 'stmt_type' not in qj:
-            abort(Response(msg, 404))
+            abort(Response(msg, 400))
     elif qj['type'] == 'dynamic_property':
         msg = ('Dynamic query JSON has to contain keys "type", "entity" '
                '(formatted as INDRA Agent JSON), "pattern_type" (one of '
@@ -1097,7 +1097,7 @@ def run_query():
                ' ("high" or "low", only required when "pattern_type" is one of'
                ' "always_value", "eventual_value", "sometime_value".')
         if 'entity' not in qj or 'pattern_type' not in qj:
-            abort(Response(msg, 404))
+            abort(Response(msg, 400))
     model = request.json.get('model')
     query = Query._from_json(qj)
     mm = load_model_manager_from_cache(model)
