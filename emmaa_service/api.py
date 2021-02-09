@@ -1054,9 +1054,8 @@ def run_query():
     results : dict
         A dictionary mapping the model type to either paths or result code.
     """
-    qj_str = request.args.get('query_json')
-    qj = json.loads(qj_str, encoding='utf8')
-    model = request.args.get('model')
+    qj = request.json.get('query_json')
+    model = request.json.get('model')
     query = Query._from_json(qj)
     mm = load_model_manager_from_cache(model)
     full_results = mm.answer_query(query)
