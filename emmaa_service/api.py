@@ -1040,6 +1040,20 @@ def get_query_page():
 
 @app.route('/run_query', methods=['POST'])
 def run_query():
+    """Run a query.
+
+    Parameters
+    ----------
+    query_json : str(dict)
+        A JSON dump of a standard query JSON representation.
+    model : str
+        A name of a model to run a query against.
+
+    Returns
+    -------
+    results : dict
+        A dictionary mapping the model type to either paths or result code.
+    """
     qj_str = request.args.get('query_json')
     qj = json.loads(qj_str, encoding='utf8')
     model = request.args.get('model')
