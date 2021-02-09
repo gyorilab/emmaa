@@ -10,6 +10,7 @@ from indra.resources import get_resource_path
 
 
 def is_human_protein(bio_ontology, node):
+    """Return True if the given ontology node is a human protein."""
     if bio_ontology.get_ns(node) == 'HGNC':
         return True
     elif bio_ontology.get_ns(node) == 'UP' and \
@@ -19,12 +20,14 @@ def is_human_protein(bio_ontology, node):
 
 
 def is_protein_family(bio_ontology, node):
+    """Return True if the given ontology node is a protein family."""
     if bio_ontology.get_ns(node) == 'FPLX':
         return True
     return False
 
 
 def has_fplx_parents(bio_ontology, node):
+    """Return True if the given ontology node has FamPlex parents."""
     parents = bio_ontology.get_parents(*bio_ontology.get_ns_id(node))
     if any(p[0] == 'FPLX' for p in parents):
         return True
@@ -32,6 +35,7 @@ def has_fplx_parents(bio_ontology, node):
 
 
 def is_non_human_protein(bio_ontology, node):
+    """Return True if the given ontology node is a non-human protein."""
     if bio_ontology.get_ns(node) == 'UP' and \
              not uniprot_client.is_human(bio_ontology.get_id(node)):
         return True
@@ -39,33 +43,51 @@ def is_non_human_protein(bio_ontology, node):
 
 
 def add_protein_parents(bio_ontology):
+    """Add parent categories for proteins in the ontology."""
+    # Add root nodes for human and non-human proteins
     human_root = 'INDRA:HUMAN_PROTEIN'
     non_human_root = 'INDRA:NON_HUMAN_PROTEIN'
     bio_ontology.add_node(human_root, name='Human protein')
     bio_ontology.add_node(non_human_root, name='Non-human protein')
 
+    # We add each category as a node and link them to the human protein
+    # root
     edges_to_add = []
     for category_name, category_label in category_map.items():
         bio_ontology.add_node(category_label, name=category_name)
         edges_to_add.append((category_label, human_root, {'type': 'isa'}))
 
+    # Now we go over the whole ontology, and add extra edges
     for node in bio_ontology.nodes():
+        # If this is a protein family and doesn't have any further FamPlex
+        # parents then we find its specific protein children, look at all
+        # their categories, and add links from this node to the nodes of
+        # these categories.
         if is_protein_family(bio_ontology, node):
+            # Skip if this has further FPLX parents
             if has_fplx_parents(bio_ontology, node):
                 continue
             else:
+                # Get child categories
                 categoriesx = get_categories(node)
+                # If there are no categories, link directly to human protein
+                # root
                 if not categoriesx:
                     edges_to_add.append((node, human_root, {'type': 'isa'}))
                 else:
+                    # If there are categories, we link this family to each
+                    # of those
                     for category in categoriesx:
                         edges_to_add.append((node, category_map[category],
                                              {'type': 'isa'}))
-
+        # If this is a specific human protein and doesn't have any FamPlex
+        # parents then we link it to either a category node or the root node
         elif is_human_protein(bio_ontology, node):
             if has_fplx_parents(bio_ontology, node):
                 continue
             category_node = get_category(node)
+            # If there is a caqtegory, we link to that, otherwise to
+            # the human protein root
             if not category_node:
                 edges_to_add.append((node, human_root, {'type': 'isa'}))
             else:
@@ -76,6 +98,7 @@ def add_protein_parents(bio_ontology):
 
 
 def get_category(node):
+    """Return a category label for a given specific protein ontology node."""
     name = bio_ontology.get_name(*bio_ontology.get_ns_id(node))
     category = categories.get(name)
     if category:
@@ -85,6 +108,7 @@ def get_category(node):
 
 
 def get_categories(fplx_node):
+    """Return category labels for a given protein family ontology node."""
     children = bio_ontology.get_children(*bio_ontology.get_ns_id(fplx_node),
                                          ns_filter='HGNC')
     children_names = {bio_ontology.get_name(*ch) for ch in children}
@@ -94,6 +118,7 @@ def get_categories(fplx_node):
 
 
 def _process_categories():
+    """Collect protein category labels from multiple sources."""
     idg_df = pandas.read_csv('IDG_target_final.csv')
     tf_df = pandas.read_csv(get_resource_path('transcription_factors.csv'))
     pp_df = pandas.read_csv(get_resource_path('phosphatases.tsv'), sep='\t',
