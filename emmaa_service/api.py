@@ -1751,10 +1751,12 @@ def submit_curation_endpoint(hash_val, **kwargs):
 
 
 @app.route('/curation/list/<stmt_hash>/<src_hash>', methods=['GET'])
+@jwt_optional
 def list_curations(stmt_hash, src_hash):
     user, roles = resolve_auth(dict(request.args))
     if not roles and not user:
         res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        logger.debug(res_dict)
         return jsonify(res_dict), 401
 
     if user:
@@ -1764,11 +1766,13 @@ def list_curations(stmt_hash, src_hash):
         if not email:
             res_dict = {"result": "failure",
                         "reason": "POST with API key requires a user email."}
+            logger.debug(res_dict)
             return jsonify(res_dict), 400
     api_key = roles[0].api_key
     if not api_key:
         res_dict = {"result": "failure",
                     "reason": "API key is required to view curations."}
+        logger.debug(res_dict)
         return jsonify(res_dict), 401
     curations = get_curations(hash_val=stmt_hash, source_hash=src_hash,
                               api_key=api_key)
