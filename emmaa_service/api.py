@@ -24,8 +24,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
-from indra.sources.indra_db_rest import submit_curation, get_curations, \
-    get_all_curations
+from indra.sources.indra_db_rest import submit_curation, get_curations
 
 from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
@@ -472,7 +471,7 @@ def _set_curation(stmt_hash, correct, incorrect):
 
 def _label_curations(include_partial=False, **kwargs):
     logger.info('Getting curations')
-    curations = get_all_curations()
+    curations = get_curations()
     logger.info('Labeling curations')
     if include_partial:
         correct = {str(c['pa_hash']) for c in curations if
@@ -955,7 +954,7 @@ def get_paper_statements(model):
     stmts_by_hash = {}
     for stmt in updated_stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
-    all_curations = get_all_curations()
+    all_curations = get_curations()
     curations = [
         cur for cur in all_curations if cur['pa_hash'] in paper_hashes]
     cur_dict = defaultdict(list)
@@ -1283,7 +1282,7 @@ def get_statement_evidence_page():
         stmts_by_hash = {}
         for stmt in stmts:
             stmts_by_hash[str(stmt.get_hash())] = stmt
-        all_curations = get_all_curations()
+        all_curations = get_curations()
         curations = [
             cur for cur in all_curations if cur['pa_hash'] in stmt_hashes]
         cur_dict = defaultdict(list)
@@ -1352,7 +1351,7 @@ def get_all_statements_page(model):
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
     msg = None
-    curations = get_all_curations()
+    curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
         stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
@@ -1656,8 +1655,7 @@ def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
-    all_curations = get_all_curations()
-    curations = [cur for cur in all_curations if cur['pa_hash'] == hash_val]
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1675,8 +1673,7 @@ def get_statement_by_hash_model(model, date, hash_val):
 def get_tests_by_hash(test_corpus, hash_val):
     """Get test statement JSON by hash."""
     tests = _load_tests_from_cache(test_corpus)
-    all_curations = get_all_curations()
-    curations = [cur for cur in all_curations if cur['pa_hash'] == hash_val]
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1697,8 +1694,7 @@ def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
     """Get model statement by hash and paper ID."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
-    all_curations = get_all_curations()
-    curations = [cur for cur in all_curations if cur['pa_hash'] == hash_val]
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
