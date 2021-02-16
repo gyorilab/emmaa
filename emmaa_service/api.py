@@ -1725,23 +1725,27 @@ def submit_curation_endpoint(hash_val, **kwargs):
             res_dict = {"result": "failure",
                         "reason": "POST with API key requires a user email."}
             return jsonify(res_dict), 400
+    api_key = roles[0].api_key
+    if not api_key:
+        res_dict = {"result": "failure",
+                    "reason": "API key is required to submit curations."}
+        return jsonify(res_dict), 401
     logger.info("Adding curation for statement %s." % hash_val)
     ev_hash = request.json.get('ev_hash')
     tag = request.json.get('tag')
     text = request.json.get('text')
+    ev_json = request.json.get('ev_json')
     is_test = 'test' in request.args
     if not is_test:
         assert tag != 'test'
         try:
-            api_key = roles[0].api_key
-            res = submit_curation(hash_val, tag, email, text,
-                                  source='EMMAA', ev_hash=ev_hash,
+            res = submit_curation(hash_val, tag, email, text, source='EMMAA',
+                                  ev_hash=ev_hash, ev_json=ev_json,
                                   api_key=api_key)
         except BadHashError as e:
             abort(Response("Invalid hash: %s." % e.mk_hash, 400))
     else:
-        res = {'result': 'test passed', 'ref': None}
-
+        res = {'result': 'test passed', 'ref': None}        
     logger.info("Got result: %s" % str(res))
     return jsonify(res)
 
