@@ -1762,6 +1762,10 @@ def list_curations(stmt_hash, src_hash):
                         "reason": "POST with API key requires a user email."}
             return jsonify(res_dict), 400
     api_key = roles[0].api_key
+    if not api_key:
+        res_dict = {"result": "failure",
+                    "reason": "API key is required to view curations."}
+        return jsonify(res_dict), 401
     curations = get_curations(hash_val=stmt_hash, source_hash=src_hash,
                               api_key=api_key)
     return jsonify(curations)
