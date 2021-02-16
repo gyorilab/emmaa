@@ -525,8 +525,8 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     evid_count = len(stmt.evidence)
     evid = []
     if with_evid and cur_dict is not None:
-        evid = _format_evidence_text(
-            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])[:10]
+        evid = json.loads(json.dumps(_format_evidence_text(
+            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])))[:10]
     params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
               'format': 'json', 'date': date}
     if test_corpus:
