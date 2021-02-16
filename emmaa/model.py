@@ -14,7 +14,7 @@ from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra.sources.minerva import process_from_web
-from indra_db.client.principal.curation import get_curations
+from indra.sources.indra_db_rest import get_curations
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms

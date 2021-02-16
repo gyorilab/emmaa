@@ -11,8 +11,8 @@ from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.literature import pubmed_client, crossref_client, pmc_client
+from indra.sources.indra_db_rest import get_curations
 from indra_db import get_db
-from indra_db.client.principal.curation import get_curations
 from indra_db.util import unpack
 
 
