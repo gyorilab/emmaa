@@ -190,6 +190,7 @@
     {% endblock %}
   </div>
 
+  {% if not exclude_footer %}
   <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
     <div class="container">
       <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
@@ -203,4 +204,5 @@
       </small>
     </div>
   </footer>
+  {% endif %}
 </body>
