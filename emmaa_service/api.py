@@ -13,6 +13,7 @@ from flask_jwt_extended import jwt_optional
 from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
+from pusher import pusher
 
 from indra_db.exceptions import BadHashError
 from indra_db import get_db
@@ -67,6 +68,19 @@ ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
               'biological processes': ['go', 'mesh']}
 
 qm = QueryManager()
+
+app_id = os.environ.get('CLARE_PUSHER_APP_ID')
+key = os.environ.get('CLARE_PUSHER_KEY')
+secret = os.environ.get('CLARE_PUSHER_SECRET')
+cluster = os.environ.get('CLARE_PUSHER_CLUSTER')
+
+pusher = pusher_client = pusher.Pusher(
+  app_id=app_id,
+  key=key,
+  secret=secret,
+  cluster=cluster,
+  ssl=True
+)
 
 
 def _sort_pass_fail(row):
@@ -1783,6 +1797,40 @@ def get_tests_info(test_corpus):
     if not info:
         info = {'error': f'Test info for {test_corpus} is not available'}
     return info
+
+
+@app.route('/chat')
+@jwt_optional
+def chat_with_the_model():
+    model = request.args.get('model', '')
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('chat_widget.html',
+                           email=user_email,
+                           model=model,
+                           link_list=link_list,
+                           exclude_footer=True)
+
+
+@app.route('/new/guest', methods=['POST'])
+def guest_user():
+    data = request.json
+    print('New guest data: %s' % str(data))
+
+    pusher.trigger('general-channel', 'new-guest-details', {
+        'name': data['name'],
+        'email': data['email'],
+        'emmaa_model': data.get('emmaa_model')
+        })
+
+    return json.dumps(data)
+
+
+@app.route("/pusher/auth", methods=['POST'])
+def pusher_authentication():
+    auth = pusher.authenticate(channel=request.form['channel_name'],
+                               socket_id=request.form['socket_id'])
+    return json.dumps(auth)
 
 
 if __name__ == '__main__':
