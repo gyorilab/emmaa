@@ -36,7 +36,7 @@ setup(name='emmaa',
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'jsonpickle', 'kappy==4.0.94',
                         'pygraphviz', 'fnvhash', 'sqlalchemy', 'inflection',
-                        'pybel==0.15', 'flask_jwt_extended', 'gilda',
+                        'pybel==0.15', 'flask_jwt_extended==3.25.0', 'gilda',
                         'tweepy'],
       extras_require={'test': ['nose', 'coverage', 'moto[iam]',
                                'sqlalchemy_utils']}

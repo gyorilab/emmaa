@@ -4,8 +4,8 @@ import json
 import gzip
 import pandas
 import networkx
-from indra.databases import uniprot_client
-from indra.ontology.bio import bio_ontology
+from indra.databases import uniprot_client, mesh_client
+from indra.ontology.bio import bio_ontology, BioOntology
 from indra.resources import get_resource_path
 
 
@@ -40,6 +40,32 @@ def is_non_human_protein(bio_ontology, node):
              not uniprot_client.is_human(bio_ontology.get_id(node)):
         return True
     return False
+
+
+def is_mesh_subroot_node(bio_ontology, node):
+    ns, id = bio_ontology.get_ns_id(node)
+    if ns == 'MESH':
+        tree_numbers = mesh_client.get_mesh_tree_numbers(id)
+        if len(tree_numbers) == 1 and '.' not in tree_numbers[0]:
+            return tree_numbers[0][0]
+    return None
+
+
+def add_mesh_parents(bio_ontology: BioOntology):
+    """Add missing root level nodes to the MeSH ontology."""
+    for letter, name in mesh_roots_map.items():
+        bio_ontology.add_node(bio_ontology.label('MESH', letter), name=name)
+
+    edges_to_add = []
+    for node in bio_ontology.nodes():
+        subtree = is_mesh_subroot_node(bio_ontology, node)
+        if subtree is not None:
+            edges_to_add.append((
+                node,
+                bio_ontology.label('MESH', subtree),
+                {'type': 'isa'}
+            ))
+    bio_ontology.add_edges_from(edges_to_add)
 
 
 def add_protein_parents(bio_ontology):
@@ -146,10 +172,33 @@ category_map = {
 }
 
 
+mesh_roots_map = {
+    'A': 'Anatomy',
+    'B': 'Organisms',
+    'C': 'Diseases',
+    'D': 'Chemicals and Drugs',
+    'E': 'Analytical, Diagnostic and Therapeutic Techniques, and Equipment',
+    'F': 'Psychiatry and Psychology',
+    'G': 'Phenomena and Processes',
+    'H': 'Disciplines and Occupations',
+    'I': 'Anthropology, Education, Sociology, and Social Phenomena',
+    'J': 'Technology, Industry, and Agriculture',
+    'K': 'Humanities',
+    'L': 'Information Science',
+    'M': 'Named Groups',
+    'N': 'Health Care',
+    'V': 'Publication Characteristic',
+    'Z': 'Geographicals',
+}
+
+
 if __name__ == '__main__':
+    export_version = '3'
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
+    add_mesh_parents(bio_ontology)
     node_link = networkx.node_link_data(bio_ontology)
-    fname = 'bio_ontology_v%s.json.gz' % bio_ontology.version
+    fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
+        (bio_ontology.version, export_version)
     with gzip.open(fname, 'wb') as fh:
         fh.write(json.dumps(node_link, indent=1).encode('utf-8'))
