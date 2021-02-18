@@ -128,8 +128,8 @@
     // ----------------------------------------------------
 
         LogIntoChatSession: function (evt) {
-            const name  = $('#fullname').val().trim()
             const email = $('#email').val().trim().toLowerCase()
+            const name  = email
             const emmaa_model = $('#emmaa_model').val().trim()
 
             // Disable the form
