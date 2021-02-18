@@ -39,5 +39,5 @@ setup(name='emmaa',
                         'pybel==0.15', 'flask_jwt_extended==3.25.0', 'gilda',
                         'tweepy'],
       extras_require={'test': ['nose', 'coverage', 'moto[iam]',
-                               'sqlalchemy_utils']}
+                               'sqlalchemy_utils', 'pusher']}
       )
