@@ -134,7 +134,6 @@ body {
 .chatbubble {
     position: fixed;
     bottom: 0;
-    right: 30px;
     transform: translateY(300px);
     transition: transform .3s ease-in-out;
 }
@@ -143,16 +142,15 @@ body {
 }
 .chatbubble .unexpanded {
     display: block;
-    background-color: #e23e3e;
+    background-color: #007bff;
     padding: 10px 15px 10px;
     position: relative;
-    cursor: pointer;
-    width: 350px;
+    width: 1000px;
     border-radius: 10px 10px 0 0;
 }
 .chatbubble .expanded {
-    height: 300px;
-    width: 350px;
+    height: 500px;
+    width: 1000px;
     background-color: #fff;
     text-align: left;
     padding: 10px;
