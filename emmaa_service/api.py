@@ -837,6 +837,9 @@ def annotate_paper_statements(model):
     paper_stmts = [stmt for stmt in all_stmts
                    if stmt.get_hash() in paper_hashes]
     for stmt in paper_stmts:
+        stmt.evidence = [ev for ev in stmt.evidence
+                         if str(ev.text_refs.get('TRID')) == trid]
+    for stmt in paper_stmts:
         upload_statement_annotation(stmt)
 
 
