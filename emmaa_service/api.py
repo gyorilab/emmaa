@@ -69,16 +69,16 @@ ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
 
 qm = QueryManager()
 
-app_id = os.environ.get('CLARE_PUSHER_APP_ID')
-key = os.environ.get('CLARE_PUSHER_KEY')
-secret = os.environ.get('CLARE_PUSHER_SECRET')
-cluster = os.environ.get('CLARE_PUSHER_CLUSTER')
+pusher_app_id = os.environ.get('CLARE_PUSHER_APP_ID')
+pusher_key = os.environ.get('CLARE_PUSHER_KEY')
+pusher_secret = os.environ.get('CLARE_PUSHER_SECRET')
+pusher_cluster = os.environ.get('CLARE_PUSHER_CLUSTER')
 
 pusher = pusher_client = pusher.Pusher(
-  app_id=app_id,
-  key=key,
-  secret=secret,
-  cluster=cluster,
+  app_id=pusher_app_id,
+  key=pusher_key,
+  secret=pusher_secret,
+  cluster=pusher_cluster,
   ssl=True
 )
 
@@ -1809,7 +1809,8 @@ def chat_with_the_model():
                            email=user_email,
                            model=model,
                            link_list=link_list,
-                           exclude_footer=True)
+                           exclude_footer=True,
+                           pusher_key=pusher_key)
 
 
 @app.route('/new/guest', methods=['POST'])
