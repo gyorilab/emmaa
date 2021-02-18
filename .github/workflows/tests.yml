@@ -54,7 +54,7 @@ jobs:
         cd ../indralab_web_templates
         pip install .
         cd ../..
-        pip install boto3 jsonpickle pygraphviz fnvhash sqlalchemy inflection pybel==0.15 flask_jwt_extended gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor
+        pip install boto3 jsonpickle pygraphviz fnvhash sqlalchemy inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor
         pip install --no-dependencies .
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
