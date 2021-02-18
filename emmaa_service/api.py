@@ -36,6 +36,8 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
+from indra.sources.hypothesis import upload_statement_annotation
+
 
 app = Flask(__name__)
 app.register_blueprint(auth)
@@ -800,6 +802,42 @@ def get_model_dashboard(model):
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
                            new_papers=new_papers)
+
+
+@app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
+def annotate_paper_statements(model):
+    """Upload hypothes.is annotations for a given paper
+
+    Parameters
+    ----------
+    model : str
+        A name of a model to get statements from.
+    date : str
+        Date in the format "YYYY-MM-DD" to load the model state.
+    paper_id : str
+        ID of a paper to get statements from.
+    paper_id_type : str
+        Type of paper ID (e.g. TRID, PMID, PMCID, DOI).
+    """
+    date = request.args.get('date')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
+    if paper_id_type == 'TRID':
+        trid = paper_id
+    else:
+        db = get_db('primary')
+        trids = _get_trids(db, paper_id, paper_id_type.lower())
+        if trids:
+            trid = str(trids[0])
+        else:
+            abort(Response(f'Invalid paper ID: {paper_id}', 400))
+    all_stmts = _load_stmts_from_cache(model, date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
+    paper_stmts = [stmt for stmt in all_stmts
+                   if stmt.get_hash() in paper_hashes]
+    for stmt in paper_stmts:
+        upload_statement_annotation(stmt)
 
 
 @app.route('/statements_from_paper/<model>', methods=['GET', 'POST'])
