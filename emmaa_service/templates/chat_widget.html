@@ -1,75 +1,56 @@
 {% extends "emmaa_page_template.html" %}
 {% block extend_header %}
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>CLARE</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='widget/css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='widget/css/app.css') }}">
 {% endblock %}
 
 {% block body %}
-  <div class="site-wrapper">
-    <div class="site-wrapper-inner">
-      <div class="cover-container">
-        <header class="masthead clearfix">
-          <div class="inner">
-            <h3 class="masthead-brand">CLARE</h3>
-          </div>
-        </header>
-        <main role="main" class="inner cover">
-        </main>
-        <footer class="mastfoot">
-        </footer>
-      </div>
+<div class="chatbubble">
+    <div class="unexpanded">
+        <div class="title">Chat with CLARE</div>
     </div>
-  </div>
-
-  <div class="chatbubble">
-      <div class="unexpanded">
-          <div class="title">Chat with CLARE</div>
+    <div class="expanded chat-window">
+      <div class="login-screen container">
+        <form id="loginScreenForm">
+          Email
+          <div class="form-group">
+            <input type="email" class="form-control" id="email" placeholder="Email Address*" value="{{ email }}" required>
+          </div>
+          EMMAA model
+          <div class="form-group">
+            <input type="text" class="form-control" id="emmaa_model" value="{{ model }}" placeholder="EMMAA model">
+          </div>
+          <button type="submit" class="btn btn-block btn-primary">Start Chat</button>
+        </form>
       </div>
-      <div class="expanded chat-window">
-        <div class="login-screen container">
-          <form id="loginScreenForm">
-            Email
+      <div class="chats">
+        <div class="loader-wrapper">
+          <div class="loader">
+            <span>{</span><span>}</span>
+          </div>
+        </div>
+        <ul class="messages clearfix">
+        </ul>
+        <div class="input">
+          <form class="form-inline" id="messageSupport">
             <div class="form-group">
-              <input type="email" class="form-control" id="email" placeholder="Email Address*" value="{{ email }}" required>
+              <input type="text" autocomplete="off" class="form-control" id="newMessage" placeholder="Enter Message">
             </div>
-            EMMAA model
-            <div class="form-group">
-              <input type="text" class="form-control" id="emmaa_model" value="{{ model }}" placeholder="EMMAA model">
-            </div>
-            <button type="submit" class="btn btn-block btn-primary">Start Chat</button>
+            <button type="submit" class="btn btn-primary">Send</button>
           </form>
         </div>
-        <div class="chats">
-          <div class="loader-wrapper">
-            <div class="loader">
-              <span>{</span><span>}</span>
-            </div>
-          </div>
-          <ul class="messages clearfix">
-          </ul>
-          <div class="input">
-            <form class="form-inline" id="messageSupport">
-              <div class="form-group">
-                <input type="text" autocomplete="off" class="form-control" id="newMessage" placeholder="Enter Message">
-              </div>
-              <button type="submit" class="btn btn-primary">Send</button>
-            </form>
-          </div>
-        </div>
       </div>
-  </div>    
-  <script src="https://js.pusher.com/4.0/pusher.min.js"></script>
-  <script>
-    var pusher = new Pusher('{{ pusher_key }}', {
-      authEndpoint: '/pusher/auth',
-      cluster: 'mt1',
-      encrypted: true
-    });
-  </script>
-  <script type="text/javascript" src="{{ url_for('static', filename='widget/js/jquery.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='widget/js/popper.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='widget/js/axios.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='widget/js/app.js') }}"></script>
+    </div>
+</div>    
+<script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+<script>
+  var pusher = new Pusher('{{ pusher_key }}', {
+    authEndpoint: '/pusher/auth',
+    cluster: 'mt1',
+    encrypted: true
+  });
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='widget/js/jquery.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='widget/js/popper.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='widget/js/axios.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='widget/js/app.js') }}"></script>
 {% endblock %}
