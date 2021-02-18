@@ -187,7 +187,7 @@ body {
     float: right;
     text-align: right;
     color: #fff;
-    background-color: #e33d3d;
+    background-color: #007bff;
     border-radius: 5px 5px 0 5px;
 }
 .chatbubble .chats .input {
@@ -223,7 +223,7 @@ body {
 
 /* Loader Credit: https://codepen.io/ashmind/pen/zqaqpB */
 .chatbubble .loader {
-  color: #e23e3e;
+  color: #007bff;
   font-family: Consolas, Menlo, Monaco, monospace;
   font-weight: bold;
   font-size: 10vh;
