@@ -262,6 +262,40 @@ function toTitleCase(phrase) {
   return newPhrase;
 };
 
+function annotate(api_route) {
+  return $.ajax({
+    url: api_route,
+    type: 'GET',
+    contentType: 'application/json',
+    complete: function(xhr, statusText) {
+      console.log('responseJSON');
+      console.log(xhr.responseJSON);
+      console.log(statusText); 
+      switch (xhr.status) {
+        case 200:
+          console.log('200 response');
+          if (xhr.responseJSON.redirectURL) {
+            console.log(xhr.responseJSON.redirectURL)
+            window.open(xhr.responseJSON.redirectURL, target="_blank");
+          }
+          break;
+        case 400:
+          console.log('400 response');
+          break;
+        case 404:
+          console.log('404 response');
+          break;
+        case 500:
+          console.log('500 response');
+          break;
+        default:
+          console.log(`Unhandled server response: ${xhr.status}`);
+      }
+    }   
+  })
+}
+
+
 // Populate model and test stats jsons to modelTestResultBody
 function populateTestResultTable(tableBody, model_json, test_json) {
 
