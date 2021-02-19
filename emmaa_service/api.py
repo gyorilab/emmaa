@@ -583,8 +583,11 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
         url_param = parse.urlencode(
             {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
         url = f'/statements_from_paper/{model}?{url_param}'
+        ann_url = f'/annotate_paper/{model}?{url_param}'
     if url:
-        paper_tuple = (url, title, 'Click to see statements from this paper')
+        paper_tuple = (
+            url, title, 'Click to see statements from this paper', 'annotate',
+            ann_url)
     # DB url for statements from paper will be available soon
     # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
     else:
