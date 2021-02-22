@@ -186,8 +186,7 @@ body {
 .chatbubble .messages li.support {
     float: right;
     text-align: right;
-    color: #fff;
-    background-color: #007bff;
+    background-color: #faf099;
     border-radius: 5px 5px 0 5px;
 }
 .chatbubble .chats .input {
