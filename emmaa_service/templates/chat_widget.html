@@ -6,7 +6,9 @@
 {% block body %}
 <div class="chatbubble">
     <div class="unexpanded">
-        <div class="title">Chat with an EMMAA model (powered by CLARE)</div>
+        <div class="title" >Chat with an EMMAA model (powered by CLARE)
+        <a class="btn btn-primary" style="border-color: white; background: transparent; position: absolute; right: 3px; top: 3px;" href="{{ url_for('get_demos_page') }}" target="_blank">Tutorial</a>
+        </div>
     </div>
     <div class="expanded chat-window">
       <div class="login-screen container">
