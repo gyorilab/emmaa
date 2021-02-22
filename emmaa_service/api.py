@@ -541,7 +541,7 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     return badges
 
 
-def get_new_papers(model_stats, date):
+def get_new_papers(model, model_stats, date):
     paper_id_counts = []
     trids = model_stats['paper_delta']['raw_paper_ids_delta']['added']
     for paper_id in trids:
@@ -555,7 +555,7 @@ def get_new_papers(model_stats, date):
     if not paper_id_counts:
         return 'Did not process new papers'
     new_papers = [[_get_paper_title_tuple(paper_id, model_stats, date),
-                   _get_external_paper_link(paper_id, model_stats),
+                   _get_external_paper_link(model, paper_id, model_stats),
                    ('', str(assembled_count), ''),
                    ('', str(raw_count), '')]
                   for paper_id, assembled_count, raw_count in paper_id_counts]
@@ -583,11 +583,8 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
         url_param = parse.urlencode(
             {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
         url = f'/statements_from_paper/{model}?{url_param}'
-        ann_url = f'/annotate_paper/{model}?{url_param}'
     if url:
-        paper_tuple = (
-            url, title, 'Click to see statements from this paper', 'annotate',
-            ann_url)
+        paper_tuple = (url, title, 'Click to see statements from this paper')
     # DB url for statements from paper will be available soon
     # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
     else:
@@ -595,11 +592,15 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
     return paper_tuple
 
 
-def _get_external_paper_link(paper_id, model_stats):
+def _get_external_paper_link(model, paper_id, model_stats):
     trid_to_link = model_stats['paper_summary'].get('paper_links', {})
     if trid_to_link.get(str(paper_id)):
         link, name = trid_to_link[str(paper_id)]
-        paper_tuple = (link, name, 'Click to view this paper')
+        url_param = parse.urlencode(
+            {'paper_id': paper_id, 'paper_id_type': 'trid'})
+        ann_url = f'/annotate_paper/{model}?{url_param}'
+        paper_tuple = ('annotate', ann_url, link, name,
+                       'Click to view this paper')
     else:
         paper_tuple = ('', 'N/A', '')
     return paper_tuple
@@ -769,9 +770,9 @@ def get_model_dashboard(model):
     else:
         trids_counts = model_stats['paper_summary']['paper_distr'][:10]
         paper_distr = [[_get_paper_title_tuple(paper_id, model_stats, date),
-                        _get_external_paper_link(paper_id, model_stats),
+                        _get_external_paper_link(model, paper_id, model_stats),
                         ('', str(c), '')] for paper_id, c in trids_counts]
-        new_papers = get_new_papers(model_stats, date)
+        new_papers = get_new_papers(model, model_stats, date)
 
     logger.info('Rendering page')
     return render_template('model_template.html',
