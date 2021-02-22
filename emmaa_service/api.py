@@ -845,11 +845,9 @@ def annotate_paper_statements(model):
     url = None
     for i, stmt in enumerate(paper_stmts):
         logger.info(f'Annotating statement {i + 1} out of {len(paper_stmts)}')
-        updated_url = upload_statement_annotation(stmt)
-        # Normally we'd get the same url from each statement annotations
-        # This is to handle a case when only some statements have annotations
-        if updated_url:
-            url = updated_url
+        anns = upload_statement_annotation(stmt)
+        if anns:
+            url = anns[0]['url']
     if url:
         return {'redirectURL': url}
     else:
