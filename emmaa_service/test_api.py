@@ -3,6 +3,7 @@ import unittest
 from moto import mock_s3
 from emmaa.util import make_date_str
 from emmaa.tests.test_s3 import setup_bucket, TEST_BUCKET_NAME
+from emmaa.queries import PathProperty, DynamicProperty
 
 
 @mock_s3
@@ -30,6 +31,22 @@ def test_api_load_from_s3():
     assert len(metadata[0]) == 2
     assert metadata[0][0] == 'test'
     assert metadata[0][1] == config
+
+
+def test_make_query():
+    from emmaa_service.api import _make_query
+    query, tab = _make_query({
+        'typeSelection': 'Activation',
+        'subjectSelection': 'BRAF',
+        'objectSelection': 'MAPK1'})
+    assert isinstance(query, PathProperty)
+    assert tab == 'static'
+    query, tab = _make_query({
+        'agentSelection': 'phosphorylated MAP2K1',
+        'valueSelection': 'low',
+        'patternSelection': 'always_value'})
+    assert isinstance(query, DynamicProperty)
+    assert tab == 'dynamic'
 
 
 class EmmaaApiTest(unittest.TestCase):
