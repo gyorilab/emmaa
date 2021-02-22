@@ -594,13 +594,18 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
 
 def _get_external_paper_link(model, paper_id, model_stats):
     trid_to_link = model_stats['paper_summary'].get('paper_links', {})
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(
+        str(paper_id))
     if trid_to_link.get(str(paper_id)):
         link, name = trid_to_link[str(paper_id)]
-        url_param = parse.urlencode(
-            {'paper_id': paper_id, 'paper_id_type': 'trid'})
-        ann_url = f'/annotate_paper/{model}?{url_param}'
-        paper_tuple = ('annotate', ann_url, link, name,
-                       'Click to view this paper')
+        if paper_hashes:
+            url_param = parse.urlencode(
+                {'paper_id': paper_id, 'paper_id_type': 'trid'})
+            ann_url = f'/annotate_paper/{model}?{url_param}'
+            paper_tuple = ('annotate', ann_url, link, name,
+                           'Click to view this paper')
+        else:
+            paper_tuple = (link, name, 'Click to view this paper')
     else:
         paper_tuple = ('', 'N/A', '')
     return paper_tuple
