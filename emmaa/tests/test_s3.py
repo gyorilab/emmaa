@@ -374,30 +374,3 @@ def test_util_find_on_s3_functions():
         TEST_BUCKET_NAME, 'results/test/results_') == 1
     assert find_number_of_files_on_s3(
         TEST_BUCKET_NAME, 'results/test/', '.json') == 1
-
-
-@mock_s3
-def test_api_load_from_s3():
-    from emmaa_service.api import is_available, get_latest_available_date, \
-        _get_test_corpora, _get_model_meta_data, get_model_config
-    from emmaa.model import last_updated_date
-    client = setup_bucket(add_model=True, add_model_stats=True,
-                          add_test_stats=True)
-    today = make_date_str()[:10]
-    other_day = '2020-01-01'
-    assert is_available('test', 'simple_tests', today, TEST_BUCKET_NAME)
-    assert not is_available(
-        'test', 'large_corpus_tests', today, TEST_BUCKET_NAME)
-    assert not is_available(
-        'test', 'simple_tests', other_day, TEST_BUCKET_NAME)
-    assert get_latest_available_date(
-        'test', 'simple_tests', bucket=TEST_BUCKET_NAME) == today
-    config = get_model_config('test', TEST_BUCKET_NAME)
-    assert config
-    test_corpora = _get_test_corpora('test', TEST_BUCKET_NAME)
-    assert test_corpora == {'simple_tests'}
-    metadata = _get_model_meta_data(bucket=TEST_BUCKET_NAME)
-    assert len(metadata) == 1
-    assert len(metadata[0]) == 2
-    assert metadata[0][0] == 'test'
-    assert metadata[0][1] == config
