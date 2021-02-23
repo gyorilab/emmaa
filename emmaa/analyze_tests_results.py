@@ -288,17 +288,19 @@ class ModelRound(Round):
         check_in_db = []
         # Map TRIDs to available PMIDs, DOIs, PMCIDs in this order
         for ref_dict in ref_dicts:
-            if 'PMID' in ref_dict:
+            link = _get_publication_link(ref_dict)
+            trid_to_link[str(ref_dict['TRID'])] = link
+            if ref_dict.get('PMID'):
                 trid_to_pmids[ref_dict['TRID']] = ref_dict['PMID']
-            elif 'PMCID' in ref_dict:
+            elif ref_dict.get('PMCID'):
                 trid_to_pmcids[ref_dict['TRID']] = ref_dict['PMCID']
-            elif 'DOI' in ref_dict:
+            elif ref_dict.get('DOI'):
                 trid_to_dois[ref_dict['TRID']] = ref_dict['DOI']
 
         logger.info(f'From {len(trids)} TRIDs got {len(trid_to_pmids)} PMIDs,'
                     f' {len(trid_to_pmcids)} PMCIDs, {len(trid_to_dois)} DOIs')
 
-        # First get titles and links for available PMIDs
+        # First get titles for available PMIDs
         if trid_to_pmids:
             logger.info(f'Getting titles for {len(trid_to_pmids)} PMIDs')
             pmids = list(trid_to_pmids.values())
@@ -309,10 +311,8 @@ class ModelRound(Round):
                     trid_to_title[str(trid)] = pmids_to_titles[pmid]
                 else:
                     check_in_db.append(trid)
-                link = _get_publication_link(pmid, 'PMID')
-                trid_to_link[str(trid)] = link
 
-        # Then get titles and links for available PMCIDs
+        # Then get titles for available PMCIDs
         if trid_to_pmcids:
             logger.info(f'Getting titles for {len(trid_to_pmcids)} PMCIDs')
             for trid, pmcid in trid_to_pmcids.items():
@@ -321,10 +321,8 @@ class ModelRound(Round):
                     trid_to_title[str(trid)] = title
                 else:
                     check_in_db.append(trid)
-                link = _get_publication_link(pmcid, 'PMCID')
-                trid_to_link[str(trid)] = link
 
-        # Then get titles and links for available DOIs
+        # Then get titles for available DOIs
         if trid_to_dois:
             logger.info(f'Getting titles for {len(trid_to_dois)} DOIs')
             for trid, doi in trid_to_dois.items():
@@ -333,8 +331,6 @@ class ModelRound(Round):
                     trid_to_title[str(trid)] = title
                 else:
                     check_in_db.append(trid)
-                link = _get_publication_link(doi, 'DOI')
-                trid_to_link[str(trid)] = link
 
         # Try getting remaining titles from db
         if check_in_db:
@@ -346,6 +342,7 @@ class ModelRound(Round):
             for tc in tcs:
                 title = unpack(tc.content)
                 trid_to_title[str(tc.text_ref_id)] = title
+
         return trid_to_title, trid_to_link
 
     def get_curation_stats(self):
@@ -1176,14 +1173,17 @@ def _get_pmcid_title(pmcid):
     return title
 
 
-def _get_publication_link(paper_id, paper_id_type):
-    if paper_id_type == 'PMID':
-        name = 'PubMed'
-        link = f'https://pubmed.ncbi.nlm.nih.gov/{paper_id}'
-    elif paper_id_type == 'PMCID':
+def _get_publication_link(text_refs):
+    if text_refs.get('PMCID'):
         name = 'PMC'
-        link = f'https://www.ncbi.nlm.nih.gov/pmc/articles/{paper_id}'
-    elif paper_id_type == 'DOI':
+        link = f'https://www.ncbi.nlm.nih.gov/pmc/articles/{text_refs["PMCID"]}'
+    elif text_refs.get('PMID'):
+        name = 'PubMed'
+        link = f'https://pubmed.ncbi.nlm.nih.gov/{text_refs["PMID"]}'
+    elif text_refs.get('DOI'):
         name = 'DOI'
-        link = f'https://dx.doi.org/{paper_id}'
+        link = f'https://dx.doi.org/{text_refs["DOI"]}'
+    elif text_refs.get('URL'):
+        name = 'other'
+        link = text_refs['URL']
     return (link, name)
