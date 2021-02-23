@@ -8,6 +8,7 @@ logger = logging.getLogger()
 api_key = os.environ.get('XDD_API_KEY')
 doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
 obj_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/object/'
+query_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/search'
 
 
 def get_document_objects(doi):
@@ -57,3 +58,21 @@ def get_document_figures(paper_id, paper_id_type):
     for obj in objects:
         fig_list.append(get_figure(obj))
     return fig_list
+
+
+def get_search_figures(query):
+    res = requests.get(query_url, params={'query': query, 'api_key': api_key})
+    rj = res.json()
+    if 'objects' not in rj:
+        logger.warning(f'Could not get objects for {query}')
+        if 'error' in rj:
+            logger.warning(rj['error'])
+        return
+    figures = []
+    for obj in rj['objects']:
+        for child in obj['children']:
+            if child['cls'] in ['Figure', 'Table']:
+                txt = child['header_content']
+                b = child['bytes']
+                figures.append((txt, b))
+    return figures
