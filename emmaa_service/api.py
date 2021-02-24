@@ -602,7 +602,7 @@ def _get_external_paper_link(model, paper_id, model_stats):
             url_param = parse.urlencode(
                 {'paper_id': paper_id, 'paper_id_type': 'trid'})
             ann_url = f'/annotate_paper/{model}?{url_param}'
-            paper_tuple = ('annotate', ann_url, link, name,
+            paper_tuple = ('annotate', ann_url, paper_id, link, name,
                            'Click to view this paper')
         else:
             paper_tuple = (link, name, 'Click to view this paper')

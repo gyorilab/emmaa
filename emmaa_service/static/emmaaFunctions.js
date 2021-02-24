@@ -262,7 +262,21 @@ function toTitleCase(phrase) {
   return newPhrase;
 };
 
-function annotate(api_route) {
+function notify(msg, statusId, url='') {
+  console.log('calling notify with params:')
+  console.log(msg, statusId, url)
+  document.getElementById(statusId).textContent = msg;
+  if (url != '') {
+    console.log('adding url')
+    document.getElementById(statusId).insertAdjacentHTML('afterend', `<a href="${url}" target="_blank">here</a>`);
+  }
+}
+
+function annotate(api_route, paper_id) {
+  console.log('Annotating paper')
+  $(`#${paper_id}-gif`).show();
+  var statusId = `${paper_id}-status`;
+  notify('Wait while paper is being annotated', statusId);
   return $.ajax({
     url: api_route,
     type: 'GET',
@@ -270,26 +284,33 @@ function annotate(api_route) {
     complete: function(xhr, statusText) {
       console.log('responseJSON');
       console.log(xhr.responseJSON);
-      console.log(statusText); 
+      console.log(statusText);
+      $(`#${paper_id}-gif`).hide(); 
       switch (xhr.status) {
         case 200:
           console.log('200 response');
           if (xhr.responseJSON.redirectURL) {
-            console.log(xhr.responseJSON.redirectURL)
-            window.open(xhr.responseJSON.redirectURL, target="_blank");
+            redirect_url = xhr.responseJSON.redirectURL;
+            console.log(redirect_url)
+            notify(`Annotations added, see `, statusId, redirect_url);
+            window.open(redirect_url, target="_blank");
           }
           break;
         case 400:
           console.log('400 response');
+          notify(xhr.responseText, statusId);
           break;
         case 404:
           console.log('404 response');
+          notify(xhr.responseText, statusId);
           break;
         case 500:
           console.log('500 response');
+          notify(xhr.responseText, statusId);
           break;
         default:
           console.log(`Unhandled server response: ${xhr.status}`);
+          notify(xhr.responseText, statusId);
       }
     }   
   })
