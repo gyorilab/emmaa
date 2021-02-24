@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
+from flask_cors import CORS
+
 from flask_jwt_extended import jwt_optional
 from urllib import parse
 from collections import defaultdict, Counter
@@ -44,6 +46,7 @@ app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
+CORS(app)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
