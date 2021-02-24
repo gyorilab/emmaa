@@ -276,7 +276,7 @@ function annotate(api_route, paper_id) {
   console.log('Annotating paper')
   $(`#${paper_id}-gif`).show();
   var statusId = `${paper_id}-status`;
-  notify('Wait while paper is being annotated', statusId);
+  notify('Wait while we add annotations', statusId);
   return $.ajax({
     url: api_route,
     type: 'GET',
