@@ -36,6 +36,8 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
+from indra.sources.hypothesis import upload_statement_annotation
+
 
 app = Flask(__name__)
 app.register_blueprint(auth)
@@ -539,7 +541,7 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
     return badges
 
 
-def get_new_papers(model_stats, date):
+def get_new_papers(model, model_stats, date):
     paper_id_counts = []
     trids = model_stats['paper_delta']['raw_paper_ids_delta']['added']
     for paper_id in trids:
@@ -553,7 +555,7 @@ def get_new_papers(model_stats, date):
     if not paper_id_counts:
         return 'Did not process new papers'
     new_papers = [[_get_paper_title_tuple(paper_id, model_stats, date),
-                   _get_external_paper_link(paper_id, model_stats),
+                   _get_external_paper_link(model, paper_id, model_stats),
                    ('', str(assembled_count), ''),
                    ('', str(raw_count), '')]
                   for paper_id, assembled_count, raw_count in paper_id_counts]
@@ -590,11 +592,20 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
     return paper_tuple
 
 
-def _get_external_paper_link(paper_id, model_stats):
+def _get_external_paper_link(model, paper_id, model_stats):
     trid_to_link = model_stats['paper_summary'].get('paper_links', {})
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(
+        str(paper_id))
     if trid_to_link.get(str(paper_id)):
         link, name = trid_to_link[str(paper_id)]
-        paper_tuple = (link, name, 'Click to view this paper')
+        if paper_hashes:
+            url_param = parse.urlencode(
+                {'paper_id': paper_id, 'paper_id_type': 'trid'})
+            ann_url = f'/annotate_paper/{model}?{url_param}'
+            paper_tuple = ('annotate', ann_url, paper_id, link, name,
+                           'Click to view this paper')
+        else:
+            paper_tuple = (link, name, 'Click to view this paper')
     else:
         paper_tuple = ('', 'N/A', '')
     return paper_tuple
@@ -764,9 +775,9 @@ def get_model_dashboard(model):
     else:
         trids_counts = model_stats['paper_summary']['paper_distr'][:10]
         paper_distr = [[_get_paper_title_tuple(paper_id, model_stats, date),
-                        _get_external_paper_link(paper_id, model_stats),
+                        _get_external_paper_link(model, paper_id, model_stats),
                         ('', str(c), '')] for paper_id, c in trids_counts]
-        new_papers = get_new_papers(model_stats, date)
+        new_papers = get_new_papers(model, model_stats, date)
 
     logger.info('Rendering page')
     return render_template('model_template.html',
@@ -800,6 +811,58 @@ def get_model_dashboard(model):
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
                            new_papers=new_papers)
+
+
+@app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
+def annotate_paper_statements(model):
+    """Upload hypothes.is annotations for a given paper
+
+    Parameters
+    ----------
+    model : str
+        A name of a model to get statements from.
+    date : str
+        Date in the format "YYYY-MM-DD" to load the model state.
+    paper_id : str
+        ID of a paper to get statements from.
+    paper_id_type : str
+        Type of paper ID (e.g. TRID, PMID, PMCID, DOI).
+    """
+    date = request.args.get('date')
+    paper_id = request.args.get('paper_id')
+    paper_id_type = request.args.get('paper_id_type')
+    if paper_id_type == 'TRID':
+        trid = paper_id
+    else:
+        db = get_db('primary')
+        trids = _get_trids(db, paper_id, paper_id_type.lower())
+        if trids:
+            trid = str(trids[0])
+        else:
+            abort(Response(f'Invalid paper ID: {paper_id}', 400))
+    all_stmts = _load_stmts_from_cache(model, date)
+    model_stats = _load_model_stats_from_cache(model, date)
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
+    paper_stmts = [stmt for stmt in all_stmts
+                   if stmt.get_hash() in paper_hashes]
+    for stmt in paper_stmts:
+        stmt.evidence = [ev for ev in stmt.evidence
+                         if str(ev.text_refs.get('TRID')) == trid]
+    url = None
+    for i, stmt in enumerate(paper_stmts):
+        logger.info(f'Annotating statement {i + 1} out of {len(paper_stmts)}')
+        anns = upload_statement_annotation(stmt)
+        if anns:
+            url = anns[0]['url']
+    if url:
+        return {'redirectURL': url}
+    else:
+        return {'redirectURL': '/no_annotations'}
+
+
+@app.route('/no_annotations')
+def no_annotations():
+    return Response('Could not annotate the paper')
 
 
 @app.route('/statements_from_paper/<model>', methods=['GET', 'POST'])
