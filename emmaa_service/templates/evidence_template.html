@@ -78,12 +78,11 @@
 <div class="container" id="app">
   {% if source == 'model_statement' %}
   {% set url = url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') %}
-  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
   {% elif source == 'test' %}
   {% set url = url_for('get_tests_by_hash', test_corpus=test_corpus, hash_val='') %}
-  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
   {% elif source == 'paper' %}
   {% set url = url_for('get_statement_by_paper', model=model, paper_id=paper_id, paper_id_type=paper_id_type, date=date, hash_val='') %}
+  {% endif %}
   <div class="container nav-container">
     <nav>
       <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -109,9 +108,12 @@
         <br>
       {% endfor %}
     {% else %}
+      {% if source == 'paper' %}
       Could not get any figures and tables for this paper
+      {% else %}
+      Could not get any figures and tables for this statement
+      {% endif %}
     {% endif %}
-  {% endif %}
 
 </div>
 <script>
