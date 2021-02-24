@@ -36,7 +36,7 @@ from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, Query
-from emmaa.xdd import get_document_figures
+from emmaa.xdd import get_document_figures, get_search_figures
 from emmaa.analyze_tests_results import _get_trid_title
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
@@ -1284,6 +1284,8 @@ def get_statement_evidence_page():
     else:
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
         return Response(stmt_json, mimetype='application/json')
+    query = ' '.join([ag.name for ag in stmts[0].agent_list()])
+    fig_list = get_search_figures(query)
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -1292,7 +1294,8 @@ def get_statement_evidence_page():
                            table_title='Statement Evidence and Curation',
                            msg=None,
                            is_all_stmts=False,
-                           date=date)
+                           date=date,
+                           fig_list=fig_list)
 
 
 @app.route('/curated_statements/<model>')
