@@ -12,6 +12,7 @@ query_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/search'
 
 
 def get_document_objects(doi):
+    """Get a list of figure/table object dictionaries for a given DOI."""
     res = requests.get(doc_url, params={'doi': doi, 'api_key': api_key})
     rj = res.json()
     if 'objects' not in rj:
@@ -25,6 +26,7 @@ def get_document_objects(doi):
 
 
 def get_figure_from_document_object(obj_dict):
+    """Get a figure title and bytes content from figure object dictionary."""
     txt = obj_dict['header_content']
     url = f"{obj_url}{obj_dict['id']}"
     res = requests.get(url, {'api_key': api_key})
@@ -36,6 +38,20 @@ def get_figure_from_document_object(obj_dict):
 
 
 def get_document_figures(paper_id, paper_id_type):
+    """Get figures and tables from a given paper.
+
+    Parameters
+    ----------
+    paper_id : str or int
+        ID of a paper.
+    paper_id_type : str
+        A name of a paper ID type (PMID, PMCID, DOI, TRID).
+
+    Returns
+    -------
+    figures : list[tuple]
+        A list of tuples where each tuple is a figure title and bytes content.
+    """
     paper_id_type = paper_id_type.upper()
     if paper_id_type == 'DOI':
         doi = paper_id
@@ -54,14 +70,29 @@ def get_document_figures(paper_id, paper_id_type):
     objects = get_document_objects(doi)
     if not objects:
         return []
-    fig_list = []
+    figures = []
     for obj in objects:
-        fig_list.append(get_figure_from_document_object(obj))
-    return fig_list
+        figures.append(get_figure_from_document_object(obj))
+    return figures
 
 
 def get_figures_from_query(query, limit=None):
+    """Get figures and tables from a query.
+
+    Parameters
+    ----------
+    query : str
+        An entity name or comma-separated entity names to query for.
+    limit : int or None
+        A number of figures and tables to return.
+
+    Returns
+    -------
+    figures : list[tuple]
+        A list of tuples where each tuple is a figure title and bytes content.
+    """
     logger.info(f'Got a request for query {query} with limit {limit}')
+    # Get first batch of results and find the total number of results
     rj = send_query_search_request(query, page=0)
     if not rj:
         return []
@@ -96,6 +127,7 @@ def get_figures_from_query(query, limit=None):
 
 
 def send_query_search_request(query, page):
+    """Send a request to get one page of results for a query."""
     logger.info(f'Sending a request for query {query}, page {page}')
     res = requests.get(
         query_url,
@@ -114,6 +146,8 @@ def send_query_search_request(query, page):
 
 
 def get_figures_from_query_objects(objects):
+    """Get a list of figure titles and their content bytes from a list of
+    object dictionaries (returned from query api).
     figures = []
     for obj in objects:
         for child in obj['children']:
