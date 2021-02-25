@@ -1,1 +1,1 @@
-from .xdd_client import get_document_figures, get_search_figures
+from .xdd_client import get_document_figures, get_figures_from_query

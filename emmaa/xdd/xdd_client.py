@@ -24,7 +24,7 @@ def get_document_objects(doi):
     return objects
 
 
-def get_figure(obj_dict):
+def get_figure_from_document_object(obj_dict):
     txt = obj_dict['header_content']
     url = f"{obj_url}{obj_dict['id']}"
     res = requests.get(url, {'api_key': api_key})
@@ -56,7 +56,7 @@ def get_document_figures(paper_id, paper_id_type):
         return []
     fig_list = []
     for obj in objects:
-        fig_list.append(get_figure(obj))
+        fig_list.append(get_figure_from_document_object(obj))
     return fig_list
 
 
