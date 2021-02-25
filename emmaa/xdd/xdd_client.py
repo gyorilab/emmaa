@@ -75,6 +75,8 @@ def get_document_figures(paper_id, paper_id_type):
         ref_dict = tr.get_ref_dict()
         doi = ref_dict.get('DOI')
     if not doi:
+        logger.warning(f'Could not get DOI from {paper_id_type} {paper_id}, '
+                       'returning 0 figures and tables')
         return []
     objects = get_document_objects(doi)
     if not objects:
@@ -82,6 +84,7 @@ def get_document_figures(paper_id, paper_id_type):
     figures = []
     for obj in objects:
         figures.append(get_figure_from_document_object(obj))
+    logger.info(f'Returning {len(figures)} figures and tables.')
     return figures
 
 
@@ -122,7 +125,9 @@ def get_figures_from_query(query, limit=None):
             new_figures = get_figures_from_query_objects(rj['objects'])
             figures += new_figures
             objects += rj['objects']
-        return figures[: limit]
+        figures = figures[: limit]
+        logger.info(f'Returning {len(figures)} figures and tables.')
+        return figures
     # There's no limit so we want to get all objects before getting figures
     while len(objects) < total:
         page += 1
@@ -132,6 +137,7 @@ def get_figures_from_query(query, limit=None):
             break
         objects += rj['objects']
     figures = get_figures_from_query_objects(objects)
+    logger.info(f'Returning {len(figures)} figures and tables.')
     return figures
 
 
