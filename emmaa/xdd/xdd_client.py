@@ -60,16 +60,62 @@ def get_document_figures(paper_id, paper_id_type):
     return fig_list
 
 
-def get_search_figures(query):
-    res = requests.get(query_url, params={'query': query, 'api_key': api_key})
-    rj = res.json()
-    if 'objects' not in rj:
-        logger.warning(f'Could not get objects for {query}')
-        if 'error' in rj:
-            logger.warning(rj['error'])
+def get_figures_from_query(query, limit=None):
+    logger.info(f'Got a request for query {query} with limit {limit}')
+    rj = send_query_search_request(query, page=0)
+    if not rj:
+        return []
+    total = rj.get('total', 0)
+    logger.info(f'Got a total of {total} objects')
+    objects = rj['objects']
+    page = 0
+    # If there's a limit of number of figures so we can stop when we reach it
+    # or when we run out of objects
+    if limit:
+        figures = get_figures_from_query_objects(objects)
+        while len(figures) < limit and len(objects) < total:
+            page += 1
+            rj = send_query_search_request(query, page)
+            if not rj:
+                logger.warning(f'Did not get results for {query}, page {page}')
+                break
+            new_figures = get_figures_from_query_objects(rj['objects'])
+            figures += new_figures
+            objects += rj['objects']
+        return figures[: limit]
+    # There's no limit so we want to get all objects before getting figures
+    while len(objects) < total:
+        page += 1
+        rj = send_query_search_request(query, page)
+        if not rj:
+            logger.warning(f'Did not get results for {query} page {page}')
+            break
+        objects += rj['objects']
+    figures = get_figures_from_query_objects(objects)
+    return figures
+
+
+def send_query_search_request(query, page):
+    logger.info(f'Sending a request for query {query}, page {page}')
+    res = requests.get(
+        query_url,
+        params={'query': query, 'inclusive': True, 'page': page})
+    try:
+        rj = res.json()
+        if 'objects' not in rj:
+            logger.warning(f'Could not get objects for {query}')
+            if 'error' in rj:
+                logger.warning(rj['error'])
+            return
+    except Exception as e:
+        logger.info(e)
         return
+    return rj
+
+
+def get_figures_from_query_objects(objects):
     figures = []
-    for obj in rj['objects']:
+    for obj in objects:
         for child in obj['children']:
             if child['cls'] in ['Figure', 'Table']:
                 txt = child['header_content']
