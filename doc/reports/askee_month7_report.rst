@@ -9,6 +9,31 @@ Natural language dialogue interaction with EMMAA models
 
 Automatically generated text annotations in context
 ---------------------------------------------------
+As an extension of paper centered view of model statements reported last month
+we integrated EMMAA with hypothes.is service that allows annotating webpages.
+The figure below illustrates the part of the updated "Paper" tab on 
+EMMAA dashboard.
+
+.. image:: ../_static/images/hypothesis_badge.png
+
+For each paper that has extracted statements a small hypothesis ("h.") badge is
+displayed. Clicking on this badge starts the process of uploading the annotations
+for statements extracted from this paper. After all annotations are added, an
+external page with this paper opens up in a new tab. In addition, a link to this
+page is displayed on EMMAA website.
+
+.. image:: ../_static/images/annotations_added.png
+
+Viewing the uploaded annotations requires installing Google Chrome hypothes.is
+extension. The figure below shows how annotations can be further viewed and
+curated on a new opened page. In this example, a paper on PubMed Central is
+annotated. The sentences supporting each of the extracted statements are 
+highlighted in the paper and the statements can be viewed in the annotations
+panel on the right. For instance, this image shows the highlighted sentence
+mentioning "FGF1–heparin complex" and the extracted "heparin binds FGF1" INDRA
+statement.
+
+.. image:: ../_static/images/annotations_displayed.png
 
 Developing the EMMAA REST API for flexible integration
 ------------------------------------------------------
