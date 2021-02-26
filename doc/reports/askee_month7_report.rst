@@ -41,11 +41,11 @@ We continued working on extending EMMAA REST API for the integration with other
 teams. One of the key goals was to allow dynamic retrieval of EMMAA models and 
 tests metadata. To enable that we implemented four new endpoints in EMMAA REST 
 API that support the retrieval of the following data:
-- A list of all available EMMAA models;
-- Model metadata (short name, human readable name, description, links to NDEx
-browsing interface and to model's Twitter account) for a given model;
-- A list of test corpora a given model is tested against;
-- Test corpus metadata (name and description) for a given test corpus.
+
+    - A list of all available EMMAA models;
+    - Model metadata (short name, human readable name, description, links to NDEx browsing interface and to model's Twitter account) for a given model;
+    - A list of test corpora a given model is tested against;
+    - Test corpus metadata (name and description) for a given test corpus.
 
 Another extension of EMMAA API we implemented is the support for running
 queries programmatically. Previously it was only possible to submit the queries

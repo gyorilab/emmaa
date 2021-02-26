@@ -32,3 +32,4 @@ Automating Scientific Knowledge Extraction (ASKE) program extension.
    askee_month4_report
    askee_month5_report
    askee_month6_report
+   askee_month7_report
