@@ -1,6 +1,96 @@
 ASKE-E Month 7 Milestone Report
 ===============================
 
+Natural language dialogue interaction with EMMAA models
+-------------------------------------------------------
+This month we developed a new feature that allows users to directly "chat"
+with an EMMAA model. The main idea is to make use of the CLARE dialogue
+system we have previously developed, and create custom instance of it,
+on demand, that load a given EMMAA model and conduct dialogue with respect
+to that model. An instance of the CLARE system is running on a remote
+server and can handle multiple independent user sessions simultaneously.
+Chat sessions are executed through the Pusher framework
+(https://pusher.com/) which handles the real-time aspects of the
+chat interaction (start new session, asynchronously listen to messages,
+deliver messages to connected clients, etc.). In EMMAA, we implemented
+a Pusher chat client which integrates into the main EMMAA dashboard.
+When clicking on the "Chat" button on the card representing a model on the
+EMMAA dashboard, a new page opens up where the user can put in their email
+(this is automatically populated if the user is logged in) and start the
+chat session. They can then talk about a variety of topics, including mechanisms
+represented in the given EMMAA model.
+
+The screenshots below show dialogues with two different EMMAA models: the
+MARM model above and the RAS model below. The first question "what does
+BRAF interact with" highlights the fact that in the two sessions, these
+questions are answer with respect to two different model contexts. In the
+MARM model, we find that "BRAF can interact with BRAF, RAF1, KRAS, MAPK1,
+and vemurafenib", whereas in the Ras model, we find that "BRAF can interact
+with MAP2K1, SRC, KRAS, and BAD".
+
+.. image:: ../_static/images/emmaa_chat_marm_model.png
+   :align: center
+   :scale: 50%
+
+
+.. image:: ../_static/images/emmaa_chat_ras_model.png
+   :align: center
+   :scale: 50%
+
+A key feature of human-machine dialogue
+as implemented by CLARE is that it maintains dialogue context and can
+interpret and answer follow-up questions using co-references that refer
+to previous questions or answers. This allows exploring complex mechanisms,
+such as ones represented in EMMAA models, sequentially. This kind of
+sequential exploration with intuitive co-reference resolution would be
+difficult to implement using traditional form-based web interfaces.
+
+The two dialogues above also demonstrate this context-aware co-reference
+resolution feature. For instance, the questions "are any of those small
+molecules?", "are any of those kinases?" or "are there any drugs for any of
+those?" are all questions making use of this feature.
+
+We further plan to improve the rendering of some answers (bulleted lists,
+HTML formatting, etc.). We will also improve session management on the back-end
+to allow terminating sessions explicitl. Finally, we plan to make more
+tutorials and demos available for this dialogue integration to help users make
+best use of it.
+
+Automatically generated text annotations in context
+---------------------------------------------------
+As an extension of the paper centered view of model statements reported last
+month we integrated EMMAA with the hypothes.is service that allows annotating
+webpages.  The figure below illustrates the relevant part of the updated
+"Paper" tab on the EMMAA dashboard.
+
+.. image:: ../_static/images/hypothesis_badge.png
+   :align: center
+   :scale: 30%
+
+For each paper from which statements were extracted, a small hypothesis ("h.")
+badge is displayed. Clicking on this badge starts the process of uploading the
+annotations for statements extracted from this paper. After all annotations are
+added, an external page with this paper opens up in a new tab. In addition, a
+link to this page is displayed on the EMMAA website.
+
+.. image:: ../_static/images/annotations_added.png
+   :align: center
+   :scale: 30%
+
+Viewing the uploaded annotations requires the user to install the hypothes.is
+extension in their browser. The figure below shows how annotations can be
+viewed and edited on the newly opened page. In this example, a paper on PubMed
+Central was automatically annotated. The sentences supporting each of the
+extracted statements are highlighted in the paper and the statements can be
+viewed in the annotations panel on the right. For instance, this image shows
+the highlighted sentence mentioning "FGF1–heparin complex" and the extracted
+"heparin binds FGF1" INDRA statement.
+
+.. image:: ../_static/images/annotations_displayed.png
+   :align: center
+   :scale: 30%
+
+
 Demonstrations at the stakeholder meeting
 -----------------------------------------
 The February 2021 stakeholder meeting focused on system integration: we
@@ -38,43 +128,6 @@ HMI.
 .. image:: ../_static/images/askee_hmi_2.png
    :align: center
    :scale: 50%
-
-Natural language dialogue interaction with EMMAA models
--------------------------------------------------------
-
-Automatically generated text annotations in context
----------------------------------------------------
-As an extension of the paper centered view of model statements reported last
-month we integrated EMMAA with the hypothes.is service that allows annotating
-webpages.  The figure below illustrates the relevant part of the updated
-"Paper" tab on the EMMAA dashboard.
-
-.. image:: ../_static/images/hypothesis_badge.png
-   :align: center
-   :scale: 30%
-
-For each paper from which statements were extracted, a small hypothesis ("h.")
-badge is displayed. Clicking on this badge starts the process of uploading the
-annotations for statements extracted from this paper. After all annotations are
-added, an external page with this paper opens up in a new tab. In addition, a
-link to this page is displayed on the EMMAA website.
-
-.. image:: ../_static/images/annotations_added.png
-   :align: center
-   :scale: 30%
-
-Viewing the uploaded annotations requires the user to install the hypothes.is
-extension in their browser. The figure below shows how annotations can be
-viewed and edited on the newly opened page. In this example, a paper on PubMed
-Central was automatically annotated. The sentences supporting each of the
-extracted statements are highlighted in the paper and the statements can be
-viewed in the annotations panel on the right. For instance, this image shows
-the highlighted sentence mentioning "FGF1–heparin complex" and the extracted
-"heparin binds FGF1" INDRA statement.
-
-.. image:: ../_static/images/annotations_displayed.png
-   :align: center
-   :scale: 30%
 
 
 Developing the EMMAA REST API for flexible integration
