@@ -3,6 +3,28 @@ ASKE-E Month 7 Milestone Report
 
 Demonstrations at the stakeholder meeting
 -----------------------------------------
+The February 2021 stakeholder meeting focused on system integration: we
+demonstrated how EMMAA models can be displayed and interacted with in the
+UI developed by Uncharted. First, we showed how a keyword search for an
+entity of interest can lead a user to "discover" a relevant paper
+and then an EMMAA model which contains mechanisms surrounding the given entity.
+The user can then interact with a network view of the model, highlighting
+interactions derived from the paper of interst in the context of all concepts organized
+by their ontological categories (for instance, a search for IL6 connects the
+node representing it in the "Human proteins" category with the node representing
+SARS in the "Infections" category. The UI is also able to visualize the subnetwork
+corresponding to the specific paper on a separate tab. The user can then
+click on a node to see additional incoming or outgoing interactions and click
+ont them to add them to this view. The figure below shows interactions
+highlighted in the context of ontology-based categories on the left, and the
+separate view of interactions derived from a given paper on the right.
+
+.. image:: ../_static/images/askee_hmi_1.png
+   :align: center
+   :scale: 50%
+
+
+
 
 Natural language dialogue interaction with EMMAA models
 -------------------------------------------------------
@@ -15,6 +37,8 @@ The figure below illustrates the relevant part of the updated "Paper" tab on the
 EMMAA dashboard.
 
 .. image:: ../_static/images/hypothesis_badge.png
+   :align: center
+   :scale: 30%
 
 For each paper from which statements were extracted, a small hypothesis ("h.") badge is
 displayed. Clicking on this badge starts the process of uploading the annotations
@@ -23,6 +47,8 @@ external page with this paper opens up in a new tab. In addition, a link to this
 page is displayed on the EMMAA website.
 
 .. image:: ../_static/images/annotations_added.png
+   :align: center
+   :scale: 30%
 
 Viewing the uploaded annotations requires the user to install the hypothes.is
 extension in their browser. The figure below shows how annotations can be viewed and
@@ -34,6 +60,9 @@ mentioning "FGF1–heparin complex" and the extracted "heparin binds FGF1" INDRA
 statement.
 
 .. image:: ../_static/images/annotations_displayed.png
+   :align: center
+   :scale: 30%
+
 
 Developing the EMMAA REST API for flexible integration
 ------------------------------------------------------
