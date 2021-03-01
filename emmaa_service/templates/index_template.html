@@ -20,14 +20,15 @@
           <p class="card-text">{{ model_meta['description'] }}</p>
           <div class="justify-content-between align-items-center">
             <div class="btn-group">
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, tab='model') }}" target="_blank">Details</a>
-              <a class="btn btn-sm btn-outline-secondary" style="margin-left: 3px; ;" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}" target="_blank">Query</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('get_model_dashboard', model=model_id, tab='model') }}" target="_blank" title="View the details of this model">Details</a>
+              <a class="btn btn-sm btn-outline-secondary" style="margin-left: 3px; ;" href="{{ url_for('get_query_page', tab='open', preselected=model_id) }}" target="_blank" title="Query this model">Query</a>
               {% if 'ndex' in model_meta %}
               <a class="btn btn-sm btn-outline-secondary" style="margin-left: 3px;" 
-                 href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank">NDEx</a>
+                 href="http://www.ndexbio.org/#/network/{{ model_meta['ndex']['network'] }}" target="_blank" title="Interactive view">NDEx</a>
               {% endif %}
+              <a class="btn btn-sm btn-outline-secondary" style="margin-left: 3px; ;" href="{{ url_for('chat_with_the_model', model=model_id) }}" target="_blank" title="Chat with this model">Chat</a>
               {% if 'twitter_link' in model_meta %}
-              <a href="{{ model_meta['twitter_link'] }}"  target="_blank" class="btn btn-sm fa fa-twitter" style="margin-left: 3px;"></a>
+              <a href="{{ model_meta['twitter_link'] }}"  target="_blank" class="btn btn-sm fa fa-twitter" style="margin-left: 3px;"  title="Check this model's Twitter"></a>
               {% endif %}
             </div>
           </div>
