@@ -5,20 +5,25 @@ Natural language dialogue interaction with EMMAA models
 -------------------------------------------------------
 This month we developed a new feature that allows users to directly "chat"
 with an EMMAA model. The main idea is to make use of the CLARE dialogue
-system we have previously developed, and create custom instance of it,
+system we have previously developed, and create custom instances of it,
 on demand, that load a given EMMAA model and conduct dialogue with respect
 to that model. An instance of the CLARE system is running on a remote
 server and can handle multiple independent user sessions simultaneously.
-Chat sessions are executed through the Pusher framework
+Chat sessions are orchestrated through the Pusher framework
 (https://pusher.com/) which handles the real-time aspects of the
-chat interaction (start new session, asynchronously listen to messages,
-deliver messages to connected clients, etc.). In EMMAA, we implemented
+chat interaction (initialize new user session,
+asynchronously listen to messages, deliver messages to connected clients, etc.).
+In EMMAA, we implemented
 a Pusher chat client which integrates into the main EMMAA dashboard.
 When clicking on the "Chat" button on the card representing a model on the
 EMMAA dashboard, a new page opens up where the user can put in their email
 (this is automatically populated if the user is logged in) and start the
 chat session. They can then talk about a variety of topics, including mechanisms
 represented in the given EMMAA model.
+
+.. image:: ../_static/images/chat_button.png
+   :align: center
+   :scale: 75%
 
 The screenshots below show dialogues with two different EMMAA models: the
 MARM model above and the RAS model below. The first question "what does
@@ -28,14 +33,18 @@ MARM model, we find that "BRAF can interact with BRAF, RAF1, KRAS, MAPK1,
 and vemurafenib", whereas in the Ras model, we find that "BRAF can interact
 with MAP2K1, SRC, KRAS, and BAD".
 
+Chat with the MARM model:
+
 .. image:: ../_static/images/emmaa_chat_marm_model.png
    :align: center
-   :scale: 50%
+   :scale: 80%
 
+
+Chat with the RAS model:
 
 .. image:: ../_static/images/emmaa_chat_ras_model.png
    :align: center
-   :scale: 50%
+   :scale: 80%
 
 A key feature of human-machine dialogue
 as implemented by CLARE is that it maintains dialogue context and can
