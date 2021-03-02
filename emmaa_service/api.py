@@ -1250,10 +1250,14 @@ def get_statement_evidence_page():
             cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
                 {'error_type': cur['tag']})
         cur_counts = _count_curations(curations, stmts_by_hash)
+        if len(stmts) > 1:
+            with_evid = False
+        else:
+            with_evid = True
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                      test_corpus, stmt_counts_dict,
-                                     cur_dict, True)
+                                     cur_dict, with_evid)
             stmt_rows.append(stmt_row)
     else:
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
