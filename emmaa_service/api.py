@@ -1239,6 +1239,7 @@ def get_statement_evidence_page():
                     stmts.append(t.stmt)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
+    stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)
     if display_format == 'html':
         stmt_rows = []
         stmts_by_hash = {}
