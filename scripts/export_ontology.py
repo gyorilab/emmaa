@@ -58,11 +58,21 @@ def add_mesh_parents(bio_ontology: BioOntology):
 
     edges_to_add = []
     for node in bio_ontology.nodes():
+        # First deal with subtree root nodes
         subtree = is_mesh_subroot_node(bio_ontology, node)
         if subtree is not None:
             edges_to_add.append((
                 node,
                 bio_ontology.label('MESH', subtree),
+                {'type': 'isa'}
+            ))
+        db_ns, db_id = bio_ontology.get_ns_id(node)
+        # Then deal with supplementary concepts
+        if db_ns == 'MESH' and db_id.startswith('C') \
+                and db_id != 'C':  # To skip the previously added subroot node
+            edges_to_add.append((
+                node,
+                bio_ontology.label('MESH', 'S'),
                 {'type': 'isa'}
             ))
     bio_ontology.add_edges_from(edges_to_add)
@@ -161,6 +171,11 @@ def _process_categories():
     return categories
 
 
+def map_node_names(bio_ontology, rename_map):
+    for node_label, new_name in rename_map.items():
+        bio_ontology.nodes[node_label]['name'] = rename_map
+
+
 categories = _process_categories()
 
 category_map = {
@@ -189,14 +204,22 @@ mesh_roots_map = {
     'N': 'Health Care',
     'V': 'Publication Characteristic',
     'Z': 'Geographicals',
+    # This is added manually for supplementary concepts, it's not a real
+    # sub-tree letter
+    'S': 'Supplementary Concept'
+}
+
+rename_map = {
+    'HP:HP:0000001': 'Human phenotype'
 }
 
 
 if __name__ == '__main__':
-    export_version = '3'
+    export_version = '1'
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
+    map_node_names(bio_ontology, rename_map)
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
