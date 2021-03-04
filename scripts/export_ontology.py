@@ -2,6 +2,7 @@
 graph with additional nodes to group entities."""
 import json
 import gzip
+import boto3
 import pandas
 import networkx
 from indra.databases import uniprot_client, mesh_client
@@ -75,6 +76,16 @@ def add_mesh_parents(bio_ontology: BioOntology):
                 bio_ontology.label('MESH', 'S'),
                 {'type': 'isa'}
             ))
+    bio_ontology.add_edges_from(edges_to_add)
+
+
+def add_chebi_parents(bio_ontology: BioOntology):
+    """Add missing root level nodes to the ChEBI ontology."""
+    chebi_root = bio_ontology.label('CHEBI', '0')
+    bio_ontology.add_node(chebi_root, name='small molecule')
+    edges_to_add = []
+    for node in {'CHEBI:24431', 'CHEBI:36342', 'CHEBI:50906'}:
+        edges_to_add.append((node, chebi_root, {'type': 'isa'}))
     bio_ontology.add_edges_from(edges_to_add)
 
 
@@ -210,7 +221,9 @@ mesh_roots_map = {
 }
 
 rename_map = {
-    'HP:HP:0000001': 'Human phenotype'
+    'HP:HP:0000001': 'Human phenotype',
+    'CHEBI:CHEBI:24431': 'chemicals by structure',
+    'CHEBI:CHEBI:50906': 'chemicals by role',
 }
 
 
@@ -219,9 +232,17 @@ if __name__ == '__main__':
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
+    add_chebi_parents(bio_ontology)
     map_node_names(bio_ontology, rename_map)
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
     with gzip.open(fname, 'wb') as fh:
         fh.write(json.dumps(node_link, indent=1).encode('utf-8'))
+    # S3 upload
+    s3 = boto3.client('s3')
+    with open(fname, 'rb') as fh:
+        s3.put_object(Body=fh.read(),
+                      Bucket='emmaa',
+                      Key=f'integration/ontology/{fname}',
+                      ACL='public-read')
