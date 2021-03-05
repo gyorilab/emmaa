@@ -81,10 +81,11 @@ def add_mesh_parents(bio_ontology: BioOntology):
 
 def add_chebi_parents(bio_ontology: BioOntology):
     """Add missing root level nodes to the ChEBI ontology."""
-    chebi_root = bio_ontology.label('CHEBI', '0')
+    chebi_root = bio_ontology.label('CHEBI', 'CHEBI:0')
     bio_ontology.add_node(chebi_root, name='small molecule')
     edges_to_add = []
-    for node in {'CHEBI:24431', 'CHEBI:36342', 'CHEBI:50906'}:
+    for node in {'CHEBI:CHEBI:24431', 'CHEBI:CHEBI:36342',
+                 'CHEBI:CHEBI:50906'}:
         edges_to_add.append((node, chebi_root, {'type': 'isa'}))
     bio_ontology.add_edges_from(edges_to_add)
 
@@ -241,6 +242,7 @@ if __name__ == '__main__':
         fh.write(json.dumps(node_link, indent=1).encode('utf-8'))
     # S3 upload
     s3 = boto3.client('s3')
+    print('Uploading to S3')
     with open(fname, 'rb') as fh:
         s3.put_object(Body=fh.read(),
                       Bucket='emmaa',
