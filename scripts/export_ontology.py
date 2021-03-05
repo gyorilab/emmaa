@@ -2,6 +2,7 @@
 graph with additional nodes to group entities."""
 import json
 import gzip
+import boto3
 import pandas
 import networkx
 from indra.databases import uniprot_client, mesh_client
@@ -58,6 +59,7 @@ def add_mesh_parents(bio_ontology: BioOntology):
 
     edges_to_add = []
     for node in bio_ontology.nodes():
+        # First deal with subtree root nodes
         subtree = is_mesh_subroot_node(bio_ontology, node)
         if subtree is not None:
             edges_to_add.append((
@@ -65,6 +67,26 @@ def add_mesh_parents(bio_ontology: BioOntology):
                 bio_ontology.label('MESH', subtree),
                 {'type': 'isa'}
             ))
+        db_ns, db_id = bio_ontology.get_ns_id(node)
+        # Then deal with supplementary concepts
+        if db_ns == 'MESH' and db_id.startswith('C') \
+                and db_id != 'C':  # To skip the previously added subroot node
+            edges_to_add.append((
+                node,
+                bio_ontology.label('MESH', 'S'),
+                {'type': 'isa'}
+            ))
+    bio_ontology.add_edges_from(edges_to_add)
+
+
+def add_chebi_parents(bio_ontology: BioOntology):
+    """Add missing root level nodes to the ChEBI ontology."""
+    chebi_root = bio_ontology.label('CHEBI', 'CHEBI:0')
+    bio_ontology.add_node(chebi_root, name='small molecule')
+    edges_to_add = []
+    for node in {'CHEBI:CHEBI:24431', 'CHEBI:CHEBI:36342',
+                 'CHEBI:CHEBI:50906'}:
+        edges_to_add.append((node, chebi_root, {'type': 'isa'}))
     bio_ontology.add_edges_from(edges_to_add)
 
 
@@ -161,6 +183,11 @@ def _process_categories():
     return categories
 
 
+def map_node_names(bio_ontology, rename_map):
+    for node_label, new_name in rename_map.items():
+        bio_ontology.nodes[node_label]['name'] = rename_map
+
+
 categories = _process_categories()
 
 category_map = {
@@ -189,16 +216,35 @@ mesh_roots_map = {
     'N': 'Health Care',
     'V': 'Publication Characteristic',
     'Z': 'Geographicals',
+    # This is added manually for supplementary concepts, it's not a real
+    # sub-tree letter
+    'S': 'Supplementary Concept'
+}
+
+rename_map = {
+    'HP:HP:0000001': 'Human phenotype',
+    'CHEBI:CHEBI:24431': 'chemicals by structure',
+    'CHEBI:CHEBI:50906': 'chemicals by role',
 }
 
 
 if __name__ == '__main__':
-    export_version = '3'
+    export_version = '1'
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
+    add_chebi_parents(bio_ontology)
+    map_node_names(bio_ontology, rename_map)
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
     with gzip.open(fname, 'wb') as fh:
         fh.write(json.dumps(node_link, indent=1).encode('utf-8'))
+    # S3 upload
+    s3 = boto3.client('s3')
+    print('Uploading to S3')
+    with open(fname, 'rb') as fh:
+        s3.put_object(Body=fh.read(),
+                      Bucket='emmaa',
+                      Key=f'integration/ontology/{fname}',
+                      ACL='public-read')
