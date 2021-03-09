@@ -463,10 +463,20 @@ def _set_curation(stmt_hash, correct, incorrect):
     return cur
 
 
-def _label_curations(**kwargs):
+def _label_curations(include_partial=False, **kwargs):
     logger.info('Getting curations')
     curations = get_curations(**kwargs)
     logger.info('Labeling curations')
+    if include_partial:
+        correct = {str(c['pa_hash']) for c in curations if
+                   c['tag'] == 'correct'}
+        partial = {str(c['pa_hash']) for c in curations if
+                   c['tag'] in ['act_vs_amt', 'hypothesis'] and
+                   str(c['pa_hash']) not in correct}
+        incorrect = {str(c['pa_hash']) for c in curations if
+                     str(c['pa_hash']) not in correct and
+                     str(c['pa_hash']) not in partial}
+        return correct, incorrect, partial
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     correct = {str(c['pa_hash']) for c in curations if
                c['tag'] in correct_tags}
@@ -1272,6 +1282,20 @@ def get_statement_evidence_page():
                            msg=None,
                            is_all_stmts=False,
                            date=date)
+
+
+@app.route('/curated_statements/<model>')
+def get_curated_statements(model):
+    date = request.args.get('date')
+    if not date:
+        date = get_latest_available_date(model, _default_test(model))
+    model_stats = _load_model_stats_from_cache(model, date)
+    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
+    correct, incorrect, partial = _label_curations(include_partial=True,
+                                                   pa_hash=stmt_hashes)
+    return jsonify({'correct': list(correct),
+                    'partial': list(partial),
+                    'incorrect': list(incorrect)})
 
 
 @app.route('/all_statements/<model>')
