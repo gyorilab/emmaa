@@ -108,8 +108,9 @@
         {{ fig_title }}
         <br>
         {% endif %}
-        <img src="data:image/jpg;base64, {{ fig_bytes }}">
+        <img src="data:image/jpg;base64, {{ fig_bytes }}" style="width: 50vw;">
         <br>
+        <hr class="solid" style="border-top: solid 5px;">
       {% endfor %}
     {% else %}
       {% if source == 'paper' %}
