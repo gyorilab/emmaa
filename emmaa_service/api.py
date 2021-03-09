@@ -1283,15 +1283,19 @@ def get_statement_evidence_page():
                            is_all_stmts=False,
                            date=date)
 
+
 @app.route('/curated_statements/<model>')
 def get_curated_statements(model):
     date = request.args.get('date')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
-    stmts = _load_stmts_from_cache(model, date)
-    stmt_hashes = {stmt.get_hash() for stmt in stmts}
-    curation_hashes = {cur['pa_hash'] for cur in get_curations()}
-    return jsonify(sorted(stmt_hashes & curation_hashes))
+    model_stats = _load_model_stats_from_cache(model, date)
+    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
+    correct, incorrect, partial = _label_curations(include_partial=True,
+                                                   pa_hash=stmt_hashes)
+    return jsonify({'correct': list(correct),
+                    'partial': list(partial),
+                    'incorrect': list(incorrect)})
 
 
 @app.route('/all_statements/<model>')
