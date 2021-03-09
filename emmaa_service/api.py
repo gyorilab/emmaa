@@ -463,10 +463,20 @@ def _set_curation(stmt_hash, correct, incorrect):
     return cur
 
 
-def _label_curations(**kwargs):
+def _label_curations(include_partial=False, **kwargs):
     logger.info('Getting curations')
     curations = get_curations(**kwargs)
     logger.info('Labeling curations')
+    if include_partial:
+        correct = {str(c['pa_hash']) for c in curations if
+                   c['tag'] == 'correct'}
+        partial = {str(c['pa_hash']) for c in curations if
+                   c['tag'] in ['act_vs_amt', 'hypothesis'] and
+                   str(c['pa_hash']) not in correct}
+        incorrect = {str(c['pa_hash']) for c in curations if
+                     str(c['pa_hash']) not in correct and
+                     str(c['pa_hash']) not in partial}
+        return correct, incorrect, partial
     correct_tags = ['correct', 'act_vs_amt', 'hypothesis']
     correct = {str(c['pa_hash']) for c in curations if
                c['tag'] in correct_tags}
