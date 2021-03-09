@@ -74,7 +74,11 @@
       </div>
     </div>
   </div>
-{% endif %}
+<div class="container" id="app">
+  {% set url = url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') %}
+  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+</div>
+{% else %}
 <div class="container" id="app">
   {% if source == 'model_statement' %}
   {% set url = url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') %}
@@ -114,7 +118,7 @@
       Could not get any figures and tables for this statement
       {% endif %}
     {% endif %}
-
+{% endif %}
 </div>
 <script>
   Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') }}";
