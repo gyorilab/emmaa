@@ -4,7 +4,7 @@ import logging
 from indra_db import get_db
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 api_key = os.environ.get('XDD_API_KEY')
 doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
 obj_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/object/'
@@ -160,8 +160,9 @@ def send_request(url, params):
 def send_query_search_request(query, page):
     """Send a request to get one page of results for a query."""
     logger.info(f'Sending a request for query {query}, page {page}')
-    return send_request(query_url,
-                        {'query': query, 'inclusive': True, 'page': page})
+    return send_request(
+        query_url,
+        {'query': query, 'inclusive': True, 'page': page, 'api_key': api_key})
 
 
 def send_document_search_request(doi, page):
