@@ -973,7 +973,8 @@ def get_paper_statements(model):
                            date=date,
                            paper_id=paper_id,
                            paper_id_type=paper_id_type,
-                           fig_list=fig_list)
+                           fig_list=fig_list,
+                           tabs=True)
 
 
 @app.route('/tests/<model>')
@@ -1274,8 +1275,14 @@ def get_statement_evidence_page():
         cur_counts = _count_curations(curations, stmts_by_hash)
         if len(stmts) > 1:
             with_evid = False
+            tabs = False
+            fig_list = None
         else:
             with_evid = True
+            tabs = True
+            query = ','.join(
+                [ag.name for ag in stmts[0].agent_list() if ag is not None])
+            fig_list = get_figures_from_query(query, limit=None)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                      test_corpus, stmt_counts_dict,
@@ -1284,8 +1291,6 @@ def get_statement_evidence_page():
     else:
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
         return Response(stmt_json, mimetype='application/json')
-    query = ','.join([ag.name for ag in stmts[0].agent_list()])
-    fig_list = get_figures_from_query(query, limit=None)
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -1295,7 +1300,8 @@ def get_statement_evidence_page():
                            msg=None,
                            is_all_stmts=False,
                            date=date,
-                           fig_list=fig_list)
+                           fig_list=fig_list,
+                           tabs=tabs)
 
 
 @app.route('/curated_statements/<model>')
@@ -1402,7 +1408,8 @@ def get_all_statements_page(model):
                            filter_curated=filter_curated,
                            sort_by=sort_by,
                            link=link,
-                           date=date)
+                           date=date,
+                           tabs=False)
 
 
 @app.route('/query/<model>')
