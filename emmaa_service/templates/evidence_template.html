@@ -1,5 +1,6 @@
 {% extends "emmaa_page_template.html" %}
 {% from "path_macros.html" import path_table, path_card %}
+{% from "tabs/figures_tab.html" import figure_tab %}
 
 {% block additional_scripts %}
 <style>
@@ -84,40 +85,22 @@
   {% set url = url_for('get_statement_by_paper', model=model, paper_id=paper_id, paper_id_type=paper_id_type, date=date, hash_val='') %}
   {% endif %}
   {% if tabs %}
-  <div class="container nav-container">
-    <nav>
-      <div class="nav nav-tabs" id="nav-tab" role="tablist">
-        <a class="nav-item nav-link active" id="nav-stmts-tab" data-toggle="tab" href="#nav-stmts" role="tab" aria-controls="nav-stmts" aria-selected="true">Statements</a>
-        <a class="nav-item nav-link" id="nav-figures-tab" data-toggle="tab" href="#nav-figures" role="tab" aria-controls="nav-figures" aria-selected="false">Figures</a>
-      </div>
-    </nav>
-  </div>
-  <div class="tab-content" id="nav-tabContent">
-    <div class="tab-pane fade show active" id="nav-stmts" role="tabpanel" aria-labelledby="nav-stmts-tab">
-    {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
-  
+    <div class="container nav-container">
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-stmts-tab" data-toggle="tab" href="#nav-stmts" role="tab" aria-controls="nav-stmts" aria-selected="true">Statements</a>
+          <a class="nav-item nav-link" id="nav-figures-tab" data-toggle="tab" href="#nav-figures" role="tab" aria-controls="nav-figures" aria-selected="false">Figures</a>
+        </div>
+      </nav>
     </div>
-    <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">  
-    {% if fig_list %}
-      {% for fig_title, fig_bytes in fig_list %}
-        <br>
-        {% if fig_title %}
-        {{ fig_title }}
-        <br>
-        {% endif %}
-        <img src="data:image/jpg;base64, {{ fig_bytes }}" style="width: 50vw;">
-        <br>
-        <hr class="solid" style="border-top: solid 5px;">
-      {% endfor %}
-    {% else %}
-      {% if source == 'paper' %}
-      Could not get any figures and tables for this paper
-      {% else %}
-      Could not get any figures and tables for this statement
-      {% endif %}
-    {% endif %}
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-stmts" role="tabpanel" aria-labelledby="nav-stmts-tab">
+      {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+      </div>
+      <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">  
+      {{ figure_tab(fig_list, source) }}
   {% else %}
-  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+    {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
   {% endif %}
 </div>
 <script>
