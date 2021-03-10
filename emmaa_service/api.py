@@ -1325,7 +1325,10 @@ def get_all_statements_page(model):
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
     for test_corpus in test_corpora:
-        test_stats, _ = _load_test_stats_from_cache(model, test_corpus, date)
+        test_date = last_updated_date(model, 'test_stats', 'date', test_corpus,
+                                      extension='.json')
+        test_stats, _ = _load_test_stats_from_cache(
+            model, test_corpus, test_date)
         stmt_counts = test_stats['test_round_summary'].get(
             'path_stmt_counts', [])
         stmt_counts_dict += Counter(dict(stmt_counts))
