@@ -185,7 +185,7 @@ def _process_categories():
 
 def map_node_names(bio_ontology, rename_map):
     for node_label, new_name in rename_map.items():
-        bio_ontology.nodes[node_label]['name'] = rename_map
+        bio_ontology.nodes[node_label]['name'] = new_name
 
 
 categories = _process_categories()
@@ -229,7 +229,7 @@ rename_map = {
 
 
 if __name__ == '__main__':
-    export_version = '1'
+    export_version = '2'
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
