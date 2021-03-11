@@ -2,7 +2,16 @@
 
 {% macro figure_tab(fig_list, source) -%}
   {% if fig_list %}
-    {% for fig_title, fig_bytes in fig_list %}
+    {% for figure in fig_list %}
+      {% if figure|length == 3 %}
+        {% set urls, fig_title, fig_bytes = figure %}
+        {% for url in urls %}
+          <a href="{{ url }}">View paper</a>
+        {% endfor %}
+        <br>
+      {% else %}
+        {% set fig_title, fig_bytes = figure %}
+      {% endif %}
       <br>
       {% if fig_title %}
       {{ fig_title }}

@@ -181,5 +181,8 @@ def get_figures_from_query_objects(objects):
             if child['cls'] in ['Figure', 'Table']:
                 txt = child['header_content']
                 b = child['bytes']
-                figures.append((txt, b))
+                urls = set()
+                for link in obj['bibjson']['link']:
+                    urls.add(link['url'])
+                figures.append((urls, txt, b))
     return figures
