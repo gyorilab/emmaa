@@ -1,13 +1,19 @@
+from nose.plugins.attrib import attr
 from emmaa.xdd import get_document_figures, get_figures_from_query
 
 
-def test_document_figures():
-    # Should get results from different paper ID types
+def test_document_figures_doi():
     doi = '10.1101/2020.08.23.20180281'
     fig_list = get_document_figures(doi, 'DOI')
     assert fig_list
     # Should be a list of tuples with title and image bytes
     assert len(fig_list[0]) == 2
+
+
+# This would call database
+@attr('notravis')
+def test_document_figures_other_types():
+    # Should get results from different paper ID types
     trid = 31859624
     fig_list = get_document_figures(trid, 'TRID')
     assert fig_list
