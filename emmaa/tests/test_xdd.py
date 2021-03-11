@@ -23,13 +23,13 @@ def test_document_figures():
 
 
 def test_figures_from_query():
-    query = 'ACE2,TMPRSS2'
+    query = 'ATG12,ATG5'
     # Get full result
     fig_list = get_figures_from_query(query)
     assert fig_list
     assert len(fig_list[0]) == 3
     total = len(fig_list)
-    assert total > 90
+    assert total > 15, total
     # Set smaller limit
     fig_list = get_figures_from_query(query, limit=10)
     assert fig_list
