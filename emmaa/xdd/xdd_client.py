@@ -147,7 +147,8 @@ def send_request(url, params):
     try:
         rj = res.json()
         if 'objects' not in rj:
-            logger.warning(f'Could not get objects for {query}')
+            params.pop('api_key')
+            logger.warning(f'Could not get objects for {params}')
             if 'error' in rj:
                 logger.warning(rj['error'])
             return
