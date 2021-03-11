@@ -39,6 +39,7 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
+from indra.config import get_config
 from indra.sources.hypothesis import upload_statement_annotation
 
 
@@ -66,6 +67,7 @@ SC, jwt = config_auth(app)
 ns_mapping = {'genes/proteins': ['hgnc', 'up', 'fplx'],
               'small molecules': ['chebi', 'drugbank', 'chembl', 'pubchem'],
               'biological processes': ['go', 'mesh']}
+hypothesis_group = get_config('HYPOTHESIS_GROUP')
 
 qm = QueryManager()
 
@@ -880,7 +882,7 @@ def annotate_paper_statements(model):
         logger.info(f'Annotating statement {i + 1} out of {len(paper_stmts)}')
         anns = upload_statement_annotation(stmt)
         if anns:
-            url = anns[0]['url']
+            url = f"{anns[0]['url']}#annotations:group:{hypothesis_group}"
     if url:
         return {'redirectURL': url}
     else:
