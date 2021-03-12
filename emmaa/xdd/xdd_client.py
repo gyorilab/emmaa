@@ -101,7 +101,8 @@ def get_figures_from_query(query, limit=None):
     Returns
     -------
     figures : list[tuple]
-        A list of tuples where each tuple is a figure title and bytes content.
+        A list of tuples where each tuple is a link to the paper, a figure
+        title and bytes content.
     """
     logger.info(f'Got a request for query {query} with limit {limit}')
     # Get first batch of results and find the total number of results
@@ -174,8 +175,8 @@ def send_document_search_request(doi, page):
 
 
 def get_figures_from_query_objects(objects):
-    """Get a list of figure titles and their content bytes from a list of
-    object dictionaries (returned from query api)."""
+    """Get a list of paper links, figure titles and their content bytes from
+    a list of object dictionaries (returned from query api)."""
     figures = []
     for obj in objects:
         for child in obj['children']:
