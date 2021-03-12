@@ -16,4 +16,5 @@ EMMAA modules reference
    readers
    database
    aws_lambda_functions
+   xdd
    util
