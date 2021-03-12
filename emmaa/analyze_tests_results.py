@@ -1173,6 +1173,31 @@ def _get_pmcid_title(pmcid):
     return title
 
 
+def _get_trid_title(trid):
+    db = get_db('primary')
+    tc = db.select_one(db.TextContent,
+                       db.TextContent.text_ref_id == trid,
+                       db.TextContent.text_type == 'title')
+    if tc:
+        title = unpack(tc.content)
+        return title
+    tr = db.select_one(db.TextRef, db.TextRef.id == trid)
+    ref_dict = tr.get_ref_dict()
+    if 'PMID' in ref_dict:
+        pmid = ref_dict['PMID']
+        pmids_to_titles = _get_pmid_titles([pmid])
+        if pmid in pmids_to_titles:
+            return pmids_to_titles[pmid]
+    if 'PMCID' in ref_dict:
+        title = _get_pmcid_title(ref_dict['PMCID'])
+        if title:
+            return title
+    if 'DOI' in ref_dict:
+        title = _get_doi_title(ref_dict['DOI'])
+        if title:
+            return title
+
+
 def _get_publication_link(text_refs):
     if text_refs.get('PMCID'):
         name = 'PMC'

@@ -36,6 +36,8 @@ from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, Query
+from emmaa.xdd import get_document_figures, get_figures_from_query
+from emmaa.analyze_tests_results import _get_trid_title
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -593,11 +595,14 @@ def get_new_papers(model, model_stats, date):
 
 def _get_title(paper_id, model_stats):
     id_to_title = model_stats['paper_summary'].get('paper_titles')
+    title = None
     if id_to_title:
-        title = id_to_title.get(str(paper_id), 'Title not available')
-    else:
-        title = 'Title not available'
-    return title
+        title = id_to_title.get(str(paper_id))
+    if title is None:
+        title = _get_trid_title(paper_id)
+    if title:
+        return title
+    return "Title not available"
 
 
 def _get_paper_title_tuple(paper_id, model_stats, date):
@@ -605,19 +610,11 @@ def _get_paper_title_tuple(paper_id, model_stats, date):
     stmts_by_paper_id = model_stats['paper_summary']['stmts_by_paper']
     stmt_hashes = [
         str(st_hash) for st_hash in stmts_by_paper_id.get(str(paper_id), [])]
-    if not stmt_hashes:
-        url = None
-    else:
-        model = model_stats['model_summary']['model_name']
-        url_param = parse.urlencode(
-            {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
-        url = f'/statements_from_paper/{model}?{url_param}'
-    if url:
-        paper_tuple = (url, title, 'Click to see statements from this paper')
-    # DB url for statements from paper will be available soon
-    # https://db.indra.bio/statements/from_paper/<id_type>/<id_value>
-    else:
-        paper_tuple = ('', title, '')
+    model = model_stats['model_summary']['model_name']
+    url_param = parse.urlencode(
+        {'paper_id': paper_id, 'paper_id_type': 'trid', 'date': date})
+    url = f'/statements_from_paper/{model}?{url_param}'
+    paper_tuple = (url, title, 'Click to see statements from this paper')
     return paper_tuple
 
 
@@ -915,7 +912,7 @@ def get_paper_statements(model):
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
     display_format = request.args.get('format', 'html')
-    if paper_id_type == 'TRID':
+    if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
         db = get_db('primary')
@@ -924,15 +921,19 @@ def get_paper_statements(model):
             trid = str(trids[0])
         else:
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
-    all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
-    paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
-    paper_stmts = [stmt for stmt in all_stmts
-                   if stmt.get_hash() in paper_hashes]
-    updated_stmts = [filter_evidence(stmt, trid, 'TRID')
-                     for stmt in paper_stmts]
-    updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
-                           reverse=True)
+    raw_paper_ids = model_stats['paper_summary']['raw_paper_ids']
+    paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
+    if paper_hashes:
+        all_stmts = _load_stmts_from_cache(model, date)
+        paper_stmts = [stmt for stmt in all_stmts
+                       if stmt.get_hash() in paper_hashes]
+        updated_stmts = [filter_evidence(stmt, trid, 'TRID')
+                         for stmt in paper_stmts]
+        updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
+                               reverse=True)
+    else:
+        updated_stmts = []
     if display_format == 'json':
         resp = {'statements': stmts_to_json(updated_stmts)}
         return resp
@@ -955,8 +956,15 @@ def get_paper_statements(model):
                                  date, None, None, cur_dict, with_evid,
                                  trid, 'TRID')
         stmt_rows.append(stmt_row)
+    if not stmt_rows:
+        if int(trid) in raw_paper_ids:
+            stmt_rows = 'We did not get assembled statements from this paper'
+        else:
+            stmt_rows = 'We did not process this paper in this model'
     paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
+
+    fig_list = get_document_figures(paper_id, paper_id_type)
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -964,7 +972,9 @@ def get_paper_statements(model):
                            table_title=table_title,
                            date=date,
                            paper_id=paper_id,
-                           paper_id_type=paper_id_type)
+                           paper_id_type=paper_id_type,
+                           fig_list=fig_list,
+                           tabs=True)
 
 
 @app.route('/tests/<model>')
@@ -1265,8 +1275,14 @@ def get_statement_evidence_page():
         cur_counts = _count_curations(curations, stmts_by_hash)
         if len(stmts) > 1:
             with_evid = False
+            tabs = False
+            fig_list = None
         else:
             with_evid = True
+            tabs = True
+            query = ','.join(
+                [ag.name for ag in stmts[0].agent_list() if ag is not None])
+            fig_list = get_figures_from_query(query, limit=None)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                      test_corpus, stmt_counts_dict,
@@ -1283,7 +1299,9 @@ def get_statement_evidence_page():
                            table_title='Statement Evidence and Curation',
                            msg=None,
                            is_all_stmts=False,
-                           date=date)
+                           date=date,
+                           fig_list=fig_list,
+                           tabs=tabs)
 
 
 @app.route('/curated_statements/<model>')
@@ -1390,7 +1408,8 @@ def get_all_statements_page(model):
                            filter_curated=filter_curated,
                            sort_by=sort_by,
                            link=link,
-                           date=date)
+                           date=date,
+                           tabs=False)
 
 
 @app.route('/query/<model>')

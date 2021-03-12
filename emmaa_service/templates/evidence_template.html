@@ -1,5 +1,6 @@
 {% extends "emmaa_page_template.html" %}
 {% from "path_macros.html" import path_table, path_card %}
+{% from "tabs/figures_tab.html" import figure_tab %}
 
 {% block additional_scripts %}
 <style>
@@ -83,7 +84,24 @@
   {% elif source == 'paper' %}
   {% set url = url_for('get_statement_by_paper', model=model, paper_id=paper_id, paper_id_type=paper_id_type, date=date, hash_val='') %}
   {% endif %}
-  {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+  {% if tabs %}
+    <div class="container nav-container">
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-stmts-tab" data-toggle="tab" href="#nav-stmts" role="tab" aria-controls="nav-stmts" aria-selected="true">Statements</a>
+          <a class="nav-item nav-link" id="nav-figures-tab" data-toggle="tab" href="#nav-figures" role="tab" aria-controls="nav-figures" aria-selected="false">Figures</a>
+        </div>
+      </nav>
+    </div>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-stmts" role="tabpanel" aria-labelledby="nav-stmts-tab">
+      {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+      </div>
+      <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">  
+      {{ figure_tab(fig_list, source) }}
+  {% else %}
+    {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+  {% endif %}
 </div>
 <script>
   Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') }}";

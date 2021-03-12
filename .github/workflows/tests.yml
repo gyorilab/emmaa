@@ -83,3 +83,4 @@ jobs:
         INDRALAB_USERS_DB: ${{ secrets.INDRALAB_USERS_DB }}
         EMMAADBTEST: ${{ secrets.EMMAADBTEST }}
         EMAIL_SIGN_SECRET: ${{ secrets.EMAIL_SIGN_SECRET }}
+        XDD_API_KEY: ${{ secrets.XDD_API_KEY }}
