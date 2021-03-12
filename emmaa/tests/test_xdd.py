@@ -2,6 +2,7 @@ from nose.plugins.attrib import attr
 from emmaa.xdd import get_document_figures, get_figures_from_query
 
 
+@attr('nonpublic')
 def test_document_figures_doi():
     doi = '10.1101/2020.08.23.20180281'
     fig_list = get_document_figures(doi, 'DOI')
@@ -11,7 +12,7 @@ def test_document_figures_doi():
 
 
 # This would call database
-@attr('notravis')
+@attr('notravis', 'nonpublic')
 def test_document_figures_other_types():
     # Should get results from different paper ID types
     trid = 31859624
@@ -28,6 +29,7 @@ def test_document_figures_other_types():
     assert len(fig_list[0]) == 2
 
 
+@attr('nonpublic')
 def test_figures_from_query():
     query = 'ATG12,ATG5'
     # Get full result
