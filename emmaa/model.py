@@ -12,6 +12,7 @@ from indra.assemblers.indranet import IndraNetAssembler
 from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
+from indra.sources.minerva import process_from_web
 from indra_db.client.principal.curation import get_curations
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
@@ -246,32 +247,36 @@ class EmmaaModel(object):
         if isinstance(readers, str):
             readers = [readers]
         estmts = []
-        for lit_source, reader in zip(lit_sources, readers):
-            ids_to_terms = self.search_literature(lit_source, date_limit)
-            if reader == 'aws':
-                new_estmts = read_pmid_search_terms(
-                    ids_to_terms)
-                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
-            elif reader == 'indra_db_pmid':
-                new_estmts = read_db_pmid_search_terms(
-                    ids_to_terms)
-                self.add_paper_ids(ids_to_terms.keys(), 'pmid')
-            elif reader == 'indra_db_doi':
-                new_estmts = read_db_doi_search_terms(
-                    ids_to_terms)
-                self.add_paper_ids(ids_to_terms.keys(), 'doi')
-            elif reader == 'elsevier_eidos':
-                new_estmts = read_elsevier_eidos_search_terms(
-                    ids_to_terms)
-                self.add_paper_ids(ids_to_terms.keys(), 'pii')
-            else:
-                raise ValueError('Unknown reader: %s' % reader)
-            estmts += new_estmts
-        logger.info('Got a total of %d new EMMAA Statements from reading' %
-                    len(estmts))
-        self.extend_unique(estmts)
+        # Some models are not updated from literature
+        if lit_sources is not None and readers is not None:
+            for lit_source, reader in zip(lit_sources, readers):
+                ids_to_terms = self.search_literature(lit_source, date_limit)
+                if reader == 'aws':
+                    new_estmts = read_pmid_search_terms(
+                        ids_to_terms)
+                    self.add_paper_ids(ids_to_terms.keys(), 'pmid')
+                elif reader == 'indra_db_pmid':
+                    new_estmts = read_db_pmid_search_terms(
+                        ids_to_terms)
+                    self.add_paper_ids(ids_to_terms.keys(), 'pmid')
+                elif reader == 'indra_db_doi':
+                    new_estmts = read_db_doi_search_terms(
+                        ids_to_terms)
+                    self.add_paper_ids(ids_to_terms.keys(), 'doi')
+                elif reader == 'elsevier_eidos':
+                    new_estmts = read_elsevier_eidos_search_terms(
+                        ids_to_terms)
+                    self.add_paper_ids(ids_to_terms.keys(), 'pii')
+                else:
+                    raise ValueError('Unknown reader: %s' % reader)
+                estmts += new_estmts
+            logger.info('Got a total of %d new EMMAA Statements from reading' %
+                        len(estmts))
+            self.extend_unique(estmts)
         if self.reading_config.get('cord19_update'):
             self.update_with_cord19()
+        if self.reading_config.get('disease_map'):
+            self.update_from_disease_map(self.reading_config['disease_map'])
         self.eliminate_copies()
 
     def extend_unique(self, estmts):
@@ -308,6 +313,12 @@ class EmmaaModel(object):
         new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
         self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
         self.add_paper_ids(paper_ids, 'TRID')
+
+    def update_from_disease_map(self, disease_map_config):
+        filenames = disease_map_config['filenames']
+        map_name = disease_map_config['map_name']
+        sp = process_from_web(filenames=filenames, map_name=map_name)
+        self.stmts = to_emmaa_stmts(sp.statements, datetime.datetime.now(), [])
 
     def add_paper_ids(self, initial_ids, id_type='pmid'):
         """Convert if needed and save paper IDs.
