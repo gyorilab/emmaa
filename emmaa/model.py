@@ -315,6 +315,7 @@ class EmmaaModel(object):
         self.add_paper_ids(paper_ids, 'TRID')
 
     def update_from_disease_map(self, disease_map_config):
+        """Update model by processing MINERVA Disease."""
         filenames = disease_map_config['filenames']
         map_name = disease_map_config['map_name']
         sp = process_from_web(filenames=filenames, map_name=map_name)
