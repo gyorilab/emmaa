@@ -246,9 +246,10 @@ class EmmaaModel(object):
             lit_sources = [lit_sources]
         if isinstance(readers, str):
             readers = [readers]
-        estmts = []
+        # First get statements from literature if needed
         # Some models are not updated from literature
         if lit_sources is not None and readers is not None:
+            estmts = []
             for lit_source, reader in zip(lit_sources, readers):
                 ids_to_terms = self.search_literature(lit_source, date_limit)
                 if reader == 'aws':
@@ -273,10 +274,22 @@ class EmmaaModel(object):
             logger.info('Got a total of %d new EMMAA Statements from reading' %
                         len(estmts))
             self.extend_unique(estmts)
+        # Then update from other sources
         if self.reading_config.get('cord19_update'):
+            # This overwrites existing statements
             self.update_with_cord19()
+        # The following methods can extend existing statements
+        estmts = []
         if self.reading_config.get('disease_map'):
-            self.update_from_disease_map(self.reading_config['disease_map'])
+            new_estmts = self.update_from_disease_map(
+                self.reading_config['disease_map'])
+            estmts += new_estmts
+        if self.reading_config.get('other_files'):
+            new_estmts = self.update_from_files(
+                self.reading_config['other_files'])
+            estmts += new_estmts
+        if estmts:
+            self.extend_unique(estmts)
         self.eliminate_copies()
 
     def extend_unique(self, estmts):
@@ -315,11 +328,27 @@ class EmmaaModel(object):
         self.add_paper_ids(paper_ids, 'TRID')
 
     def update_from_disease_map(self, disease_map_config):
-        """Update model by processing MINERVA Disease."""
+        """Update model by processing MINERVA Disease Map."""
         filenames = disease_map_config['filenames']
         map_name = disease_map_config['map_name']
+        logger.info('Loading Statements from %s Disease Map' % map_name)
         sp = process_from_web(filenames=filenames, map_name=map_name)
-        self.stmts = to_emmaa_stmts(sp.statements, datetime.datetime.now(), [])
+        new_estmts = to_emmaa_stmts(sp.statements, datetime.datetime.now(), [])
+        logger.info('Got %d EMMAA Statements from %s Disease Map' %
+                    (len(new_estmts), map_name))
+        return new_estmts
+
+    def update_from_files(self, files_config):
+        """Add custom statements from files."""
+        bucket = files_config['bucket']
+        filenames = files_config['filenames']
+        stmts = []
+        for fname in filenames:
+            file_stmts = load_pickle_from_s3(bucket, fname)
+            logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
+            stmts += file_stmts
+        new_estmts = to_emmaa_stmts(stmts, datetime.datetime.now(), [])
+        return new_estmts
 
     def add_paper_ids(self, initial_ids, id_type='pmid'):
         """Convert if needed and save paper IDs.
