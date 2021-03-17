@@ -36,7 +36,7 @@ jobs:
       run: |
         sudo apt-get install libpq-dev
         psql --no-password -h localhost -c 'create database emmaadb_test;' -U postgres
-        wget https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
+        wget -nv https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
         mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         sudo apt-get install graphviz libgraphviz-dev pkg-config
@@ -54,8 +54,9 @@ jobs:
         cd ../indralab_web_templates
         pip install .
         cd ../..
-        pip install boto3 jsonpickle pygraphviz fnvhash sqlalchemy inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors
+        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors
         pip install --no-dependencies .
+        pip install -U sqlalchemy==1.3.23
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
         tar xzf bionetgen.tar.gz
       env:
