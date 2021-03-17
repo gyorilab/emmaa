@@ -1,8 +1,9 @@
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.answer_queries import QueryManager, format_results, \
-    make_reports_from_results, make_str_report_per_user, \
-    make_html_report_per_user
+    make_reports_from_results
+from emmaa.notifications import make_str_report_per_user, \
+    make_html_report_per_user, get_user_delta
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_model import create_model
@@ -205,7 +206,7 @@ def test_user_query_delta():
                       subscribe=True)
     qm.db.put_results('test', [(query_object, 'pysb', test_response)])
     qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
-    str_rep, html_rep = qm.get_user_query_delta(user_email=test_email)
+    str_rep, html_rep = get_user_delta(db, user_email=test_email)
     assert str_rep, print(str_rep)
     assert html_rep, print(html_rep)
     assert '</html>' in html_rep
