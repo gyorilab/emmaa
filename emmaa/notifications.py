@@ -1,11 +1,58 @@
 import logging
-from emmaa.util import EmailHtmlBody
+from emmaa.util import _get_flask_app
 from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.answer_queries import make_reports_from_results
 
 
 logger = logging.getLogger(__name__)
-email_html = EmailHtmlBody()
+
+
+class EmailHtmlBody(object):
+    app = _get_flask_app()
+
+    def __init__(self, domain='emmaa.indra.bio',
+                 template_path='email_unsub/email_body.html'):
+        self.template = self.app.jinja_env.get_template(template_path)
+        self.domain = domain
+        self.static_tab_link = f'https://{domain}/query?tab=static'
+        self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
+        self.open_tab_link = f'https://{domain}/query?tab=open'
+
+    def render(self, static_query_deltas, open_query_deltas,
+               dynamic_query_deltas, unsub_link):
+        """Provided the delta json objects, render HTML to put in email body
+
+        Parameters
+        ----------
+        static_query_deltas : json
+            A list of lists that names which queries have updates. Expected
+            structure:
+            [(english_query, detailed_query_link, model, model_type)]
+        dynamic_query_deltas : list[
+            A list of lists that names which queries have updates. Expected
+            structure:
+            [(english_query, model, model_type)]
+        unsub_link : str
+
+        Returns
+        -------
+        html
+            An html string rendered from the associated jinja2 template
+        """
+        if not static_query_deltas and not open_query_deltas and \
+                not dynamic_query_deltas:
+            raise ValueError('No query deltas provided')
+        # Todo consider generating unsubscribe link here, will probably have
+        #  to solve import loops for that though
+        return self.template.render(
+            static_tab_link=self.static_tab_link,
+            static_query_deltas=static_query_deltas,
+            open_tab_link=self.open_tab_link,
+            open_query_deltas=open_query_deltas,
+            dynamic_tab_link=self.dynamic_tab_link,
+            dynamic_query_deltas=dynamic_query_deltas,
+            unsub_link=unsub_link
+        ).replace('\n', '')
 
 
 def get_user_delta(db, user_email, domain='emmaa.indra.bio'):
@@ -123,7 +170,7 @@ def make_html_report_per_user(static_results_delta, open_results_delta,
     """
     # Generate unsubscribe link
     link = generate_unsubscribe_link(email=email, domain=domain)
-
+    email_html = EmailHtmlBody()
     if static_results_delta or open_results_delta or dynamic_results_delta:
         return email_html.render(
             static_query_deltas=static_results_delta,

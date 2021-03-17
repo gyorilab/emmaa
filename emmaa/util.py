@@ -330,54 +330,6 @@ def _get_json_str(json_obj, save_format='json'):
     return json_str
 
 
-class EmailHtmlBody(object):
-    app = _get_flask_app()
-
-    def __init__(self, domain='emmaa.indra.bio',
-                 template_path='email_unsub/email_body.html'):
-        self.template = self.app.jinja_env.get_template(template_path)
-        self.domain = domain
-        self.static_tab_link = f'https://{domain}/query?tab=static'
-        self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
-        self.open_tab_link = f'https://{domain}/query?tab=open'
-
-    def render(self, static_query_deltas, open_query_deltas,
-               dynamic_query_deltas, unsub_link):
-        """Provided the delta json objects, render HTML to put in email body
-
-        Parameters
-        ----------
-        static_query_deltas : json
-            A list of lists that names which queries have updates. Expected
-            structure:
-            [(english_query, detailed_query_link, model, model_type)]
-        dynamic_query_deltas : list[
-            A list of lists that names which queries have updates. Expected
-            structure:
-            [(english_query, model, model_type)]
-        unsub_link : str
-
-        Returns
-        -------
-        html
-            An html string rendered from the associated jinja2 template
-        """
-        if not static_query_deltas and not open_query_deltas and \
-                not dynamic_query_deltas:
-            raise ValueError('No query deltas provided')
-        # Todo consider generating unsubscribe link here, will probably have
-        #  to solve import loops for that though
-        return self.template.render(
-            static_tab_link=self.static_tab_link,
-            static_query_deltas=static_query_deltas,
-            open_tab_link=self.open_tab_link,
-            open_query_deltas=open_query_deltas,
-            dynamic_tab_link=self.dynamic_tab_link,
-            dynamic_query_deltas=dynamic_query_deltas,
-            unsub_link=unsub_link
-        ).replace('\n', '')
-
-
 class NotAClassName(Exception):
     pass
 
