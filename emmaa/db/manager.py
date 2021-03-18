@@ -10,7 +10,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base, Result, UserQuery
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, UserModel
 from emmaa.queries import Query as QueryObject
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class EmmaaDatabaseSessionManager(object):
 
 class EmmaaDatabaseManager(object):
     """A class used to manage sessions with EMMAA's database."""
-    table_order = ['user', 'query', 'user_query', 'result']
+    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
 
     def __init__(self, host, label=None):
         self.host = host
@@ -486,6 +486,47 @@ class EmmaaDatabaseManager(object):
                                               Result.mc_type == mc_type))
         return len(q.all())
 
+    def subscribe_to_model(self, user_email, user_id, model_id):
+        """Subsribe a user to model updates.
+
+        Parameters
+        ----------
+        user_email : str
+            the email of the user that entered the queries.
+        user_id : int
+            the user id of the user that entered the queries. Corresponds to
+            the user id in the User table in indralab_auth_tools
+        model_id : str
+            Standard model ID to which the user wishes to subscribe.
+        """
+        if not user_email or not user_id or not model_id:
+            raise TypeError('User email, user id and model id are required')
+        with self.get_session() as sess:
+            # Check if user is in the emmaa user table
+            res = sess.query(User.id).filter(User.id == user_id).first()
+            if res:
+                logger.info(f'User {user_email} is registered in the '
+                            f'user table.')
+            else:
+                logger.info(f'{user_email} not in user table. Adding...')
+                self.add_user(user_id=user_id, email=user_email)
+            all_user_models = {m for m, in sess.query(
+                UserModel.model_id).filter(UserModel.user_id == user_id)}
+            if model_id in all_user_models:
+                user_model = sess.query(UserModel).filter(
+                    UserModel.user_id == user_id,
+                    UserModel.model_id == model_id).first()
+                user_model = update_model_subscription(user_model, True)
+            else:
+                user_model = UserModel(user_id=user_id,
+                                       model_id=model_id,
+                                       subscription=True)
+                sess.add(user_model)
+        return
+
+    def get_user_models(self, user_email):
+        pass
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter:
@@ -551,3 +592,23 @@ def update_subscription(user_query, new_sub_status):
         logger.info(f'Updated subscription status to '
                     f'{new_sub_status} for query {user_query.query_hash}')
     return user_query
+
+
+def update_model_subscription(user_model, new_sub_status):
+    """Update a UserQuery object's subscription status
+
+    user_query : `emmaa.db.schema.UserModel`
+        The UserModel object to be updated
+    new_sub_status : Bool
+        The subscription status to change to
+
+    Returns
+    -------
+    user_model : UserModel(object)
+        The updated UserModel object
+    """
+    if new_sub_status is not user_model.subscription:
+        user_query.subscription = new_sub_status
+        logger.info(f'Updated subscription status to '
+                    f'{new_sub_status} for model {user_model.model_id}')
+    return user_model
