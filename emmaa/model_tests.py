@@ -838,15 +838,16 @@ def update_model_manager_on_s3(model_name, bucket=EMMAA_BUCKET_NAME):
 
 
 def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
-    em = EmmaaModel.load_from_s3(model_name, bucket=bucket)
-    em.run_assembly()
-    tests = [StatementCheckingTest(stmt) for stmt in em.assembled_stmts if
+    """Create StatementCheckingTests from model statements."""
+    stmts, _ = get_assembled_statements(model_name, bucket=bucket)
+    config = load_config_from_s3(model_name, bucket=bucket)
+    tests = [StatementCheckingTest(stmt) for stmt in stmts if
              all(stmt.agent_list())]
     date_str = make_date_str()
     test_description = (
-        f'These tests were generated from the {em.human_readable_name} '
-        f'on {date_str[:10]}')
-    test_name = f'{em.human_readable_name} model test corpus'
+        f'These tests were generated from the '
+        f'{config.get("human_readable_name")} on {date_str[:10]}')
+    test_name = f'{config.get("human_readable_name")} model test corpus'
     test_dict = {'test_data': {'description': test_description,
                                'name': test_name},
                  'tests': tests}

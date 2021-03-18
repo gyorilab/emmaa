@@ -266,12 +266,13 @@ def test_save_load_update_model_manager():
     assert find_number_of_files_on_s3(
         TEST_BUCKET_NAME, 'results/test/model_manager_', '.pkl') == 2
 
+
 @mock_s3
 def test_model_to_tests():
     # Local imports are recommended when using moto
     from emmaa.model_tests import model_to_tests, load_tests_from_s3, \
         StatementCheckingTest
-    client = setup_bucket(add_model=True)
+    client = setup_bucket(add_model=True, add_mm=True)
     test_dict = model_to_tests('test', bucket=TEST_BUCKET_NAME)
     assert isinstance(test_dict, dict)
     assert 'test_data' in test_dict
