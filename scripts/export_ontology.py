@@ -145,6 +145,17 @@ def add_protein_parents(bio_ontology):
     bio_ontology.add_edges_from(edges_to_add)
 
 
+def add_efo_parents(bio_ontology):
+    edges_to_add = []
+    efo_root = 'EFO:0000001'
+    for node in bio_ontology.nodes():
+        if bio_ontology.get_ns(node) == 'EFO' and \
+                not bio_ontology.get_parents(*bio_ontology.get_ns_id(node)):
+            edges_to_add.append((node, efo_root, {'type': 'isa'}))
+    print('Adding %d EFO isa edges.' % len(edges_to_add))
+    bio_ontology.add_edges_from(edges_to_add)
+
+
 def get_category(node):
     """Return a category label for a given specific protein ontology node."""
     name = bio_ontology.get_name(*bio_ontology.get_ns_id(node))
@@ -210,15 +221,17 @@ mesh_roots_map = {
     'H': 'Disciplines and Occupations',
     'I': 'Anthropology, Education, Sociology, and Social Phenomena',
     'J': 'Technology, Industry, and Agriculture',
-    'K': 'Humanities',
-    'L': 'Information Science',
-    'M': 'Named Groups',
     'N': 'Health Care',
     'V': 'Publication Characteristic',
-    'Z': 'Geographicals',
     # This is added manually for supplementary concepts, it's not a real
     # sub-tree letter
-    'S': 'Supplementary Concept'
+    'S': 'Supplementary Concept',
+    # The letters below all have a single child and so we don't need to add
+    # them.
+    # 'K': 'Humanities',
+    # 'L': 'Information Science',
+    # 'M': 'Named Groups',
+    # 'Z': 'Geographicals',
 }
 
 rename_map = {
@@ -234,7 +247,9 @@ if __name__ == '__main__':
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
     add_chebi_parents(bio_ontology)
+    add_efo_parents(bio_ontology)
     map_node_names(bio_ontology, rename_map)
+    """
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
@@ -248,3 +263,4 @@ if __name__ == '__main__':
                       Bucket='emmaa',
                       Key=f'integration/ontology/{fname}',
                       ACL='public-read')
+    """
