@@ -467,7 +467,10 @@ class TestRound(Round):
 
     def passed_over_total(self, mc_type='pysb'):
         """Return a ratio of passed over total tests."""
-        return self.get_number_passed_tests(mc_type)/self.get_total_applied_tests()
+        total = self.get_total_applied_tests()
+        if total == 0:
+            return 0
+        return self.get_number_passed_tests(mc_type)/total
 
     def _get_applied_tests_results(self):
         """Return a dictionary mapping a test hash and a list containing its
