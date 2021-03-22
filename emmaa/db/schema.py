@@ -138,7 +138,7 @@ class UserModel(Base, EmmaaTable):
     subscription : bool
         Record whether the user has subscribed to see results of this model.
     """
-    __tablename__ = 'user_query'
+    __tablename__ = 'user_model'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     user = relationship(User)

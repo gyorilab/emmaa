@@ -413,16 +413,22 @@ class EmmaaDatabaseManager(object):
         -------
         list[str]
             A list of email addresses corresponding to all users who have
-            any subscribed query
+            any subscribed query or model.
         """
         logger.info('Got request to gather all users with subscription')
         # Get db session
         with self.get_session() as sess:
-            q = sess.query(User.email).filter(
+            q1 = sess.query(User.email).filter(
                 User.id == UserQuery.user_id,
                 UserQuery.subscription
             ).distinct()
-        return [e for e, in q.all()] if q.all() else []
+            q2 = sess.query(User.email).filter(
+                User.id == UserModel.user_id,
+                UserModel.subscription
+            ).distinct()
+        query_users = [e for e, in q1.all()] if q1.all() else []
+        model_users = [e for e, in q2.all()] if q2.all() else []
+        return list(set(query_users + model_users))
 
     def update_email_subscription(self, email, queries, subscribe):
         """Update email subscriptions for user queries
@@ -518,6 +524,8 @@ class EmmaaDatabaseManager(object):
                     UserModel.model_id == model_id).first()
                 user_model = update_model_subscription(user_model, True)
             else:
+                logger.info(
+                    f'Subscribing user {user_email} to {model_id} model')
                 user_model = UserModel(user_id=user_id,
                                        model_id=model_id,
                                        subscription=True)
@@ -525,7 +533,13 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_user_models(self, user_email):
-        pass
+        """Get all models a user is subscribed to."""
+        with self.get_session() as sess:
+            q = sess.query(UserModel.model_id).filter(
+                UserModel.user_id == User.id,
+                User.email == user_email
+            ).distinct()
+        return [m for m, in q.all()] if q.all() else []
 
 
 def _weed_results(result_iter, latest_order=1):
