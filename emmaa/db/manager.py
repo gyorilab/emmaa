@@ -408,27 +408,20 @@ class EmmaaDatabaseManager(object):
 
     def get_subscribed_users(self):
         """Get all users who have subscriptions
-
         Returns
         -------
         list[str]
             A list of email addresses corresponding to all users who have
-            any subscribed query or model.
+            any subscribed query
         """
         logger.info('Got request to gather all users with subscription')
         # Get db session
         with self.get_session() as sess:
-            q1 = sess.query(User.email).filter(
+            q = sess.query(User.email).filter(
                 User.id == UserQuery.user_id,
                 UserQuery.subscription
             ).distinct()
-            q2 = sess.query(User.email).filter(
-                User.id == UserModel.user_id,
-                UserModel.subscription
-            ).distinct()
-        query_users = [e for e, in q1.all()] if q1.all() else []
-        model_users = [e for e, in q2.all()] if q2.all() else []
-        return list(set(query_users + model_users))
+        return [e for e, in q.all()] if q.all() else []
 
     def update_email_subscription(self, email, queries, subscribe):
         """Update email subscriptions for user queries
@@ -531,15 +524,6 @@ class EmmaaDatabaseManager(object):
                                        subscription=True)
                 sess.add(user_model)
         return
-
-    def get_user_models(self, user_email):
-        """Get all models a user is subscribed to."""
-        with self.get_session() as sess:
-            q = sess.query(UserModel.model_id).filter(
-                UserModel.user_id == User.id,
-                User.email == user_email
-            ).distinct()
-        return [m for m, in q.all()] if q.all() else []
 
 
 def _weed_results(result_iter, latest_order=1):
