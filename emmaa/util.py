@@ -31,6 +31,12 @@ FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
                         'unsigned_graph': 'Unsigned Graph'}
 
 
+TWITTER_MODEL_TYPES = {'pysb': '@PySysBio',
+                       'pybel': '@pybelbio',
+                       'signed_graph': 'Signed Graph',
+                       'unsigned_graph': 'Unsigned Graph'}
+
+
 def strip_out_date(keystring, date_format='datetime'):
     """Strips out datestring of selected date_format from a keystring"""
     if date_format == 'datetime':
@@ -364,3 +370,41 @@ def update_status(msg, twitter_cred):
         return
     twitter_api = tweepy.API(twitter_auth)
     twitter_api.update_status(msg)
+
+
+def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
+                    test_corpus=None, test_name=None, new_papers=None,
+                    model_type_dict=TWITTER_MODEL_TYPES):
+    if len(delta['added']) == 0:
+        logger.info(f'No {msg_type} delta found')
+        return
+    if not test_name:
+        test_name = test_corpus
+    plural = 's' if len(delta['added']) > 1 else ''
+    if msg_type == 'stmts':
+        if not new_papers:
+            logger.info(f'No new papers found')
+            return
+        else:
+            paper_plural = 's' if new_papers > 1 else ''
+            msg = (f'Today I read {new_papers} new publication{paper_plural} '
+                   f'and learned {len(delta["added"])} new mechanism{plural}. '
+                   f'See https://emmaa.indra.bio/dashboard/{model_name}'
+                   f'?tab=model&date={date}#addedStmts for more '
+                   'details.')
+    elif msg_type == 'applied_tests':
+        msg = (f'Today I applied {len(delta["added"])} new test{plural} in '
+               f'the {test_name}. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newAppliedTests for '
+               'more details.')
+    elif msg_type == 'passed_tests' and mc_type:
+        msg = (f'Today I explained {len(delta["added"])} new '
+               f'observation{plural} in the {test_name} with my '
+               f'{model_type_dict[mc_type]} model. See '
+               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newPassedTests for '
+               'more details.')
+    else:
+        raise TypeError(f'Invalid message type: {msg_type}.')
+    return msg
