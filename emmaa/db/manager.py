@@ -525,6 +525,30 @@ class EmmaaDatabaseManager(object):
                 sess.add(user_model)
         return
 
+    def get_model_users(self, model_id):
+        """Get all users who are subscribed to a given model.
+
+        Parameters
+        ----------
+        model_id : str
+            A standard name of a model to get users for.
+
+        Returns
+        -------
+        list[str]
+            A list of email addresses corresponding to all users who are
+            subscribed to this model.
+        """
+        logger.info(f'Got request to gather users subscribed to {model_id}')
+        # Get db session
+        with self.get_session() as sess:
+            q = sess.query(User.email).filter(
+                User.id == UserModel.user_id,
+                UserModel.model_id == model_id,
+                UserModel.subscription
+            ).distinct()
+        return [e for e, in q.all()] if q.all() else []
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter:
