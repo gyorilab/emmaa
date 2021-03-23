@@ -1,7 +1,9 @@
 import logging
-from emmaa.util import _get_flask_app, _make_delta_msg
+from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
+    get_credentials, update_status
 from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.answer_queries import make_reports_from_results
+from emmaa.model import load_config_from_s3, get_model_stats
 
 
 logger = logging.getLogger(__name__)
@@ -182,7 +184,8 @@ def make_html_report_per_user(static_results_delta, open_results_delta,
         return ''
 
 
-def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
+def get_model_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
+    deltas = {}
     model_stats, _ = get_model_stats(model_name, 'model', date=date)
     test_stats_by_corpus = {}
     for test_corpus in test_corpora:
@@ -192,50 +195,74 @@ def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
             logger.info(f'Could not find test stats for {test_corpus}')
         test_stats_by_corpus[test_corpus] = test_stats
     if not model_stats or not test_stats_by_corpus:
-        logger.warning('Stats are not found, not tweeting')
-        return
+        logger.warning('Stats are not found, cannot generate deltas')
+        return deltas
+    # Model deltas
+    stmts_delta = model_stats['model_delta']['statements_hashes_delta']
+    paper_delta = model_stats['paper_delta']['raw_paper_ids_delta']
+    new_papers = len(paper_delta['added'])
+    deltas['stmts_delta'] = stmts_delta
+    deltas['new_papers'] = new_papers
+    # Test deltas
+    deltas['tests'] = {}
+    for test_corpus, test_stats in test_stats_by_corpus.items():
+        test_deltas = {}
+        test_name = None
+        test_data = test_stats['test_round_summary'].get('test_data')
+        if test_data:
+            test_name = test_data.get('name')
+        test_deltas['name'] = test_name
+        test_deltas['passed'] = {}
+        for k, v in test_stats['tests_delta'].items():
+            if k == 'applied_hashes_delta':
+                applied_delta = v
+                test_deltas['applied_tests'] = applied_delta
+            else:
+                mc_type = k
+                passed_delta = v['passed_hashes_delta']
+                test_deltas['passed'][mc_type] = passed_delta
+        deltas['tests'][test_corpus] = test_deltas
+    return deltas
+
+
+def tweet_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
+    deltas = get_model_deltas(
+        model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME)
     config = load_config_from_s3(model_name, bucket)
     twitter_key = config.get('twitter')
     twitter_cred = get_credentials(twitter_key)
     if not twitter_cred:
         logger.warning('Twitter credentials are not found, not tweeting')
     # Model message
-    stmts_delta = model_stats['model_delta']['statements_hashes_delta']
-    paper_delta = model_stats['paper_delta']['raw_paper_ids_delta']
-    new_papers = len(paper_delta['added'])
-    stmts_msg = _make_twitter_msg(model_name, 'stmts', stmts_delta, date,
-                                  new_papers=new_papers)
+    stmts_delta = deltas.get('stmts_delta')
+    new_papers = deltas.get('new_papers')
+    stmts_msg = _make_delta_msg(model_name, 'stmts', stmts_delta,
+                                date, new_papers=new_papers)
     if stmts_msg:
         logger.info(stmts_msg)
         if twitter_cred:
             update_status(stmts_msg, twitter_cred)
 
     # Tests messages
-    for test_corpus, test_stats in test_stats_by_corpus.items():
-        test_name = None
-        test_data = test_stats['test_round_summary'].get('test_data')
-        if test_data:
-            test_name = test_data.get('name')
-        for k, v in test_stats['tests_delta'].items():
-            if k == 'applied_hashes_delta':
-                applied_delta = v
-                applied_msg = _make_twitter_msg(
-                    model_name, 'applied_tests', applied_delta, date,
-                    test_corpus=test_corpus, test_name=test_name)
-                if applied_msg:
-                    logger.info(applied_msg)
-                    if twitter_cred:
-                        update_status(applied_msg, twitter_cred)
-            else:
-                mc_type = k
-                passed_delta = v['passed_hashes_delta']
-                passed_msg = _make_twitter_msg(
-                    model_name, 'passed_tests', passed_delta,
-                    date, mc_type, test_corpus=test_corpus,
-                    test_name=test_name)
-                if passed_msg:
-                    logger.info(passed_msg)
-                    if twitter_cred:
-                        update_status(passed_msg, twitter_cred)
+    for test_corpus, test_delta in deltas['tests'].items():
+        applied_delta = test_delta.get('applied_tests')
+        test_name = test_delta.get('name')
+        applied_msg = _make_delta_msg(
+            model_name, 'applied_tests', applied_delta, date,
+            test_corpus=test_corpus, test_name=test_name)
+        if applied_msg:
+            logger.info(applied_msg)
+            if twitter_cred:
+                update_status(applied_msg, twitter_cred)
+        for mc_type in test_delta.get('passed', {}):
+            passed_delta = test_delta['passed'][mc_type]
+            passed_msg = _make_delta_msg(
+                model_name, 'passed_tests', passed_delta,
+                date, mc_type, test_corpus=test_corpus,
+                test_name=test_name)
+            if passed_msg:
+                logger.info(passed_msg)
+                if twitter_cred:
+                    update_status(passed_msg, twitter_cred)
 
     logger.info('Done tweeting')

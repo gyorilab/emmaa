@@ -1,12 +1,11 @@
 import logging
 import jsonpickle
 from collections import defaultdict
-from emmaa.model import load_config_from_s3, get_model_stats, \
-    load_stmts_from_s3
+from emmaa.model import load_stmts_from_s3
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
-    get_credentials, update_status, _make_delta_msg
+    _make_delta_msg
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.literature import pubmed_client, crossref_client, pmc_client
