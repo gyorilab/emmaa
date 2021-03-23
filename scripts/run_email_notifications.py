@@ -1,19 +1,20 @@
 import os
-from emmaa.answer_queries import QueryManager
+from emmaa.db import get_db
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default, notifications_return_default
+from emmaa.subscription.notifications import get_user_query_delta
 
 indra_bio_ARN = os.environ.get('INDRA_BIO_ARN')
 
 
 if __name__ == '__main__':
-    qm = QueryManager()
-    subscribed_users = qm.db.get_subscribed_users()
+    db = get_db('primary')
+    subscribed_users = db.get_subscribed_users()
 
     subject_line = 'You have an update to your queries on EMMAA'
 
     for user_email in subscribed_users:
-        delta_str_msg, delta_html_msg = qm.get_user_query_delta(user_email)
+        delta_str_msg, delta_html_msg = get_user_query_delta(user_email)
         # If there is a delta, send an email
         if delta_html_msg:
             res = send_email(sender=notifications_sender_default,
