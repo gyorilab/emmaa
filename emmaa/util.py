@@ -374,7 +374,11 @@ def update_status(msg, twitter_cred):
 
 def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
                     test_corpus=None, test_name=None, new_papers=None,
-                    model_type_dict=TWITTER_MODEL_TYPES):
+                    is_tweet=False):
+    if is_tweet:
+        model_type_dict = TWITTER_MODEL_TYPES
+    else:
+        model_type_dict = FORMATTED_TYPE_NAMES
     if len(delta['added']) == 0:
         logger.info(f'No {msg_type} delta found')
         return
