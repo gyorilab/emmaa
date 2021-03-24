@@ -3,11 +3,14 @@ import time
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
     get_credentials, update_status
 from emmaa.subscription.email_util import generate_unsubscribe_link
+from emmaa.subscription.email_service import send_email, \
+    notifications_sender_default, notifications_return_default
 from emmaa.answer_queries import make_reports_from_results
 from emmaa.model import load_config_from_s3, get_model_stats
 
 
 logger = logging.getLogger(__name__)
+indra_bio_ARN = os.environ.get('INDRA_BIO_ARN')
 
 
 class EmailHtmlBody(object):
@@ -205,7 +208,7 @@ def make_html_report_per_user(static_results_delta, open_results_delta,
     """
     # Generate unsubscribe link
     link = generate_unsubscribe_link(email=email, domain=domain)
-    email_html = EmailHtmlBody()
+    email_html = QueryEmailHtmlBody()
     if static_results_delta or open_results_delta or dynamic_results_delta:
         return email_html.render(
             static_query_deltas=static_results_delta,
@@ -349,6 +352,11 @@ def tweet_deltas(deltas, twitter_cred):
     logger.info('Done tweeting')
 
 
+def make_model_html_email(msg_dicts):
+    email_html = ModelDeltaEmailHtmlBody()
+    return email_html.render(msg_dicts)
+
+
 def model_update_notify(model_name, test_corpora, date, db,
                         bucket=EMMAA_BUCKET_NAME):
     # Find where to send notifications (Twitter, user emails)
@@ -373,4 +381,16 @@ def model_update_notify(model_name, test_corpora, date, db,
 
     if users:
         msg_dicts = get_all_update_messages(deltas, is_tweet=False)
-        email_str = '\n'.join([msg['message'] for msg in msg_dicts])
+        if msg_dicts:
+            str_email = '\n'.join([msg['message'] for msg in msg_dicts])
+            html_email = make_model_html_email(msg_dicts)
+            subject_line = f'Updates to {model_name} EMMAA model'
+            res = send_email(sender=notifications_sender_default,
+                             recipients=users,
+                             subject=subject_line,
+                             body_text=str_email,
+                             body_html=html_email,
+                             source_arn=indra_bio_ARN,
+                             return_email=notifications_return_default,
+                             return_arn=indra_bio_ARN
+                             )
