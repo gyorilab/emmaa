@@ -1,5 +1,6 @@
 import logging
 import time
+import os
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
     get_credentials, update_status
 from emmaa.subscription.email_util import generate_unsubscribe_link
@@ -23,7 +24,7 @@ class EmailHtmlBody(object):
 
 class QueryEmailHtmlBody(EmailHtmlBody):
     """Email body for query notifications."""
-    def __init__(self, domain=domain='emmaa.indra.bio',
+    def __init__(self, domain='emmaa.indra.bio',
                  template_path='email_unsub/email_body.html'):
         super().__init__(template_path)
         self.domain = domain
@@ -384,7 +385,8 @@ def model_update_notify(model_name, test_corpora, date, db,
         if msg_dicts:
             str_email = '\n'.join([msg['message'] for msg in msg_dicts])
             html_email = make_model_html_email(msg_dicts)
-            subject_line = f'Updates to {model_name} EMMAA model'
+            full_name = config.get('human_readable_name', model_name)
+            subject_line = f'Updates to the {full_name} EMMAA model'
             res = send_email(sender=notifications_sender_default,
                              recipients=users,
                              subject=subject_line,
