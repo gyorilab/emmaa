@@ -1892,8 +1892,8 @@ def pusher_authentication():
 def entity_info(model):
     # For now, the model isn't explicitly used but could be necessary
     # for adding model-specific entity info later
-    namespace = request.json.get('namespace')
-    identifier = request.json.get('id')
+    namespace = request.args.get('namespace')
+    identifier = request.args.get('id')
     url = get_identifiers_url(namespace, identifier)
     return {'url': url}
 
