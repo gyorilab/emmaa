@@ -43,6 +43,7 @@ from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
 from indra.config import get_config
 from indra.sources.hypothesis import upload_statement_annotation
+from indra.databases.identifiers import get_identifiers_url
 
 
 app = Flask(__name__)
@@ -1712,7 +1713,7 @@ def submit_curation_endpoint(hash_val, **kwargs):
     text = request.json.get('text')
     is_test = 'test' in request.args
     if not is_test:
-        assert tag is not 'test'
+        assert tag != 'test'
         try:
             dbid = submit_curation(hash_val, tag, email, ip, text, ev_hash,
                                    source_api)
@@ -1885,6 +1886,16 @@ def pusher_authentication():
     auth = pusher.authenticate(channel=request.form['channel_name'],
                                socket_id=request.form['socket_id'])
     return json.dumps(auth)
+
+
+@app.route("/entity_info/<model>", methods=['GET', 'POST'])
+def entity_info(model):
+    # For now, the model isn't explicitly used but could be necessary
+    # for adding model-specific entity info later
+    namespace = request.args.get('namespace')
+    identifier = request.args.get('id')
+    url = get_identifiers_url(namespace, identifier)
+    return {'url': url}
 
 
 if __name__ == '__main__':
