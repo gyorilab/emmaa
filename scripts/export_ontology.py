@@ -156,6 +156,19 @@ def add_efo_parents(bio_ontology):
     bio_ontology.add_edges_from(edges_to_add)
 
 
+def add_drugbank_parents(bio_ontology):
+    edges_to_add = []
+    drugbank_root = 'DRUGBANK:DB00000'
+    bio_ontology.add_node(drugbank_root, name='Drugs')
+    for node in bio_ontology.nodes():
+        if bio_ontology.get_ns(node) == 'DRUGBANK' and \
+                not bio_ontology[node]:
+            edges_to_add.append((node, drugbank_root, {'type': 'isa'}))
+    print('Adding %d DRUGBANK isa edges.' % len(edges_to_add))
+    bio_ontology.add_edges_from(edges_to_add)
+
+
+
 def get_category(node):
     """Return a category label for a given specific protein ontology node."""
     name = bio_ontology.get_name(*bio_ontology.get_ns_id(node))
@@ -249,6 +262,7 @@ if __name__ == '__main__':
     add_chebi_parents(bio_ontology)
     add_efo_parents(bio_ontology)
     map_node_names(bio_ontology, rename_map)
+    add_drugbank_parents(bio_ontology)
     """
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
