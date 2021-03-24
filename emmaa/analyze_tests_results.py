@@ -685,9 +685,9 @@ class ModelStatsGenerator(StatsGenerator):
             self.json_stats['model_delta'] = {
                 'statements_hashes_delta': stmts_delta}
             msg = _make_delta_msg(self.model_name, 'stmts', stmts_delta,
-                                    self.latest_round.date_str[:10])
+                                  self.latest_round.date_str[:10])
             if msg:
-                logger.info(msg)
+                logger.info(msg['message'])
 
     def make_paper_summary(self):
         """Add latest paper summary to json_stats."""
@@ -897,7 +897,7 @@ class TestStatsGenerator(StatsGenerator):
                 self.model_name, 'applied_tests', applied_delta, date,
                 test_corpus=self.test_corpus, test_name=test_name)
             if msg:
-                logger.info(msg)
+                logger.info(msg['message'])
 
         for mc_type in self.latest_round.mc_types_results:
             if not self.previous_round or mc_type not in \
@@ -913,7 +913,7 @@ class TestStatsGenerator(StatsGenerator):
                     self.model_name, 'passed_tests', passed_delta, date,
                     mc_type, test_corpus=self.test_corpus, test_name=test_name)
                 if msg:
-                    logger.info(msg)
+                    logger.info(msg['message'])
         self.json_stats['tests_delta'] = tests_delta
 
     def make_changes_over_time(self):

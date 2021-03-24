@@ -266,7 +266,7 @@ def get_all_update_messages(deltas, is_tweet=False):
         A list of individual string messages that can be tweeted or emailed to
         user.
     """
-    msgs = []
+    msg_dicts = []
     model_name = deltas['model_name']
     date = deltas['date']
     # Model message
@@ -275,8 +275,8 @@ def get_all_update_messages(deltas, is_tweet=False):
     stmts_msg = _make_delta_msg(model_name, 'stmts', stmts_delta,
                                 date, new_papers=new_papers, is_tweet=is_tweet)
     if stmts_msg:
-        logger.info(stmts_msg)
-        msgs.append(stmts_msg)
+        logger.info(stmts_msg['message'])
+        msg_dicts.append(stmts_msg)
     # Tests messages
     for test_corpus, test_delta in deltas['tests'].items():
         applied_delta = test_delta.get('applied_tests')
@@ -285,8 +285,8 @@ def get_all_update_messages(deltas, is_tweet=False):
             model_name, 'applied_tests', applied_delta, date,
             test_corpus=test_corpus, test_name=test_name, is_tweet=is_tweet)
         if applied_msg:
-            logger.info(applied_msg)
-            msgs.append(applied_msg)
+            logger.info(applied_msg['message'])
+            msg_dicts.append(applied_msg)
         for mc_type in test_delta.get('passed', {}):
             passed_delta = test_delta['passed'][mc_type]
             passed_msg = _make_delta_msg(
@@ -294,9 +294,9 @@ def get_all_update_messages(deltas, is_tweet=False):
                 date, mc_type, test_corpus=test_corpus,
                 test_name=test_name, is_tweet=is_tweet)
             if passed_msg:
-                logger.info(passed_msg)
-                msgs.append(passed_msg)
-    return msgs
+                logger.info(passed_msg['message'])
+                msg_dicts.append(passed_msg)
+    return msg_dicts
 
 
 def tweet_deltas(deltas, twitter_cred):
@@ -312,7 +312,7 @@ def tweet_deltas(deltas, twitter_cred):
     """
     msgs = get_all_update_messages(deltas, is_tweet=True)
     for msg in msgs:
-        update_status(msg, twitter_cred)
+        update_status(msg['message'], twitter_cred)
         time.sleep(1)
     logger.info('Done tweeting')
 
@@ -330,8 +330,15 @@ def model_update_notify(model_name, test_corpora, date, db,
         logger.info('No Twitter account and no users subscribed '
                     'to this model, not generating deltas')
         return
+
+    # Get deltas
     deltas = get_model_deltas(
         model_name, test_corpora, date, bucket=bucket)
+
+    # Tweet if configured
     if twitter_cred:
         tweet_deltas(deltas)
-    # TODO make and send emails to users
+
+    if users:
+        msg_dicts = get_all_update_messages(deltas, is_tweet=False)
+        email_str = '\n'.join([msg['message'] for msg in msg_dicts])
