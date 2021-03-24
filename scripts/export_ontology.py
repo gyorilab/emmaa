@@ -255,7 +255,7 @@ rename_map = {
 
 
 if __name__ == '__main__':
-    export_version = '2'
+    export_version = '1'
     bio_ontology.initialize()
     add_protein_parents(bio_ontology)
     add_mesh_parents(bio_ontology)
@@ -263,7 +263,6 @@ if __name__ == '__main__':
     add_efo_parents(bio_ontology)
     map_node_names(bio_ontology, rename_map)
     add_drugbank_parents(bio_ontology)
-    """
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
@@ -277,4 +276,3 @@ if __name__ == '__main__':
                       Bucket='emmaa',
                       Key=f'integration/ontology/{fname}',
                       ACL='public-read')
-    """
