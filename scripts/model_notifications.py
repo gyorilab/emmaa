@@ -1,10 +1,11 @@
 import argparse
-from emmaa.analyze_tests_results import tweet_deltas
+from emmaa.subscription.notifications import model_update_notify
+from emmaa.db import get_db
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Script to tweet about model and test deltas.')
+        description='Script to tweet and email about model and test deltas.')
     parser.add_argument('-m', '--model', help='Model name', required=True)
     parser.add_argument('-tc', '--test_corpora', nargs='+',
                         help='List of test corpora names', required=True)
@@ -12,5 +13,6 @@ if __name__ == '__main__':
                         required=True)
     args = parser.parse_args()
 
-    tweet_deltas(model_name=args.model, test_corpora=args.test_corpora,
-                 date=args.date)
+    db = get_db('primary')
+    model_update_notify(model_name=args.model, test_corpora=args.test_corpora,
+                        date=args.date, db=db)
