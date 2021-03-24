@@ -11,11 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 class EmailHtmlBody(object):
+    """Parent class for email body."""
     app = _get_flask_app()
 
-    def __init__(self, domain='emmaa.indra.bio',
-                 template_path='email_unsub/email_body.html'):
+    def __init__(self, template_path):
         self.template = self.app.jinja_env.get_template(template_path)
+
+
+class QueryEmailHtmlBody(EmailHtmlBody):
+    """Email body for query notifications."""
+    def __init__(self, domain=domain='emmaa.indra.bio',
+                 template_path='email_unsub/email_body.html'):
+        super().__init__(template_path)
         self.domain = domain
         self.static_tab_link = f'https://{domain}/query?tab=static'
         self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
@@ -23,7 +30,7 @@ class EmailHtmlBody(object):
 
     def render(self, static_query_deltas, open_query_deltas,
                dynamic_query_deltas, unsub_link):
-        """Provided the delta json objects, render HTML to put in email body
+        """Provided the delta json objects, render HTML to put in email body.
 
         Parameters
         ----------
@@ -56,6 +63,31 @@ class EmailHtmlBody(object):
             dynamic_query_deltas=dynamic_query_deltas,
             unsub_link=unsub_link
         ).replace('\n', '')
+
+
+class ModelDeltaEmailHtmlBody(EmailHtmlBody):
+    """Email body for model updates."""
+    def __init__(self, template_path='email_unsub/model_email_body.html'):
+        super().__init__(template_path)
+
+    def render(self, msg_dicts):
+        """Provided pregenerated msg_dicts render HTML to put in email body.
+
+        Parameters
+        ----------
+        msg_dicts : list[dict]
+            A list of dictionaries containing parts of messages to be added to
+            email. Each dictionary has the following keys: 'url', 'start',
+            'delta_part', 'middle', 'message'.
+
+        Returns
+        -------
+        html
+            An html string rendered from the associated jinja2 template
+        """
+        return self.template.render(
+            msg_dicts=msg_dicts
+        )
 
 
 def get_user_query_delta(db, user_email, domain='emmaa.indra.bio'):
