@@ -391,24 +391,27 @@ def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
             return
         else:
             paper_plural = 's' if new_papers > 1 else ''
-            msg = (f'Today I read {new_papers} new publication{paper_plural} '
-                   f'and learned {len(delta["added"])} new mechanism{plural}. '
-                   f'See https://emmaa.indra.bio/dashboard/{model_name}'
-                   f'?tab=model&date={date}#addedStmts for more '
-                   'details.')
+            url = (f'https://emmaa.indra.bio/dashboard/{model_name}'
+                   f'?tab=model&date={date}#addedStmts')
+            start = (f'Today I read {new_papers} new publication{paper_plural}'
+                     ' and learned ')
+            delta_part = f'{len(delta["added"])} new mechanism{plural}'
+            middle = ''
     elif msg_type == 'applied_tests':
-        msg = (f'Today I applied {len(delta["added"])} new test{plural} in '
-               f'the {test_name}. See '
-               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus}&date={date}#newAppliedTests for '
-               'more details.')
+        url = (f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newAppliedTests')
+        start = 'Today I applied '
+        delta_part = f'{len(delta["added"])} new test{plural}'
+        middle = f' in the {test_name}'
     elif msg_type == 'passed_tests' and mc_type:
-        msg = (f'Today I explained {len(delta["added"])} new '
-               f'observation{plural} in the {test_name} with my '
-               f'{model_type_dict[mc_type]} model. See '
-               f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
-               f'&test_corpus={test_corpus}&date={date}#newPassedTests for '
-               'more details.')
+        url = (f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newPassedTests')
+        start = 'Today I explained '
+        delta_part = f'{len(delta["added"])} new observation{plural}'
+        middle = (f' in the {test_name} with my {model_type_dict[mc_type]} '
+                  'model')
     else:
         raise TypeError(f'Invalid message type: {msg_type}.')
-    return msg
+    msg = f'{start}{delta_part}{middle}. See {url} for more details.'
+    return {'url': url, 'start': start, 'delta_part': delta_part,
+            'middle': middle, 'message': msg}
