@@ -246,7 +246,7 @@ class EmmaaModel(object):
             lit_sources = [lit_sources]
         if isinstance(readers, str):
             readers = [readers]
-        # First get statements from literature if needed
+        # First get statements from literature and extend existing statements
         # Some models are not updated from literature
         if lit_sources is not None and readers is not None:
             estmts = []
@@ -274,12 +274,12 @@ class EmmaaModel(object):
             logger.info('Got a total of %d new EMMAA Statements from reading' %
                         len(estmts))
             self.extend_unique(estmts)
-        # Then update from other sources
-        if self.reading_config.get('cord19_update'):
-            # This overwrites existing statements
-            self.update_with_cord19()
-        # The following methods can extend existing statements
+        # The following methods get subsets of statements from other sources
+        # and overwrite existing statements
         estmts = []
+        if self.reading_config.get('cord19_update'):
+            new_estmts = self.update_with_cord19()
+            estmts += new_estmts
         if self.reading_config.get('disease_map'):
             new_estmts = self.update_from_disease_map(
                 self.reading_config['disease_map'])
@@ -289,7 +289,7 @@ class EmmaaModel(object):
                 self.reading_config['other_files'])
             estmts += new_estmts
         if estmts:
-            self.extend_unique(estmts)
+            self.stmts = estmts
         self.eliminate_copies()
 
     def extend_unique(self, estmts):
@@ -324,8 +324,9 @@ class EmmaaModel(object):
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             other_stmts += file_stmts
         new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
-        self.stmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
+        new_estmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
         self.add_paper_ids(paper_ids, 'TRID')
+        return new_estmts
 
     def update_from_disease_map(self, disease_map_config):
         """Update model by processing MINERVA Disease Map."""
