@@ -1,4 +1,4 @@
-__all__ = ['User', 'Query', 'UserQuery', 'Result']
+__all__ = ['User', 'Query', 'UserQuery', 'Result', 'UserModel']
 
 import logging
 
@@ -123,7 +123,7 @@ class UserQuery(Base, EmmaaTable):
 class UserModel(Base, EmmaaTable):
     """A table linking users to models:
 
-    ``UserModel(_id_, user_id, query_hash, date, subscription, count)``
+    ``UserModel(_id_, user_id, model_id, date, subscription)``
 
     Parameters
     ----------

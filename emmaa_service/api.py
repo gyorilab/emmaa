@@ -1915,6 +1915,21 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     return res_json
 
 
+@jwt_optional
+@app.route('/subscribe/<model>')
+def subscribe_to_model(model):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        logger.warning('User is not logged in')
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    user_email = user.email
+    user_id = user.id
+
+    qm.db.subscribe_to_model(user_email, user_id, model)
+    return {'subscription': 'success'}
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
     parser.add_argument('--host', default='0.0.0.0')
