@@ -737,7 +737,7 @@ def get_model_dashboard(model):
     if user:
         logger.info('Getting model subscription info')
         model_users = qm.db.get_model_users(model)
-        if user_email in model_users:
+        if user.email in model_users:
             subsribed = True
     if subscribed:
         model_info_contents.append([
