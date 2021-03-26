@@ -317,6 +317,56 @@ function annotate(api_route, paper_id) {
 }
 
 
+function subscribe_model(api_route) {
+  console.log('Subscribing user to the model')
+  var statusId = 'model-subscription-status';
+  return $.ajax({
+    url: api_route,
+    type: 'GET',
+    contentType: 'application/json',
+    complete: function(xhr, statusText) {
+      console.log('responseJSON');
+      console.log(xhr.responseJSON);
+      console.log(statusText);
+      switch (xhr.status) {
+        case 200:
+          console.log('200 response');
+          notify(`You have successfully subscribed to this model`, statusId);
+          break;
+        case 400:
+          console.log('400 response');
+          notify(xhr.responseText, statusId);
+          break;
+        case 401:
+          console.log('401 response', statusId);
+          let msg = 'Must be signed in to subscribe to models';
+          notify(msg, statusId);
+          report_login_result(msg);
+          login(
+            (type, data) => {
+              subscribe_model(api_route);
+              handle_success(type, data);
+            },
+            (type, data) => {subscribe_model(api_route)}
+          );
+          break;
+        case 404:
+          console.log('404 response');
+          notify(xhr.responseText, statusId);
+          break;
+        case 500:
+          console.log('500 response');
+          notify(xhr.responseText, statusId);
+          break;
+        default:
+          console.log(`Unhandled server response: ${xhr.status}`);
+          notify(xhr.responseText, statusId);
+      }
+    }   
+  })
+}
+
+
 // Populate model and test stats jsons to modelTestResultBody
 function populateTestResultTable(tableBody, model_json, test_json) {
 
