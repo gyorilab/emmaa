@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -1903,7 +1904,7 @@ def entity_info(model):
 
 
 def _lookup_bioresolver(prefix: str, identifier: str):
-    url = get_config(‘ENTITY_RESOLVER_URL’)
+    url = get_config('ENTITY_RESOLVER_URL')
     if url is None:
         return
     res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
