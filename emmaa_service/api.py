@@ -733,25 +733,21 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
-    subscribed = False
     if user:
         logger.info('Getting model subscription info')
         model_users = qm.db.get_model_users(model)
         logger.info(f'Currently registered users: {model_users}')
         if user.email in model_users:
-            subscribed = True
-    if subscribed:
-        model_info_contents.append([
-            ('', 'Subscription', ''),
-            ('', 'You are subscribed to this model',
-             'You are subscribed to this model')
-        ])
+            msg = 'You are subscribed to this model'
+            sub_link = ''
+        else:
+            msg = 'Subscribe to get model updates'
+            sub_link = f'/subscribe/{model}'
     else:
-        model_info_contents.append([
-            ('', 'Subscription', ''),
-            (f'/subscribe/{model}', 'Subscribe to get model updates',
-             'Subscribe to get model updates')
-        ])
+        msg = 'Login and refresh to see if you are subscribed to this model'
+        sub_link = ''
+    model_info_contents.append([
+        ('', 'Subscription', ''), (sub_link, msg, msg)])
     logger.info('Getting test information')
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
