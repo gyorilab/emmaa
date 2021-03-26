@@ -322,7 +322,7 @@ function subscribe_model(api_route) {
   var statusId = 'model-subscription-status';
   return $.ajax({
     url: api_route,
-    type: 'GET',
+    type: 'POST',
     contentType: 'application/json',
     complete: function(xhr, statusText) {
       console.log('responseJSON');

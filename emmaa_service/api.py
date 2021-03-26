@@ -1934,8 +1934,8 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     return res_json
 
 
+@app.route('/subscribe/<model>', methods=['POST'])
 @jwt_optional
-@app.route('/subscribe/<model>')
 def subscribe_to_model(model):
     user, roles = resolve_auth(dict(request.args))
     if not roles and not user:
@@ -1948,6 +1948,7 @@ def subscribe_to_model(model):
 
     qm.db.subscribe_to_model(user_email, user_id, model)
     return {'subscription': 'success'}
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Run the EMMAA dashboard service.')
