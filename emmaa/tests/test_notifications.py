@@ -6,6 +6,7 @@ from emmaa.tests.db_setup import _get_test_db, setup_function, \
     teardown_function
 from emmaa.tests.test_answer_queries import query_object, test_email, \
     test_response, fail_response, query_not_appl, open_query, dyn_query
+from emmaa.util import _make_delta_msg
 
 
 def setup_module():
@@ -59,3 +60,46 @@ def test_make_reports():
             'tab=open">open') in html_rep
     assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
             'tab=dynamic">dynamic') in html_rep
+
+
+def test_delta_msg():
+    # No message when no delta
+    msg = _make_delta_msg('test', 'stmts', {'added': []}, '2020-01-01',
+                          new_papers=2)
+    assert not msg
+    # No message with no new papers
+    msg = _make_delta_msg('test', 'stmts', {'added': [1234, 2345]},
+                          '2020-01-01', new_papers=None)
+    assert not msg, msg
+    # New statements with new papers message
+    msg = _make_delta_msg('test', 'stmts', {'added': [1234, 2345]},
+                          '2020-01-01', new_papers=5)
+    assert set(msg.keys()) == {
+        'message', 'start', 'middle', 'delta_part', 'url'}
+    assert msg['message'] == (
+        'Today I read 5 new publications and learned 2 new mechanisms. See '
+        'https://emmaa.indra.bio/dashboard/test?tab=model&date='
+        '2020-01-01#addedStmts for more details.'), msg['message']
+    # New applied tests message
+    msg = _make_delta_msg('test', 'applied_tests', {'added': [1234, 2345]},
+                          '2020-01-01', test_corpus='simple_tests',
+                          test_name='Simple tests corpus')
+    assert set(msg.keys()) == {
+        'message', 'start', 'middle', 'delta_part', 'url'}
+    assert msg['message'] == (
+        'Today I applied 2 new tests in the Simple tests corpus. '
+        'See https://emmaa.indra.bio/dashboard/test?'
+        'tab=tests&test_corpus=simple_tests&date=2020-01-01'
+        '#newAppliedTests for more details.'), msg['message']
+    # New passed tests message
+    msg = _make_delta_msg('test', 'passed_tests', {'added': [1234, 2345]},
+                          '2020-01-01', 'pysb', test_corpus='simple_tests',
+                          test_name='Simple tests corpus', is_tweet=True)
+    assert set(msg.keys()) == {
+        'message', 'start', 'middle', 'delta_part', 'url'}
+    assert msg['message'] == (
+        'Today I explained 2 new observations in the Simple tests '
+        'corpus with my @PySysBio model. See '
+        'https://emmaa.indra.bio/dashboard/test?tab=tests'
+        '&test_corpus=simple_tests&date=2020-01-01#newPassedTests '
+        'for more details.'), msg['message']
