@@ -98,6 +98,8 @@ def get_user_query_delta(db, user_email, domain='emmaa.indra.bio'):
 
     Parameters
     ----------
+    db : emmaa.db.EmmaaDatabaseManager
+        An instance of a database manager to use.
     user_email : str
         The email of the user for which to get the report for
     domain : str
@@ -290,6 +292,8 @@ def get_model_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
         A list of test corpora names to get the test updates for.
     date : str
         A date for which the updates should be generated.
+    bucket : str
+        A name of S3 bucket where the stats files are stored.
 
     Returns
     -------
@@ -355,9 +359,9 @@ def get_all_update_messages(deltas, is_tweet=False):
 
     Returns
     -------
-    msgs : list[str]
-        A list of individual string messages that can be tweeted or emailed to
-        user.
+    msg_dicts : list[dict]
+        A list of individual message dictionaries that can be used for tweets
+        or email notifications.
     """
     msg_dicts = []
     model_name = deltas['model_name']
@@ -393,15 +397,16 @@ def get_all_update_messages(deltas, is_tweet=False):
 
 
 def tweet_deltas(deltas, twitter_cred):
-    """Tweet the model updates. This function requires Twitter credentials
-    to be stored as AWS SSM parameters and the key to be configured in model
-    config.
+    """Tweet the model updates.
 
     Parameters
     ----------
     deltas : dict
         A dictionary containing deltas for a model and its test results
         returned by get_model_deltas function.
+    twitter_cred : dict
+        A dictionary containing consumer_token, consumer_secret, access_token,
+        and access_secret for a model Twitter account.
     """
     msgs = get_all_update_messages(deltas, is_tweet=True)
     for msg in msgs:
@@ -411,12 +416,29 @@ def tweet_deltas(deltas, twitter_cred):
 
 
 def make_model_html_email(msg_dicts):
+    """Render html file for model notification email."""
     email_html = ModelDeltaEmailHtmlBody()
     return email_html.render(msg_dicts)
 
 
 def model_update_notify(model_name, test_corpora, date, db,
                         bucket=EMMAA_BUCKET_NAME):
+    """This function finds delta for a given model and sends updates via
+    Twitter posts and email notifications.
+
+    Parameters
+    ----------
+    model_name : str
+        A name of EMMAA model.
+    test_corpora : list[str]
+        A list of test corpora names to get test stats.
+    date : str
+        A date for which to get stats for.
+    db : emmaa.db.EmmaaDatabaseManager
+        An instance of a database manager to use.
+    bucket : str
+        A name of S3 bucket where corresponding stats files are stored.
+    """
     # Find where to send notifications (Twitter, user emails)
     config = load_config_from_s3(model_name, bucket)
     twitter_key = config.get('twitter')
@@ -437,6 +459,7 @@ def model_update_notify(model_name, test_corpora, date, db,
     if twitter_cred:
         tweet_deltas(deltas)
 
+    # Send emails if there are subscribed users
     if users:
         msg_dicts = get_all_update_messages(deltas, is_tweet=False)
         if msg_dicts:
