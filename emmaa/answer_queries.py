@@ -113,64 +113,6 @@ class QueryManager(object):
         return load_model_manager_from_cache(model_name)
 
 
-def make_reports_from_results(new_results, domain='emmaa.indra.bio'):
-    """Make a report given latest results and queries the results are for.
-
-    Parameters
-    ----------
-    new_results : list[tuple]
-        Latest results as a list of tuples where each tuple has the format
-        (model_name, query, mc_type, result_json, date, delta).
-
-    Returns
-    -------
-    reports : list
-        A list of reports on changes for each of the queries.
-    """
-    processed_query_mc = []
-    static_reports = []
-    open_reports = []
-    dynamic_reports = []
-    for model_name, query, mc_type, result_json, delta, _ in new_results:
-        if (model_name, query, mc_type) in processed_query_mc:
-            continue
-        if delta:
-            model_type_name = FORMATTED_TYPE_NAMES[
-                mc_type] if mc_type else mc_type
-            rep = [
-                query.to_english(),
-                _detailed_page_link(
-                    domain,
-                    model_name,
-                    mc_type,
-                    query.get_hash_with_model(
-                        model_name)),
-                model_name,
-                model_type_name
-            ]
-            # static
-            if query.get_type() == 'path_property':
-                static_reports.append(rep)
-            # open
-            elif query.get_type() == 'open_search_query':
-                open_reports.append(rep)
-            # dynamic
-            else:
-                # Remove link for dynamic
-                _ = rep.pop(1)
-                dynamic_reports.append(rep)
-        processed_query_mc.append((model_name, query, mc_type))
-    return static_reports, open_reports, dynamic_reports
-
-
-def _detailed_page_link(domain, model_name, model_type, query_hash):
-    # example:
-    # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash
-    # =4911955502409811&order=1
-    return f'https://{domain}/query/{model_name}?model_type=' \
-           f'{model_type}&query_hash={query_hash}&order=1'
-
-
 def format_results(results, query_type='path_property'):
     """Format db output to a standard json structure."""
     model_types = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']

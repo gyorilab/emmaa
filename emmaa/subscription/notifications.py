@@ -2,11 +2,10 @@ import logging
 import time
 import os
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
-    get_credentials, update_status
+    get_credentials, update_status, FORMATTED_TYPE_NAMES
 from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default, notifications_return_default
-from emmaa.answer_queries import make_reports_from_results
 from emmaa.model import load_config_from_s3, get_model_stats
 
 
@@ -136,6 +135,64 @@ def get_user_query_delta(db, user_email, domain='emmaa.indra.bio'):
     else:
         logger.info(f'No query delta to report for {user_email}')
     return str_report, html_report
+
+
+def make_reports_from_results(new_results, domain='emmaa.indra.bio'):
+    """Make a report given latest results and queries the results are for.
+
+    Parameters
+    ----------
+    new_results : list[tuple]
+        Latest results as a list of tuples where each tuple has the format
+        (model_name, query, mc_type, result_json, date, delta).
+
+    Returns
+    -------
+    reports : list
+        A list of reports on changes for each of the queries.
+    """
+    processed_query_mc = []
+    static_reports = []
+    open_reports = []
+    dynamic_reports = []
+    for model_name, query, mc_type, result_json, delta, _ in new_results:
+        if (model_name, query, mc_type) in processed_query_mc:
+            continue
+        if delta:
+            model_type_name = FORMATTED_TYPE_NAMES[
+                mc_type] if mc_type else mc_type
+            rep = [
+                query.to_english(),
+                _detailed_page_link(
+                    domain,
+                    model_name,
+                    mc_type,
+                    query.get_hash_with_model(
+                        model_name)),
+                model_name,
+                model_type_name
+            ]
+            # static
+            if query.get_type() == 'path_property':
+                static_reports.append(rep)
+            # open
+            elif query.get_type() == 'open_search_query':
+                open_reports.append(rep)
+            # dynamic
+            else:
+                # Remove link for dynamic
+                _ = rep.pop(1)
+                dynamic_reports.append(rep)
+        processed_query_mc.append((model_name, query, mc_type))
+    return static_reports, open_reports, dynamic_reports
+
+
+def _detailed_page_link(domain, model_name, model_type, query_hash):
+    # example:
+    # https://emmaa.indra.bio/query/aml/?model_type=pysb&query_hash
+    # =4911955502409811&order=1
+    return f'https://{domain}/query/{model_name}?model_type=' \
+           f'{model_type}&query_hash={query_hash}&order=1'
 
 
 def make_str_report_per_user(static_results_delta, open_results_delta,
