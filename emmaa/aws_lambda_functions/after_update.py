@@ -119,13 +119,12 @@ def lambda_handler(event, context):
                 f'{model_name}_{test_corpus}_stats_{now_str}', [test_id])
             stats_job_ids.append(test_stats_id)
 
-        # Submit twitter job
-        if config.get('twitter'):
-            twitter_command = (
-                f' python scripts/tweet_deltas.py --model {model_name} '
-                f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
-            submit_batch_job(twitter_command, 'update-twitter-status',
-                             f'{model_name}_twitter_{now_str}', stats_job_ids)
+        # Submit notification job
+        notify_command = (
+            f' python scripts/model_notifications.py --model {model_name} '
+            f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
+        submit_batch_job(notify_command, 'model-notify',
+                         f'{model_name}_notification_{now_str}', stats_job_ids)
         # Run queries
         query_command = (' python scripts/answer_queries_from_s3.py'
                          f' --model {model_name}')
