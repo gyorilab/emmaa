@@ -1,9 +1,6 @@
 from datetime import datetime
 from nose.plugins.attrib import attr
-from emmaa.answer_queries import QueryManager, format_results, \
-    make_reports_from_results
-from emmaa.notifications import make_str_report_per_user, \
-    make_html_report_per_user, get_user_delta
+from emmaa.answer_queries import QueryManager, format_results
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_model import create_model
@@ -195,50 +192,3 @@ def test_answer_get_registered_queries():
         assert isinstance(results[qh][mc_type][1], list)
         assert test_response['3801854542']['path'] in [
             res['path'] for res in results[qh][mc_type][1]]
-
-
-@attr('nonpublic')
-def test_user_query_delta():
-    db = _get_test_db()
-    qm = QueryManager(db=db, model_managers=[test_mm])
-    # Using results from db
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_results('test', [(query_object, 'pysb', test_response)])
-    qm.db.put_results('test', [(query_object, 'pysb', query_not_appl)])
-    str_rep, html_rep = get_user_delta(db, user_email=test_email)
-    assert str_rep, print(str_rep)
-    assert html_rep, print(html_rep)
-    assert '</html>' in html_rep
-    assert '</body>' in html_rep
-    assert 'pysb' in html_rep
-    assert 'unsubscribe' in html_rep
-
-
-@attr('nonpublic')
-def test_make_reports():
-    date = datetime.now()
-    results = [
-        ('test', query_object, 'pysb', test_response, {'3801854542'}, date),
-        ('test', query_object, 'signed_graph', fail_response, {}, date),
-        ('test', query_object, 'unsigned_graph', test_response, {}, date),
-        ('test', open_query, 'pysb', test_response, {'3801854542'}, date),
-        ('test', dyn_query, 'pysb', query_not_appl, {'2413475507'}, date)]
-    static_rep, open_rep, dyn_rep = make_reports_from_results(results)
-    assert static_rep
-    assert open_rep
-    assert dyn_rep
-    str_rep = make_str_report_per_user(static_rep, open_rep, dyn_rep)
-    assert str_rep
-    assert 'Updates to your static queries:' in str_rep
-    assert 'Updates to your open queries:' in str_rep
-    assert 'Updates to your dynamic queries:' in str_rep
-    html_rep = make_html_report_per_user(static_rep, open_rep, dyn_rep,
-                                         test_email)
-    assert html_rep
-    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
-            'tab=static">static') in html_rep
-    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
-            'tab=open">open') in html_rep
-    assert ('Updates to your <a href="https://emmaa.indra.bio/query?'
-            'tab=dynamic">dynamic') in html_rep
