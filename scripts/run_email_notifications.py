@@ -14,7 +14,7 @@ if __name__ == '__main__':
     subject_line = 'You have an update to your queries on EMMAA'
 
     for user_email in subscribed_users:
-        delta_str_msg, delta_html_msg = get_user_query_delta(user_email)
+        delta_str_msg, delta_html_msg = get_user_query_delta(db, user_email)
         # If there is a delta, send an email
         if delta_html_msg:
             res = send_email(sender=notifications_sender_default,
