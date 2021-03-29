@@ -1899,7 +1899,8 @@ def entity_info(model):
     rv = {'url': url}
     bioresolver_json = _lookup_bioresolver(namespace, identifier)
     if bioresolver_json:
-        rv.update(bioresolver_json)  # TODO how is best to organize this?
+        rv['name'] = bioresolver_json.get('name')
+        rv['definition'] = bioresolver_json.get('definition')
     return rv
 
 
