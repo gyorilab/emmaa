@@ -17,4 +17,5 @@ EMMAA modules reference
    database
    aws_lambda_functions
    xdd
+   subscription
    util
