@@ -23,7 +23,8 @@ now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
 date = datetime.utcnow().strftime('%Y-%m-%d')
 
 
-def submit_batch_job(script_command, purpose, job_name, wait_for=None):
+def submit_batch_job(script_command, purpose, job_name, wait_for=None,
+                     job_def=JOB_DEF):
     print(f'Submitting job {job_name}')
     core_command = 'bash scripts/git_and_run.sh'
     if BRANCH is not None:
@@ -41,7 +42,7 @@ def submit_batch_job(script_command, purpose, job_name, wait_for=None):
                                for job_id in wait_for]
     ret = batch.submit_job(
         jobName=job_name,
-        jobQueue=QUEUE, jobDefinition=JOB_DEF,
+        jobQueue=QUEUE, jobDefinition=job_def,
         containerOverrides=cont_overrides, **kwargs)
     job_id = ret['jobId']
     print(f"Result from job submission: {job_id}")
@@ -124,7 +125,8 @@ def lambda_handler(event, context):
             f' python scripts/model_notifications.py --model {model_name} '
             f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
         submit_batch_job(notify_command, 'model-notify',
-                         f'{model_name}_notification_{now_str}', stats_job_ids)
+                         f'{model_name}_notification_{now_str}', stats_job_ids,
+                         job_def='emmaa-email-notifications')
         # Run queries
         query_command = (' python scripts/answer_queries_from_s3.py'
                          f' --model {model_name}')
