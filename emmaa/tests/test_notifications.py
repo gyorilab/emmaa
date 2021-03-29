@@ -1,7 +1,8 @@
 from datetime import datetime
 from nose.plugins.attrib import attr
 from emmaa.subscription.notifications import make_str_report_per_user, \
-    make_html_report_per_user, get_user_query_delta, make_reports_from_results
+    make_html_report_per_user, get_user_query_delta, \
+    make_reports_from_results, get_all_update_messages
 from emmaa.tests.db_setup import _get_test_db, setup_function, \
     teardown_function
 from emmaa.tests.test_answer_queries import query_object, test_email, \
@@ -103,3 +104,27 @@ def test_delta_msg():
         'https://emmaa.indra.bio/dashboard/test?tab=tests'
         '&test_corpus=simple_tests&date=2020-01-01#newPassedTests '
         'for more details.'), msg['message']
+
+
+def test_get_all_messages():
+    deltas = {
+        'model_name': 'test',
+        'date': '2020-01-01',
+        'stmts_delta': {'added': ['-13855132444206450', '2874381165909177'],
+                        'removed': []},
+        'new_papers': 2,
+        'tests': {'simple_tests': {
+            'name': None,
+            'passed': {'pysb': {'added': ['34500484183886742'], 'removed': []},
+                       'pybel': {'added': ['34500484183886742'],
+                                 'removed': []},
+                       'signed_graph': {'added': ['34500484183886742'],
+                                        'removed': []},
+                       'unsigned_graph': {'added': ['34500484183886742'],
+                                          'removed': []}},
+            'applied_tests': {'added': ['34500484183886742'], 'removed': []}}}}
+    msg_dicts = get_all_update_messages(deltas)
+    assert len(msg_dicts) == 6
+    for msg_dict in msg_dicts:
+        assert set(msg_dict.keys()) == {
+            'message', 'start', 'middle', 'delta_part', 'url'}
