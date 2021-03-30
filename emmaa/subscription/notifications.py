@@ -46,6 +46,7 @@ class QueryEmailHtmlBody(EmailHtmlBody):
             structure:
             [(english_query, model, model_type)]
         unsub_link : str
+            A link to unsubscribe page.
 
         Returns
         -------
@@ -73,7 +74,7 @@ class ModelDeltaEmailHtmlBody(EmailHtmlBody):
     def __init__(self, template_path='email_unsub/model_email_body.html'):
         super().__init__(template_path)
 
-    def render(self, msg_dicts):
+    def render(self, msg_dicts, unsub_link):
         """Provided pregenerated msg_dicts render HTML to put in email body.
 
         Parameters
@@ -82,6 +83,8 @@ class ModelDeltaEmailHtmlBody(EmailHtmlBody):
             A list of dictionaries containing parts of messages to be added to
             email. Each dictionary has the following keys: 'url', 'start',
             'delta_part', 'middle', 'message'.
+        unsub_link : str
+            A link to unsubscribe page.
 
         Returns
         -------
@@ -89,7 +92,8 @@ class ModelDeltaEmailHtmlBody(EmailHtmlBody):
             An html string rendered from the associated jinja2 template
         """
         return self.template.render(
-            msg_dicts=msg_dicts
+            msg_dicts=msg_dicts,
+            unsub_link=unsub_link
         )
 
 
@@ -415,10 +419,11 @@ def tweet_deltas(deltas, twitter_cred):
     logger.info('Done tweeting')
 
 
-def make_model_html_email(msg_dicts):
+def make_model_html_email(msg_dicts, email, domain='emmaa.indra.bio'):
     """Render html file for model notification email."""
+    link = generate_unsubscribe_link(email=email, domain=domain)
     email_html = ModelDeltaEmailHtmlBody()
-    return email_html.render(msg_dicts)
+    return email_html.render(msg_dicts, unsub_link=unsub_link)
 
 
 def model_update_notify(model_name, test_corpora, date, db,
@@ -464,15 +469,16 @@ def model_update_notify(model_name, test_corpora, date, db,
         msg_dicts = get_all_update_messages(deltas, is_tweet=False)
         if msg_dicts:
             str_email = '\n'.join([msg['message'] for msg in msg_dicts])
-            html_email = make_model_html_email(msg_dicts)
             full_name = config.get('human_readable_name', model_name)
             subject_line = f'Updates to the {full_name} EMMAA model'
-            res = send_email(sender=notifications_sender_default,
-                             recipients=users,
-                             subject=subject_line,
-                             body_text=str_email,
-                             body_html=html_email,
-                             source_arn=indra_bio_ARN,
-                             return_email=notifications_return_default,
-                             return_arn=indra_bio_ARN
-                             )
+            for user_email in users:
+                html_email = make_model_html_email(msg_dicts, user_email)
+                res = send_email(sender=notifications_sender_default,
+                                 recipients=users,
+                                 subject=subject_line,
+                                 body_text=str_email,
+                                 body_html=html_email,
+                                 source_arn=indra_bio_ARN,
+                                 return_email=notifications_return_default,
+                                 return_arn=indra_bio_ARN
+                                 )
