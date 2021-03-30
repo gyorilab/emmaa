@@ -1944,6 +1944,8 @@ def model_subscription(model):
     user_id = user.id
 
     subscribe = request.json.get('subscribe')
+    logger.info(f'Change subscription status for {model} and {user_email} to '
+                f'{subscribe}')
     if subscribe:
         qm.db.subscribe_to_model(user_email, user_id, model)
         return {'subscription': 'success'}
