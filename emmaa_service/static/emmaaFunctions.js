@@ -333,7 +333,12 @@ function subscribe_model(api_route, subscribe) {
       switch (xhr.status) {
         case 200:
           console.log('200 response');
-          notify(`You have successfully subscribed to this model`, statusId);
+          if (subscribe) {
+            var msg = 'You have successfully subscribed to this model'
+          } else {
+            var msg = 'You have successfully unsubscribed from this model'
+          }
+          notify(msg, statusId);
           break;
         case 400:
           console.log('400 response');
