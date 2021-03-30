@@ -1640,7 +1640,9 @@ def email_unsubscribe_post():
 
     if verified:
         success = register_email_unsubscribe(email, queries, models)
-        return jsonify({'result': success})
+        params = parse.urlencode(
+            {'email': email, 'expiration': expiration, 'signature': signature})
+        return jsonify({'redirectURL': f'/query/unsubscribe?{params}'})
     else:
         logger.info('Could not verify signature, aborting unsubscribe')
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401

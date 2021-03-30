@@ -65,6 +65,9 @@
             case 200:
               console.log('200 response');
               $('#unsub-status').textContent = 'Unsubscribe successful';
+              if (res.responseJSON.redirectURL) {
+                window.location.replace(res.responseJSON.redirectURL);
+              }
               break;
             case 400:
               console.log('400 response');
@@ -117,7 +120,7 @@
               </tr>
             </tbody>
           </table>
-          <button type="button" class="btn btn-primary" onclick="submitSubscriptionUpdate($('#all-hashes').checked)">Unsubscribe</button>
+          <button type="button" class="btn btn-primary" onclick="submitSubscriptionUpdate($('#all-hashes').is(':checked'))">Unsubscribe</button>
           <p><i id="unsub-status"></i></p>
         {% else %}
           <p><i>You currently don't have any subscribed queries</i></p>
