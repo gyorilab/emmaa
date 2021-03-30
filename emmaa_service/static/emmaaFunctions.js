@@ -317,12 +317,14 @@ function annotate(api_route, paper_id) {
 }
 
 
-function subscribe_model(api_route) {
-  console.log('Subscribing user to the model')
+function subscribe_model(api_route, subscribe) {
+  console.log('Got a request to update subscription status to:')
+  console.log(subscribe)
   var statusId = 'model-subscription-status';
   return $.ajax({
     url: api_route,
     type: 'POST',
+    data: JSON.stringify({'subscribe': subscribe}),
     contentType: 'application/json',
     complete: function(xhr, statusText) {
       console.log('responseJSON');
@@ -344,10 +346,10 @@ function subscribe_model(api_route) {
           report_login_result(msg);
           login(
             (type, data) => {
-              subscribe_model(api_route);
+              subscribe_model(api_route, subscribe);
               handle_success(type, data);
             },
-            (type, data) => {subscribe_model(api_route)}
+            (type, data) => {subscribe_model(api_route, subscribe)}
           );
           break;
         case 404:

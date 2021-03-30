@@ -733,21 +733,16 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
+    logger.info('Getting model subscription info')
+    subscribe = True
+    logged_in = False
+    sub_link = f'/subscribe/{model}'
     if user:
-        logger.info('Getting model subscription info')
+        logged_in = True
         model_users = qm.db.get_model_users(model)
-        logger.info(f'Currently registered users: {model_users}')
         if user.email in model_users:
-            msg = 'You are subscribed to this model'
-            sub_link = ''
-        else:
-            msg = 'Subscribe to get model updates'
-            sub_link = f'/subscribe/{model}'
-    else:
-        msg = 'Login and refresh to see if you are subscribed to this model'
-        sub_link = ''
-    model_info_contents.append([
-        ('', 'Subscription', ''), (sub_link, msg, msg)])
+            subscribe = False
+    subscription = (logged_in, subscribe, sub_link)
     logger.info('Getting test information')
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
@@ -832,6 +827,7 @@ def get_model_dashboard(model):
                            available_tests=available_tests,
                            link_list=link_list,
                            user_email=user.email if user else "",
+                           subscription=subscription,
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
@@ -1937,7 +1933,7 @@ def _lookup_bioresolver(prefix: str, identifier: str):
 
 @app.route('/subscribe/<model>', methods=['POST'])
 @jwt_optional
-def subscribe_to_model(model):
+def model_subscription(model):
     user, roles = resolve_auth(dict(request.args))
     if not roles and not user:
         logger.warning('User is not logged in')
@@ -1947,8 +1943,13 @@ def subscribe_to_model(model):
     user_email = user.email
     user_id = user.id
 
-    qm.db.subscribe_to_model(user_email, user_id, model)
-    return {'subscription': 'success'}
+    subscribe = request.args.get('subscribe')
+    if subscribe:
+        qm.db.subscribe_to_model(user_email, user_id, model)
+        return {'subscription': 'success'}
+    else:
+        qm.db.update_email_subscription(user_email, [], [model], False)
+        return {'unsubscribe': 'success'}
 
 
 if __name__ == '__main__':
