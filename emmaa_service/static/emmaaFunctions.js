@@ -346,7 +346,7 @@ function subscribe_model(api_route, subscribe) {
           break;
         case 401:
           console.log('401 response', statusId);
-          let msg = 'Must be signed in to subscribe to models';
+          var msg = 'Must be signed in to subscribe to models';
           notify(msg, statusId);
           report_login_result(msg);
           login(
