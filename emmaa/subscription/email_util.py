@@ -166,7 +166,7 @@ def get_email_subscriptions(email):
     results = {
         'queries': [(qo.to_english() + f' for model {model_full_names[mid]}',
                     f'{qo.get_type()}'.replace('_', ' '), qh)
-                    for qo, mid, qh in user_queries]
+                    for qo, mid, qh in user_queries],
         'models': [model_full_names[mid] for mid in user_models]
     }
     return results
