@@ -159,7 +159,7 @@ def get_email_subscriptions(email):
             for qo, mid, qh in user_queries]
 
 
-def register_email_unsubscribe(email, queries):
+def register_email_unsubscribe(email, queries, models):
     """Executes an email unsubscribe request"""
-    success = db.update_email_subscription(email, queries, False)
+    success = db.update_email_subscription(email, queries, models, False)
     return success

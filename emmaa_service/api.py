@@ -1616,7 +1616,8 @@ def email_unsubscribe():
 def email_unsubscribe_post():
     query = request.json.copy()
     email = query.get('email')
-    queries = query.get('queries')
+    queries = query.get('queries', [])
+    models = query.get('models', [])
     expiration = query.get('expiration')
     signature = query.get('signature')
     logger.info(f'Got unsubscribe request for {email} for queries {queries}')
@@ -1638,7 +1639,7 @@ def email_unsubscribe_post():
         verified = False
 
     if verified:
-        success = register_email_unsubscribe(email, queries)
+        success = register_email_unsubscribe(email, queries, models)
         return jsonify({'result': success})
     else:
         logger.info('Could not verify signature, aborting unsubscribe')

@@ -423,7 +423,7 @@ class EmmaaDatabaseManager(object):
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
 
-    def update_email_subscription(self, email, queries, subscribe):
+    def update_email_subscription(self, email, queries, models, subscribe):
         """Update email subscriptions for user queries
 
         NOTE:
@@ -435,8 +435,10 @@ class EmmaaDatabaseManager(object):
         ----------
         email : str
             The email assocaited with the query
-        queries : list(int)|'all'
-            A list of query hashes or the string "all"
+        queries : list(int)
+            A list of query hashes.
+        models " list[str]
+            A list of models.
         subscribe : bool
             The subscription status for all matching query hashes
 
@@ -448,8 +450,10 @@ class EmmaaDatabaseManager(object):
         logger.info(f'Got request to update email subscription for {email} '
                     f'on {len(queries)} queries.')
         try:
-            updated = 0
+            updated_queries = 0
+            updated_models = 0
             with self.get_session() as sess:
+                # First unsubscribe queries
                 for qhash in queries:
                     # Update subscription status for each provided hash
                     user_query = sess.query(UserQuery).filter(
@@ -464,17 +468,41 @@ class EmmaaDatabaseManager(object):
                     # from new status
                     if uq and uq.subscription != subscribe:
                         uq = update_subscription(uq, subscribe)
-                        updated += 1
+                        updated_queries += 1
                     else:
                         continue
-            logger.info(f'Changed subscription status for {updated} '
-                        f'queries to {subscribe}. The other '
-                        f'{updated-len(queries)} queries already had their '
-                        f'subscription status set to {subscribe}.')
+                if updated_queries:
+                    logger.info(f'Changed subscription status for '
+                                f'{updated_queries} queries to {subscribe}. '
+                                f'The other {len(queries) - updated_queries} '
+                                f'queries already had their subscription '
+                                f'status set to {subscribe}.')
+                # Then unsubscribe models
+                for model_id in models:
+                    user_model = sess.query(UserModel).filter(
+                        User.email == email,
+                        UserModel.user_id == User.id,
+                        UserModel.model_id == model_id
+                    )
+                    um = user_model.all()[0] if len(user_model.all()) > 0 \
+                        else None
+                    # If entry exists and subscription status is different
+                    # from new status
+                    if um and um.subscription != subscribe:
+                        um = update_model_subscription(um, subscribe)
+                        updated_models += 1
+                    else:
+                        continue
+                if updated_models:
+                    logger.info(f'Changed subscription status for '
+                                f'{updated_models} models to {subscribe}. '
+                                f'The other {len(models) - updated_models} '
+                                f'models already had their subscription '
+                                f'status set to {subscribe}.')
             return True
         except Exception as e:
             logger.warning(f'Could not change subscription status for query '
-                           f'hashes {queries}.')
+                           f'hashes {queries} and models {models}.')
             logger.exception(e)
             return False
 
