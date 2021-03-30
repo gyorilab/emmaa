@@ -1943,7 +1943,7 @@ def model_subscription(model):
     user_email = user.email
     user_id = user.id
 
-    subscribe = request.args.get('subscribe')
+    subscribe = request.json.get('subscribe')
     if subscribe:
         qm.db.subscribe_to_model(user_email, user_id, model)
         return {'subscription': 'success'}
