@@ -404,7 +404,7 @@ class EmmaaDatabaseManager(object):
             )
             # Returns list of (query json, query hash) tuples
         return [(QueryObject._from_json(qj), mid, qh)
-                for qj, mid, qh in q.all()]
+                for qj, mid, qh in q.all()] if q.all() else []
 
     def get_subscribed_users(self):
         """Get all users who have subscriptions

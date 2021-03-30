@@ -6,6 +6,7 @@ from urllib import parse
 from datetime import datetime, timedelta
 
 from emmaa.db import get_db
+from emmaa.model import load_config_from_s3
 
 db = get_db('primary')
 
@@ -152,11 +153,23 @@ def get_email_subscriptions(email):
     list(tuple(str, str, query_hash))
     """
     user_queries = db.get_subscribed_queries(email)
-    if not user_queries:
-        return []
-    return [(qo.to_english() + f' for model {mid}',
-             f'{qo.get_type()}'.replace('_', ' '), qh)
-            for qo, mid, qh in user_queries]
+    user_models = db.get_user_models(email)
+    model_full_names = {}
+    for qo, mid, dh in user_queries:
+        if mid not in model_full_names:
+            config = load_config_from_s3(mid)
+            model_full_names[mid] = config.get('human_readable_name', mid)
+    for mid in user_models:
+        if mid not in model_full_names:
+            config = load_config_from_s3(mid)
+            model_full_names[mid] = config.get('human_readable_name', mid)
+    results = {
+        'queries': [(qo.to_english() + f' for model {model_full_names[mid]}',
+                    f'{qo.get_type()}'.replace('_', ' '), qh)
+                    for qo, mid, qh in user_queries]
+        'models': [model_full_names[mid] for mid in user_models]
+    }
+    return results
 
 
 def register_email_unsubscribe(email, queries, models):

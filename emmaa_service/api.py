@@ -1600,11 +1600,12 @@ def email_unsubscribe():
     if verified:
         # queries conatins a list of tuples (english query, query type,
         # query hash)
-        queries = get_email_subscriptions(email=email)
+        subscriptions = get_email_subscriptions(email=email)
 
         return render_template('email_unsub/email_unsubscribe.html',
                                email=req_args['email'],
-                               possible_queries=queries,
+                               possible_queries=subscriptions['queries'],
+                               possible_models=subscriptions['models'],
                                expiration=expiration,
                                signature=signature)
     else:
