@@ -36,8 +36,9 @@
         if (allModelsChecked || (!allModelsChecked && m_inp.checked)) {
           modelList.push(m_inp.id)
         }
-      return hashList, modelList;
-    }
+      }
+      return [hashList, modelList];
+  }
 
     function submitSubscriptionUpdate(allHashesChecked, allModelsChecked) {
       // Greyout all checkboxes
@@ -45,7 +46,7 @@
       $('#all-hashes').disabled = true;
       $('#all-models').disabled = true;
       // Check if 'all-hashes' is checked and  Gather query hashes
-      let queryHashes, model_ids = gatherHashes(allHashesChecked, allModelsChecked);
+      let [queryHashes, model_ids] = gatherHashes(allHashesChecked, allModelsChecked);
       // Could also get email from: `new URL(window.location.href).searchParams.get('email')`
       let email = '{{ email }}';
       let expiration = '{{ expiration }}';
@@ -143,10 +144,10 @@
               </tr>
             </thead>
             <tbody>
-              {% for model in possible_models %}
+              {% for mid, model_name in possible_models %}
               <tr>
-                <td>{{ model }}</td>
-                <td><input id="{{ model }}" type="checkbox" class="model-sub-choice"></td>
+                <td>{{ model_name }}</td>
+                <td><input id="{{ mid }}" type="checkbox" class="model-sub-choice"></td>
               </tr>
               {% endfor %}
               <tr style="border-top: 2px solid darkgray">

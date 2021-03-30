@@ -423,12 +423,14 @@ class EmmaaDatabaseManager(object):
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
 
-    def get_user_models(self, user_email):
+    def get_user_models(self, email):
         """Get all models a user is subscribed to."""
+        logger.info(f"Got request to list subscribed models for {email}")
         with self.get_session() as sess:
             q = sess.query(UserModel.model_id).filter(
                 UserModel.user_id == User.id,
-                User.email == user_email
+                User.email == email,
+                UserModel.subscription
             ).distinct()
         return [m for m, in q.all()] if q.all() else []
 
@@ -457,7 +459,7 @@ class EmmaaDatabaseManager(object):
             Return True if the update was successful, False otherwise
         """
         logger.info(f'Got request to update email subscription for {email} '
-                    f'on {len(queries)} queries.')
+                    f'on {len(queries)} queries and {len(models)} models')
         try:
             updated_queries = 0
             updated_models = 0
@@ -667,7 +669,7 @@ def update_model_subscription(user_model, new_sub_status):
         The updated UserModel object
     """
     if new_sub_status is not user_model.subscription:
-        user_query.subscription = new_sub_status
+        user_model.subscription = new_sub_status
         logger.info(f'Updated subscription status to '
                     f'{new_sub_status} for model {user_model.model_id}')
     return user_model

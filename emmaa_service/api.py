@@ -1621,7 +1621,8 @@ def email_unsubscribe_post():
     models = query.get('models', [])
     expiration = query.get('expiration')
     signature = query.get('signature')
-    logger.info(f'Got unsubscribe request for {email} for queries {queries}')
+    logger.info(f'Got unsubscribe request for {email} for queries {queries}'
+                f' and models {models}')
 
     # Check that required query parameters are present
     if bool(email) and bool(expiration) and bool(signature):
