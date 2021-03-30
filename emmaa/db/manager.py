@@ -423,6 +423,15 @@ class EmmaaDatabaseManager(object):
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
 
+    def get_user_models(self, user_email):
+        """Get all models a user is subscribed to."""
+        with self.get_session() as sess:
+            q = sess.query(UserModel.model_id).filter(
+                UserModel.user_id == User.id,
+                User.email == user_email
+            ).distinct()
+        return [m for m, in q.all()] if q.all() else []
+
     def update_email_subscription(self, email, queries, models, subscribe):
         """Update email subscriptions for user queries
 
