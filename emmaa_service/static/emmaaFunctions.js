@@ -319,12 +319,13 @@ function annotate(api_route, paper_id) {
 
 function subscribe_model(api_route, subscribe) {
   console.log('Got a request to update subscription status to:')
-  console.log(subscribe)
+  let subscribe_bool = (subscribe === 'True')
+  console.log(subscribe, subscribe_bool)
   var statusId = 'model-subscription-status';
   return $.ajax({
     url: api_route,
     type: 'POST',
-    data: JSON.stringify({'subscribe': subscribe}),
+    data: JSON.stringify({'subscribe': subscribe_bool}),
     contentType: 'application/json',
     complete: function(xhr, statusText) {
       console.log('responseJSON');
@@ -333,7 +334,7 @@ function subscribe_model(api_route, subscribe) {
       switch (xhr.status) {
         case 200:
           console.log('200 response');
-          if (subscribe) {
+          if (subscribe_bool) {
             var msg = 'You have successfully subscribed to this model'
           } else {
             var msg = 'You have successfully unsubscribed from this model'
