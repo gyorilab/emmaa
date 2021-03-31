@@ -421,7 +421,7 @@ def tweet_deltas(deltas, twitter_cred):
 
 def make_model_html_email(msg_dicts, email, domain='emmaa.indra.bio'):
     """Render html file for model notification email."""
-    link = generate_unsubscribe_link(email=email, domain=domain)
+    unsub_link = generate_unsubscribe_link(email=email, domain=domain)
     email_html = ModelDeltaEmailHtmlBody()
     return email_html.render(msg_dicts, unsub_link=unsub_link)
 
