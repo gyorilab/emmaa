@@ -159,7 +159,7 @@
         {% else %}
           <p><i>You currently don't have any subscribed models</i></p>
         {% endif %}
-        {% if possible_queries|length > 0 and possible_models|length > 0 %}
+        {% if possible_queries|length > 0 or possible_models|length > 0 %}
           <button type="button" class="btn btn-primary" onclick="submitSubscriptionUpdate($('#all-hashes').is(':checked'), $('#all-models').is(':checked'))">Unsubscribe</button>
           <p><i id="unsub-status"></i></p>
         {% endif %}
