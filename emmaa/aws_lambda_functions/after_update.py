@@ -16,7 +16,7 @@ from datetime import datetime
 
 batch = boto3.client('batch')
 JOB_DEF = 'emmaa_jobdef'
-QUEUE = 'emmaa-models-update-test'
+QUEUE = 'emmaa-after-update'
 PROJECT = 'aske'
 BRANCH = 'origin/master'
 now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
