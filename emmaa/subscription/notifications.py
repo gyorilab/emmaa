@@ -446,8 +446,10 @@ def model_update_notify(model_name, test_corpora, date, db,
     """
     # Find where to send notifications (Twitter, user emails)
     config = load_config_from_s3(model_name, bucket)
+    twitter_cred = None
     twitter_key = config.get('twitter')
-    twitter_cred = get_credentials(twitter_key)
+    if twitter_key:
+        twitter_cred = get_credentials(twitter_key)
 
     users = db.get_model_users(model_name)
 
