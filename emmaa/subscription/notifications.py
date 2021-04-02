@@ -464,7 +464,7 @@ def model_update_notify(model_name, test_corpora, date, db,
 
     # Tweet if configured
     if twitter_cred:
-        tweet_deltas(deltas)
+        tweet_deltas(deltas, twitter_cred)
 
     # Send emails if there are subscribed users
     if users:
