@@ -476,7 +476,7 @@ def model_update_notify(model_name, test_corpora, date, db,
             for user_email in users:
                 html_email = make_model_html_email(msg_dicts, user_email)
                 res = send_email(sender=notifications_sender_default,
-                                 recipients=users,
+                                 recipients=[user_email],
                                  subject=subject_line,
                                  body_text=str_email,
                                  body_html=html_email,
