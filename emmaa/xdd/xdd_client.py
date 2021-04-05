@@ -7,7 +7,6 @@ from indra_db import get_db
 logger = logging.getLogger(__name__)
 api_key = os.environ.get('XDD_API_KEY')
 doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
-obj_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/object/'
 query_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/search'
 
 
@@ -29,21 +28,7 @@ def get_document_objects(doi):
             logger.warning(f'Did not get results for {doi} page {page}')
             break
         objects += rj['objects']
-    filtered_objects = [
-        obj for obj in objects if obj['cls'] in ['Figure', 'Table']]
-    return filtered_objects
-
-
-def get_figure_from_document_object(obj_dict):
-    """Get a figure title and bytes content from figure object dictionary."""
-    txt = obj_dict['header_content']
-    url = f"{obj_url}{obj_dict['id']}"
-    res = requests.get(url, {'api_key': api_key})
-    rj = res.json()
-    if 'objects' not in rj:
-        return txt, None
-    b = rj['objects'][0]['children'][0]['bytes']
-    return txt, b
+    return objects
 
 
 def get_document_figures(paper_id, paper_id_type):
@@ -81,9 +66,7 @@ def get_document_figures(paper_id, paper_id_type):
     objects = get_document_objects(doi)
     if not objects:
         return []
-    figures = []
-    for obj in objects:
-        figures.append(get_figure_from_document_object(obj))
+    figures = get_figures_from_objects(objects)
     logger.info(f'Returning {len(figures)} figures and tables.')
     return figures
 
@@ -116,14 +99,14 @@ def get_figures_from_query(query, limit=None):
     # If there's a limit of number of figures so we can stop when we reach it
     # or when we run out of objects
     if limit:
-        figures = get_figures_from_query_objects(objects)
+        figures = get_figures_from_objects(objects, True)
         while len(figures) < limit and len(objects) < total:
             page += 1
             rj = send_query_search_request(query, page)
             if not rj:
                 logger.warning(f'Did not get results for {query}, page {page}')
                 break
-            new_figures = get_figures_from_query_objects(rj['objects'])
+            new_figures = get_figures_from_objects(rj['objects'], True)
             figures += new_figures
             objects += rj['objects']
         figures = figures[: limit]
@@ -137,7 +120,7 @@ def get_figures_from_query(query, limit=None):
             logger.warning(f'Did not get results for {query} page {page}')
             break
         objects += rj['objects']
-    figures = get_figures_from_query_objects(objects)
+    figures = get_figures_from_objects(objects, True)
     logger.info(f'Returning {len(figures)} figures and tables.')
     return figures
 
@@ -174,17 +157,20 @@ def send_document_search_request(doi, page):
                         {'doi': doi, 'api_key': api_key, 'page': page})
 
 
-def get_figures_from_query_objects(objects):
+def get_figures_from_objects(objects, paper_links=False):
     """Get a list of paper links, figure titles and their content bytes from
-    a list of object dictionaries (returned from query api)."""
+    a list of object dictionaries (returned from query or document api)."""
     figures = []
     for obj in objects:
         for child in obj['children']:
             if child['cls'] in ['Figure', 'Table']:
                 txt = child['header_content']
                 b = child['bytes']
-                urls = set()
-                for link in obj['bibjson']['link']:
-                    urls.add(link['url'])
-                figures.append((urls, txt, b))
+                if paper_links:
+                    urls = set()
+                    for link in obj['bibjson']['link']:
+                        urls.add(link['url'])
+                    figures.append((urls, txt, b))
+                else:
+                    figures.append((txt, b))
     return figures
