@@ -165,7 +165,7 @@ def test_update_email_subscription():
         q = sess.query(UserQuery.subscription).filter(
             UserQuery.user_id == 1, UserQuery.query_hash == qh)
     assert [q[0] for q in q.all()][0]  # True
-    db.update_email_subscription('test1@test.com', [qh], False)
+    db.update_email_subscription('test1@test.com', [qh], [], False)
     with db.get_session() as sess:
         q = sess.query(UserQuery.subscription).filter(
             UserQuery.user_id == 1,
