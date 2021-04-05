@@ -4,7 +4,7 @@ from emmaa.xdd import get_document_figures, get_figures_from_query
 
 @attr('nonpublic')
 def test_document_figures_doi():
-    doi = '10.1101/2020.08.23.20180281'
+    doi = '10.1016/j.apsb.2020.09.003'
     fig_list = get_document_figures(doi, 'DOI')
     assert fig_list
     # Should be a list of tuples with title and image bytes
@@ -15,15 +15,15 @@ def test_document_figures_doi():
 @attr('notravis', 'nonpublic')
 def test_document_figures_other_types():
     # Should get results from different paper ID types
-    trid = 31859624
+    trid = 32094555
     fig_list = get_document_figures(trid, 'TRID')
     assert fig_list
     assert len(fig_list[0]) == 2
-    pmid = '32838361'
+    pmid = '32923317'
     fig_list = get_document_figures(pmid, 'PMID')
     assert fig_list
     assert len(fig_list[0]) == 2
-    pmcid = 'PMC7362813'
+    pmcid = 'PMC7476560'
     fig_list = get_document_figures(pmcid, 'PMCID')
     assert fig_list
     assert len(fig_list[0]) == 2
