@@ -3,6 +3,7 @@ import json
 import boto3
 import logging
 import argparse
+import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -1895,7 +1896,23 @@ def entity_info(model):
     namespace = request.args.get('namespace')
     identifier = request.args.get('id')
     url = get_identifiers_url(namespace, identifier)
-    return {'url': url}
+    rv = {'url': url}
+    bioresolver_json = _lookup_bioresolver(namespace, identifier)
+    if bioresolver_json:
+        rv['name'] = bioresolver_json.get('name')
+        rv['definition'] = bioresolver_json.get('definition')
+    return rv
+
+
+def _lookup_bioresolver(prefix: str, identifier: str):
+    url = get_config('ENTITY_RESOLVER_URL')
+    if url is None:
+        return
+    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+    res_json = res.json()
+    if not res_json['success']:
+        return  # there was a problem looking up CURIE in the bioresolver
+    return res_json
 
 
 if __name__ == '__main__':
