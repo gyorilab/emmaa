@@ -7,7 +7,6 @@ from indra_db import get_db
 logger = logging.getLogger(__name__)
 api_key = os.environ.get('XDD_API_KEY')
 doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
-obj_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/object/'
 query_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/search'
 
 
@@ -29,21 +28,19 @@ def get_document_objects(doi):
             logger.warning(f'Did not get results for {doi} page {page}')
             break
         objects += rj['objects']
-    filtered_objects = [
-        obj for obj in objects if obj['cls'] in ['Figure', 'Table']]
-    return filtered_objects
+    return objects
 
 
-def get_figure_from_document_object(obj_dict):
+def get_figures_from_document_objects(objects):
     """Get a figure title and bytes content from figure object dictionary."""
-    txt = obj_dict['header_content']
-    url = f"{obj_url}{obj_dict['id']}"
-    res = requests.get(url, {'api_key': api_key})
-    rj = res.json()
-    if 'objects' not in rj:
-        return txt, None
-    b = rj['objects'][0]['children'][0]['bytes']
-    return txt, b
+    figures = []
+    for obj in objects:
+        for child in obj['children']:
+            if child['cls'] in ['Figure', 'Table']:
+                txt = child['header_content']
+                b = child['bytes']
+                figures.append((txt, b))
+    return figures
 
 
 def get_document_figures(paper_id, paper_id_type):
@@ -81,9 +78,7 @@ def get_document_figures(paper_id, paper_id_type):
     objects = get_document_objects(doi)
     if not objects:
         return []
-    figures = []
-    for obj in objects:
-        figures.append(get_figure_from_document_object(obj))
+    figures = get_figures_from_document_objects(objects)
     logger.info(f'Returning {len(figures)} figures and tables.')
     return figures
 
