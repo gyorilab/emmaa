@@ -212,3 +212,20 @@ def test_get_all_result_hashes_and_delta():
     assert db.get_all_result_hashes(qh, 'pysb') == {'1234', '345'}
     results = db.get_results_from_hashes([qh])
     assert results[0][4] == [], results[0]
+
+
+@with_setup(setup_function, teardown_function)
+@attr('nonpublic')
+def test_model_subscription():
+    db = _get_test_db()
+    db.subscribe_to_model('test@test.com', 1, 'aml')
+    db.subscribe_to_model('test@test.com', 1, 'paad')
+    db.subscribe_to_model('test2@test.com', 2, 'aml')
+    aml_users = db.get_model_users('aml')
+    paad_users = db.get_model_users('paad')
+    ms_users = db.get_model_users('ms')
+    assert len(aml_users) == 2
+    assert set(aml_users) == {'test@test.com', 'test2@test.com'}
+    assert len(paad_users) == 1
+    assert paad_users == ['test@test.com']
+    assert ms_users == []

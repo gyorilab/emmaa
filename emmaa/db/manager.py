@@ -10,7 +10,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base, Result, UserQuery
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, UserModel
 from emmaa.queries import Query as QueryObject
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class EmmaaDatabaseSessionManager(object):
 
 class EmmaaDatabaseManager(object):
     """A class used to manage sessions with EMMAA's database."""
-    table_order = ['user', 'query', 'user_query', 'result']
+    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
 
     def __init__(self, host, label=None):
         self.host = host
@@ -404,11 +404,10 @@ class EmmaaDatabaseManager(object):
             )
             # Returns list of (query json, query hash) tuples
         return [(QueryObject._from_json(qj), mid, qh)
-                for qj, mid, qh in q.all()]
+                for qj, mid, qh in q.all()] if q.all() else []
 
     def get_subscribed_users(self):
         """Get all users who have subscriptions
-
         Returns
         -------
         list[str]
@@ -424,7 +423,18 @@ class EmmaaDatabaseManager(object):
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
 
-    def update_email_subscription(self, email, queries, subscribe):
+    def get_user_models(self, email):
+        """Get all models a user is subscribed to."""
+        logger.info(f"Got request to list subscribed models for {email}")
+        with self.get_session() as sess:
+            q = sess.query(UserModel.model_id).filter(
+                UserModel.user_id == User.id,
+                User.email == email,
+                UserModel.subscription
+            ).distinct()
+        return [m for m, in q.all()] if q.all() else []
+
+    def update_email_subscription(self, email, queries, models, subscribe):
         """Update email subscriptions for user queries
 
         NOTE:
@@ -436,8 +446,10 @@ class EmmaaDatabaseManager(object):
         ----------
         email : str
             The email assocaited with the query
-        queries : list(int)|'all'
-            A list of query hashes or the string "all"
+        queries : list(int)
+            A list of query hashes.
+        models " list[str]
+            A list of models.
         subscribe : bool
             The subscription status for all matching query hashes
 
@@ -447,10 +459,12 @@ class EmmaaDatabaseManager(object):
             Return True if the update was successful, False otherwise
         """
         logger.info(f'Got request to update email subscription for {email} '
-                    f'on {len(queries)} queries.')
+                    f'on {len(queries)} queries and {len(models)} models')
         try:
-            updated = 0
+            updated_queries = 0
+            updated_models = 0
             with self.get_session() as sess:
+                # First unsubscribe queries
                 for qhash in queries:
                     # Update subscription status for each provided hash
                     user_query = sess.query(UserQuery).filter(
@@ -465,17 +479,41 @@ class EmmaaDatabaseManager(object):
                     # from new status
                     if uq and uq.subscription != subscribe:
                         uq = update_subscription(uq, subscribe)
-                        updated += 1
+                        updated_queries += 1
                     else:
                         continue
-            logger.info(f'Changed subscription status for {updated} '
-                        f'queries to {subscribe}. The other '
-                        f'{updated-len(queries)} queries already had their '
-                        f'subscription status set to {subscribe}.')
+                if updated_queries:
+                    logger.info(f'Changed subscription status for '
+                                f'{updated_queries} queries to {subscribe}. '
+                                f'The other {len(queries) - updated_queries} '
+                                f'queries already had their subscription '
+                                f'status set to {subscribe}.')
+                # Then unsubscribe models
+                for model_id in models:
+                    user_model = sess.query(UserModel).filter(
+                        User.email == email,
+                        UserModel.user_id == User.id,
+                        UserModel.model_id == model_id
+                    )
+                    um = user_model.all()[0] if len(user_model.all()) > 0 \
+                        else None
+                    # If entry exists and subscription status is different
+                    # from new status
+                    if um and um.subscription != subscribe:
+                        um = update_model_subscription(um, subscribe)
+                        updated_models += 1
+                    else:
+                        continue
+                if updated_models:
+                    logger.info(f'Changed subscription status for '
+                                f'{updated_models} models to {subscribe}. '
+                                f'The other {len(models) - updated_models} '
+                                f'models already had their subscription '
+                                f'status set to {subscribe}.')
             return True
         except Exception as e:
             logger.warning(f'Could not change subscription status for query '
-                           f'hashes {queries}.')
+                           f'hashes {queries} and models {models}.')
             logger.exception(e)
             return False
 
@@ -485,6 +523,70 @@ class EmmaaDatabaseManager(object):
                                               Query.hash == Result.query_hash,
                                               Result.mc_type == mc_type))
         return len(q.all())
+
+    def subscribe_to_model(self, user_email, user_id, model_id):
+        """Subsribe a user to model updates.
+
+        Parameters
+        ----------
+        user_email : str
+            the email of the user that entered the queries.
+        user_id : int
+            the user id of the user that entered the queries. Corresponds to
+            the user id in the User table in indralab_auth_tools
+        model_id : str
+            Standard model ID to which the user wishes to subscribe.
+        """
+        if not user_email or not user_id or not model_id:
+            raise TypeError('User email, user id and model id are required')
+        with self.get_session() as sess:
+            # Check if user is in the emmaa user table
+            res = sess.query(User.id).filter(User.id == user_id).first()
+            if res:
+                logger.info(f'User {user_email} is registered in the '
+                            f'user table.')
+            else:
+                logger.info(f'{user_email} not in user table. Adding...')
+                self.add_user(user_id=user_id, email=user_email)
+            all_user_models = {m for m, in sess.query(
+                UserModel.model_id).filter(UserModel.user_id == user_id)}
+            if model_id in all_user_models:
+                user_model = sess.query(UserModel).filter(
+                    UserModel.user_id == user_id,
+                    UserModel.model_id == model_id).first()
+                user_model = update_model_subscription(user_model, True)
+            else:
+                logger.info(
+                    f'Subscribing user {user_email} to {model_id} model')
+                user_model = UserModel(user_id=user_id,
+                                       model_id=model_id,
+                                       subscription=True)
+                sess.add(user_model)
+        return
+
+    def get_model_users(self, model_id):
+        """Get all users who are subscribed to a given model.
+
+        Parameters
+        ----------
+        model_id : str
+            A standard name of a model to get users for.
+
+        Returns
+        -------
+        list[str]
+            A list of email addresses corresponding to all users who are
+            subscribed to this model.
+        """
+        logger.info(f'Got request to gather users subscribed to {model_id}')
+        # Get db session
+        with self.get_session() as sess:
+            q = sess.query(User.email).filter(
+                User.id == UserModel.user_id,
+                UserModel.model_id == model_id,
+                UserModel.subscription
+            ).distinct()
+        return [e for e, in q.all()] if q.all() else []
 
 
 def _weed_results(result_iter, latest_order=1):
@@ -551,3 +653,23 @@ def update_subscription(user_query, new_sub_status):
         logger.info(f'Updated subscription status to '
                     f'{new_sub_status} for query {user_query.query_hash}')
     return user_query
+
+
+def update_model_subscription(user_model, new_sub_status):
+    """Update a UserQuery object's subscription status
+
+    user_query : `emmaa.db.schema.UserModel`
+        The UserModel object to be updated
+    new_sub_status : Bool
+        The subscription status to change to
+
+    Returns
+    -------
+    user_model : UserModel(object)
+        The updated UserModel object
+    """
+    if new_sub_status is not user_model.subscription:
+        user_model.subscription = new_sub_status
+        logger.info(f'Updated subscription status to '
+                    f'{new_sub_status} for model {user_model.model_id}')
+    return user_model

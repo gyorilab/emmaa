@@ -31,6 +31,12 @@ FORMATTED_TYPE_NAMES = {'pysb': 'PySB',
                         'unsigned_graph': 'Unsigned Graph'}
 
 
+TWITTER_MODEL_TYPES = {'pysb': '@PySysBio',
+                       'pybel': '@pybelbio',
+                       'signed_graph': 'Signed Graph',
+                       'unsigned_graph': 'Unsigned Graph'}
+
+
 def strip_out_date(keystring, date_format='datetime'):
     """Strips out datestring of selected date_format from a keystring"""
     if date_format == 'datetime':
@@ -330,54 +336,6 @@ def _get_json_str(json_obj, save_format='json'):
     return json_str
 
 
-class EmailHtmlBody(object):
-    app = _get_flask_app()
-
-    def __init__(self, domain='emmaa.indra.bio',
-                 template_path='email_unsub/email_body.html'):
-        self.template = self.app.jinja_env.get_template(template_path)
-        self.domain = domain
-        self.static_tab_link = f'https://{domain}/query?tab=static'
-        self.dynamic_tab_link = f'https://{domain}/query?tab=dynamic'
-        self.open_tab_link = f'https://{domain}/query?tab=open'
-
-    def render(self, static_query_deltas, open_query_deltas,
-               dynamic_query_deltas, unsub_link):
-        """Provided the delta json objects, render HTML to put in email body
-
-        Parameters
-        ----------
-        static_query_deltas : json
-            A list of lists that names which queries have updates. Expected
-            structure:
-            [(english_query, detailed_query_link, model, model_type)]
-        dynamic_query_deltas : list[
-            A list of lists that names which queries have updates. Expected
-            structure:
-            [(english_query, model, model_type)]
-        unsub_link : str
-
-        Returns
-        -------
-        html
-            An html string rendered from the associated jinja2 template
-        """
-        if not static_query_deltas and not open_query_deltas and \
-                not dynamic_query_deltas:
-            raise ValueError('No query deltas provided')
-        # Todo consider generating unsubscribe link here, will probably have
-        #  to solve import loops for that though
-        return self.template.render(
-            static_tab_link=self.static_tab_link,
-            static_query_deltas=static_query_deltas,
-            open_tab_link=self.open_tab_link,
-            open_query_deltas=open_query_deltas,
-            dynamic_tab_link=self.dynamic_tab_link,
-            dynamic_query_deltas=dynamic_query_deltas,
-            unsub_link=unsub_link
-        ).replace('\n', '')
-
-
 class NotAClassName(Exception):
     pass
 
@@ -412,3 +370,48 @@ def update_status(msg, twitter_cred):
         return
     twitter_api = tweepy.API(twitter_auth)
     twitter_api.update_status(msg)
+
+
+def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
+                    test_corpus=None, test_name=None, new_papers=None,
+                    is_tweet=False):
+    if is_tweet:
+        model_type_dict = TWITTER_MODEL_TYPES
+    else:
+        model_type_dict = FORMATTED_TYPE_NAMES
+    if len(delta['added']) == 0:
+        logger.info(f'No {msg_type} delta found')
+        return
+    if not test_name:
+        test_name = test_corpus
+    plural = 's' if len(delta['added']) > 1 else ''
+    if msg_type == 'stmts':
+        if not new_papers:
+            logger.info(f'No new papers found')
+            return
+        else:
+            paper_plural = 's' if new_papers > 1 else ''
+            url = (f'https://emmaa.indra.bio/dashboard/{model_name}'
+                   f'?tab=model&date={date}#addedStmts')
+            start = (f'Today I read {new_papers} new publication{paper_plural}'
+                     ' and learned ')
+            delta_part = f'{len(delta["added"])} new mechanism{plural}'
+            middle = ''
+    elif msg_type == 'applied_tests':
+        url = (f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newAppliedTests')
+        start = 'Today I applied '
+        delta_part = f'{len(delta["added"])} new test{plural}'
+        middle = f' in the {test_name}'
+    elif msg_type == 'passed_tests' and mc_type:
+        url = (f'https://emmaa.indra.bio/dashboard/{model_name}?tab=tests'
+               f'&test_corpus={test_corpus}&date={date}#newPassedTests')
+        start = 'Today I explained '
+        delta_part = f'{len(delta["added"])} new observation{plural}'
+        middle = (f' in the {test_name} with my {model_type_dict[mc_type]} '
+                  'model')
+    else:
+        raise TypeError(f'Invalid message type: {msg_type}.')
+    msg = f'{start}{delta_part}{middle}. See {url} for more details.'
+    return {'url': url, 'start': start, 'delta_part': delta_part,
+            'middle': middle, 'message': msg}

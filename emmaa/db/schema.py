@@ -1,4 +1,4 @@
-__all__ = ['User', 'Query', 'UserQuery', 'Result']
+__all__ = ['User', 'Query', 'UserQuery', 'Result', 'UserModel']
 
 import logging
 
@@ -118,6 +118,33 @@ class UserQuery(Base, EmmaaTable):
     date = Column(DateTime, default=func.now())
     subscription = Column(Boolean, nullable=False)
     count = Column(Integer, nullable=False)
+
+
+class UserModel(Base, EmmaaTable):
+    """A table linking users to models:
+
+    ``UserModel(_id_, user_id, model_id, date, subscription)``
+
+    Parameters
+    ----------
+    id : int
+        (auto, primary key) A database-assigned integer id.
+    user_id : int
+        (foreign key -> User.id) The id of the user related to this query.
+    model_id : str
+        (20 character) The short id/acronym for the given model.
+    date : datetime
+        (auto) The date that this entry was added to the database.
+    subscription : bool
+        Record whether the user has subscribed to see results of this model.
+    """
+    __tablename__ = 'user_model'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user = relationship(User)
+    model_id = Column(String(20), nullable=False)
+    date = Column(DateTime, default=func.now())
+    subscription = Column(Boolean, nullable=False)
 
 
 class Result(Base, EmmaaTable):

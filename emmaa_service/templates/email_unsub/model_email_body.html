@@ -1,0 +1,14 @@
+<html lang="en">
+<body>
+  <meta charset="UTF-8">
+  {% for msg_dict in msg_dicts %}
+    <li>{{ msg_dict['start'] }} <a href="{{ msg_dict['url'] }}" target="_blank">{{ msg_dict['delta_part'] }}</a>{{ msg_dict['middle'] }}</li>
+  {% endfor %}
+  </body>
+  <footer>
+    <small>
+      <p>If you wish to unsubscribe from future notifications, click on the
+      following link:<br><a href="{{ unsub_link }}">{{ unsub_link }}</a></p>
+    </small>
+  </footer>
+</html>  

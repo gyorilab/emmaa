@@ -733,6 +733,16 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
+    logger.info('Getting model subscription info')
+    subscribe = True
+    logged_in = False
+    sub_link = f'/subscribe/{model}'
+    if user:
+        logged_in = True
+        model_users = qm.db.get_model_users(model)
+        if user.email in model_users:
+            subscribe = False
+    subscription = (logged_in, subscribe, sub_link)
     logger.info('Getting test information')
     test_data = test_stats['test_round_summary'].get('test_data')
     test_info_contents = None
@@ -817,6 +827,7 @@ def get_model_dashboard(model):
                            available_tests=available_tests,
                            link_list=link_list,
                            user_email=user.email if user else "",
+                           subscription=subscription,
                            stmts_counts=top_stmts_counts,
                            added_stmts=added_stmts,
                            model_info_contents=model_info_contents,
@@ -1585,11 +1596,12 @@ def email_unsubscribe():
     if verified:
         # queries conatins a list of tuples (english query, query type,
         # query hash)
-        queries = get_email_subscriptions(email=email)
+        subscriptions = get_email_subscriptions(email=email)
 
         return render_template('email_unsub/email_unsubscribe.html',
                                email=req_args['email'],
-                               possible_queries=queries,
+                               possible_queries=subscriptions['queries'],
+                               possible_models=subscriptions['models'],
                                expiration=expiration,
                                signature=signature)
     else:
@@ -1601,10 +1613,12 @@ def email_unsubscribe():
 def email_unsubscribe_post():
     query = request.json.copy()
     email = query.get('email')
-    queries = query.get('queries')
+    queries = query.get('queries', [])
+    models = query.get('models', [])
     expiration = query.get('expiration')
     signature = query.get('signature')
-    logger.info(f'Got unsubscribe request for {email} for queries {queries}')
+    logger.info(f'Got unsubscribe request for {email} for queries {queries}'
+                f' and models {models}')
 
     # Check that required query parameters are present
     if bool(email) and bool(expiration) and bool(signature):
@@ -1623,8 +1637,10 @@ def email_unsubscribe_post():
         verified = False
 
     if verified:
-        success = register_email_unsubscribe(email, queries)
-        return jsonify({'result': success})
+        success = register_email_unsubscribe(email, queries, models)
+        params = parse.urlencode(
+            {'email': email, 'expiration': expiration, 'signature': signature})
+        return jsonify({'redirectURL': f'/query/unsubscribe?{params}'})
     else:
         logger.info('Could not verify signature, aborting unsubscribe')
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
@@ -1913,6 +1929,29 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     if not res_json['success']:
         return  # there was a problem looking up CURIE in the bioresolver
     return res_json
+
+
+@app.route('/subscribe/<model>', methods=['POST'])
+@jwt_optional
+def model_subscription(model):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        logger.warning('User is not logged in')
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    user_email = user.email
+    user_id = user.id
+
+    subscribe = request.json.get('subscribe')
+    logger.info(f'Change subscription status for {model} and {user_email} to '
+                f'{subscribe}')
+    if subscribe:
+        qm.db.subscribe_to_model(user_email, user_id, model)
+        return {'subscription': 'success'}
+    else:
+        qm.db.update_email_subscription(user_email, [], [model], False)
+        return {'unsubscribe': 'success'}
 
 
 if __name__ == '__main__':

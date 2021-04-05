@@ -1,9 +1,9 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts) -%}
+{% macro model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts, subscription) -%}
 <!-- This table displays model data -->
   <div class="container">
-  {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody") }}
+  {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody", subscription=subscription) }}
   {% if exp_formats %}
   <div class="card">
     <div class="card-header">
