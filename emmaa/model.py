@@ -324,6 +324,8 @@ class EmmaaModel(object):
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             other_stmts += file_stmts
         new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
+        # TODO this probably needs refactoring to determine which statements
+        # internal vs external
         new_estmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
         self.add_paper_ids(paper_ids, 'TRID')
         return new_estmts
@@ -334,7 +336,8 @@ class EmmaaModel(object):
         map_name = disease_map_config['map_name']
         logger.info('Loading Statements from %s Disease Map' % map_name)
         sp = process_from_web(filenames=filenames, map_name=map_name)
-        new_estmts = to_emmaa_stmts(sp.statements, datetime.datetime.now(), [])
+        new_estmts = to_emmaa_stmts(
+            sp.statements, datetime.datetime.now(), [], 'internal')
         logger.info('Got %d EMMAA Statements from %s Disease Map' %
                     (len(new_estmts), map_name))
         return new_estmts
@@ -348,7 +351,8 @@ class EmmaaModel(object):
             file_stmts = load_pickle_from_s3(bucket, fname)
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             stmts += file_stmts
-        new_estmts = to_emmaa_stmts(stmts, datetime.datetime.now(), [])
+        new_estmts = to_emmaa_stmts(
+            stmts, datetime.datetime.now(), [], 'external')
         return new_estmts
 
     def add_paper_ids(self, initial_ids, id_type='pmid'):
