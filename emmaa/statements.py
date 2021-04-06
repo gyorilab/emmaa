@@ -60,3 +60,23 @@ def emmaa_metadata_json(search_terms, date, source_tag):
 def add_emmaa_annotations(indra_stmt, annotation):
     for evid in indra_stmt.evidence:
         evid.annotations['emmaa'] = annotation
+
+
+def filter_emmaa_stmts_by_tag(estmts, allowed_tags=['internal']):
+    estmts_out = []
+    for estmt in estmts:
+        if estmt.source_tag in allowed_tags:
+            estmts_out.append(estmt)
+    return estmts_out
+
+
+def filter_indra_stmts_by_tag(stmts, allowed_tags=['internal']):
+    stmts_out = []
+    for stmt in stmts:
+        evid_tags = set()
+        for evid in stmt.evidence:
+            if evid.annotations.get('emmaa'):
+                evid_tags.add(evid.annotations['emmaa']['source_tag'])
+        if any([tag in allowed_tags for tag in evid_tags]):
+            stmts_out.append(stmt)
+    return stmts_out
