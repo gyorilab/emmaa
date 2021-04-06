@@ -13,16 +13,20 @@ class EmmaaStatement(object):
     source_tag : str
         Tag of statement source (e.g. internal, external, ctd, etc.)
     """
-    def __init__(self, stmt, date, search_terms, source_tag):
+    def __init__(self, stmt, date, search_terms, source_tag=None):
         self.stmt = stmt
         self.date = date
         self.search_terms = search_terms
-        self.source_tag = source_tag
+        self.source_tag = source_tag if source_tag else ''
 
     def __repr__(self):
-        return '%s(%s, %s, %s, %s)' % (self.__class__.__name__, self.stmt,
-                                       self.date, self.search_terms,
-                                       self.source_tag)
+        if hasattr(self, 'source_tag'):
+            return '%s(%s, %s, %s, %s)' % (self.__class__.__name__, self.stmt,
+                                           self.date, self.search_terms,
+                                           self.source_tag)
+        else:
+            return '%s(%s, %s, %s)' % (self.__class__.__name__, self.stmt,
+                                       self.date, self.search_terms)
 
     def to_json(self):
         output_json = emmaa_metadata_json(self.search_terms, self.date,
