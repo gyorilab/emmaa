@@ -21,7 +21,8 @@ def create_upload_model(model_name, indra_stmts, config_file):
     config_file : str
         Path to the local config.json file.
     """
-    emmaa_stmts = to_emmaa_stmts(indra_stmts, datetime.datetime.now(), [])
+    emmaa_stmts = to_emmaa_stmts(indra_stmts, datetime.datetime.now(), [],
+                                 'internal')
     # Load config information
     with open(config_file, 'rt') as f:
         config_json = json.load(f)

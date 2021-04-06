@@ -3,7 +3,7 @@ import logging
 import datetime
 from indra.sources import eidos
 from indra.literature import elsevier_client
-from emmaa.statements import EmmaaStatement
+from emmaa.statements import to_emmaa_stmts
 
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,9 @@ def read_elsevier_eidos_search_terms(piis_to_terms):
         for stmt in stmts:
             for evid in stmt.evidence:
                 evid.annotations['pii'] = pii
-            es = EmmaaStatement(stmt, date, piis_to_terms[pii])
-            estmts.append(es)
+        pii_estmts = to_emmaa_stmts(stmts, date, piis_to_terms[pii],
+                                    'internal')
+        estmts += pii_estmts
     return estmts
 
 
