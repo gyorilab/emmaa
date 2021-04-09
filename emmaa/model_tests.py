@@ -173,7 +173,7 @@ class ModelManager(object):
             logger.info(f'Applying {filter_func.__name__}')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths,
-            agent_filter_func=filter_func)
+            agent_filter_func=filter_func, edge_filter_func_name=edge_filter)
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
