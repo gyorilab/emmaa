@@ -25,7 +25,7 @@ from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
     EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, \
     load_gzip_json_from_s3, get_s3_client
-from emmaa.statements import to_emmaa_stmts
+from emmaa.statements import to_emmaa_stmts, is_internal
 
 
 logger = logging.getLogger(__name__)
@@ -337,7 +337,7 @@ class EmmaaModel(object):
         logger.info('Loading Statements from %s Disease Map' % map_name)
         sp = process_from_web(filenames=filenames, map_name=map_name)
         new_estmts = to_emmaa_stmts(
-            sp.statements, datetime.datetime.now(), [], 'internal')
+            sp.statements, datetime.datetime.now(), [], {'internal': True})
         logger.info('Got %d EMMAA Statements from %s Disease Map' %
                     (len(new_estmts), map_name))
         return new_estmts
@@ -352,7 +352,7 @@ class EmmaaModel(object):
             logger.info(f'Loaded {len(file_stmts)} statements from {fname}.')
             stmts += file_stmts
         new_estmts = to_emmaa_stmts(
-            stmts, datetime.datetime.now(), [], 'external')
+            stmts, datetime.datetime.now(), [], {'internal': False})
         return new_estmts
 
     def add_paper_ids(self, initial_ids, id_type='pmid'):
@@ -538,7 +538,9 @@ class EmmaaModel(object):
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
-        signed_graph = ia.make_model(graph_type='signed')
+        signed_graph = ia.make_model(
+            graph_type='signed',
+            extra_columns=[('internal', is_internal)])
         if mode == 's3' and 'indranet' in self.export_formats:
             fname = f'indranet_{self.date_str}.tsv'
             df = ia.make_df()
@@ -554,7 +556,9 @@ class EmmaaModel(object):
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
-        unsigned_graph = ia.make_model(graph_type='digraph')
+        unsigned_graph = ia.make_model(
+            graph_type='digraph',
+            extra_columns=[('internal', is_internal)])
         return unsigned_graph
 
     def to_json(self):
