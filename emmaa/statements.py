@@ -62,6 +62,9 @@ def add_emmaa_annotations(indra_stmt, annotation):
 def filter_emmaa_stmts_by_metadata(estmts, conditions):
     estmts_out = []
     for estmt in estmts:
+        if not hasattr(estmt, 'metadata'):
+            estmts_out.append(estmt)
+            continue
         checks = []
         for key, value in conditions.items():
             checks.append(estmt.metadata.get(key) == value)
@@ -91,6 +94,8 @@ def check_stmt(stmt, conditions, evid_policy='any'):
             evid_checks.append(all(checks))
             if all(checks) and evid_policy == 'any':
                 break
+    if not evid_checks:
+        return True
     if evid_policy == 'any':
         return any(evid_checks)
     elif evid_policy == 'all':
