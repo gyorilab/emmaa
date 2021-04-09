@@ -33,7 +33,7 @@ def read_elsevier_eidos_search_terms(piis_to_terms):
             for evid in stmt.evidence:
                 evid.annotations['pii'] = pii
         pii_estmts = to_emmaa_stmts(stmts, date, piis_to_terms[pii],
-                                    'internal')
+                                    {'internal': True})
         estmts += pii_estmts
     return estmts
 

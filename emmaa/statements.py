@@ -10,27 +10,22 @@ class EmmaaStatement(object):
         represents the time at which the Statement was created.
     search_terms : list[emmaa.priors.SearchTerm]
         The list of search terms that led to the creation of the Statement.
-    source_tag : str
-        Tag of statement source (e.g. internal, external, ctd, etc.)
+    metadata : dict
+        Additional metadata for the statement.
     """
-    def __init__(self, stmt, date, search_terms, source_tag=None):
+    def __init__(self, stmt, date, search_terms, metadata=None):
         self.stmt = stmt
         self.date = date
         self.search_terms = search_terms
-        self.source_tag = source_tag if source_tag else ''
+        self.metadata = metadata if metadata else {}
 
     def __repr__(self):
-        if hasattr(self, 'source_tag'):
-            return '%s(%s, %s, %s, %s)' % (self.__class__.__name__, self.stmt,
-                                           self.date, self.search_terms,
-                                           self.source_tag)
-        else:
-            return '%s(%s, %s, %s)' % (self.__class__.__name__, self.stmt,
-                                       self.date, self.search_terms)
+        return '%s(%s, %s, %s)' % (self.__class__.__name__, self.stmt,
+                                   self.date, self.search_terms)
 
     def to_json(self):
         output_json = emmaa_metadata_json(self.search_terms, self.date,
-                                          self.source_tag)
+                                          self.metadata)
         # Get json representation of statement
         json_stmt = self.stmt.to_json(use_sbo=False)
         # Stringify source hashes: JavaScript can't handle int's of length > 16
@@ -40,21 +35,23 @@ class EmmaaStatement(object):
         return output_json
 
 
-def to_emmaa_stmts(stmt_list, date, search_terms, source_tag):
+def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     """Make EMMAA statements from INDRA Statements with the given metadata."""
     emmaa_stmts = []
-    ann = emmaa_metadata_json(search_terms, date, source_tag)
+    ann = emmaa_metadata_json(search_terms, date, metadata)
     for indra_stmt in stmt_list:
         add_emmaa_annotations(indra_stmt, ann)
-        es = EmmaaStatement(indra_stmt, date, search_terms, source_tag)
+        es = EmmaaStatement(indra_stmt, date, search_terms, metadata)
         emmaa_stmts.append(es)
     return emmaa_stmts
 
 
-def emmaa_metadata_json(search_terms, date, source_tag):
+def emmaa_metadata_json(search_terms, date, metadata):
+    if not metadata:
+        metadata = {}
     return {'search_terms': [st.to_json() for st in search_terms],
             'date': date.strftime('%Y-%m-%d-%H-%M-%S'),
-            'source_tag': source_tag}
+            'metadata': metadata}
 
 
 def add_emmaa_annotations(indra_stmt, annotation):

@@ -29,7 +29,7 @@ def read_db_ids_search_terms(id_search_terms, id_type):
     for _id, stmt_jsons in id_stmts.items():
         stmts = stmts_from_json(stmt_jsons)
         id_estmts = to_emmaa_stmts(
-            stmts, date, id_search_terms[_id], 'internal')
+            stmts, date, id_search_terms[_id], {'internal': True})
         estmts += id_estmts
     return estmts
 

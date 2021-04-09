@@ -27,7 +27,7 @@ def read_pmid_search_terms(pmid_search_terms):
     estmts = []
     for pmid, stmts in pmid_stmts.items():
         pmid_estmts = to_emmaa_stmts(stmts, date, pmid_search_terms[pmid],
-                                     'internal')
+                                     {'internal': True})
         estmts += pmid_estmts
     return estmts
 
