@@ -130,7 +130,7 @@ class ModelManager(object):
         mm = cls(model, mode=mode)
         return mm
 
-    def get_updated_mc(self, mc_type, stmts, add_ns=False):
+    def get_updated_mc(self, mc_type, stmts, add_ns=False, edge_filter=None):
         """Update the ModelChecker and graph with stmts for tests/queries."""
         mc = self.mc_types[mc_type]['model_checker']
         mc.statements = stmts
@@ -138,7 +138,11 @@ class ModelManager(object):
             mc.graph = None
             mc.model_stmts = self.model.assembled_stmts
             mc.get_graph(prune_im=True, prune_im_degrade=True,
-                         add_namespaces=add_ns)
+                         add_namespaces=add_ns,
+                         edge_filter_func_name=edge_filter)
+        else:
+            mc.graph = None
+            mc.get_graph(edge_filter_func_name=edge_filter)
         if mc_type in ('signed_graph', 'unsigned_graph'):
             mc.nodes_to_agents = {ag.name: ag for ag in self.entities}
         return mc
@@ -151,18 +155,19 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self, filter_func=None):
+    def run_all_tests(self, filter_func=None, edge_filter=None):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
-                                  filter_func)
+                                  filter_func, edge_filter)
 
     def run_tests_per_mc(self, mc_type, max_path_length, max_paths,
-                         filter_func=None):
+                         filter_func=None, edge_filter=None):
         """Run all applicable tests with one ModelChecker."""
         mc = self.get_updated_mc(
-            mc_type, [test.stmt for test in self.applicable_tests])
+            mc_type, [test.stmt for test in self.applicable_tests],
+            edge_filter=edge_filter)
         logger.info(f'Running the tests with {mc_type} ModelChecker.')
         if filter_func:
             logger.info(f'Applying {filter_func.__name__}')
@@ -640,10 +645,10 @@ class TestManager(object):
             logger.info(f'Created {len(model_manager.applicable_tests)} tests '
                         f'for {model_manager.model.name} model.')
 
-    def run_tests(self, filter_func=None):
+    def run_tests(self, filter_func=None, edge_filter=None):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_all_tests(filter_func)
+            model_manager.run_all_tests(filter_func, edge_filter)
 
 
 class TestConnector(object):
@@ -910,11 +915,14 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         test_connector = RefinementTestConnector()
     tm.make_tests(test_connector)
     filter_func = None
+    edge_filter = None
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
         if filter_func_name:
             filter_func = filter_functions.get(filter_func_name)
-    tm.run_tests(filter_func)
+    if mm.model.test_config.get('edge_filters'):
+        edge_filter = mm.model.test_config['edge_filters'].get(test_corpus)
+    tm.run_tests(filter_func, edge_filter)
     # Optionally upload test results to S3
     if upload_results:
         mm.upload_results(test_corpus, test_data, bucket=bucket)
