@@ -59,21 +59,43 @@ def add_emmaa_annotations(indra_stmt, annotation):
         evid.annotations['emmaa'] = annotation
 
 
-def filter_emmaa_stmts_by_tag(estmts, allowed_tags=['internal']):
+def filter_emmaa_stmts_by_metadata(estmts, conditions):
     estmts_out = []
     for estmt in estmts:
-        if estmt.source_tag in allowed_tags:
+        checks = []
+        for key, value in conditions.items():
+            checks.append(estmt.metadata.get(key) == value)
+        if all(checks):
             estmts_out.append(estmt)
     return estmts_out
 
 
-def filter_indra_stmts_by_tag(stmts, allowed_tags=['internal']):
+def filter_indra_stmts_by_metadata(stmts, conditions, evid_policy='any'):
     stmts_out = []
     for stmt in stmts:
-        evid_tags = set()
-        for evid in stmt.evidence:
-            if evid.annotations.get('emmaa'):
-                evid_tags.add(evid.annotations['emmaa']['source_tag'])
-        if any([tag in allowed_tags for tag in evid_tags]):
+        add = check_stmt(stmt, conditions, evid_policy)
+        if add:
             stmts_out.append(stmt)
     return stmts_out
+
+
+def check_stmt(stmt, conditions, evid_policy='any'):
+    evid_checks = []
+    for evid in stmt.evidence:
+        emmaa_anns = evid.annotations.get('emmaa')
+        if emmaa_anns:
+            metadata = emmaa_anns.get('metadata')
+            checks = []
+            for key, value in conditions.items():
+                checks.append(metadata[key] == value)
+            evid_checks.append(all(checks))
+            if all(checks) and evid_policy == 'any':
+                break
+    if evid_policy == 'any':
+        return any(evid_checks)
+    elif evid_policy == 'all':
+        return all(evid_checks)
+
+
+def is_internal(stmt):
+    return check_stmt(stmt, {'internal': True}, evid_policy='any')
