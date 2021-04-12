@@ -325,8 +325,9 @@ class EmmaaModel(object):
             other_stmts += file_stmts
         new_stmts, paper_ids = make_model_stmts(current_stmts, other_stmts)
         # TODO this probably needs refactoring to determine which statements
-        # internal vs external
-        new_estmts = to_emmaa_stmts(new_stmts, datetime.datetime.now(), [])
+        # are from literature vs curated pickled files
+        new_estmts = to_emmaa_stmts(
+            new_stmts, datetime.datetime.now(), [], {'internal': True})
         self.add_paper_ids(paper_ids, 'TRID')
         return new_estmts
 
