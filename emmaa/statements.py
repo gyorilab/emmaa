@@ -55,25 +55,68 @@ def emmaa_metadata_json(search_terms, date, metadata):
 
 
 def add_emmaa_annotations(indra_stmt, annotation):
+    """Add EMMAA annotations to inner INDRA statement."""
     for evid in indra_stmt.evidence:
         evid.annotations['emmaa'] = annotation
 
 
 def filter_emmaa_stmts_by_metadata(estmts, conditions):
+    """Filter EMMAA statements to those where conditions are met.
+
+    Parameters
+    ----------
+    estmts : list[emmaa.statements.EmmaaStatement]
+        A list of EMMAA Statements to filter.
+    conditions : dict
+        Conditions to filter on represented as key-value pairs that statements'
+        metadata can be compared to. NOTE if there are multiple conditions
+        provided, the function will require that all conditions are met
+        to keep a statement.
+
+    Returns
+    -------
+    estmts_out : list[emmaa.statements.EmmaaStatement]
+        A list of EMMAA Statements which meet the conditions.
+    """
     estmts_out = []
     for estmt in estmts:
+        # Not filter out "old version" statements without metadata
         if not hasattr(estmt, 'metadata'):
             estmts_out.append(estmt)
             continue
         checks = []
+        # Collect results for all conditions
         for key, value in conditions.items():
             checks.append(estmt.metadata.get(key) == value)
+        # Only keep statements meeting all conditions
         if all(checks):
             estmts_out.append(estmt)
     return estmts_out
 
 
 def filter_indra_stmts_by_metadata(stmts, conditions, evid_policy='any'):
+    """Filter INDRA statements to those where conditions are met.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements to filter.
+    conditions : dict
+        Conditions to filter on represented as key-value pairs that statements'
+        metadata can be compared to. NOTE if there are multiple conditions
+        provided, the function will require that all conditions are met
+        to keep a statement.
+    evid_policy : str
+        Policy for checking statement's evidence objects. If 'all', then the
+        statement is kept only if all of it's evidence objects meet the
+        conditions. If 'any', the statement is kept as long as at least one
+        of its evidences meets the conditions.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of INDRA Statements which meet the conditions.
+    """
     stmts_out = []
     for stmt in stmts:
         add = check_stmt(stmt, conditions, evid_policy)
@@ -83,6 +126,28 @@ def filter_indra_stmts_by_metadata(stmts, conditions, evid_policy='any'):
 
 
 def check_stmt(stmt, conditions, evid_policy='any'):
+    """Decide whether a statement meets the conditions.
+
+    Parameters
+    ----------
+    stmt : indra.statements.Statement
+        INDRA Statement that should be checked for conditions.
+    conditions : dict
+        Conditions represented as key-value pairs that statements'
+        metadata can be compared to. NOTE if there are multiple conditions
+        provided, the function will require that all conditions are met to
+        return True.
+    evid_policy : str
+        Policy for checking statement's evidence objects. If 'all', then the
+        function returns True only if all of statement's evidence objects meet
+        the conditions. If 'any', the function returns True as long as at
+        least one of statement's evidences meets the conditions.
+
+    Return
+    ------
+    meets_conditions : bool
+        Whether the Statement meets the conditions.
+    """
     evid_checks = []
     for evid in stmt.evidence:
         emmaa_anns = evid.annotations.get('emmaa')
@@ -94,8 +159,11 @@ def check_stmt(stmt, conditions, evid_policy='any'):
             evid_checks.append(all(checks))
             if all(checks) and evid_policy == 'any':
                 break
+    # There are no evidence checks if stmt doesn't have emmaa annotations,
+    # in this case we say it meets conditions by default
     if not evid_checks:
         return True
+    # Make decision based on the evidence policy
     if evid_policy == 'any':
         return any(evid_checks)
     elif evid_policy == 'all':
@@ -103,4 +171,5 @@ def check_stmt(stmt, conditions, evid_policy='any'):
 
 
 def is_internal(stmt):
+    """Check if statement has any internal evidence."""
     return check_stmt(stmt, {'internal': True}, evid_policy='any')
