@@ -10,8 +10,9 @@
           <h4 class="my-0 font-weight-normal">Model Info
             <button class="btn btn-outline-secondary" style="font-size: medium; float: right"onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
             <a class="btn btn-outline-secondary" style="font-size: medium; float: right; margin-right: 5px" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
-            <span><i id="model-subscription-status" style="word-break:break-word; float: right;"></i></span>
           </h4>
+            <span><i id="model-subscription-status" style="word-break:break-word; float: right;"></i></span>
+          
         {% else %}
           <h4 class="my-0 font-weight-normal" style="float: left">Model Info</h4>
           <a class="btn btn-outline-secondary" style="font-size: medium; float: right" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
