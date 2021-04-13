@@ -6,7 +6,6 @@
     <div class="card" id="modelInfoTable">
       <div class="card-header">
         {% set logged_in, subscribe, url = subscription %}
-        {% set logged_in = True %}
         {% if logged_in %}
           <h4 class="my-0 font-weight-normal">Model Info
             <button class="btn btn-outline-secondary" style="font-size: medium; float: right"onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
