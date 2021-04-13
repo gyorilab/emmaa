@@ -8,8 +8,8 @@
         {% set logged_in, subscribe, url = subscription %}
         {% if logged_in %}
           <h4 class="my-0 font-weight-normal">Model Info
-            <button class="btn btn-outline-secondary" onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" style="position: absolute; right: 10px; top: 1.1%" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
-            <button class="btn btn-outline-secondary" style="font-size: medium; float: right" href="{{ url_for('chat_with_the_model', model=model_id) }}" target="_blank" title="Chat with this model">Chat</button>
+            <button class="btn btn-outline-secondary" onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
+            <button class="btn btn-outline-secondary" href="{{ url_for('chat_with_the_model', model=model_id) }}" target="_blank" title="Chat with this model">Chat</button>
           </h4>
           <span><i id="model-subscription-status" style="word-break:break-word; float: right;"></i></span>
         {% else %}
