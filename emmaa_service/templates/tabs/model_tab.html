@@ -9,12 +9,12 @@
         {% if logged_in %}
           <h4 class="my-0 font-weight-normal">Model Info
             <button class="btn btn-outline-secondary" style="font-size: medium; float: right"onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
-            <button class="btn btn-outline-secondary" style="font-size: medium; float: right; margin-right: 5px"href="{{ url_for('chat_with_the_model', model=model_id) }}" target="_blank" title="Chat with this model">Chat</button>
+            <a class="btn btn-outline-secondary" style="font-size: medium; float: right; margin-right: 5px" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
             <span><i id="model-subscription-status" style="word-break:break-word; float: right;"></i></span>
           </h4>
         {% else %}
           <h4 class="my-0 font-weight-normal" style="float: left">Model Info</h4>
-          <button class="btn btn-outline-secondary" style="font-size: medium; float: right" href="{{ url_for('chat_with_the_model', model=model_id) }}" target="_blank" title="Chat with this model">Chat</button>
+          <a class="btn btn-outline-secondary" style="font-size: medium; float: right" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
           <span style="font-size: medium; float: right; margin-right: 10px; margin-top: 8px;">(Log in and refresh to see if you're subscribed to this model)</span>
         {% endif %}
       </div>
