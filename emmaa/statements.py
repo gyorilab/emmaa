@@ -1,3 +1,9 @@
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
 class EmmaaStatement(object):
     """Represents an EMMAA Statement.
 
@@ -38,6 +44,8 @@ class EmmaaStatement(object):
 def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     """Make EMMAA statements from INDRA Statements with the given metadata."""
     emmaa_stmts = []
+    logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
+                f'{metadata}')
     ann = emmaa_metadata_json(search_terms, date, metadata)
     for indra_stmt in stmt_list:
         add_emmaa_annotations(indra_stmt, ann)
@@ -78,6 +86,8 @@ def filter_emmaa_stmts_by_metadata(estmts, conditions):
     estmts_out : list[emmaa.statements.EmmaaStatement]
         A list of EMMAA Statements which meet the conditions.
     """
+    logger.info(f'Filtering {len(estmts)} EMMAA Statements with the following'
+                f' conditions: {conditions}')
     estmts_out = []
     for estmt in estmts:
         # Not filter out "old version" statements without metadata
@@ -91,6 +101,7 @@ def filter_emmaa_stmts_by_metadata(estmts, conditions):
         # Only keep statements meeting all conditions
         if all(checks):
             estmts_out.append(estmt)
+    logger.info(f'Got {len(estmts_out)} EMMAA Statements after filtering')
     return estmts_out
 
 
@@ -117,11 +128,14 @@ def filter_indra_stmts_by_metadata(stmts, conditions, evid_policy='any'):
     stmts_out : list[indra.statements.Statement]
         A list of INDRA Statements which meet the conditions.
     """
+    logger.info(f'Filtering {len(stmts)} INDRA Statements with the following'
+                f' conditions: {conditions} in {evid_policy} evidence')
     stmts_out = []
     for stmt in stmts:
         add = check_stmt(stmt, conditions, evid_policy)
         if add:
             stmts_out.append(stmt)
+    logger.info(f'Got {len(stmts_out)} INDRA Statements after filtering')
     return stmts_out
 
 
