@@ -307,6 +307,19 @@ class EmmaaModel(object):
                     (len_after - len_before))
 
     def update_with_cord19(self, cord19_config):
+        """Update model with new CORD19 dataset statements.
+
+        Relevant part of reading config should look similar to:
+
+        {"cord19_update": {
+            "metadata": {
+                "internal": true,
+                "curated": false
+                },
+            "date_limit": 5
+            }
+        }
+        """
         # Using local import to avoid dependency
         from covid_19.emmaa_update import make_model_stmts
         current_stmts = self.get_indra_stmts()
@@ -320,7 +333,19 @@ class EmmaaModel(object):
         return new_estmts
 
     def update_from_disease_map(self, disease_map_config):
-        """Update model by processing MINERVA Disease Map."""
+        """Update model by processing MINERVA Disease Map.
+
+        Relevant part of reading config should look similar to:
+
+        {"disease_map": {
+            "map_name": "covid19map",
+            "filenames" : "all",  # or a list of filenames
+            "metadata": {
+                "internal": true
+                }
+            }
+        }
+        """
         filenames = disease_map_config['filenames']
         map_name = disease_map_config['map_name']
         metadata = disease_map_config['metadata']
@@ -333,9 +358,19 @@ class EmmaaModel(object):
         return new_estmts
 
     def update_from_files(self, files_config):
-        """Add custom statements from files."""
-        bucket = files_config['bucket']
-        filenames = files_config['filenames']
+        """Add custom statements from files.
+
+        Relevant part of reading config should look similar to:
+
+        {"other_files": [
+            {
+                "bucket": "indra-covid19",
+                "filename": "ctd_stmts.pkl",
+                "metadata": {"internal": true, "curated": true}
+            }
+        ]
+        }
+        """
         new_estmts = []
         for file_dict in files_config:
             bucket = file_dict['bucket']
