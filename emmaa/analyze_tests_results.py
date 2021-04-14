@@ -2,6 +2,8 @@ import logging
 import jsonpickle
 from collections import defaultdict
 from emmaa.model import load_stmts_from_s3
+from emmaa.statements import filter_emmaa_stmts_by_metadata, \
+    filter_indra_stmts_by_metadata
 from emmaa.model_tests import load_model_manager_from_s3
 from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
@@ -51,7 +53,7 @@ class Round(object):
 
     @classmethod
     def load_from_s3_key(cls, key):
-        raise NotImplementedError("Method must be implemented in child class.")        
+        raise NotImplementedError("Method must be implemented in child class.")
 
     def get_english_statement(self, stmt):
         ea = EnglishAssembler([stmt])
@@ -141,6 +143,13 @@ class ModelRound(Round):
         estmts = None
         if load_estmts:
             estmts, _ = load_stmts_from_s3(mm.model.name, bucket)
+        if mm.model.reading_config.get('filter'):
+            conditions = mm.model.reading_config['filter']['conditions']
+            evid_policy = mm.model.reading_config['filter']['evid_policy']
+            statements = filter_indra_stmts_by_metadata(
+                statements, conditions, evid_policy)
+            if estmts:
+                estmts = filter_emmaa_stmts_by_metadata(estmts, conditions)
         return cls(statements, date_str, paper_ids, paper_id_type, estmts)
 
     def get_total_statements(self):

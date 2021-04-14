@@ -4,7 +4,7 @@ from indra.literature.s3_client import get_reader_json_str, get_full_text
 from indra_reading.scripts.submit_reading_pipeline import \
     submit_reading
 from indra_reading.batch.monitor import BatchMonitor
-from emmaa.statements import EmmaaStatement
+from emmaa.statements import to_emmaa_stmts
 
 
 def read_pmid_search_terms(pmid_search_terms):
@@ -26,9 +26,9 @@ def read_pmid_search_terms(pmid_search_terms):
     pmid_stmts = read_pmids(pmids, date)
     estmts = []
     for pmid, stmts in pmid_stmts.items():
-        for stmt in stmts:
-            es = EmmaaStatement(stmt, date, pmid_search_terms[pmid])
-            estmts.append(es)
+        pmid_estmts = to_emmaa_stmts(stmts, date, pmid_search_terms[pmid],
+                                     {'internal': True})
+        estmts += pmid_estmts
     return estmts
 
 

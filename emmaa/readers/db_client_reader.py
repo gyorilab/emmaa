@@ -3,7 +3,7 @@ from indra_db.client.principal.raw_statements import \
     get_raw_stmt_jsons_from_papers
 from indra_db.util import get_db
 from indra.statements import stmts_from_json
-from emmaa.statements import EmmaaStatement
+from emmaa.statements import to_emmaa_stmts
 
 
 def read_db_ids_search_terms(id_search_terms, id_type):
@@ -28,9 +28,9 @@ def read_db_ids_search_terms(id_search_terms, id_type):
     estmts = []
     for _id, stmt_jsons in id_stmts.items():
         stmts = stmts_from_json(stmt_jsons)
-        for stmt in stmts:
-            es = EmmaaStatement(stmt, date, id_search_terms[_id])
-            estmts.append(es)
+        id_estmts = to_emmaa_stmts(
+            stmts, date, id_search_terms[_id], {'internal': True})
+        estmts += id_estmts
     return estmts
 
 

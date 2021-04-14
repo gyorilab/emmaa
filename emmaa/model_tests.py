@@ -31,7 +31,7 @@ from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_gzip_json_to_s3
-from emmaa.filter_functions import filter_functions
+from emmaa.filter_functions import node_filter_functions, edge_filter_functions
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +130,8 @@ class ModelManager(object):
         mm = cls(model, mode=mode)
         return mm
 
-    def get_updated_mc(self, mc_type, stmts, add_ns=False):
+    def get_updated_mc(self, mc_type, stmts, add_ns=False,
+                       edge_filter_func=None):
         """Update the ModelChecker and graph with stmts for tests/queries."""
         mc = self.mc_types[mc_type]['model_checker']
         mc.statements = stmts
@@ -138,7 +139,11 @@ class ModelManager(object):
             mc.graph = None
             mc.model_stmts = self.model.assembled_stmts
             mc.get_graph(prune_im=True, prune_im_degrade=True,
-                         add_namespaces=add_ns)
+                         add_namespaces=add_ns,
+                         edge_filter_func=edge_filter_func)
+        else:
+            mc.graph = None
+            mc.get_graph(edge_filter_func=edge_filter_func)
         if mc_type in ('signed_graph', 'unsigned_graph'):
             mc.nodes_to_agents = {ag.name: ag for ag in self.entities}
         return mc
@@ -151,24 +156,25 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self, filter_func=None):
+    def run_all_tests(self, filter_func=None, edge_filter_func=None):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
-                                  filter_func)
+                                  filter_func, edge_filter_func)
 
     def run_tests_per_mc(self, mc_type, max_path_length, max_paths,
-                         filter_func=None):
+                         filter_func=None, edge_filter_func=None):
         """Run all applicable tests with one ModelChecker."""
         mc = self.get_updated_mc(
-            mc_type, [test.stmt for test in self.applicable_tests])
+            mc_type, [test.stmt for test in self.applicable_tests],
+            edge_filter_func=edge_filter_func)
         logger.info(f'Running the tests with {mc_type} ModelChecker.')
         if filter_func:
             logger.info(f'Applying {filter_func.__name__}')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths,
-            agent_filter_func=filter_func)
+            agent_filter_func=filter_func, edge_filter_func=edge_filter_func)
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
@@ -640,10 +646,10 @@ class TestManager(object):
             logger.info(f'Created {len(model_manager.applicable_tests)} tests '
                         f'for {model_manager.model.name} model.')
 
-    def run_tests(self, filter_func=None):
+    def run_tests(self, filter_func=None, edge_filter_func=None):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_all_tests(filter_func)
+            model_manager.run_all_tests(filter_func, edge_filter_func)
 
 
 class TestConnector(object):
@@ -910,11 +916,16 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         test_connector = RefinementTestConnector()
     tm.make_tests(test_connector)
     filter_func = None
+    edge_filter_func = None
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
         if filter_func_name:
-            filter_func = filter_functions.get(filter_func_name)
-    tm.run_tests(filter_func)
+            filter_func = node_filter_functions.get(filter_func_name)
+    if mm.model.test_config.get('edge_filters'):
+        edge_filter_func_name = mm.model.test_config['edge_filters'].get(
+            test_corpus)
+        edge_filter_func = edge_filter_functions.get(edge_filter_func_name)
+    tm.run_tests(filter_func, edge_filter_func)
     # Optionally upload test results to S3
     if upload_results:
         mm.upload_results(test_corpus, test_data, bucket=bucket)
