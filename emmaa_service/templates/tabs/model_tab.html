@@ -1,9 +1,28 @@
-{% from "path_macros.html" import path_card %}
+{% from "path_macros.html" import path_card, path_table %}
 
 {% macro model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts, subscription) -%}
 <!-- This table displays model data -->
   <div class="container">
-  {{ path_card(model_info_contents, "Model Info", "modelInfoTable", ["Item", "Details"], "modelInfoTableBody", subscription=subscription) }}
+    <div class="card" id="modelInfoTable">
+      <div class="card-header">
+        {% set logged_in, subscribe, url = subscription %}
+        {% if logged_in %}
+          <h4 class="my-0 font-weight-normal">Model Info
+            <button class="btn btn-outline-secondary" style="font-size: medium; float: right"onClick="subscribe_model('{{ url }}', '{{ subscribe }}')" type="button">{% if subscribe %}Subscribe{% else %}Unsubscribe{% endif %}</button>
+            <a class="btn btn-outline-secondary" style="font-size: medium; float: right; margin-right: 5px" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
+          </h4>
+          <span><i id="model-subscription-status" style="word-break:break-word; float: right; margin-top: -20px; margin-right: 30px"></i></span>
+          
+        {% else %}
+          <h4 class="my-0 font-weight-normal" style="float: left">Model Info</h4>
+          <a class="btn btn-outline-secondary" style="font-size: medium; float: right" href="{{ url_for('chat_with_the_model', model=model) }}" target="_blank" title="Chat with this model">Chat</a>
+          <span style="font-size: medium; float: right; margin-right: 10px; margin-top: 8px;">(Log in and refresh to see if you're subscribed to this model)</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {{ path_table(model_info_contents, ["Item", "Details"], modelInfoTableBody) }}
+      </div>
+    </div>
   {% if exp_formats %}
   <div class="card">
     <div class="card-header">
@@ -45,7 +64,14 @@
   </div>
   {% endif %}
   {% set show_all = url_for('get_all_statements_page', model=model, sort_by='evidence', page=1, filter_curated=false, date=date) %}
-  {{ path_card(stmts_counts, "Most Supported Statements", "stmtEvidence", ["Statement", "Evidence Count"], "stmtEvidenceTable", show_all=show_all) }}
+  <div class="card" id="stmtEvidence">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Most Supported Statements<button class="btn btn-outline-secondary" onClick='window.open("{{ show_all }}", target="_blank")' style="position: absolute; right: 10px; top: 1.1%" type="button">View All Statements</button></h4>
+    </div>
+    <div class="card-body">
+      {{ path_table(stmts_counts, ["Statement", "Evidence Count"], "stmtEvidenceTable") }}
+    </div>
+  </div>
   <div class="card">
     <div class="card-header">
     <h4 class="my-0 font-weight-normal">Number of Statements over Time</h4>
