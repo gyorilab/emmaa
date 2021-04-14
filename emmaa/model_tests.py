@@ -916,7 +916,7 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         test_connector = RefinementTestConnector()
     tm.make_tests(test_connector)
     filter_func = None
-    edge_filter = None
+    edge_filter_func = None
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
         if filter_func_name:
