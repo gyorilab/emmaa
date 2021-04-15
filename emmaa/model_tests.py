@@ -22,6 +22,7 @@ from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements, \
     load_config_from_s3
+from emmaa.statements import filter_indra_stmts_by_metadata
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
 from emmaa.util import make_date_str, get_s3_client, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
@@ -843,6 +844,11 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     """Create StatementCheckingTests from model statements."""
     stmts, _ = get_assembled_statements(model_name, bucket=bucket)
     config = load_config_from_s3(model_name, bucket=bucket)
+    # Filter statements if needed
+    if isinstance(config.get('make_tests'), dict):
+        conditions = config['make_tests']['filter']['conditions']
+        evid_policy = config['make_tests']['filter']['evid_policy']
+        stmts = filter_indra_stmts_by_metadata(stmts, conditions, evid_policy)
     tests = [StatementCheckingTest(stmt) for stmt in stmts if
              all(stmt.agent_list())]
     date_str = make_date_str()
