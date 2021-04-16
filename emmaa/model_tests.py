@@ -727,7 +727,6 @@ class StatementCheckingTest(EmmaaTest):
     def __init__(self, stmt, configs=None):
         self.stmt = stmt
         self.configs = {} if not configs else configs
-        logger.info('Test configs: %s' % configs)
         # TODO
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
