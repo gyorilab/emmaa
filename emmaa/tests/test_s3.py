@@ -1,6 +1,4 @@
-import datetime
 import json
-import os
 import pickle
 import re
 import time
@@ -9,10 +7,8 @@ from nose.plugins.attrib import attr
 from nose.tools import with_setup
 
 from indra.statements import Activation, Agent
-from emmaa.priors import SearchTerm
-from emmaa.statements import EmmaaStatement
 from emmaa.tests.test_model import create_model
-from emmaa.tests.test_stats import previous_results, new_results, \
+from emmaa.tests.test_stats import previous_results, \
     previous_test_stats, previous_model_stats
 from emmaa.tests.test_answer_queries import query_object
 from emmaa.util import make_date_str, RE_DATETIMEFORMAT, RE_DATEFORMAT
@@ -36,7 +32,7 @@ def setup_bucket(
     """
     # Local imports are recommended when using moto
     from emmaa.util import get_s3_client
-    from emmaa.model import EmmaaModel, save_config_to_s3
+    from emmaa.model import save_config_to_s3
     from emmaa.model_tests import ModelManager, save_model_manager_to_s3, \
         StatementCheckingTest
     # Create a mock s3 bucket
@@ -242,8 +238,7 @@ def test_save_load_update_model_manager():
     # Local imports are recommended when using moto
     from emmaa.model_tests import ModelManager, save_model_manager_to_s3, \
         load_model_manager_from_s3, update_model_manager_on_s3
-    from emmaa.util import find_number_of_files_on_s3, \
-        sort_s3_files_by_date_str
+    from emmaa.util import find_number_of_files_on_s3
     client = setup_bucket(add_model=True)
     # Should be None if no model manager
     assert find_number_of_files_on_s3(
@@ -272,13 +267,27 @@ def test_model_to_tests():
     # Local imports are recommended when using moto
     from emmaa.model_tests import model_to_tests, load_tests_from_s3, \
         StatementCheckingTest
+    from emmaa.model import save_config_to_s3, load_config_from_s3
     client = setup_bucket(add_model=True, add_mm=True)
     test_dict = model_to_tests('test', bucket=TEST_BUCKET_NAME)
     assert isinstance(test_dict, dict)
     assert 'test_data' in test_dict
     assert 'tests' in test_dict
     tests = test_dict['tests']
+    # With default config get tests for each statement
     assert len(tests) == 2
+    # Modify config to filter
+    config = load_config_from_s3('test', bucket=TEST_BUCKET_NAME)
+    config['make_tests'] = {'filter': {'conditions': {'curated': False},
+                                       'evid_policy': 'any'}}
+    save_config_to_s3('test', config, bucket=TEST_BUCKET_NAME)
+    test_dict = model_to_tests('test', bucket=TEST_BUCKET_NAME)
+    assert isinstance(test_dict, dict)
+    assert 'test_data' in test_dict
+    assert 'tests' in test_dict
+    tests = test_dict['tests']
+    # With modified config statements are filtered
+    assert len(tests) == 1
     assert isinstance(tests[0], StatementCheckingTest)
     loaded_tests, _ = load_tests_from_s3('test_tests', bucket=TEST_BUCKET_NAME)
     assert loaded_tests

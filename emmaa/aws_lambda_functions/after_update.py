@@ -11,7 +11,6 @@ in this directory.
 
 import boto3
 import json
-from datetime import datetime
 
 
 batch = boto3.client('batch')
@@ -19,8 +18,6 @@ JOB_DEF = 'emmaa_jobdef'
 QUEUE = 'emmaa-after-update'
 PROJECT = 'aske'
 BRANCH = 'origin/master'
-now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-date = datetime.utcnow().strftime('%Y-%m-%d')
 
 
 def submit_batch_job(script_command, purpose, job_name, wait_for=None,
@@ -85,7 +82,8 @@ def lambda_handler(event, context):
         except KeyError:
             pass
         model_name = model_key.split('/')[1]
-
+        now_str = model_key.split('model_manager_')[1][:-4]
+        date = now_str[:10]
         # Store all stats jobs IDs
         stats_job_ids = []
 

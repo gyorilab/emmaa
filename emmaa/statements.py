@@ -20,6 +20,8 @@ class EmmaaStatement(object):
         Additional metadata for the statement.
     """
     def __init__(self, stmt, date, search_terms, metadata=None):
+        ann = emmaa_metadata_json(search_terms, date, metadata)
+        add_emmaa_annotations(stmt, ann)
         self.stmt = stmt
         self.date = date
         self.search_terms = search_terms
@@ -46,9 +48,7 @@ def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     emmaa_stmts = []
     logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
                 f'{metadata}')
-    ann = emmaa_metadata_json(search_terms, date, metadata)
     for indra_stmt in stmt_list:
-        add_emmaa_annotations(indra_stmt, ann)
         es = EmmaaStatement(indra_stmt, date, search_terms, metadata)
         emmaa_stmts.append(es)
     return emmaa_stmts

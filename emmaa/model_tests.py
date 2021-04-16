@@ -3,13 +3,11 @@ import logging
 import itertools
 import jsonpickle
 import os
-import pickle
 import sys
 from collections import defaultdict
 from fnvhash import fnv1a_32
 from urllib import parse
 from copy import deepcopy
-from zipfile import ZipFile
 from indra.explanation.model_checker import PysbModelChecker, \
     PybelModelChecker, SignedGraphModelChecker, UnsignedGraphModelChecker
 from indra.explanation.reporting import stmts_from_pysb_path, \
@@ -17,17 +15,16 @@ from indra.explanation.reporting import stmts_from_pysb_path, \
     pybel_edge_to_english, RefEdge
 from indra.explanation.pathfinding import bfs_search_multiple_nodes
 from indra.assemblers.english.assembler import EnglishAssembler
-from indra.sources.indra_db_rest.api import get_statement_queries
-from indra.statements import Statement, Agent, Concept, Event, \
-    stmts_to_json
+from indra.statements import Statement, Agent, stmts_to_json
 from indra.util.statement_presentation import group_and_sort_statements, \
     make_string_from_relation_key
 from indra.ontology.bio import bio_ontology
 from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements, \
     load_config_from_s3
+from emmaa.statements import filter_indra_stmts_by_metadata
 from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
-from emmaa.util import make_date_str, get_s3_client, get_class_from_name, \
+from emmaa.util import make_date_str, get_s3_client, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_gzip_json_to_s3
@@ -730,7 +727,6 @@ class StatementCheckingTest(EmmaaTest):
     def __init__(self, stmt, configs=None):
         self.stmt = stmt
         self.configs = {} if not configs else configs
-        logger.info('Test configs: %s' % configs)
         # TODO
         # Add entities as a property if we can reload tests on s3.
         # self.entities = self.get_entities()
@@ -847,6 +843,11 @@ def model_to_tests(model_name, upload=True, bucket=EMMAA_BUCKET_NAME):
     """Create StatementCheckingTests from model statements."""
     stmts, _ = get_assembled_statements(model_name, bucket=bucket)
     config = load_config_from_s3(model_name, bucket=bucket)
+    # Filter statements if needed
+    if isinstance(config.get('make_tests'), dict):
+        conditions = config['make_tests']['filter']['conditions']
+        evid_policy = config['make_tests']['filter']['evid_policy']
+        stmts = filter_indra_stmts_by_metadata(stmts, conditions, evid_policy)
     tests = [StatementCheckingTest(stmt) for stmt in stmts if
              all(stmt.agent_list())]
     date_str = make_date_str()
