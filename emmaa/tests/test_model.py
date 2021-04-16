@@ -21,8 +21,14 @@ def create_model(relevance=None, paper_ids=None):
                                       text_refs={'TRID': '2345'})])
         ]
     st = SearchTerm('gene', 'MAP2K1', db_refs={}, search_term='MAP2K1')
-    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), [st])
-                   for stmt in indra_stmts]
+    emmaa_stmts = [
+        EmmaaStatement(
+            indra_stmts[0], datetime.datetime.now(), [st],
+            {'internal': True, 'curated': False}),
+        EmmaaStatement(
+            indra_stmts[1], datetime.datetime.now(), [st],
+            {'internal': True, 'curated': True})
+        ]
     config_dict = {
         'ndex': {'network': 'a08479d1-24ce-11e9-bb6a-0ac135e8bacf'},
         'search_terms': [{'db_refs': {'HGNC': '20974'}, 'name': 'MAPK1',
@@ -31,8 +37,7 @@ def create_model(relevance=None, paper_ids=None):
         'test': {
             'statement_checking': {'max_path_length': 5, 'max_paths': 1},
             'test_corpus': 'simple_tests',
-            'mc_types': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
-            'make_links': True},
+            'mc_types': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']},
         'assembly': [
             {'function': 'filter_no_hypothesis'},
             {'function': 'map_grounding'},
