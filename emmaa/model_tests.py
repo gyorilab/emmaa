@@ -82,6 +82,7 @@ class ModelManager(object):
     """
     def __init__(self, model, mode='local'):
         self.model = model
+        self.mode = mode
         self.mc_mapping = {
             'pysb': (self.model.assemble_pysb, PysbModelChecker,
                      stmts_from_pysb_path),
@@ -331,16 +332,18 @@ class ModelManager(object):
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 pysb_model, tp)
-            fig_name, ext = os.path.splitext(os.path.basename(fig_path))
-            date_str = make_date_str()
-            s3_key = (f'query_images/{self.model.name}/{fig_name}_'
-                      f'{date_str}{ext}')
-            s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
-            client = get_s3_client(unsigned=False)
-            logger.info(f'Uploading image to {s3_path}')
-            client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+            if self.mode == 's3':
+                fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+                date_str = make_date_str()
+                s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                          f'{date_str}{ext}')
+                s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+                client = get_s3_client(unsigned=False)
+                logger.info(f'Uploading image to {s3_path}')
+                client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+                fig_path = s3_path
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
-                         'kpat': kpat, 'fig_path': s3_path}
+                         'kpat': kpat, 'fig_path': fig_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json), resp_json)]
