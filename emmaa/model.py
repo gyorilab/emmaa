@@ -595,7 +595,7 @@ class EmmaaModel(object):
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
 
-    def assemble_dynamic_pysb(self):
+    def assemble_dynamic_pysb(self, **kwargs):
         """Assemble a version of a PySB model for dynamic simulation."""
         # First need to run regular assembly
         if not self.assembled_stmts:

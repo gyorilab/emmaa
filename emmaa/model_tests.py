@@ -93,14 +93,16 @@ class ModelManager(object):
                              stmts_from_indranet_path),
             'unsigned_graph': (self.model.assemble_unsigned_graph,
                                UnsignedGraphModelChecker,
-                               stmts_from_indranet_path)}
+                               stmts_from_indranet_path),
+            'dynamic': (self.model.assemble_dynamic_pysb, None, None)}
         self.mc_types = {}
         for mc_type in model.test_config.get('mc_types', ['pysb']):
             self.mc_types[mc_type] = {}
             assembled_model = self.mc_mapping[mc_type][0](mode=mode)
             self.mc_types[mc_type]['model'] = assembled_model
-            self.mc_types[mc_type]['model_checker'] = (
-                self.mc_mapping[mc_type][1](assembled_model))
+            if self.mc_mapping[mc_type][1]:
+                self.mc_types[mc_type]['model_checker'] = (
+                    self.mc_mapping[mc_type][1](assembled_model))
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
