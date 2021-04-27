@@ -895,3 +895,9 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
     gr_map = load_json_from_s3(bucket, key)
     return gr_map
+
+
+@register_pipeline
+def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
+    config = load_config_from_s3(model, bucket=bucket)
+    return [st['name'] for st in config['search_terms']]
