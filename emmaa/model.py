@@ -116,7 +116,10 @@ class EmmaaModel(object):
         if 'reading' in config:
             self.reading_config = config['reading']
         if 'assembly' in config:
-            self.assembly_config = config['assembly']
+            if isinstance(config['assembly'], list):
+                self.assembly_config = {'main': config['assembly']}
+            else:
+                self.assembly_config = config['assembly']
         if 'test' in config:
             self.test_config = config['test']
         if 'query' in config:
@@ -445,7 +448,7 @@ class EmmaaModel(object):
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stnames = {s.name for s in self.search_terms}
-        ap = AssemblyPipeline(self.assembly_config)
+        ap = AssemblyPipeline(self.assembly_config['main'])
         self.assembled_stmts = ap.run(stmts, stnames=stnames)
 
     def update_to_ndex(self):
