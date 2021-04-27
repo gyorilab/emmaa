@@ -1,3 +1,4 @@
+from copy import deepcopy
 import time
 import logging
 import datetime
@@ -593,6 +594,21 @@ class EmmaaModel(object):
             graph_type='digraph',
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
+
+    def assemble_dynamic_pysb(self):
+        """Assemble a version of a PySB model for dynamic simulation."""
+        # First need to run regular assembly
+        if not self.assembled_stmts:
+            self.run_assembly()
+        if 'dynamic' is self.assembly_config:
+            ap = AssemblyPipeline(self.assembly_config['dynamic'])
+            # Not overwrite assembled stmts
+            stmts = deepcopy(self.assembled_stmts)
+            new_stmts = ap.run(stmts)
+            pa = PysbAssembler()
+            pa.add_statements(new_stmts)
+            pysb_model = pa.make_model()
+            return pysb_model
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
