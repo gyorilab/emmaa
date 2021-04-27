@@ -323,9 +323,11 @@ class ModelManager(object):
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
                      RESULT_CODES['QUERY_NOT_APPLICABLE'])]
 
-    def answer_dynamic_query(self, query, use_kappa=False,
-                             bucket=EMMAA_BUCKET_NAME):
+    def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
+        use_kappa = False
+        if 'dynamic' in self.model.query_config:
+            use_kappa = self.model.query_config['dynamic']['use_kappa']
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern()
         pysb_model = deepcopy(self.mc_types['pysb']['model'])

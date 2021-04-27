@@ -33,7 +33,7 @@ class QueryManager(object):
 
     def answer_immediate_query(
             self, user_email, user_id, query, model_names, subscribe,
-            use_kappa=False, bucket=EMMAA_BUCKET_NAME):
+            bucket=EMMAA_BUCKET_NAME):
         """This method first tries to find saved result to the query in the
         database and if not found, runs ModelManager method to answer query."""
         query_type = query.get_type()
@@ -58,15 +58,13 @@ class QueryManager(object):
             if model_name not in checked_models:
                 results_to_store = []
                 mm = self.get_model_manager(model_name)
-                response_list = mm.answer_query(
-                    query, use_kappa=use_kappa, bucket=bucket)
+                response_list = mm.answer_query(query, bucket=bucket)
                 for (mc_type, response, paths) in response_list:
                     results_to_store.append((query, mc_type, response))
                 self.db.put_results(model_name, results_to_store)
         return {query_type: query_hashes}
 
-    def answer_registered_queries(self, model_name, use_kappa=False,
-                                  bucket=EMMAA_BUCKET_NAME):
+    def answer_registered_queries(self, model_name, bucket=EMMAA_BUCKET_NAME):
         """Retrieve and asnwer registered queries
 
         Retrieve queries registered on database for a given model,
@@ -77,8 +75,6 @@ class QueryManager(object):
         ----------
         model_name : str
             The name of the model
-        use_kappa : bool
-            If True, use kappa modeling when answering the dynamic query
         bucket : str
             The bucket to save the results to
         """
@@ -87,8 +83,7 @@ class QueryManager(object):
         logger.info(f'Found {len(queries)} queries for {model_name} model.')
         # Only do the following steps if there are queries for this model
         if queries:
-            results = model_manager.answer_queries(
-                queries, use_kappa=use_kappa, bucket=bucket)
+            results = model_manager.answer_queries(queries, bucket=bucket)
             new_results = [(model_name, result[0], result[1], result[2], '')
                            for result in results]
             self.db.put_results(model_name, results)
