@@ -57,7 +57,7 @@ First level fields of config.json
       frequently mutated genes, and the pathways in which they are involved.
 
 - `dev_only` : bool, optional
-    Set to True if this model is still in development model and should not be
+    Set to True if this model is still in development mode and should not be
     displayed on the main emmaa.indra.bio dashboard. Default: False.
 
 - `twitter` : str, optional
@@ -67,7 +67,7 @@ First level fields of config.json
     - Example: covid19
 
 - `twitter_link` : str, optional
-    URL to model"s Twitter account if it exists.
+    URL to model's Twitter account if it exists.
 
     - Example: https://twitter.com/covid19_emmaa
 
@@ -81,9 +81,9 @@ First level fields of config.json
 
 - `assembly` : list[dict]
     Configuration of model assembly. It should contain jsonified steps to
-    pass into INDRA AssemblyPipeline class. Each step should have a
+    pass into the INDRA AssemblyPipeline class. Each step should have a
     `function` key and, if appropriate, `args` and `kwargs` keys.
-    For more informations on AssemblyPipeline, see
+    For more information on AssemblyPipeline, see
     https://indra.readthedocs.io/en/latest/modules/pipeline.html
 
     - Example:
@@ -143,7 +143,7 @@ following fields:
     sources should be provided in the same order as the readers to read them.
 
 - `cord19_update` : dict, optional
-    COVID19 specific configuration to update model from CORD19 corpus. The
+    COVID-19 specific configuration to update model from the CORD19 corpus. The
     dictionary should have the following fields:
 
         - `metadata` : dict
@@ -151,7 +151,7 @@ following fields:
 
         - `date_limit`: int
             Number of days to search back.
-    
+
     - Example:
 
     .. code-block:: json
@@ -217,8 +217,8 @@ following fields:
         }
 
 - `filter` : dict, optional
-    Configuration of a statements used for statistics generation (e.g. to not
-    include external statements into statistics).
+    Configuration of a statement filter used for statistics generation (e.g.
+    to not include external statements into statistics).
     The filter dictionary should have the following fields:
 
     - `conditions` : dict
@@ -256,8 +256,8 @@ following fields:
     - Example : ["covid19_curated_tests", "covid19_mitre_tests"]
 
 - `default_test_corpus` : str
-    A name of test corpus that will be loaded by default on the model page on
-    EMMAA dashboard.
+    The name of the test corpus that will be loaded by default on the model
+    page on the EMMAA dashboard.
 
     - Example : "large_corpus_tests"
 
@@ -268,7 +268,7 @@ following fields:
     `signed_graph`, `unsigned_graph`.
 
 - `statement_checking` : dict, optional
-    Maximum paths and maximum path length to limit test results. In most
+    Maximum paths and maximum path length to limit test results. In the most
     general case the dictionary should have only two keys (`max_path_length`
     and `max_paths`) but it is also possible to set a custom configuration for
     one model type. In this case, a nested dictionary can be added with
@@ -291,9 +291,10 @@ following fields:
 
 - `filters` : dict
     Configuration for applying semantic filters to the model checking process.
-    It is represented as a dictionary mapping test corpus name to filter
-    function name. Filter function should be defined in :ref:`filter_functions`
-    and registered with `@register_filter('node')` decorator.
+    It is represented as a dictionary mapping a test corpus name to a filter
+    function name. The filter function should be defined in
+    :ref:`filter_functions` and registered with `@register_filter('node')`
+    decorator.
 
     - Example:
 
@@ -306,9 +307,10 @@ following fields:
 
 - `edge_filters` : dict
     Configuration to apply edge filters to the model checking process.
-    It is represented as a dictionary mapping test corpus name to edge filter
-    function name. Filter function should be defined in :ref:`filter_functions`
-    and registered with `@register_filter('edge')` decorator.
+    It is represented as a dictionary mapping a test corpus name to an edge
+    filter function name. Filter function should be defined in
+    :ref:`filter_functions` and registered with `@register_filter('edge')`
+    decorator.
 
     - Example:
 
@@ -323,7 +325,7 @@ following fields:
 
 Model queries configuration
 ---------------------------
-Configuration for model queries. Similar to model test `statement_checking`
+Configuration for model queries. Similar to the model test `statement_checking`
 format. Here in addition to `statement_checking` to configure the static 
 path queries, it is also possible to add a similar configuration for 
 `open_search` queries. Same as in test config, it is possible to set different
