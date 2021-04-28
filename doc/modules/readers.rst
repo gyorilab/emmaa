@@ -1,3 +1,5 @@
+.. _readers:
+
 Readers (:py:mod:`emmaa.readers`)
 =================================
 

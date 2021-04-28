@@ -19,3 +19,4 @@ EMMAA modules reference
    xdd
    subscription
    util
+   filters

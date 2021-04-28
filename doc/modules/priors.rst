@@ -1,9 +1,13 @@
+.. _priors:
+
 Priors (:py:mod:`emmaa.priors`)
 ===============================
 
 .. automodule:: emmaa.priors
     :members:
     :show-inheritance:
+
+.. _literature_prior:
 
 Literature Prior (:py:mod:`emmaa.priors.literature_prior`)
 ----------------------------------------------------------
