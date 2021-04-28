@@ -327,12 +327,17 @@ class ModelManager(object):
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
+        # Get simulation mode (kappa or ODE) from query config
         use_kappa = False
         if 'dynamic' in self.model.query_config:
             use_kappa = self.model.query_config['dynamic']['use_kappa']
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern()
-        pysb_model = deepcopy(self.mc_types['pysb']['model'])
+        # Either use specially assembled or regular PySB depending on model
+        if 'dynamic' in self.mc_types:
+            pysb_model = deepcopy(self.mc_types['dynamic']['model'])
+        else:
+            pysb_model = deepcopy(self.mc_types['pysb']['model'])
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 pysb_model, tp)
