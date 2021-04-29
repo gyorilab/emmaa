@@ -329,10 +329,15 @@ class ModelManager(object):
         """Answer user query by simulating a PySB model."""
         # Get simulation mode (kappa or ODE) from query config
         use_kappa = False
+        time_limit = None
+        num_times = 100
         if 'dynamic' in self.model.query_config:
             use_kappa = self.model.query_config['dynamic']['use_kappa']
+            time_limit = self.model.query_config['dynamic'].get('time_limit')
+            num_times = self.model.query_config['dynamic'].get(
+                'num_times', 100)
         tra = TRA(use_kappa=use_kappa)
-        tp = query.get_temporal_pattern()
+        tp = query.get_temporal_pattern(time_limit)
         # Either use specially assembled or regular PySB depending on model
         if 'dynamic' in self.mc_types:
             pysb_model = deepcopy(self.mc_types['dynamic']['model'])
@@ -340,7 +345,7 @@ class ModelManager(object):
             pysb_model = deepcopy(self.mc_types['pysb']['model'])
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                pysb_model, tp)
+                pysb_model, tp, num_times=num_times)
             if self.mode == 's3':
                 fig_name, ext = os.path.splitext(os.path.basename(fig_path))
                 date_str = make_date_str()
