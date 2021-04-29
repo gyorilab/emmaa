@@ -55,6 +55,9 @@ ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
               'DecreaseAmount': u"\u22A3"}
 
+MODEL_TYPES = {'path': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
+               'simulation': ['dynamic', 'pysb']}
+
 
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
@@ -100,7 +103,7 @@ class ModelManager(object):
             self.mc_types[mc_type] = {}
             assembled_model = self.mc_mapping[mc_type][0](mode=mode)
             self.mc_types[mc_type]['model'] = assembled_model
-            if self.mc_mapping[mc_type][1]:
+            if mc_type in MODEL_TYPES['path']:
                 self.mc_types[mc_type]['model_checker'] = (
                     self.mc_mapping[mc_type][1](assembled_model))
             self.mc_types[mc_type]['test_results'] = []
@@ -160,6 +163,8 @@ class ModelManager(object):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
+            if mc_type not in MODEL_TYPES['path']:
+                continue
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
                                   filter_func, edge_filter_func)
 
@@ -312,6 +317,8 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 mc = self.get_updated_mc(mc_type, [query.path_stmt])
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', mc_type=mc_type, default_paths=5)
@@ -339,10 +346,11 @@ class ModelManager(object):
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
         # Either use specially assembled or regular PySB depending on model
-        if 'dynamic' in self.mc_types:
-            pysb_model = deepcopy(self.mc_types['dynamic']['model'])
-        else:
-            pysb_model = deepcopy(self.mc_types['pysb']['model'])
+        for mc_type in MODEL_TYPES['simulation']:
+            if mc_type in self.mc_types:
+                logger.info(f'Using {mc_type} model for simulation')
+                pysb_model = deepcopy(self.mc_types[mc_type]['model'])
+                break
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 pysb_model, tp, num_times=num_times)
@@ -367,6 +375,8 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', qtype='open_search', mc_type=mc_type,
                     default_paths=50, default_length=2)
@@ -460,6 +470,8 @@ class ModelManager(object):
         # Path queries
         if applicable_queries:
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', mc_type=mc_type, default_paths=5)
@@ -473,6 +485,8 @@ class ModelManager(object):
         # Open queries
         if applicable_open_queries:
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', qtype='open_search', mc_type=mc_type,
                     default_paths=50, default_length=2)
@@ -567,7 +581,8 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
+            'mc_types': [mc_type for mc_type in self.mc_types
+                         if mc_type in MODEL_TYPES['path']],
             'path_stmt_counts': self.path_stmt_counts,
             'date_str': self.date_str,
             'test_data': test_data})
@@ -576,6 +591,8 @@ class ModelManager(object):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 result = self.mc_types[mc_type]['test_results'][ix]
                 path_json, test_json_lines = self.make_path_json(
                     mc_type, result.paths)
