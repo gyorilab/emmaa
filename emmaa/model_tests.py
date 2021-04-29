@@ -66,6 +66,9 @@ class ModelManager(object):
     ----------
     model : emmaa.model.EmmaaModel
         EMMAA model
+    mode : str
+        If 'local' (default), does not save any exports/images to S3. It is
+        only set to 's3' mode in update_model_manager.py script.
 
     Attributes
     ----------
@@ -82,6 +85,8 @@ class ModelManager(object):
         A list of EMMAA tests applicable for given EMMAA model.
     date_str : str
         Time when this object was created.
+    path_stmt_types : dict
+        A dictionary mapping statement hashes to a count of paths they are in.
     """
     def __init__(self, model, mode='local'):
         self.model = model
