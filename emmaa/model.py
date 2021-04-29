@@ -600,7 +600,8 @@ class EmmaaModel(object):
         # First need to run regular assembly
         if not self.assembled_stmts:
             self.run_assembly()
-        if 'dynamic' is self.assembly_config:
+        if 'dynamic' in self.assembly_config:
+            logger.info('Assembling dynamic PySB model')
             ap = AssemblyPipeline(self.assembly_config['dynamic'])
             # Not overwrite assembled stmts
             stmts = deepcopy(self.assembled_stmts)
@@ -609,6 +610,7 @@ class EmmaaModel(object):
             pa.add_statements(new_stmts)
             pysb_model = pa.make_model()
             return pysb_model
+        logger.info('Did not find dynamic assembly steps')
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
