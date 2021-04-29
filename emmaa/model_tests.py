@@ -338,11 +338,14 @@ class ModelManager(object):
         use_kappa = False
         time_limit = None
         num_times = 100
+        num_sim = 2
         if 'dynamic' in self.model.query_config:
-            use_kappa = self.model.query_config['dynamic']['use_kappa']
+            use_kappa = self.model.query_config['dynamic'].get(
+                'use_kappa', False)
             time_limit = self.model.query_config['dynamic'].get('time_limit')
             num_times = self.model.query_config['dynamic'].get(
                 'num_times', 100)
+            num_sim = self.model.query_config['dynamic'].get('num_sim', 2)
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
         # Either use specially assembled or regular PySB depending on model
