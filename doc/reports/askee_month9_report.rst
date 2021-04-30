@@ -73,8 +73,60 @@ Assembling and analyzing dynamical models
 Creating a training corpus for identifying causal precedence in text
 --------------------------------------------------------------------
 
+One of our goals during this period (in collaboration with the UA team) was to
+extend the Reach reading system with the ability to recognize causal precedence
+in text. An example of causal precedence expressed in text is the following
+sentence: "insulin binding of the insulin receptor (IR) at the cell surface
+activates IRS-1 intracellularly, which in turn activates PI3K". This sentence
+not only implies that (a) IR activates IRS-1 and (b) IRS-1 activates PI3K but
+also speficically suggests that (a) is a causal precedent of (b). Given that
+not all A->B and B->C relationships that are independently collected
+necessarily imply A->B->C in any specific context, explicit descriptions of
+such knowledge are extremely valuable for understanding complex causal systems.
+
+One challenge is collecting a large corpus of training data which consists of
+sentences with causal precedences descrbing some A->B->C causal chain without
+manual curation effort. Our idea was to start from curated databases to
+identify causal A->B->C sequences. Knowledge bases such as Reactome, KEGG and
+SIGNOR are organized into pathways, and the same molecular entity may appear in
+multiple pathways and be involved in different interaction in each pathway.
+This implies that to find relevant causal precedence examples, it makes sense
+to search for A->B and B->C relationships within the scope/context of a single
+curated pathway (instead of all curated knowledge combined). We ran this search
+on both Reactome and SIGNOR pathways and found that results from SIGNOR were
+higher quality and consistent with expected positive and negative controls.
+
+Next, we searched all existing outputs from Reach to find instances of A->B and
+B->C relationships (from the set identified from SIGNOR) extracted from a
+single paper, and either a single sentence or two neighboring sentences. We
+found a total of 782 such sentences automatically.  These sentences will become
+the training set for learning to recognize causal precedence.
+
+We made our code available at
+https://github.com/indralab/causal_precedence_training and will continue to
+extend it to find further opportunities for automated training data collection.
+
 Knowledge/model curation using BEL annotations
 ----------------------------------------------
+
+We have previously described an integration with hypothes.is. This integration
+has supported two usage modes: (1) users can select sentences on any website and
+add annotations in simple English language that can be processed into
+statements automatically, and (2) text mined statements can be exported and
+uploaded as annotations onto the websites (for instance PubMedCentral) where
+they were originally extracted from.
+
+Though usage mode (1) is convenient, NLP on even simple sentences can sometimes
+be unreliable and therefore we decided to implement support other intuitive but
+formal syntaxes for annotation. Our preferred choice was the Biological
+Expression Language (BEL) which allows expressing a wide range of causal
+relationships relevant for biology. For instance, the BEL statement
+"kin(p(FPLX:MEK)) => kin(p(FPLX:ERK))" expresses that the kinase activity of
+the protein family MEK directly increases the kinase activity of the protein
+family ERK. Building on the PyBEL package and the existing BEL-INDRA
+integration we added support for parsing BEL statements from hypothes.is
+annotations into INDRA Statements. We plan to use this capability to build
+new human-curated models or extend existing ones in EMMAA.
 
 Formalizing EMMAA model configuration
 -------------------------------------
