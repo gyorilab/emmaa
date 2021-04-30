@@ -26,6 +26,11 @@ observations.
 .. image:: ../_static/images/model_subscribe_email.png
     :scale: 50%
 
+We refactored our codebase to separate all code related to notifications 
+(tweets and emails about model updates and emails about new query results)
+into a `subscription.notifications` submodule. It allows sharing and reusing
+relevant parts of code.
+
 Figures and tables from xDD as non-textual evidence for model statements
 ------------------------------------------------------------------------
 
