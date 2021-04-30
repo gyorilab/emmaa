@@ -70,6 +70,57 @@ during statistics generation and model analysis.
 Assembling and analyzing dynamical models
 -----------------------------------------
 
+During this period, we aimed to strengthen EMMAA's capability to execute and
+analyze dynamical models. Previously, EMMAA's dynamical queries supported
+checking "unconditional" properties, for instance, whether in a model
+"phosphorylated BRAF is ever high". This captures a model's baseline
+dynamical behavior without any specific perturbation condition. Further,
+EMMAA only supported deterministic and continuoys ODE-based simulation of
+models.
+
+We added support for a new simulation mode, namely continuous-time,
+discrete-space stochastic simulation using the Kappa framework. One
+important advantage of this approach is that - unlike the ODE-based approach -
+it does not rely on enumerating all molecular species that can exist in the
+system ahead of simulation. Instead, an initial mixture of molecular species
+is evolved, through a set of reaction rules, and new species can be created
+during simulation if any reaction rules produce them. However, stochastic
+simulation is typically slower than ODE-based simulation.
+
+Further, we also implemented a new query mode for dynamical models that
+can be used to observe model behavior under perturbations. For instance,
+it allows answering the query "does EGF increase phosphorylated ERK?" in
+a model by setting up a pair of simulation experiments in which EGF is either
+at a low or a high level, and then quantifying the difference in the temporal
+profile of phosphorylated ERK between the two condition (the outcome is either
+"increase", "decrease" or "no change"). This is useful for interactive
+user-driven queries but can also be used for model testing/validation against
+a specific set of observations.
+
+There are numerous challenges involved in evaluating the dynamics of
+automatically assembled EMMAA models. For very large models such as the
+COVID-19 model, it makes sense to think of "executable subnetworks" that are
+assembled to answer a specific set of queries instead of attempting to
+simulate the entire model. We began implementing an assembly pipeline that
+performs additional filtering, reasoning and processing on assembled knowledge
+to prepare if for execution. These steps involve filtering to "direct"
+statements to remove indirect/bypass effects, rewriting molecular states
+in statements to improve the causal connectivity of the model, and filtering
+out "inconsequential" statements to cut down on the size of the model.
+We also implemented a new analysis feature that can detect potential
+polymerization (where molecular species can form arbitrarily large complexes
+as the system evolves) in a model which precludes ODE-based simulation and
+can result in slower stochastic simulation. For now, these detected
+polymerizations can help manually patch models, however, it might be possible
+to automate the addition of constraints to a model to avoid polymerization.
+Another problem is that of model parameterization. EMMAA models could be
+connected to relevant expression profiles to set total protein amounts as
+initial conditions, while reasonable priors can be chosen for reaction rate
+constants. Beyond that, the uncertainty in model parameters can be resolved
+by any combination of (1) fitting the model to data, (2) performing
+ensemble analysis that "integrates" over the model uncertainty, and (3)
+user interaction to set parameter values manually.
+
 Creating a training corpus for identifying causal precedence in text
 --------------------------------------------------------------------
 
