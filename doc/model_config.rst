@@ -1,3 +1,5 @@
+.. _config_doc:
+
 Configuring an EMMAA model
 ==========================
 

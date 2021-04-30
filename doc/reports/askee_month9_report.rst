@@ -7,8 +7,48 @@ Integrating the COVID-19 Disease Map community model
 Notifications about general model updates
 -----------------------------------------
 
+One of the key concepts of EMMAA is a concept of "push science" - notifying 
+users of new discoveries relevant to their research. Previously reported
+developments in this direction included subscribing to query results and 
+tweeting about new findings. We recently made a new step towards this goal and
+added a feature allowing users to subscribe to a model of their interest.
+
+.. image:: ../_static/images/model_subscribe_button.png
+    :scale: 50%
+
+To subscribe to model notifications, a user needs to click the "Subscribe"
+button on the model dashboard. The models are updated and tested daily and
+every time there are any new findings, a subscribed user will receive an email
+with updates. New findings can include new mechanisms found in the model
+context, new tests applied to a model, or new explanations found for the tested
+observations.
+
+.. image:: ../_static/images/model_subscribe_email.png
+    :scale: 50%
+
 Figures and tables from xDD as non-textual evidence for model statements
 ------------------------------------------------------------------------
+
+We previously reported on displaying figures and tables from a given paper 
+through the integration with xDD platform developed by UW. That approach
+supports an exploration of different mechanisms described in the context of a 
+single paper by viewing both their text description and visual representation.
+
+In this reporting period we added support for displaying figures and tables
+relevant for a given mechanism rather than for a particular paper. To enable
+this we used xDD entity based search mode that allows searching for objects
+associated with one or more entities across their knowledge base. For our use
+case we are searching for figures and tables where both statement subject and
+object are involved. As a result, we can display both textual and non-textual
+evidence for a given statement coming from different papers.
+
+
+.. image:: ../_static/images/xdd_stmt_figures.png
+    :scale: 20%
+
+In the image above the text evidence and figures for the statement "ACE2 binds
+SARS-CoV-2" is shown. Both text and figures are from different papers and have
+links to original publications.
 
 Integration with the Uncharted UI
 ---------------------------------
@@ -181,3 +221,13 @@ new human-curated models or extend existing ones in EMMAA.
 
 Formalizing EMMAA model configuration
 -------------------------------------
+
+Each EMMAA model has to be set up with its own configuration settings in a 
+JSON file. The settings allow to store model specific metadata (e.g. short and
+human readable name, links to NDEx visualization and Twitter accounts) that 
+are displayed on the model dashboard as well as to configure the methods to 
+update and assemble the model, run test and queries and generate statistics 
+reports. With the number and diversity of EMMAA models growing we felt the 
+need to document the requirements to the model configuration. The detailed
+instruction on what information the configuration file should contain with 
+examples can be found at :ref:`config_doc`
