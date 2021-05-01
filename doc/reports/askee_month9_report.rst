@@ -164,7 +164,7 @@ evidence for a given statement coming from different papers.
 
 .. image:: ../_static/images/xdd_stmt_figures.png
     :align: center
-    :scale: 20%
+    :scale: 33%
 
 In the image above the text evidence and figures for the statement "ACE2 binds
 SARS-CoV-2" are shown. Both text and figures are from different papers and have
