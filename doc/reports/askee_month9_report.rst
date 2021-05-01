@@ -34,6 +34,76 @@ files in conjunction with the metadata (entity grounding, literature
 references, etc.) from MINERVA into INDRA Statements. We then initialized an
 EMMAA model with these statements.
 
+.. image:: ../_static/images/c19dm_card.png
+    :scale: 50%
+
+The next step was to set up the model for automated analysis against a set of
+relevant empirical observations. We chose three sets of observations to analyze
+the model against: (1) a set of in-vitro drug screening experiments, (2) a set
+of empirical assertions on drugs inhibiting infection or adverse outcomes
+associated with COVID-19 (aka the MITRE test corpus), and (3) text mining
+statements automatically collected by the existing EMMAA COVID-19 model. We
+used both signed graph and unsigned graph instantiations of the C19DM EMAA
+model for analysis.
+
+In case of the in-vitro drug screening data, each data point can be interpreted
+as "Drug X inhibits SARS-CoV-2 replication". Viral replication appears as a
+concept in the C19DM model and can be used as a readout in this case.  However,
+most drugs that appear in the screening data aren't modeled in the C19DM. We
+therefore extended the model with these drugs and their known targets within
+the C19DM using statements independently assembled by INDRA from multiple
+sources. This is a relatively small corpus of statements and - within the EMMAA
+framework, instantiated as a signed graph model - the C19DM could explain 10
+such observations, including how "nafamostat inhibits viral replication". The
+explanation in this case involved nafamostat inhibiting TMPRSS2's activation of
+ACE2 which enables viral replication.
+
+.. image:: ../_static/images/c19dm_invitro.png
+    :scale: 50%
+
+As for the second corpus, these empirical assertions aren't necessarily
+associated with SARS-CoV-2 replication per se, rather, they imply that a given
+drug is beneficial in inhibiting some COVID-19-associated adverse outcome.
+While there are several phenotypic nodes that could be considered readouts for
+this purpose in the C19DM (e.g., thrombosis, cytokine storm, ARDS, etc.), we
+don't know in advance which one of these a given drug affects. Therefore, we
+added a new readout concept to the model called "COVID-19 adverse outcome" and
+added positive regulation relations between each specific adverse outcome
+concept and this new one. Similar to the case of in-vitro drug screening as
+described above, we also added external drug-target statements relevant for
+this corpus.
+
+The sketch below illustrates the two types of model extensions done to make the
+model applicable to these analysis tasks
+
+.. image:: ../_static/images/c19dm_extension.png
+    :scale: 50%
+
+For this corpus the C19DM EMMAA model, instantiated as a signed graph was able
+to explain 463 test statements. It is particularly interesting to observe which
+specific phenotypic outcome the explanation involves as a "COVID-10 adverse
+outcome". For example, for the observation that "aliskiren inhibits COVID-19
+adverse outcomes", EMMAA finds an explanation in the C19DM in which aliskiren
+inhibits angiotensin which - through some intermediaries - leads to reduced
+vascular inflammation, one of the adverse outcomes associated with COVID-19.
+
+
+.. image:: ../_static/images/c19dm_mitre.png
+    :scale: 50%
+
+Finally, we set up the existing EMMAA COVID-19 model (which aggregates
+knowledge about COVID-19 largely via text mining the existing and emerging
+literature) as a set of assertions to be explained by the C19DM. Conceptually
+this is an interesting approach since the EMMAA COVID-19 model contains many
+assertions about indirect effects (e.g., "azythromycin activates autophagy",
+see below) that were reported in the literature but not necessarily explained
+mechanistically, while the C19DM is a detailed, mechanistic and high-precision
+(in that it is human curated rather than automatically assembled) model that is
+likely to contain mechanistic paths that can serve as interesting explanations.
+
+.. image:: ../_static/images/c19dm_text_mining_test.png
+    :scale: 50%
+
 
 Notifications about general model updates
 -----------------------------------------
