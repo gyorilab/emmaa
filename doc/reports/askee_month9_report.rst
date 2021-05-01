@@ -3,6 +3,37 @@ ASKE-E Month 9 Milestone Report
 
 Integrating the COVID-19 Disease Map community model
 ----------------------------------------------------
+One of our goals in this project is to demonstrate the capability to take an
+existing model constructed by others in the community and instantiate it as an
+EMMAA model. One approach is to take the model in its original form and extend
+it with some meta-data to allow running it for the purposes of validation and
+analysis within EMMAA. Another approach is to process the original model into
+knowledge-level assertions - in our case INDRA Statements - and instantiate
+this set of statements as an EMMAA model. As the first proof of principle, we
+decided to take the latter approach since it results in a more transparent
+model with all necessary annotations to display model statistics, testing and
+query results on the EMMAA dashboard. Due to its direct relevance to our
+applications and its interesting connection with our fully automatically
+assembled COVID-19 EMMAA model, we decided to work with the COVID-19 Disease
+Map model.
+
+The COVID-19 Disease Map (C19DM) is a large model of molecular mechanisms
+related to SARS-CoV-2 infection and COVID-19 curated collaboratively by a
+consortium of experts. It models all known SARS-CoV-2 protein interactions with
+human host proteins, and multiple pathways that are triggered by these
+interactions.  It also models phenotypic outcomes associated with COVID-19, for
+instance, cytokine storm, thrombosis, etc.
+
+The C10DM is being built using CellDesigner and can be explored or
+programmatically obtained through the MINERVA platform.  Using the CASQ tools,
+the model has also been transformed into a Simple Interaction Format (SIF) that
+can be used as the basis for causal analysis or Boolean/logical modeling.
+
+We implemented a new client and processor in INDRA to process the C19DM SIF
+files in conjunction with the metadata (entity grounding, literature
+references, etc.) from MINERVA into INDRA Statements. We then initialized an
+EMMAA model with these statements.
+
 
 Notifications about general model updates
 -----------------------------------------
