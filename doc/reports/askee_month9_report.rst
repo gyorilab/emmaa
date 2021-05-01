@@ -35,7 +35,7 @@ references, etc.) from MINERVA into INDRA Statements. We then initialized an
 EMMAA model with these statements.
 
 .. image:: ../_static/images/c19dm_card.png
-    :scale: 50%
+    :align: center
 
 The next step was to set up the model for automated analysis against a set of
 relevant empirical observations. We chose three sets of observations to analyze
@@ -59,7 +59,7 @@ explanation in this case involved nafamostat inhibiting TMPRSS2's activation of
 ACE2 which enables viral replication.
 
 .. image:: ../_static/images/c19dm_invitro.png
-    :scale: 50%
+   :align: center
 
 As for the second corpus, these empirical assertions aren't necessarily
 associated with SARS-CoV-2 replication per se, rather, they imply that a given
@@ -74,10 +74,11 @@ described above, we also added external drug-target statements relevant for
 this corpus.
 
 The sketch below illustrates the two types of model extensions done to make the
-model applicable to these analysis tasks
+model applicable to these analysis tasks.
 
 .. image:: ../_static/images/c19dm_extension.png
-    :scale: 50%
+    :scale: 70%
+    :align: center
 
 For this corpus the C19DM EMMAA model, instantiated as a signed graph was able
 to explain 463 test statements. It is particularly interesting to observe which
@@ -89,7 +90,7 @@ vascular inflammation, one of the adverse outcomes associated with COVID-19.
 
 
 .. image:: ../_static/images/c19dm_mitre.png
-    :scale: 50%
+    :align: center
 
 Finally, we set up the existing EMMAA COVID-19 model (which aggregates
 knowledge about COVID-19 largely via text mining the existing and emerging
@@ -102,7 +103,7 @@ mechanistically, while the C19DM is a detailed, mechanistic and high-precision
 likely to contain mechanistic paths that can serve as interesting explanations.
 
 .. image:: ../_static/images/c19dm_text_mining_test.png
-    :scale: 50%
+    :align: center
 
 
 Notifications about general model updates
@@ -115,6 +116,7 @@ tweeting about new findings. We recently made a new step towards this goal and
 added a feature allowing users to subscribe to a model of their interest.
 
 .. image:: ../_static/images/model_subscribe_button.png
+    :align: center
     :scale: 50%
 
 To subscribe to model notifications, a user needs to click the "Subscribe"
@@ -125,6 +127,7 @@ context, new tests applied to a model, or new explanations found for the tested
 observations.
 
 .. image:: ../_static/images/model_subscribe_email.png
+    :align: center
     :scale: 50%
 
 We refactored our codebase to separate all code related to notifications 
@@ -150,6 +153,7 @@ evidence for a given statement coming from different papers.
 
 
 .. image:: ../_static/images/xdd_stmt_figures.png
+    :align: center
     :scale: 20%
 
 In the image above the text evidence and figures for the statement "ACE2 binds
