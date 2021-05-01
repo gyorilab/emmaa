@@ -5,34 +5,34 @@ Integrating the COVID-19 Disease Map community model
 ----------------------------------------------------
 One of our goals in this project is to demonstrate the capability to take an
 existing model constructed by others in the community and instantiate it as an
-EMMAA model. One approach is to take the model in its original form and extend
-it with some meta-data to allow running it for the purposes of validation and
-analysis within EMMAA. Another approach is to process the original model into
-knowledge-level assertions - in our case INDRA Statements - and instantiate
-this set of statements as an EMMAA model. As the first proof of principle, we
-decided to take the latter approach since it results in a more transparent
-model with all necessary annotations to display model statistics, testing and
-query results on the EMMAA dashboard. Due to its direct relevance to our
-applications and its interesting connection with our fully automatically
-assembled COVID-19 EMMAA model, we decided to work with the COVID-19 Disease
-Map model.
+EMMAA model. One approach for doing this is to take the model in its original
+form and extend it with some meta-data to allow running it for the purposes of
+validation and analysis within EMMAA. Another approach is to process the
+original model into knowledge-level assertions - in our case INDRA Statements -
+and instantiate this set of statements as an EMMAA model. As the first proof of
+principle, we decided to take the latter approach since it results in a more
+transparent model with all necessary annotations available to display model
+statistics, testing and query results on the EMMAA dashboard. Due to its direct
+relevance to our applications and its interesting connection with our existing
+automatically assembled COVID-19 EMMAA model, we decided to work with the
+COVID-19 Disease Map model.
 
 The COVID-19 Disease Map (C19DM) is a large model of molecular mechanisms
 related to SARS-CoV-2 infection and COVID-19 curated collaboratively by a
 consortium of experts. It models all known SARS-CoV-2 protein interactions with
 human host proteins, and multiple pathways that are triggered by these
-interactions.  It also models phenotypic outcomes associated with COVID-19, for
-instance, cytokine storm, thrombosis, etc.
+interactions. It also models phenotypic outcomes associated with COVID-19, for
+instance, cytokine storm, thrombosis, vascular inflammation, ARDS, etc.
 
-The C10DM is being built using CellDesigner and can be explored or
-programmatically obtained through the MINERVA platform.  Using the CASQ tools,
+The C19DM is being built using CellDesigner and can be explored or
+programmatically obtained through the MINERVA platform. Using the CASQ tool,
 the model has also been transformed into a Simple Interaction Format (SIF) that
 can be used as the basis for causal analysis or Boolean/logical modeling.
 
 We implemented a new client and processor in INDRA to process the C19DM SIF
-files in conjunction with the metadata (entity grounding, literature
+files in conjunction with metadata (entity grounding, literature
 references, etc.) from MINERVA into INDRA Statements. We then initialized an
-EMMAA model with these statements.
+EMMAA model with these statements (see model card below).
 
 .. image:: ../_static/images/c19dm_card.png
     :align: center
@@ -40,23 +40,23 @@ EMMAA model with these statements.
 The next step was to set up the model for automated analysis against a set of
 relevant empirical observations. We chose three sets of observations to analyze
 the model against: (1) a set of in-vitro drug screening experiments, (2) a set
-of empirical assertions on drugs inhibiting infection or adverse outcomes
-associated with COVID-19 (aka the MITRE test corpus), and (3) text mining
-statements automatically collected by the existing EMMAA COVID-19 model. We
-used both signed graph and unsigned graph instantiations of the C19DM EMAA
+of empirical assertions on drugs inhibiting SARS-CoV-2 infection or adverse
+outcomes associated with COVID-19 (aka the MITRE test corpus), and (3) text
+mining statements automatically collected by the existing EMMAA COVID-19 model.
+We used both signed graph and unsigned graph instantiations of the C19DM EMMAA
 model for analysis.
 
 In case of the in-vitro drug screening data, each data point can be interpreted
 as "Drug X inhibits SARS-CoV-2 replication". Viral replication appears as a
-concept in the C19DM model and can be used as a readout in this case.  However,
+concept in the C19DM model and can be used as a readout in this case. However,
 most drugs that appear in the screening data aren't modeled in the C19DM. We
-therefore extended the model with these drugs and their known targets within
-the C19DM using statements independently assembled by INDRA from multiple
-sources. This is a relatively small corpus of statements and - within the EMMAA
-framework, instantiated as a signed graph model - the C19DM could explain 10
+therefore extended the EMMAA C19DM model with these drugs and their known
+targets within the C19DM using statements independently assembled by INDRA from
+multiple sources. The in-vitro drug screening corpus is relatively small and
+the EMMAA C19DM model (instantiated as a signed graph model) could explain 10
 such observations, including how "nafamostat inhibits viral replication". The
 explanation in this case involved nafamostat inhibiting TMPRSS2's activation of
-ACE2 which enables viral replication.
+ACE2 which enables viral replication:
 
 .. image:: ../_static/images/c19dm_invitro.png
    :align: center
@@ -66,12 +66,12 @@ associated with SARS-CoV-2 replication per se, rather, they imply that a given
 drug is beneficial in inhibiting some COVID-19-associated adverse outcome.
 While there are several phenotypic nodes that could be considered readouts for
 this purpose in the C19DM (e.g., thrombosis, cytokine storm, ARDS, etc.), we
-don't know in advance which one of these a given drug affects. Therefore, we
-added a new readout concept to the model called "COVID-19 adverse outcome" and
-added positive regulation relations between each specific adverse outcome
-concept and this new one. Similar to the case of in-vitro drug screening as
-described above, we also added external drug-target statements relevant for
-this corpus.
+don't want to assert up front which one of these a given drug affects.
+Therefore, we added a new readout concept to the model called "COVID-19 adverse
+outcome" and added positive regulation relations between each specific adverse
+outcome concept and this new one. Similar to the case of in-vitro drug
+screening as described above, we also added external drug-target statements
+relevant for this corpus.
 
 The sketch below illustrates the two types of model extensions done to make the
 model applicable to these analysis tasks.
@@ -82,12 +82,11 @@ model applicable to these analysis tasks.
 
 For this corpus the C19DM EMMAA model, instantiated as a signed graph was able
 to explain 463 test statements. It is particularly interesting to observe which
-specific phenotypic outcome the explanation involves as a "COVID-10 adverse
+specific phenotypic outcome the explanation involves as a "COVID-19 adverse
 outcome". For example, for the observation that "aliskiren inhibits COVID-19
 adverse outcomes", EMMAA finds an explanation in the C19DM in which aliskiren
 inhibits angiotensin which - through some intermediaries - leads to reduced
-vascular inflammation, one of the adverse outcomes associated with COVID-19.
-
+vascular inflammation, one of the adverse outcomes associated with COVID-19:
 
 .. image:: ../_static/images/c19dm_mitre.png
     :align: center
@@ -95,23 +94,28 @@ vascular inflammation, one of the adverse outcomes associated with COVID-19.
 Finally, we set up the existing EMMAA COVID-19 model (which aggregates
 knowledge about COVID-19 largely via text mining the existing and emerging
 literature) as a set of assertions to be explained by the C19DM. Conceptually
-this is an interesting approach since the EMMAA COVID-19 model contains many
-assertions about indirect effects (e.g., "azythromycin activates autophagy",
-see below) that were reported in the literature but not necessarily explained
-mechanistically, while the C19DM is a detailed, mechanistic and high-precision
-(in that it is human curated rather than automatically assembled) model that is
-likely to contain mechanistic paths that can serve as interesting explanations.
+this is an interesting analysis task since the EMMAA COVID-19 model contains
+many assertions about indirect effects (e.g., "azythromycin activates
+autophagy", see below) that were reported in the literature but not necessarily
+explained mechanistically, while the C19DM is a detailed, mechanistic and
+high-precision (in that it is human curated rather than automatically
+assembled) model that is likely to contain mechanistic paths that can serve as
+interesting explanations. As an example, below is the explanation constructed
+for the "azythromycin activates autophagy" example.
 
 .. image:: ../_static/images/c19dm_text_mining_test.png
     :align: center
 
+Going forward, we will work on instantiating the C19DM as a simulatable
+Boolean network within EMMAA and will also work towards importing other
+existing models into EMMAA for automated analysis.
 
 Notifications about general model updates
 -----------------------------------------
 
-One of the key concepts of EMMAA is a concept of "push science" - notifying 
+One of the key concepts of EMMAA is "push science" - notifying 
 users of new discoveries relevant to their research. Previously reported
-developments in this direction included subscribing to query results and 
+developments in this direction included subscribing to query results and
 tweeting about new findings. We recently made a new step towards this goal and
 added a feature allowing users to subscribe to a model of their interest.
 
@@ -122,24 +126,24 @@ added a feature allowing users to subscribe to a model of their interest.
 To subscribe to model notifications, a user needs to click the "Subscribe"
 button on the model dashboard. The models are updated and tested daily and
 every time there are any new findings, a subscribed user will receive an email
-with updates. New findings can include new mechanisms found in the model
-context, new tests applied to a model, or new explanations found for the tested
-observations.
+with updates. New findings can include new mechanisms added to the model
+from the literature, new tests applied to a model, or new explanations found
+for the tested observations.
 
 .. image:: ../_static/images/model_subscribe_email.png
     :align: center
     :scale: 50%
 
-We refactored our codebase to separate all code related to notifications 
+We refactored our code base to separate all code related to notifications
 (tweets and emails about model updates and emails about new query results)
-into a `subscription.notifications` submodule. It allows sharing and reusing
+into a `subscription.notifications` submodule. This allows sharing and reusing
 relevant parts of code.
 
 Figures and tables from xDD as non-textual evidence for model statements
 ------------------------------------------------------------------------
 
 We previously reported on displaying figures and tables from a given paper 
-through the integration with xDD platform developed by UW. That approach
+through the integration with the xDD platform developed by UW. That approach
 supports an exploration of different mechanisms described in the context of a 
 single paper by viewing both their text description and visual representation.
 
@@ -151,14 +155,13 @@ case we are searching for figures and tables where both statement subject and
 object are involved. As a result, we can display both textual and non-textual
 evidence for a given statement coming from different papers.
 
-
 .. image:: ../_static/images/xdd_stmt_figures.png
     :align: center
     :scale: 20%
 
 In the image above the text evidence and figures for the statement "ACE2 binds
-SARS-CoV-2" is shown. Both text and figures are from different papers and have
-links to original publications.
+SARS-CoV-2" are shown. Both text and figures are from different papers and have
+links to the original publications.
 
 Integration with the Uncharted UI
 ---------------------------------
