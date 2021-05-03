@@ -362,6 +362,9 @@ Configuration for dynamic queries has different fields (all optional):
 - `num_sim` : int
     Number of simulations to run. Default: 2.
 
+Having a `dynamic` key in query config is required for a model to be listed as
+an option for model selection on dynamic queries page.
+
     - Example (all query types):
 
     .. code-block:: json
