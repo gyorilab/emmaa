@@ -110,7 +110,7 @@ Another example involves the observation that "viral N protein downregulates
 interferon" which the EMMAA C19DM model explains through the SARS-CoV-2 N
 protein's inhibition of human IRF3.
 
-.. image:: ../_static/images/c19dm_text_mining_test.png
+.. image:: ../_static/images/c19dm_text_mining_test2.png
     :align: center
 
 Going forward, we will work on instantiating the C19DM as a simulatable
