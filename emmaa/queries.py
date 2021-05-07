@@ -167,7 +167,47 @@ class PathProperty(Query):
 
 
 class SimpleInterventionProperty(Query):
-    pass
+    """This type of query requires dynamic simulation of the model to observe
+    the behavior under perturbation.
+    """
+    def __init__(self, condition_entity, target_entity, direction):
+        self.condition_entity = condition_entity
+        self.target_entity = target_entity
+        self.direction = direction
+
+    def matches_key(self):
+        condition_key = self.condition_entity.matches_key()
+        target_key = self.target_entity.matches_key()
+        key = (condition_key, self.direction, target_key)
+        return str(key)
+
+    def to_json(self):
+        query_type = self.get_type()
+        json_dict = _o(type=query_type)
+        json_dict['condition_entity'] = self.condition_entity.to_json()
+        json_dict['target_entity'] = self.target_entity.to_json()
+        json_dict['direction'] = self.direction
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        cond_ent_json = json_dict.get('condition_entity')
+        condition_entity = Agent._from_json(cond_ent_json)
+        target_ent_json = json_dict.get('target_entity')
+        target_entity = Agent._from_json(target_ent_json)
+        direction = json_dict.get('direction')
+        query = cls(condition_entity, target_entity, direction)
+        return query
+
+    def __str__(self):
+        descr = (f'SimpleInterventionPropertyQuery'
+                 f'(condition={self.condition_entity}, '
+                 f'target={self.target_entity}, '
+                 f'direction={self.direction})')
+        return descr
+
+    def __repr__(self):
+        return str(self)
 
 
 class ComparativeInterventionProperty(Query):
