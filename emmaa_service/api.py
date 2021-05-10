@@ -1081,7 +1081,8 @@ def get_immediate_queries(query_type):
             results = _format_query_results(qr) if qr else\
                 'No stashed results for subscribed queries. Please re-run ' \
                 'query to see latest result.'
-        elif query_type == 'dynamic_property':
+        elif query_type in ['dynamic_property',
+                            'simple_intervention_property']:
             headers = ['Query', 'Model', 'Result', 'Image']
             results = _format_dynamic_query_results(qr)
     return headers, results
@@ -1096,7 +1097,8 @@ def get_subscribed_queries(query_type, user_email=None):
                 sub_results = _format_query_results(res)
                 headers = ['Query', 'Model'] + [
                     FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
-            elif query_type == 'dynamic_property':
+            elif query_type in ['dynamic_property',
+                                'simple_intervention_property']:
                 sub_results = _format_dynamic_query_results(res)
                 headers = ['Query', 'Model', 'Result', 'Image']
         else:
