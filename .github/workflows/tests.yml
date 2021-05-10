@@ -68,7 +68,7 @@ jobs:
         export AWS_DEFAULT_REGION='us-east-1'
         export NOSEATTR="!notravis"
         export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
-        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19:`pwd`/kappy
+        export PYTHONPATH=$PYTHONPATH:`pwd`/covid-19:`pwd`/kappy:`pwd`/indra_world
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export INDRA_WM_CACHE="."
         nosetests -v -a $NOSEATTR emmaa/tests/test_s3.py
