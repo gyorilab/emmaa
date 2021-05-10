@@ -148,6 +148,19 @@ def format_results(results, query_type='path_property'):
                 formatted_results[query_hash][mc_type] = ['Fail', response]
             else:
                 formatted_results[query_hash][mc_type] = ['Pass', response]
+        elif query_type == 'simple_intervention_property':
+            if response == 'Query is not applicable for this model':
+                formatted_results[query_hash]['result'] = ['n_a', response]
+            else:
+                res = response[0]['result']
+                if res.startswith('no'):
+                    expl = 'Query is not satisfied'
+                    formatted_results[query_hash]['result'] = ['Fail', expl]
+                else:
+                    expl = 'Query is satisfied'
+                    formatted_results[query_hash]['result'] = ['Pass', expl]
+                formatted_results[query_hash]['image'] = (
+                    response[0]['fig_path'])
         elif query_type == 'dynamic_property':
             if response == 'Query is not applicable for this model':
                 formatted_results[query_hash]['result'] = ['n_a', response]
