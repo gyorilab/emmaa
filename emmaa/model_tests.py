@@ -23,7 +23,8 @@ from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements, \
     load_config_from_s3
 from emmaa.statements import filter_indra_stmts_by_metadata
-from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
+from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery, \
+    SimpleInterventionProperty
 from emmaa.util import make_date_str, get_s3_client, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
@@ -316,6 +317,8 @@ class ModelManager(object):
             return self.answer_path_query(query)
         if isinstance(query, OpenSearchQuery):
             return self.answer_open_query(query)
+        if isinstance(query, SimpleInterventionProperty):
+            return self.answer_intervention_query(query)
 
     def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
@@ -358,6 +361,32 @@ class ModelManager(object):
                 fig_path = s3_path
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
                          'kpat': kpat, 'fig_path': fig_path}
+        except (MissingMonomerError, MissingMonomerSiteError):
+            resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
+        return [('pysb', self.hash_response_list(resp_json), resp_json)]
+
+    def answer_intervention_query(self, query, bucket=EMMAA_BUCKET_NAME):
+        """Answer user intervention query by simulating a PySB model."""
+        pysb_model, use_kappa, time_limit, num_times, num_sim = \
+            self._get_dynamic_components()
+        tra = TRA(use_kappa=use_kappa)
+        try:
+            res, fig_path = tra.compare_conditions(pysb_model,
+                                                   query.condition_entity,
+                                                   query.target_entity,
+                                                   query.direction,
+                                                   time_limit, num_times)
+            if self.mode == 's3':
+                fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+                date_str = make_date_str()
+                s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                          f'{date_str}{ext}')
+                s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+                client = get_s3_client(unsigned=False)
+                logger.info(f'Uploading image to {s3_path}')
+                client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+                fig_path = s3_path
+            resp_json = {'result': res, 'fig_path': fig_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json), resp_json)]
@@ -441,6 +470,9 @@ class ModelManager(object):
                 mc_type, response, resp_json = self.answer_dynamic_query(
                     query, **kwargs)[0]
                 responses.append((query, mc_type, response))
+            if isinstance(query, SimpleInterventionProperty):
+                mc_type, response, resp_json = self.answer_intervention_query(
+                    query, **kwargs)[0]
             elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
                     applicable_queries.append(query)
@@ -579,9 +611,12 @@ class ModelManager(object):
                 response_hash = str(fnv1a_32(response_str.encode('utf-8')))
                 response_dict[response_hash] = resp
         elif isinstance(response, dict):
-            results = [str(response.get('sat_rate')),
-                       str(response.get('num_sim'))]
-            response_str = ' '.join(results)
+            if 'sat_rate' in response:
+                results = [str(response.get('sat_rate')),
+                           str(response.get('num_sim'))]
+                response_str = ' '.join(results)
+            else:
+                response_str = response.get('result')
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response
         else:
