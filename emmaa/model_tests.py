@@ -339,26 +339,10 @@ class ModelManager(object):
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
-        # Get simulation mode (kappa or ODE) from query config
-        use_kappa = False
-        time_limit = None
-        num_times = 100
-        num_sim = 2
-        if 'dynamic' in self.model.query_config:
-            use_kappa = self.model.query_config['dynamic'].get(
-                'use_kappa', False)
-            time_limit = self.model.query_config['dynamic'].get('time_limit')
-            num_times = self.model.query_config['dynamic'].get(
-                'num_times', 100)
-            num_sim = self.model.query_config['dynamic'].get('num_sim', 2)
+        pysb_model, use_kappa, time_limit, num_times, num_sim = \
+            self._get_dynamic_components()
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
-        # Either use specially assembled or regular PySB depending on model
-        for mc_type in MODEL_TYPES['simulation']:
-            if mc_type in self.mc_types:
-                logger.info(f'Using {mc_type} model for simulation')
-                pysb_model = deepcopy(self.mc_types[mc_type]['model'])
-                break
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
                 pysb_model, tp, num_times=num_times)
@@ -533,6 +517,27 @@ class ModelManager(object):
         logger.info('Parameters for model checking: %d, %d' %
                     (max_path_length, max_paths))
         return (max_path_length, max_paths)
+
+    def _get_dynamic_components(self, qtype='dynamic'):
+        # Get simulation mode (kappa or ODE) from query config
+        use_kappa = False
+        time_limit = None
+        num_times = 100
+        num_sim = 2
+        if qtype in self.model.query_config:
+            use_kappa = self.model.query_config[qtype].get(
+                'use_kappa', False)
+            time_limit = self.model.query_config[qtype].get('time_limit')
+            num_times = self.model.query_config[qtype].get(
+                'num_times', 100)
+            num_sim = self.model.query_config[qtype].get('num_sim', 2)
+        # Either use specially assembled or regular PySB depending on model
+        for mc_type in MODEL_TYPES['simulation']:
+            if mc_type in self.mc_types:
+                logger.info(f'Using {mc_type} model for simulation')
+                pysb_model = deepcopy(self.mc_types[mc_type]['model'])
+                break
+        return pysb_model, use_kappa, time_limit, num_times, num_sim
 
     def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
