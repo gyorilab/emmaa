@@ -204,7 +204,11 @@ class ModelManager(object):
                 if len(step) < 1:
                     continue
                 stmt_type = type(step[0]).__name__
-                if stmt_type in ('PybelEdge', 'RefEdge'):
+                # Skip reporting has component edges
+                if stmt_type == 'PybelEdge' and step[0].relation == 'partOf' \
+                        and step[0].reverse:
+                    continue
+                elif stmt_type in ('PybelEdge', 'RefEdge'):
                     source, target = step[0].source, step[0].target
                     edge_nodes.append(source.name)
                     edge_nodes.append(u"\u2192")
