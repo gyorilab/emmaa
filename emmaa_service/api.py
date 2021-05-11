@@ -1495,12 +1495,17 @@ def process_query():
     user_id = user.id if user else None
 
     # Extract info.
-    expected_static_query_keys = {f'{pos}Selection'
-                                  for pos in ['subject', 'object', 'type']}
-    expected_dynamic_query_keys = {f'{pos}Selection'
-                                   for pos in ['pattern', 'value', 'agent']}
-    expected_open_query_keys = {f'{pos}Selection' for pos in
-                                ['openAgent', 'stmtType', 'role', 'ns']}
+    def get_expected_keys(fields):
+        keys = {f'{pos}Selection' for pos in fields}
+        keys.update({'queryType'})
+        return keys
+
+    expected_static_query_keys = get_expected_keys(
+        ['subject', 'object', 'type'])
+    expected_dynamic_query_keys = get_expected_keys(
+        ['pattern', 'value', 'agent'])
+    expected_open_query_keys = get_expected_keys(
+        ['openAgent', 'stmtType', 'role', 'ns'])
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:

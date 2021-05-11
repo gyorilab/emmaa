@@ -21,6 +21,7 @@ function postQuery(queryContainer) {
     var reg = document.getElementById('register-open-query').checked;
   }
   console.log(querySel)
+  console.log(querySel[1])
   if (querySel == null || querySel.length < 2) {
     queryNotify('Did not send query', statusId);
     let loc = window.location.href;
@@ -82,6 +83,7 @@ function collectQuery(queryContainer) {
 
   // Collect subject/object/agent from forms
   if (queryContainer.id == 'query-container') {
+    query['queryType'] = 'static';
     query['subjectSelection'] = document.getElementById('subjectInput').value;
     query['objectSelection'] = document.getElementById('objectInput').value;
     if (query['subjectSelection'] === '') {
@@ -93,12 +95,14 @@ function collectQuery(queryContainer) {
       return;
     }
   } else if (queryContainer.id == 'dynamic-container') {
+    query['queryType'] = 'dynamic';
     query['agentSelection'] = document.getElementById('agentInput').value;
     if (query['agentSelection'] === '') {
       alert('Must provide an agent description!');
       return;
     } 
-  } else {
+  } else if (queryContainer.id == 'open-container') {
+    query['queryType'] = 'open';
     query['openAgentSelection'] = document.getElementById('openAgentInput').value;
     if (query['openAgentSelection'] === '') {
       alert('Must provide an agent description!');
