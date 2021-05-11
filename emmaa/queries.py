@@ -9,7 +9,7 @@ from indra.statements.statements import *
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler, statement_base_verb, statement_present_verb
 from indra.assemblers.pybel.assembler import _get_agent_node
-from bioagents.tra.tra import MolecularQuantity, TemporalPattern
+from bioagents.tra.tra import MolecularQuantity, TemporalPattern, TimeInterval
 from .util import get_class_from_name
 
 
@@ -198,12 +198,15 @@ class DynamicProperty(Query):
         self.quant_value = quant_value
         self.quant_type = quant_type
 
-    def get_temporal_pattern(self):
+    def get_temporal_pattern(self, time_limit=None):
         """Return TemporalPattern object created with query properties."""
         mq = None
         if self.quant_value:
             mq = MolecularQuantity(self.quant_type, self.quant_value)
-        tp = TemporalPattern(self.pattern_type, [self.entity], None, value=mq)
+        t = None
+        if time_limit:
+            t = TimeInterval(0, time_limit, 'second')
+        tp = TemporalPattern(self.pattern_type, [self.entity], t, value=mq)
         return tp
 
     def matches_key(self):

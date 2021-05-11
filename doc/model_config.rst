@@ -81,18 +81,24 @@ First level fields of config.json
     `indranet`, `pybel`, `sbml`, `kappa`, `kappa_im`, `kappa_cm`,
     `bngl`, `sbgn`, `pysb_flat`.
 
-- `assembly` : list[dict]
-    Configuration of model assembly. It should contain jsonified steps to
-    pass into the INDRA AssemblyPipeline class. Each step should have a
-    `function` key and, if appropriate, `args` and `kwargs` keys.
+- `assembly` : dict or list[dict]
+    Configuration of model assembly represented as a dictionary where each
+    key is a type of assembly (`main` for general purpose assembly steps and
+    `dynamic` for additional steps to assemble a simulatable model) and
+    values should contain corresponding jsonified steps to pass into the INDRA
+    AssemblyPipeline class. Each step should have a `function` key and, if
+    appropriate, `args` and `kwargs` keys.
     For more information on AssemblyPipeline, see
     https://indra.readthedocs.io/en/latest/modules/pipeline.html
+    For backward compatibility, if a model has only one type of assembly
+    (`main`), assembly configuration can be a list of steps instead of a
+    dictionary with assembly types.
 
     - Example:
 
     .. code-block:: json
 
-        [
+        {"main": [
             {"function": "map_grounding",
              "kwargs": {"grounding_map": {
                 "Viral replication": {"MESH": "D014779"},
@@ -104,7 +110,15 @@ First level fields of config.json
                       "any",
                       ["correct", "act_vs_amt", "hypothesis"]],
              "kwargs": {"update_belief": true}}
-        ]
+            ],
+         "dynamic": [
+            {"function": "filter_by_type",
+             "args": [{"stmt_type": "Complex"}],
+             "kwargs": {"invert": true}},
+            {"function": "filter_direct"},
+            {"function": "filter_belief", "args": [0.95]}
+            ]
+        }
 
 - `reading` : dict, optional
     Configuration of model update process. For more details see
@@ -267,7 +281,7 @@ following fields:
     A list of network types a model should be assembled into. For each of the
     model types, a ModelChecker instance will be created and used to find
     explanations to tests. Accepted elements are: `pysb`, `pybel`, 
-    `signed_graph`, `unsigned_graph`.
+    `signed_graph`, `unsigned_graph`, `dynamic`.
 
 - `statement_checking` : dict, optional
     Maximum paths and maximum path length to limit test results. In the most
@@ -327,13 +341,31 @@ following fields:
 
 Model queries configuration
 ---------------------------
-Configuration for model queries. Similar to the model test `statement_checking`
-format. Here in addition to `statement_checking` to configure the static 
-path queries, it is also possible to add a similar configuration for 
-`open_search` queries. Same as in test config, it is possible to set different
-values for different model types. 
+Configuration for model queries represented as a dictionary keyed by the type
+of query (`statement_checking` (static paths queries), `open_search` and
+`dynamic`). Configuration for `statement_checking` and `open_search` queries
+is similar to the model test `statement_checking` format. Same as in test
+config, it is possible to set different values for different model types.
 
-    - Example
+Configuration for dynamic queries has different fields (all optional):
+
+- `use_kappa` : bool
+    Determines the mode of the simulation. If True, uses `kappa`, otherwise,
+    runs the ODE simulations. Default: False.
+
+- `time_limit` : int
+    Number of seconds to run the simulation for. Default: 200000.
+
+- `num_times` : int
+    Number of time points in the simulation plot. Default: 100.
+
+- `num_sim` : int
+    Number of simulations to run. Default: 2.
+
+Having a `dynamic` key in query config is required for a model to be listed as
+an option for model selection on dynamic queries page.
+
+    - Example (all query types):
 
     .. code-block:: json
 
@@ -348,6 +380,12 @@ values for different model types.
          "open_search": {
             "max_paths": 50,
             "max_path_length": 2
+            },
+         "dynamic": {
+            "use_kappa": true,
+            "time_limit": 100,
+            "num_times": 100,
+            "num_sim": 1
             }
         }
 

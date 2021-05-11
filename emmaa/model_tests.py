@@ -55,6 +55,9 @@ ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
               'DecreaseAmount': u"\u22A3"}
 
+MODEL_TYPES = {'path': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
+               'simulation': ['dynamic', 'pysb']}
+
 
 class ModelManager(object):
     """Manager to generate and store properties of a model and relevant tests.
@@ -63,6 +66,9 @@ class ModelManager(object):
     ----------
     model : emmaa.model.EmmaaModel
         EMMAA model
+    mode : str
+        If 'local' (default), does not save any exports/images to S3. It is
+        only set to 's3' mode in update_model_manager.py script.
 
     Attributes
     ----------
@@ -79,9 +85,12 @@ class ModelManager(object):
         A list of EMMAA tests applicable for given EMMAA model.
     date_str : str
         Time when this object was created.
+    path_stmt_types : dict
+        A dictionary mapping statement hashes to a count of paths they are in.
     """
     def __init__(self, model, mode='local'):
         self.model = model
+        self.mode = mode
         self.mc_mapping = {
             'pysb': (self.model.assemble_pysb, PysbModelChecker,
                      stmts_from_pysb_path),
@@ -92,14 +101,16 @@ class ModelManager(object):
                              stmts_from_indranet_path),
             'unsigned_graph': (self.model.assemble_unsigned_graph,
                                UnsignedGraphModelChecker,
-                               stmts_from_indranet_path)}
+                               stmts_from_indranet_path),
+            'dynamic': (self.model.assemble_dynamic_pysb, None, None)}
         self.mc_types = {}
         for mc_type in model.test_config.get('mc_types', ['pysb']):
             self.mc_types[mc_type] = {}
             assembled_model = self.mc_mapping[mc_type][0](mode=mode)
             self.mc_types[mc_type]['model'] = assembled_model
-            self.mc_types[mc_type]['model_checker'] = (
-                self.mc_mapping[mc_type][1](assembled_model))
+            if mc_type in MODEL_TYPES['path']:
+                self.mc_types[mc_type]['model_checker'] = (
+                    self.mc_mapping[mc_type][1](assembled_model))
             self.mc_types[mc_type]['test_results'] = []
         self.entities = self.model.get_assembled_entities()
         self.applicable_tests = []
@@ -157,6 +168,8 @@ class ModelManager(object):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
+            if mc_type not in MODEL_TYPES['path']:
+                continue
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
                                   filter_func, edge_filter_func)
 
@@ -309,6 +322,8 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 mc = self.get_updated_mc(mc_type, [query.path_stmt])
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', mc_type=mc_type, default_paths=5)
@@ -322,25 +337,27 @@ class ModelManager(object):
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
                      RESULT_CODES['QUERY_NOT_APPLICABLE'])]
 
-    def answer_dynamic_query(self, query, use_kappa=False,
-                             bucket=EMMAA_BUCKET_NAME):
+    def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
+        pysb_model, use_kappa, time_limit, num_times, num_sim = \
+            self._get_dynamic_components()
         tra = TRA(use_kappa=use_kappa)
-        tp = query.get_temporal_pattern()
-        pysb_model = deepcopy(self.mc_types['pysb']['model'])
+        tp = query.get_temporal_pattern(time_limit)
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                pysb_model, tp)
-            fig_name, ext = os.path.splitext(os.path.basename(fig_path))
-            date_str = make_date_str()
-            s3_key = (f'query_images/{self.model.name}/{fig_name}_'
-                      f'{date_str}{ext}')
-            s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
-            client = get_s3_client(unsigned=False)
-            logger.info(f'Uploading image to {s3_path}')
-            client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+                pysb_model, tp, num_times=num_times)
+            if self.mode == 's3':
+                fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+                date_str = make_date_str()
+                s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                          f'{date_str}{ext}')
+                s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+                client = get_s3_client(unsigned=False)
+                logger.info(f'Uploading image to {s3_path}')
+                client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+                fig_path = s3_path
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
-                         'kpat': kpat, 'fig_path': s3_path}
+                         'kpat': kpat, 'fig_path': fig_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json), resp_json)]
@@ -350,6 +367,8 @@ class ModelManager(object):
         if ScopeTestConnector.applicable(self, query):
             results = []
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', qtype='open_search', mc_type=mc_type,
                     default_paths=50, default_length=2)
@@ -443,6 +462,8 @@ class ModelManager(object):
         # Path queries
         if applicable_queries:
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 mc = self.get_updated_mc(mc_type, applicable_stmts)
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', mc_type=mc_type, default_paths=5)
@@ -456,6 +477,8 @@ class ModelManager(object):
         # Open queries
         if applicable_open_queries:
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 max_path_length, max_paths = self._get_test_configs(
                     mode='query', qtype='open_search', mc_type=mc_type,
                     default_paths=50, default_length=2)
@@ -494,6 +517,27 @@ class ModelManager(object):
         logger.info('Parameters for model checking: %d, %d' %
                     (max_path_length, max_paths))
         return (max_path_length, max_paths)
+
+    def _get_dynamic_components(self, qtype='dynamic'):
+        # Get simulation mode (kappa or ODE) from query config
+        use_kappa = False
+        time_limit = None
+        num_times = 100
+        num_sim = 2
+        if qtype in self.model.query_config:
+            use_kappa = self.model.query_config[qtype].get(
+                'use_kappa', False)
+            time_limit = self.model.query_config[qtype].get('time_limit')
+            num_times = self.model.query_config[qtype].get(
+                'num_times', 100)
+            num_sim = self.model.query_config[qtype].get('num_sim', 2)
+        # Either use specially assembled or regular PySB depending on model
+        for mc_type in MODEL_TYPES['simulation']:
+            if mc_type in self.mc_types:
+                logger.info(f'Using {mc_type} model for simulation')
+                pysb_model = deepcopy(self.mc_types[mc_type]['model'])
+                break
+        return pysb_model, use_kappa, time_limit, num_times, num_sim
 
     def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
@@ -550,7 +594,8 @@ class ModelManager(object):
         results_json = []
         results_json.append({
             'model_name': self.model.name,
-            'mc_types': [mc_type for mc_type in self.mc_types.keys()],
+            'mc_types': [mc_type for mc_type in self.mc_types
+                         if mc_type in MODEL_TYPES['path']],
             'path_stmt_counts': self.path_stmt_counts,
             'date_str': self.date_str,
             'test_data': test_data})
@@ -559,6 +604,8 @@ class ModelManager(object):
             test_ix_results = {'test_type': test.__class__.__name__,
                                'test_json': test.to_json()}
             for mc_type in self.mc_types:
+                if mc_type not in MODEL_TYPES['path']:
+                    continue
                 result = self.mc_types[mc_type]['test_results'][ix]
                 path_json, test_json_lines = self.make_path_json(
                     mc_type, result.paths)

@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers) -%}
+{% macro dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers) -%}
   <!-- Dynamic queries -->
   <div class="container" id="dynamic-container">
 
@@ -15,7 +15,11 @@
         <div class="checkbox-container">
           <div class="form-select">
             <select name="dynamic-select" id="dynamic-select" placeholder="Select model" multiple>
-              <option value="marm_model">MARM Model</option>
+            {% for model_id, config_json in model_data %}
+            {% if 'query' in config_json and 'dynamic' in config_json['query'] %}
+              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+            {% endif %}
+            {% endfor %}
             </select>
           </div>
         </div>

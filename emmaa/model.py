@@ -1,3 +1,4 @@
+from copy import deepcopy
 import time
 import logging
 import datetime
@@ -116,7 +117,10 @@ class EmmaaModel(object):
         if 'reading' in config:
             self.reading_config = config['reading']
         if 'assembly' in config:
-            self.assembly_config = config['assembly']
+            if isinstance(config['assembly'], list):
+                self.assembly_config = {'main': config['assembly']}
+            else:
+                self.assembly_config = config['assembly']
         if 'test' in config:
             self.test_config = config['test']
         if 'query' in config:
@@ -445,7 +449,7 @@ class EmmaaModel(object):
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stnames = {s.name for s in self.search_terms}
-        ap = AssemblyPipeline(self.assembly_config)
+        ap = AssemblyPipeline(self.assembly_config['main'])
         self.assembled_stmts = ap.run(stmts, stnames=stnames)
 
     def update_to_ndex(self):
@@ -590,6 +594,23 @@ class EmmaaModel(object):
             graph_type='digraph',
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
+
+    def assemble_dynamic_pysb(self, **kwargs):
+        """Assemble a version of a PySB model for dynamic simulation."""
+        # First need to run regular assembly
+        if not self.assembled_stmts:
+            self.run_assembly()
+        if 'dynamic' in self.assembly_config:
+            logger.info('Assembling dynamic PySB model')
+            ap = AssemblyPipeline(self.assembly_config['dynamic'])
+            # Not overwrite assembled stmts
+            stmts = deepcopy(self.assembled_stmts)
+            new_stmts = ap.run(stmts)
+            pa = PysbAssembler()
+            pa.add_statements(new_stmts)
+            pysb_model = pa.make_model()
+            return pysb_model
+        logger.info('Did not find dynamic assembly steps')
 
     def to_json(self):
         """Convert the model into a json dumpable dictionary"""
@@ -895,3 +916,9 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'
     gr_map = load_json_from_s3(bucket, key)
     return gr_map
+
+
+@register_pipeline
+def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
+    config = load_config_from_s3(model, bucket=bucket)
+    return [st['name'] for st in config['search_terms']]
