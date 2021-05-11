@@ -36,7 +36,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery, Query
+    DynamicProperty, OpenSearchQuery, Query, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title
 
@@ -306,7 +306,8 @@ def get_queryable_stmt_types():
 
 
 def _make_query(query_dict):
-    if 'typeSelection' in query_dict.keys():
+    query_type = query_dict['queryType']
+    if query_type in ['static', 'intervention']:
         stmt_type = query_dict['typeSelection']
         stmt_class = get_statement_by_name(stmt_type)
         subj = get_agent_from_text(
@@ -314,17 +315,18 @@ def _make_query(query_dict):
         obj = get_agent_from_text(
             query_dict['objectSelection'])
         stmt = stmt_class(subj, obj)
-        query = PathProperty(path_stmt=stmt)
-        tab = 'static'
-    elif 'patternSelection' in query_dict.keys():
+        if query_type == 'static':
+            query = PathProperty(path_stmt=stmt)
+        elif query_type == 'intervention':
+            query = SimpleInterventionProperty.from_stmt(stmt)
+    elif query_type == 'dynamic':
         agent = get_agent_from_text(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         if not value:
             value = None
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
-        tab = 'dynamic'
-    elif 'openAgentSelection' in query_dict.keys():
+    elif query_type == 'open':
         agent = get_agent_from_text(query_dict['openAgentSelection'])
         stmt_type = query_dict['stmtTypeSelection']
         role = query_dict['roleSelection']
@@ -335,9 +337,8 @@ def _make_query(query_dict):
             terminal_ns = []
             for gr in ns_groups:
                 terminal_ns += ns_mapping[gr]
-        tab = 'open'
         query = OpenSearchQuery(agent, stmt_type, role, terminal_ns)
-    return query, tab
+    return query, query_type
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date,
