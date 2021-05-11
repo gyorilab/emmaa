@@ -8,7 +8,8 @@ from indra.ontology.standardize import \
 from indra.statements.statements import *
 from indra.assemblers.english.assembler import _assemble_agent_str, \
     EnglishAssembler, statement_base_verb, statement_present_verb
-from indra.assemblers.pybel.assembler import _get_agent_node
+from indra.explanation.model_checker.pysb import _add_activity_to_agent, \
+    _add_modification_to_agent
 from bioagents.tra.tra import MolecularQuantity, TemporalPattern, TimeInterval
 from .util import get_class_from_name
 
@@ -174,6 +175,48 @@ class SimpleInterventionProperty(Query):
         self.condition_entity = condition_entity
         self.target_entity = target_entity
         self.direction = direction
+
+    @classmethod
+    def from_stmt(cls, stmt):
+        if not isinstance(stmt, (Modification, RegulateAmount,
+                                 RegulateActivity, Influence)):
+            logger.info('Statement type %s not handled' %
+                        stmt.__class__.__name__)
+            return
+        # Get the polarity for the statement
+        if isinstance(stmt, Modification):
+            dir = 'dn' if isinstance(stmt, RemoveModification) else 'up'
+        elif isinstance(stmt, RegulateActivity):
+            dir = 'up' if stmt.is_activation else 'dn'
+        elif isinstance(stmt, RegulateAmount):
+            dir = 'dn' if isinstance(stmt, DecreaseAmount) else 'up'
+        elif isinstance(stmt, Influence):
+            dir = 'dn' if stmt.overall_polarity() == -1 else 'up'
+
+        # Get condition and target agents
+        # Modification
+        if isinstance(stmt, Modification):
+            condition_entity = stmt.enz
+            # Add the mod for the agent
+            mod_condition_name = modclass_to_modtype[stmt.__class__]
+            if isinstance(stmt, RemoveModification):
+                mod_condition_name = modtype_to_inverse[
+                    mod_condition_name]
+            # Add modification to substrate agent
+            target_entity = _add_modification_to_agent(
+                stmt.sub, mod_condition_name, stmt.residue, stmt.position)
+        # Activation/Inhibition
+        elif isinstance(stmt, RegulateActivity):
+            condition_entity = stmt.subj
+            # Add activity to object agent
+            target_entity = _add_activity_to_agent(
+                stmt.obj, stmt.obj_activity, stmt.is_activation)
+        # Increase/Decrease amount
+        elif isinstance(stmt, (RegulateAmount, Influence)):
+            condition_entity, target_entity = stmt.agent_list()
+
+        query = cls(condition_entity, target_entity, dir)
+        return query
 
     def matches_key(self):
         condition_key = self.condition_entity.matches_key()
