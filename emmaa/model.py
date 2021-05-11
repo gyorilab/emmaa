@@ -440,6 +440,8 @@ class EmmaaModel(object):
 
     def run_assembly(self):
         """Run INDRA's assembly pipeline on the Statements."""
+        from indra_world.belief import get_eidos_scorer
+        from indra_world.ontology import load_world_ontology
         self.eliminate_copies()
         stmts = self.get_indra_stmts()
         stnames = {s.name for s in self.search_terms}

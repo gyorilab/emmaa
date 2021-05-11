@@ -32,6 +32,7 @@ RUN git clone https://github.com/indralab/covid-19.git
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git && \
     pip install git+https://github.com/sorgerlab/bioagents.git && \
+    git clone https://github.com/indralab/indra_world.git && \
     pip install -U gilda && \
     git clone --recursive https://github.com/indralab/emmaa.git && \
     cd emmaa && \
