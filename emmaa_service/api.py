@@ -1131,6 +1131,8 @@ def get_query_page():
     open_headers, open_results = get_immediate_queries('open_search_query')
     dynamic_immediate_headers, dynamic_results = get_immediate_queries(
         'dynamic_property')
+    interv_headers, interv_results = get_immediate_queries(
+        'simple_intervention_property')
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
@@ -1140,6 +1142,9 @@ def get_query_page():
         'dynamic_property', user_email)
     subscribed_open_headers, subscribed_open_results = get_subscribed_queries(
         'open_search_query', user_email)
+    subscribed_interv_headers, subscribed_interv_results = \
+        get_subscribed_queries('simple_intervention_property', user_email)
+
     return render_template('query_template.html',
                            immediate_table_headers=immediate_table_headers,
                            immediate_query_result=queried_results,
@@ -1147,6 +1152,8 @@ def get_query_page():
                            dynamic_immediate_headers=dynamic_immediate_headers,
                            open_immediate_headers=open_headers,
                            open_immediate_results=open_results,
+                           interv_immediate_headers=interv_headers,
+                           interv_immediate_results=interv_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
                            subscribed_results=subscribed_path_results,
@@ -1155,6 +1162,8 @@ def get_query_page():
                            subscribed_dynamic_results=subscribed_dyn_results,
                            subscribed_open_headers=subscribed_open_headers,
                            subscribed_open_results=subscribed_open_results,
+                           subscribed_interv_headers=subscribed_interv_headers,
+                           subscribed_interv_results=subscribed_interv_results,
                            ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
