@@ -58,9 +58,9 @@
               <!-- formsubmit -->
               <div class="row">
                 <div class="container">
-                  <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="dyn-query-submit" id="dyn-query-submit">
-                  <input type="checkbox" name="register" style="margin-top: 20px" id="register-dyn-query" style="padding-top: 3000px;"><label
-                  for="register-dyn-query">  Subscribe To Query</label>
+                  <input class="btn btn-query-submit" style="margin-top: 2px" type="submit" text="Submit query" name="dynamic-query-submit" id="dynamic-query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 20px" id="register-dynamic-query" style="padding-top: 3000px;"><label
+                  for="register-dynamic-query">  Subscribe To Query</label>
                 </div>
               </div>
             </form>
@@ -69,19 +69,19 @@
 
         <div class="container">
           <div class="container">
-            <div id="dyn-query-status-gif" style="display: none;">
+            <div id="dynamic-query-status-gif" style="display: none;">
               <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
             </div>
-            <span><i id="dyn-query-status"></i></span>
+            <span><i id="dynamic-query-status"></i></span>
           </div>
         </div>
       </div>
     </div>
   </div>
   <div class="container">
-    {{ path_card(immediate_dynamic_results, 'Query Results', 'dyn-query-results', dynamic_immediate_headers, 'dynQueryResults') }}
+    {{ path_card(immediate_dynamic_results, 'Query Results', 'dynamic-query-results', dynamic_immediate_headers, 'dynQueryResults') }}
   </div>
   <div class="container">
-    {{ path_card(subscribed_dynamic_results, 'Subscribed Queries', 'dyn-user-queries', subscribed_dynamic_headers, 'dyn-old-results') }}
+    {{ path_card(subscribed_dynamic_results, 'Subscribed Queries', 'dynamic-user-queries', subscribed_dynamic_headers, 'dyn-old-results') }}
   </div>
 {%- endmacro %}
