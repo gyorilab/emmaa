@@ -7,19 +7,9 @@ function postQuery(queryContainer) {
 
   // Collect model query
   let querySel = collectQuery(queryContainer);
-  if (queryContainer.id == 'query-container') {
-    var statusId = 'query-status';
-    var tab = 'static';
-    var reg = document.getElementById('register-query').checked;
-  } else if (queryContainer.id == 'dynamic-container') {
-    var statusId = 'dyn-query-status';
-    var tab = 'dynamic';
-    var reg = document.getElementById('register-dyn-query').checked;
-  } else {
-    var statusId = 'open-query-status';
-    var tab = 'open';
-    var reg = document.getElementById('register-open-query').checked;
-  }
+  var tab = queryContainer.id.split('-')[0]
+  var statusId = `${tab}-status`
+  var reg = document.getElementById(`register-${tab}-query`)
   console.log(querySel)
   console.log(querySel[1])
   if (querySel == null || querySel.length < 2) {
@@ -51,11 +41,16 @@ function collectQuery(queryContainer) {
   let models = [];
 
   // Get checked models
-  if (queryContainer.id == 'query-container') {
-    for (op of document.getElementById('model-select').children) {
+  if (queryContainer.id == 'static-container') {
+    for (op of document.getElementById('static-select').children) {
       console.log(op.value);
       models.push(op.value);
     }
+  } else  if (queryContainer.id == 'intervention-container') {
+    for (op of document.getElementById('intervention-model-select').children) {
+      console.log(op.value);
+      models.push(op.value);
+    };
   } else  if (queryContainer.id == 'dynamic-container') {
     for (op of document.getElementById('dynamic-select').children) {
       console.log(op.value);
@@ -76,16 +71,31 @@ function collectQuery(queryContainer) {
 
   //  Collect dropdown selections
   for (let selection of dropdownSelections) {
-    let selId = selection.id;
+    var selId = selection.id;
+    if (['static-typeSelection', 'intervention-typeSelection'].includes(selId)) {
+      var selId = 'typeSelection';
+    };
     // Use the IDs of the select tags as keys in the query json
     query[selId] = selection.options[selection.selectedIndex].value;
   }
 
   // Collect subject/object/agent from forms
-  if (queryContainer.id == 'query-container') {
+  if (queryContainer.id == 'static-container') {
     query['queryType'] = 'static';
-    query['subjectSelection'] = document.getElementById('subjectInput').value;
-    query['objectSelection'] = document.getElementById('objectInput').value;
+    query['subjectSelection'] = document.getElementById('static-subjectInput').value;
+    query['objectSelection'] = document.getElementById('static-objectInput').value;
+    if (query['subjectSelection'] === '') {
+      alert('Must provide a subject!');
+      return;
+    }
+    if (query['objectSelection'] === '') {
+      alert('Must provide an object!');
+      return;
+    }
+  } else if (queryContainer.id == 'intervention-container') {
+    query['queryType'] = 'intervention';
+    query['subjectSelection'] = document.getElementById('intervention-subjectInput').value;
+    query['objectSelection'] = document.getElementById('intervention-objectInput').value;
     if (query['subjectSelection'] === '') {
       alert('Must provide a subject!');
       return;
@@ -126,16 +136,8 @@ function submitQuery(queryDict, tab, test) {
   if (test) queryDict['test'] = true;
 
   // submit POST to emmaa user db 
-  if (tab == 'static') {
-    $('#query-status-gif').show();
-    var statusId = 'query-status';
-  } else if (tab == 'dynamic') {
-    $('#dyn-query-status-gif').show();
-    var statusId = 'dyn-query-status';
-  } else {
-    $('#open-query-status-gif').show();
-    var statusId = 'open-query-status';
-  }
+  $(`#${tab}-query-status-gif`).show();
+  var statusId = `${tab}-query-status`
   queryNotify('Waiting for server response', statusId);
   return $.ajax({
     url: EMMAA_API,
@@ -147,8 +149,10 @@ function submitQuery(queryDict, tab, test) {
       console.log('responseJSON');
       console.log(xhr.responseJSON);
       console.log(statusText);
-      $('#query-status-gif').hide();
-      $('#dyn-query-status-gif').hide();
+      $('#static-query-status-gif').hide();
+      $('#dynamic-query-status-gif').hide();
+      $('#intervention-query-status-gif').hide()
+      $('#open-query-status-gif').hide()
       switch (xhr.status) {
         case 200:
           console.log('200 response');
