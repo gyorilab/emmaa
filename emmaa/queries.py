@@ -252,6 +252,15 @@ class SimpleInterventionProperty(Query):
     def __repr__(self):
         return str(self)
 
+    def to_english(self):
+        cond = _assemble_agent_str(self.condition_entity).agent_str
+        target = _assemble_agent_str(self.target_entity).agent_str
+        if self.direction == 'up':
+            dir_verb = 'increases'
+        else:
+            dir_verb = 'decreases'
+        return f'{cond} {dir_verb} {target}.'
+
 
 class ComparativeInterventionProperty(Query):
     pass
