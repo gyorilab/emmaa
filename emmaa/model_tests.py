@@ -473,6 +473,7 @@ class ModelManager(object):
             if isinstance(query, SimpleInterventionProperty):
                 mc_type, response, resp_json = self.answer_intervention_query(
                     query, **kwargs)[0]
+                responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
                 if ScopeTestConnector.applicable(self, query):
                     applicable_queries.append(query)
