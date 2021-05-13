@@ -1,0 +1,13 @@
+{"type": "simple_intervention_property",
+    "condition_entity": {
+       "type": "Agent",
+       "name": "EGF",
+       "db_refs": {"HGNC": "3229"}
+       },
+    "target_entity": {
+        "type": "Agent",
+        "name": "ERK",
+        "db_refs": {"FPLX": "ERK"}
+        },
+    "direction": "up"
+    }
