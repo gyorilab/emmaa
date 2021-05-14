@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, unique_id) -%}
+{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, unique_id, model_filter=None) -%}
   <!-- Static Queries -->
   <div class="container" id="{{ unique_id }}-container">
     <div class="card">
@@ -15,7 +15,13 @@
           <div class="form-select">
             <select name="model-select" id="{{ unique_id }}-select" placeholder="Select models" multiple>
             {% for model_id, config_json in model_data %}
-              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% if model_filter %}
+                {% if 'query' in config_json and model_filter in config_json['query'] %}
+                <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% endif %}
+              {% else %}
+                <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% endif %}
             {% endfor %}
             </select>
           </div>
