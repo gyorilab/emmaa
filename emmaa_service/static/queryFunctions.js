@@ -66,8 +66,8 @@ function collectQuery(queryContainer, tab) {
   query['queryType'] = tab;
   // Collect subject/object/agent from forms
   if (['static', 'intervention'].includes(tab)) {
-    query['subjectSelection'] = document.getElementById('static-subjectInput').value;
-    query['objectSelection'] = document.getElementById('static-objectInput').value;
+    query['subjectSelection'] = document.getElementById(`${tab}-subjectInput`).value;
+    query['objectSelection'] = document.getElementById(`${tab}-objectInput`).value;
     if (query['subjectSelection'] === '') {
       alert('Must provide a subject!');
       return;
@@ -82,7 +82,7 @@ function collectQuery(queryContainer, tab) {
       alert('Must provide an agent description!');
       return;
     } 
-  } else if (queryContainer.id == 'open-container') {
+  } else if (tab == 'open') {
     query['openAgentSelection'] = document.getElementById('openAgentInput').value;
     if (query['openAgentSelection'] === '') {
       alert('Must provide an agent description!');
