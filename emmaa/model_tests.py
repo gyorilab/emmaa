@@ -343,12 +343,12 @@ class ModelManager(object):
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
         pysb_model, use_kappa, time_limit, num_times, num_sim = \
-            self._get_dynamic_components()
+            self._get_dynamic_components('dynamic')
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                pysb_model, tp, num_times=num_times)
+                pysb_model, tp, num_times=num_times, num_sim=num_sim)
             if self.mode == 's3':
                 fig_name, ext = os.path.splitext(os.path.basename(fig_path))
                 date_str = make_date_str()
@@ -368,7 +368,7 @@ class ModelManager(object):
     def answer_intervention_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user intervention query by simulating a PySB model."""
         pysb_model, use_kappa, time_limit, num_times, num_sim = \
-            self._get_dynamic_components()
+            self._get_dynamic_components('intervention')
         tra = TRA(use_kappa=use_kappa)
         try:
             res, fig_path = tra.compare_conditions(pysb_model,
