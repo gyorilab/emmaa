@@ -8,7 +8,7 @@ function postQuery(queryContainer) {
   // Collect model query
   let tab = queryContainer.id.split('-')[0]
   let statusId = `${tab}-status`
-  let reg = document.getElementById(`register-${tab}-query`)
+  let reg = document.getElementById(`register-${tab}-query`).checked;
   let querySel = collectQuery(queryContainer, tab);
   console.log(querySel)
   console.log(querySel[1])
