@@ -344,12 +344,15 @@ following fields:
 Model queries configuration
 ---------------------------
 Configuration for model queries represented as a dictionary keyed by the type
-of query (`statement_checking` (static paths queries), `open_search` and
-`dynamic`). Configuration for `statement_checking` and `open_search` queries
-is similar to the model test `statement_checking` format. Same as in test
-config, it is possible to set different values for different model types.
+of query: `statement_checking` (source-target paths), `open_search`
+(up/down-stream paths), `dynamic` (temporal properties), and `intervention`
+(source-target dynamics). Configuration for `statement_checking` and
+`open_search` queries is similar to the model test `statement_checking` format.
+Same as in test config, it is possible to set different values for different
+model types.
 
-Configuration for dynamic queries has different fields (all optional):
+Configuration for `dynamic` and `ntervention` queries has different fields 
+(all optional):
 
 - `use_kappa` : bool
     Determines the mode of the simulation. If True, uses `kappa`, otherwise,
@@ -364,8 +367,10 @@ Configuration for dynamic queries has different fields (all optional):
 - `num_sim` : int
     Number of simulations to run. Default: 2.
 
-Having a `dynamic` key in query config is required for a model to be listed as
-an option for model selection on dynamic queries page.
+Having `dynamic` and `intervention` key in query config is required for a
+model to be listed as an option for model selection on temporal properties
+and source-target dynamics queries pages (for path-based queries all models
+will be listed).
 
     - Example (all query types):
 
@@ -387,8 +392,14 @@ an option for model selection on dynamic queries page.
             "use_kappa": true,
             "time_limit": 100,
             "num_times": 100,
+            "num_sim": 2
+            },
+         "intervention": {
+            "use_kappa": true,
+            "time_limit": 1000,
+            "num_times": 100,
             "num_sim": 1
-            }
+            },
         }
 
 .. _make_tests_config:
