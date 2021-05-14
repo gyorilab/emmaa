@@ -423,7 +423,8 @@ class ModelManager(object):
         g = mc.get_graph()
         subj_nodes, obj_nodes, res_code = mc.process_statement(query.path_stmt)
         if res_code:
-            return self.hash_response_list(RESULT_CODES[res_code])
+            return self.hash_response_list(RESULT_CODES[res_code]), \
+                RESULT_CODES[res_code]
         else:
             if query.entity_role == 'subject':
                 reverse = False
