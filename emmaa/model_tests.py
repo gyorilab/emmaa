@@ -56,6 +56,10 @@ ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
               'DecreaseAmount': u"\u22A3"}
 
+# This mapping configures the use of different model types
+# path: regular tests and path-based queries will be run against these models
+# simulation: priority list for running simulation based queries (only first
+# available model type will be used)
 MODEL_TYPES = {'path': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
                'simulation': ['dynamic', 'pysb']}
 
