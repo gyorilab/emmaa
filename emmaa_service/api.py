@@ -1118,13 +1118,7 @@ def get_query_page():
     tab = request.args.get('tab', 'static')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
-    preselected_name = None
-    preselected_val = request.args.get('preselected')
-    if preselected_val:
-        for model, config in model_meta_data:
-            if model == preselected_val:
-                preselected_name = config['human_readable_name']
-                break
+    preselected_model = request.args.get('preselected')
     latest_query = session.pop('latest_query', None)
     # Queried results
     immediate_table_headers, queried_results = get_immediate_queries(
@@ -1169,8 +1163,7 @@ def get_query_page():
                            link_list=link_list,
                            user_email=user_email,
                            tab=tab,
-                           preselected_val=preselected_val,
-                           preselected_name=preselected_name,
+                           preselected_model=preselected_model,
                            latest_query=latest_query)
 
 

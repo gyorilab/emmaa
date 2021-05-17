@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers) -%}
+{% macro open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=None, preselected_model=None) -%}
   <!-- Open Search Queries -->
   <div class="container" id="open-container">
     <div class="card">
@@ -14,11 +14,10 @@
         <div class="checkbox-container">
           <div class="form-select">
             <select name="open-select" id="open-select" placeholder="Select models" multiple>
-            {% if preselected_val and preselected_name %}
-              <option value="{{ preselected_val }}" selected="{{ preselected_val }}">{{ preselected_name }}</option>
-            {% endif %}
             {% for model_id, config_json in model_data %}
-              {% if model_id != preselected_val %}
+              {% if model_id == preselected_model %}
+              <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
               {% endif %}
             {% endfor %}
