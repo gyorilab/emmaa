@@ -1,8 +1,8 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, unique_id, model_filter=None) -%}
+{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None) -%}
   <!-- Static Queries -->
-  <div class="container" id="{{ unique_id }}-container">
+  <div class="container" id="{{ tab }}-container">
     <div class="card">
       <div class="card-header">
         <h4 class="my-0 font-weight-normal">Model Queries</h4>
@@ -13,7 +13,7 @@
         <h6><b>Model selection</b></h6>
         <div class="checkbox-container">
           <div class="form-select">
-            <select name="model-select" id="{{ unique_id }}-select" placeholder="Select models" multiple>
+            <select name="model-select" id="{{ tab }}-select" placeholder="Select models" multiple>
             {% for model_id, config_json in model_data %}
               {% if model_filter %}
                 {% if 'query' in config_json and model_filter in config_json['query'] %}
@@ -30,12 +30,12 @@
         <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
         <div class="form-container" style="display: inline-block; vertical-align: top;">
           <div class="text" style="display: table;">
-            <form onsubmit="postQuery(document.getElementById('{{ unique_id }}-container')); return false;">
+            <form onsubmit="postQuery(document.getElementById('{{ tab }}-container')); return false;">
               <div class="row" style="align-items: center">
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                   <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                     changed in the rest API and query handling -->
-                  <select class="custom-select" style="width: 400px;" id="{{ unique_id }}-typeSelection">
+                  <select class="custom-select" style="width: 400px;" id="{{ tab }}-typeSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                     {% for stmt_type in stmt_types %}
                     <option value="{{ stmt_type }}">{{ stmt_type }}</option>
@@ -44,11 +44,11 @@
                 </div>
                 <!-- subject -->
                 <div class="col" style="padding-right: 2px">
-                  <input class="form-control" id="{{ unique_id }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
                 </div>
                 <!-- object -->
                 <div class="col" style="padding-left: 2px; padding-right: 2px">
-                  <input class="form-control" id="{{ unique_id }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
                 </div>
               </div>
               <!-- indra docs text -->
@@ -59,8 +59,8 @@
               <!-- formsubmit -->
               <div class="row">
                 <div class="container">
-                  <input class="btn btn-query-submit" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="{{ unique_id }}-query-submit">
-                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-{{ unique_id }}-query" style="padding-top: 3000px;"><label
+                  <input class="btn btn-query-submit" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="{{ tab }}-query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-{{ tab }}-query" style="padding-top: 3000px;"><label
                       for="register-query">Subscribe To Query</label>
                 </div>
               </div>
@@ -70,10 +70,10 @@
 
         <div class="container">
           <div class="container">
-            <div id="{{ unique_id }}-query-status-gif" style="display: none;">
+            <div id="{{ tab }}-query-status-gif" style="display: none;">
               <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
             </div>
-            <span><i id="{{ unique_id }}-query-status"></i></span>
+            <span><i id="{{ tab }}-query-status"></i></span>
           </div>
         </div>
       </div>
