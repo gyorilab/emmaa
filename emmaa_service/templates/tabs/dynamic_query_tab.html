@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers) -%}
+{% macro dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=None) -%}
   <!-- Dynamic queries -->
   <div class="container" id="dynamic-container">
 
@@ -17,7 +17,11 @@
             <select name="dynamic-select" id="dynamic-select" placeholder="Select model" multiple>
             {% for model_id, config_json in model_data %}
             {% if 'query' in config_json and 'dynamic' in config_json['query'] %}
+              {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and model_id in latest_query['models'] %}
+              <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% endif %}
             {% endif %}
             {% endfor %}
             </select>
@@ -32,7 +36,11 @@
               <div class="row" style="align-items: center">
                 <!-- agent -->
                 <div class="col" style="padding-right: 2px">
+                  {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' %}
+                  <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description" value="{{ latest_query['query_json']['agentSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description">
+                  {% endif %}
                 </div>
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                   <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
@@ -40,7 +48,11 @@
                   <select onchange="checkPattern()" class="custom-select" style="width: 300px;" id="patternSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select pattern type</option>
                     {% for pattern_type in ['always_value', 'no_change', 'eventual_value', 'sometime_value', 'sustained', 'transient'] %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['patternSelection'] == pattern_type %}
+                    <option value="{{ pattern_type }}" selected="{{ pattern_type }}">{{ pattern_type }}</option>
+                    {% else %}
                     <option value="{{ pattern_type }}">{{ pattern_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
@@ -50,9 +62,16 @@
                   <select class="custom-select" id="valueSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select value</option>
                     {% for val in ['high', 'low'] %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['valueSelection'] == val %}
+                    <option value="{{ val }}" selected="{{ val }}">{{ val }}</option>
+                    {% else %}
                     <option value="{{ val }}">{{ val }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
+                  {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['patternSelection'] %}
+                  <script>checkPattern();</script>
+                  {% endif %}
                 </div>
               </div>
               <!-- formsubmit -->
