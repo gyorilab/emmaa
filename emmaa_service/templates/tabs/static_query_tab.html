@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None) -%}
+{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None, latest_query=None) -%}
   <!-- Static Queries -->
   <div class="container" id="{{ tab }}-container">
     <div class="card">
@@ -17,10 +17,18 @@
             {% for model_id, config_json in model_data %}
               {% if model_filter %}
                 {% if 'query' in config_json and model_filter in config_json['query'] %}
-                <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
+                  <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                  {% else %}
+                  <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                  {% endif %}
                 {% endif %}
               {% else %}
+                {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
+                <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% else %}
                 <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% endif %}
               {% endif %}
             {% endfor %}
             </select>
@@ -38,17 +46,29 @@
                   <select class="custom-select" style="width: 400px;" id="{{ tab }}-typeSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                     {% for stmt_type in stmt_types %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['typeSelection'] == stmt_type %}
+                    <option value="{{ stmt_type }}" selected="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% else %}
                     <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
                 <!-- subject -->
                 <div class="col" style="padding-right: 2px">
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject" value="{{ latest_query['query_json']['subjectSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
+                  {% endif %}
                 </div>
                 <!-- object -->
                 <div class="col" style="padding-left: 2px; padding-right: 2px">
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object" value="{{ latest_query['query_json']['objectSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
+                  {% endif %}
                 </div>
               </div>
               <!-- indra docs text -->
