@@ -1115,7 +1115,7 @@ def get_query_page():
     """Render queries page."""
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
-    tab = request.args.get('tab', 'model')
+    tab = request.args.get('tab', 'static')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
     preselected_name = None
@@ -1125,6 +1125,7 @@ def get_query_page():
             if model == preselected_val:
                 preselected_name = config['human_readable_name']
                 break
+    latest_query = session.pop('latest_query', None)
     # Queried results
     immediate_table_headers, queried_results = get_immediate_queries(
         'path_property')
@@ -1169,7 +1170,8 @@ def get_query_page():
                            user_email=user_email,
                            tab=tab,
                            preselected_val=preselected_val,
-                           preselected_name=preselected_name)
+                           preselected_name=preselected_name,
+                           latest_query=latest_query)
 
 
 @app.route('/run_query', methods=['POST'])
@@ -1572,6 +1574,8 @@ def process_query():
 
         # Replace existing entry
         session['query_hashes'] = result
+        session['latest_query'] = {'query_json': query_json,
+                                   'models': list(models)}
         res = {'redirectURL': redir_url}
 
     logger.info('Result: %s' % str(res))
