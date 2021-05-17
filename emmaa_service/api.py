@@ -1120,6 +1120,7 @@ def get_query_page():
     stmt_types = get_queryable_stmt_types()
     preselected_model = request.args.get('preselected')
     latest_query = session.pop('latest_query', None)
+    logger.info(f'Prefiling the form with previous values: {latest_query}')
     # Queried results
     immediate_table_headers, queried_results = get_immediate_queries(
         'path_property')

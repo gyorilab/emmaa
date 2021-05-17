@@ -8,14 +8,13 @@
         <h4 class="my-0 font-weight-normal">Model Queries</h4>
       </div>
       <div class="card-body">
-
         <!-- model selection -->
         <h6><b>Model selection</b></h6>
         <div class="checkbox-container">
           <div class="form-select">
             <select name="open-select" id="open-select" placeholder="Select models" multiple>
             {% for model_id, config_json in model_data %}
-              {% if model_id == preselected_model %}
+              {% if model_id == preselected_model or (latest_query and latest_query['query_json']['queryType'] == 'open' and model_id in latest_query['models']) %}
               <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
               {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
@@ -36,19 +35,31 @@
                   <select class="custom-select" style="width: 400px;" id="stmtTypeSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                     {% for stmt_type in stmt_types %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and latest_query['query_json']['stmtTypeSelection'] == stmt_type %}
+                    <option value="{{ stmt_type }}" selected="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% else %}
                     <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
                 <!-- agent -->
                 <div class="col" style="padding-right: 2px; width: 300px;">
+                  {% if latest_query and latest_query['query_json']['queryType'] == 'open' %}
+                  <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent" value="{{ latest_query['query_json']['openAgentSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent">
+                  {% endif %}
                 </div>
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
                   <select class="custom-select" id="roleSelection" style="width: 300px">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select agent's role</option>
                     {% for role, descr in {'subject': 'subject (downstream search)', 'object': 'object (upstream search)'}.items() %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and latest_query['query_json']['roleSelection'] == role %}
+                    <option value="{{ role }}" selected="{{ role }}">{{ descr }}</option>
+                    {% else %}
                     <option value="{{ role }}">{{ descr }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
@@ -63,7 +74,11 @@
                   <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
                     <option value="" disabled="disabled" hidden="hidden">Limit entity types to (optional)</option>
                   {% for group, options in ns_groups.items() %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and group in latest_query['query_json']['nsSelection'] %}
+                    <option value="{{ group }}" selected="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
+                    {% else %}
                     <option value="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
+                    {% endif %}
                   {% endfor %}
                   </select>
                 </div>
