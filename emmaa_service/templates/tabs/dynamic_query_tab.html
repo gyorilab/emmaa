@@ -1,12 +1,22 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=None) -%}
+{% macro dynamic_tab(description, model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=None) -%}
   <!-- Dynamic queries -->
-  <div class="container" id="dynamic-container">
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+        {{ description['dynamic'] }}
+      </div>
+    </div>
+  </div>
+  <div class="container" id="dynamic-container" style="margin-top: 50px;">
 
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
       </div>
       <div class="card-body">
 

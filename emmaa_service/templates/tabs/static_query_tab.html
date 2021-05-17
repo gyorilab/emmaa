@@ -1,11 +1,21 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None, latest_query=None) -%}
+{% macro static_tab(description, model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None, latest_query=None) -%}
   <!-- Static Queries -->
-  <div class="container" id="{{ tab }}-container">
+  <div class="container">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+      {{ description[tab] }}
+      </div>
+    </div>
+  </div>
+  <div class="container" id="{{ tab }}-container" style="margin-top: 50px;">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
       </div>
       <div class="card-body">
 

@@ -1,11 +1,21 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=None, preselected_model=None) -%}
+{% macro open_tab(description, model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=None, preselected_model=None) -%}
   <!-- Open Search Queries -->
-  <div class="container" id="open-container">
+  <div class="container">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+        {{ description['open'] }}
+      </div>
+    </div>
+  </div>
+  <div class="container" id="open-container" style="margin-top: 50px;">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
       </div>
       <div class="card-body">
         <!-- model selection -->

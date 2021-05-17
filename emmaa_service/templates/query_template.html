@@ -64,7 +64,7 @@
   <div class="tab-pane" id="nav-static" role="tabpanel" aria-labelledby="nav-static-tab">
   {% endif %}
 
-  {{ static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, 'static', latest_query=latest_query) }}
+  {{ static_tab(description, model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, 'static', latest_query=latest_query) }}
 
   </div>
   {% if tab == 'intervention' %}
@@ -73,7 +73,7 @@
   <div class="tab-pane" id="nav-intervention" role="tabpanel" aria-labelledby="nav-intervention-tab">
   {% endif %}
 
-  {{ static_tab(model_data, stmt_types, interv_immediate_results, subscribed_interv_results, interv_immediate_headers, subscribed_interv_headers, 'intervention', model_filter='intervention', latest_query=latest_query) }}
+  {{ static_tab(description, model_data, stmt_types, interv_immediate_results, subscribed_interv_results, interv_immediate_headers, subscribed_interv_headers, 'intervention', model_filter='intervention', latest_query=latest_query) }}
 
   </div>
   {% if tab == 'dynamic' %}
@@ -82,7 +82,7 @@
   <div class="tab-pane fade" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
   {% endif %}
 
-  {{ dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=latest_query) }}
+  {{ dynamic_tab(description, model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=latest_query) }}
   
   </div>
   {% if tab == 'open' %}
@@ -91,7 +91,7 @@
   <div class="tab-pane" id="nav-open" role="tabpanel" aria-labelledby="nav-open-tab">
   {% endif %}
 
-  {{ open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=latest_query, preselected_model=preselected_model) }}
+  {{ open_tab(description, model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=latest_query, preselected_model=preselected_model) }}
 
 </div>
 
