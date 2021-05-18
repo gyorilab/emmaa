@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(description, model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers, latest_query=None) -%}
+{% macro dynamic_tab(description, model_data, immediate_results, subscribed_results, tab, latest_query=None ) -%}
   <!-- Dynamic queries -->
   <div class="container">
     <div class="card">
@@ -8,7 +8,7 @@
         <h4 class="my-0 font-weight-normal">Description</h4>
       </div>
       <div class="card-body">
-        {{ description['dynamic'] }}
+        {{ description[tab] }}
       </div>
     </div>
   </div>
@@ -26,8 +26,8 @@
           <div class="form-select">
             <select name="dynamic-select" id="dynamic-select" placeholder="Select model" multiple>
             {% for model_id, config_json in model_data %}
-            {% if 'query' in config_json and 'dynamic' in config_json['query'] %}
-              {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and model_id in latest_query['models'] %}
+            {% if 'query' in config_json and tab in config_json['query'] %}
+              {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
               <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
               {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
@@ -46,7 +46,7 @@
               <div class="row" style="align-items: center">
                 <!-- agent -->
                 <div class="col" style="padding-right: 2px">
-                  {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' %}
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
                   <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description" value="{{ latest_query['query_json']['agentSelection'] }}">
                   {% else %}
                   <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description">
@@ -58,7 +58,7 @@
                   <select onchange="checkPattern()" class="custom-select" style="width: 300px;" id="patternSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select pattern type</option>
                     {% for pattern_type in ['always_value', 'no_change', 'eventual_value', 'sometime_value', 'sustained', 'transient'] %}
-                    {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['patternSelection'] == pattern_type %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['patternSelection'] == pattern_type %}
                     <option value="{{ pattern_type }}" selected="{{ pattern_type }}">{{ pattern_type }}</option>
                     {% else %}
                     <option value="{{ pattern_type }}">{{ pattern_type }}</option>
@@ -72,14 +72,14 @@
                   <select class="custom-select" id="valueSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select value</option>
                     {% for val in ['high', 'low'] %}
-                    {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['valueSelection'] == val %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['valueSelection'] == val %}
                     <option value="{{ val }}" selected="{{ val }}">{{ val }}</option>
                     {% else %}
                     <option value="{{ val }}">{{ val }}</option>
                     {% endif %}
                     {% endfor %}
                   </select>
-                  {% if latest_query and latest_query['query_json']['queryType'] == 'dynamic' and latest_query['query_json']['patternSelection'] %}
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['patternSelection'] %}
                   <script>checkPattern();</script>
                   {% endif %}
                 </div>
@@ -108,9 +108,9 @@
     </div>
   </div>
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(immediate_dynamic_results, 'Query Results', 'dynamic-query-results', dynamic_immediate_headers, 'dynQueryResults') }}
+    {{ path_card(immediate_results[tab][0], 'Query Results', 'dynamic-query-results', immediate_results[tab][1], 'dynQueryResults') }}
   </div>
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(subscribed_dynamic_results, 'Subscribed Queries', 'dynamic-user-queries', subscribed_dynamic_headers, 'dyn-old-results') }}
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', 'dynamic-user-queries', subscribed_results[tab][1], 'dyn-old-results') }}
   </div>
 {%- endmacro %}

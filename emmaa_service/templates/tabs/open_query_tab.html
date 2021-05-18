@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro open_tab(description, model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers, latest_query=None, preselected_model=None) -%}
+{% macro open_tab(description, model_data, stmt_types, ns_groups, immediate_results, subscribed_results, tab, latest_query=None, preselected_model=None) -%}
   <!-- Open Search Queries -->
   <div class="container">
     <div class="card">
@@ -121,11 +121,11 @@
 
   <!-- Query results -->
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(open_immediate_results, 'Query Results', 'open-query-results', open_immediate_headers, 'openQueryResults') }}
+    {{ path_card(immediate_results[tab][0], 'Query Results', 'open-query-results', immediate_results[tab][1], 'openQueryResults') }}
   </div>
   <!-- List user queries -->
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(subscribed_open_results, 'Subscribed Queries', 'open-user-queries', subscribed_open_headers, 'open-old-results') }}
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', 'open-user-queries', subscribed_results[tab][1], 'open-old-results') }}
   </div>
 </div>
 {%- endmacro %}

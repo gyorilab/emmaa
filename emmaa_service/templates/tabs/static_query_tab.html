@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(description, model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers, tab, model_filter=None, latest_query=None) -%}
+{% macro static_tab(description, model_data, stmt_types, immediate_results, subscribed_results, tab, model_filter=None, latest_query=None) -%}
   <!-- Static Queries -->
   <div class="container">
     <div class="card">
@@ -112,10 +112,10 @@
 
   <!-- Query results -->
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
+    {{ path_card(immediate_results[tab][0], 'Query Results', '{{ tab }}-query-results', immediate_results[tab][1], 'queryResults') }}
   </div>
   <!-- List user queries -->
   <div class="container" style="margin-top: 50px;">
-    {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', '{{ tab }}-user-queries', subscribed_results[tab][1], 'old-results') }}
   </div>
 {%- endmacro %}

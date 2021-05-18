@@ -1086,7 +1086,7 @@ def get_immediate_queries(query_type):
                             'simple_intervention_property']:
             headers = ['Query', 'Model', 'Result', 'Image']
             results = _format_dynamic_query_results(qr)
-    return headers, results
+    return results, headers
 
 
 def get_subscribed_queries(query_type, user_email=None):
@@ -1106,7 +1106,7 @@ def get_subscribed_queries(query_type, user_email=None):
             sub_results = 'You have no subscribed queries'
     else:
         sub_results = 'Please log in to see your subscribed queries'
-    return headers, sub_results
+    return sub_results, headers
 
 
 @app.route('/query')
@@ -1121,25 +1121,26 @@ def get_query_page():
     preselected_model = request.args.get('preselected')
     latest_query = session.pop('latest_query', None)
     logger.info(f'Prefiling the form with previous values: {latest_query}')
-    # Queried results
-    immediate_table_headers, queried_results = get_immediate_queries(
-        'path_property')
-    open_headers, open_results = get_immediate_queries('open_search_query')
-    dynamic_immediate_headers, dynamic_results = get_immediate_queries(
-        'dynamic_property')
-    interv_headers, interv_results = get_immediate_queries(
+
+    # Queried immediate results
+    immediate_results = {}
+    immediate_results['static'] = get_immediate_queries('path_property')
+    immediate_results['open'] = get_immediate_queries('open_search_query')
+    immediate_results['dynamic'] = get_immediate_queries('dynamic_property')
+    immediate_results['intervention'] = get_immediate_queries(
         'simple_intervention_property')
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    subscribed_path_headers, subscribed_path_results = get_subscribed_queries(
+    subscribed_results = {}
+    subscribed_results['static'] = get_subscribed_queries(
         'path_property', user_email)
-    subscribed_dyn_headers, subscribed_dyn_results = get_subscribed_queries(
+    subscribed_results['dynamic'] = get_subscribed_queries(
         'dynamic_property', user_email)
-    subscribed_open_headers, subscribed_open_results = get_subscribed_queries(
+    subscribed_results['open'] = get_subscribed_queries(
         'open_search_query', user_email)
-    subscribed_interv_headers, subscribed_interv_results = \
-        get_subscribed_queries('simple_intervention_property', user_email)
+    subscribed_results['intervention'] = get_subscribed_queries(
+        'simple_intervention_property', user_email)
 
     # TODO Replace these placeholders with real descriptions
     description = {'static': 'Source-target paths',
@@ -1147,24 +1148,10 @@ def get_query_page():
                    'dynamic': 'Temporal properties',
                    'intervention': 'Source-target dynamics'}
     return render_template('query_template.html',
-                           immediate_table_headers=immediate_table_headers,
-                           immediate_query_result=queried_results,
-                           immediate_dynamic_results=dynamic_results,
-                           dynamic_immediate_headers=dynamic_immediate_headers,
-                           open_immediate_headers=open_headers,
-                           open_immediate_results=open_results,
-                           interv_immediate_headers=interv_headers,
-                           interv_immediate_results=interv_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
-                           subscribed_results=subscribed_path_results,
-                           subscribed_headers=subscribed_path_headers,
-                           subscribed_dynamic_headers=subscribed_dyn_headers,
-                           subscribed_dynamic_results=subscribed_dyn_results,
-                           subscribed_open_headers=subscribed_open_headers,
-                           subscribed_open_results=subscribed_open_results,
-                           subscribed_interv_headers=subscribed_interv_headers,
-                           subscribed_interv_results=subscribed_interv_results,
+                           immediate_results=immediate_results,
+                           subscribed_results=subscribed_results,
                            ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
