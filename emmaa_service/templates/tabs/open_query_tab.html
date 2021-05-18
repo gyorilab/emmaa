@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro open_tab(description, model_data, stmt_types, ns_groups, immediate_results, subscribed_results, tab, latest_query=None, preselected_model=None) -%}
+{% macro open_tab(model_data, stmt_types, ns_groups, immediate_results, subscribed_results, tab, latest_query=None, preselected_model=None) -%}
   <!-- Open Search Queries -->
   <div class="container">
     <div class="card">
@@ -8,7 +8,23 @@
         <h4 class="my-0 font-weight-normal">Description</h4>
       </div>
       <div class="card-body">
-        {{ description['open'] }}
+        This query mode allows finding causal paths to or from a given agent 
+        to identify its upstream regulators and its downstream targets. 
+        The query specification involves specifying the agent by name and role 
+        (subject or object corresponding to finding its downstream targets 
+        or upstream regulators, respectively), a statement type representing 
+        the effect of the regulations (e.g., Phosphorylation, Inhibition), 
+        and optional constraints on the types of up/downstream entities that 
+        are of interest. This allows expressing questions such as “what small 
+        molecules [entity constraint] inhibit [statement type] the 
+        phosphorylation [statement type] of JAK2 [agent]?” or “what 
+        biological process [entity constraint] does TNF [agent] activate 
+        [statement type]?”. The result returns not only the entities but also 
+        the specific causal paths that are consistent with the query 
+        specification. Depending on which EMMAA model is selected, multiple 
+        modeling formalisms (unsigned graph, signed graph, PyBEL model, 
+        PySB model) are used to find paths, each with different causal 
+        constraint assumptions, potentially resulting in different results.
       </div>
     </div>
   </div>

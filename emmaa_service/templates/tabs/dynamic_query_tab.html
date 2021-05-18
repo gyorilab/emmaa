@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(description, model_data, immediate_results, subscribed_results, tab, latest_query=None ) -%}
+{% macro dynamic_tab(model_data, immediate_results, subscribed_results, tab, latest_query=None ) -%}
   <!-- Dynamic queries -->
   <div class="container">
     <div class="card">
@@ -8,7 +8,16 @@
         <h4 class="my-0 font-weight-normal">Description</h4>
       </div>
       <div class="card-body">
-        {{ description[tab] }}
+        This query mode uses dynamical simulation to verify if the baseline 
+        dynamics (i.e., no intervention) of the model meets a given qualitative 
+        pattern. Specifying the query involves providing an agent state 
+        description (e.g., “active KRAS”, “phosphorylated BRAF”, 
+        “DUSP6 bound to MAPK1”), a pattern type (e.g., sometime_value) 
+        and in some pattern types, a value (e.g., low/high). This allows 
+        expressing queries such as “is the amount of phosphorylated BRAF 
+        [agent state description] at any point in time [pattern] high 
+        [value]?”. The result provides a yes/no answer to the query as well 
+        as the time course results of simulations of the given agent state.
       </div>
     </div>
   </div>

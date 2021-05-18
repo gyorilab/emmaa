@@ -1142,11 +1142,6 @@ def get_query_page():
     subscribed_results['intervention'] = get_subscribed_queries(
         'simple_intervention_property', user_email)
 
-    # TODO Replace these placeholders with real descriptions
-    description = {'static': 'Source-target paths',
-                   'open': 'Up/down-stream paths',
-                   'dynamic': 'Temporal properties',
-                   'intervention': 'Source-target dynamics'}
     return render_template('query_template.html',
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
@@ -1157,8 +1152,7 @@ def get_query_page():
                            user_email=user_email,
                            tab=tab,
                            preselected_model=preselected_model,
-                           latest_query=latest_query,
-                           description=description)
+                           latest_query=latest_query)
 
 
 @app.route('/run_query', methods=['POST'])
