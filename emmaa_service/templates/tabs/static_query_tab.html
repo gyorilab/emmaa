@@ -9,27 +9,28 @@
       </div>
       <div class="card-body">
       {% if tab == 'static' %}
-      This query mode uses causal path finding to explain an effect between 
-      a source and a target. Specifying the query involves choosing a source 
-      and a target by name, and a statement type (e.g., Phosphorylation, 
-      Inhibition, IncreaseAmount) which represents the effect between them 
-      to answer questions such as “How does EGF [source] lead to the 
-      phosphorylation [statement type] of MAPK1 [target]”? Depending on which 
-      EMMAA model is selected, multiple modeling formalisms (unsigned graph, 
-      signed graph, PyBEL model, PySB model) are used to find paths, each 
-      with different causal constraint assumptions, potentially resulting 
-      in different results.
+      This query mode uses causal path finding to explain an effect between
+      a source and a target. Specifying the query involves choosing a
+      <b>source</b> and a <b>target</b> by name, and a <b>statement type</b>
+      (e.g., <i>Phosphorylation, Inhibition, IncreaseAmount</i>) which
+      represents the effect between them to answer questions such as
+      <i>“How does EGF [source] lead to the phosphorylation [statement type]
+      of MAPK1 [target]”</i>? Depending on which EMMAA model is selected,
+      multiple modeling formalisms (unsigned graph, signed graph, PyBEL model,
+      PySB model) are used to find paths, each with different causal
+      constraint assumptions, potentially resulting in different results.
       {% elif tab == 'intervention' %}
-      This query mode uses dynamical simulation to describe the effect of an 
-      intervention from a given source on a given target. Specifying the query 
-      involves choosing a source and a target by name, and a statement type 
-      (e.g., Phosphorylation, Inhibition, IncreaseAmount) which represents 
-      the effect of the intervention on the target. An example question that 
-      can be answered using this query type is “if the initial amount of BRAF 
-      [source] is increased, does the phosphorylation [statement type] of 
-      MAP2K1 [target] increase?”. The results provide a yes/no answer to the 
-      query as well as the time course results of simulations of the target 
-      readout (phosphorylated MAP2K1 in the above example) to compare the 
+      This query mode uses dynamical simulation to describe the effect of an
+      intervention from a given source on a given target. Specifying the query
+      involves choosing a <b>source</b> and a <b>target</b> by name, and a
+      <b>statement type</b>(e.g., <i>Phosphorylation, Inhibition,
+      IncreaseAmount</i>) which represents the effect of the intervention
+      on the target. An example question that can be answered using this query
+      type is <i>“if the initial amount of BRAF [source] is increased, does
+      the phosphorylation [statement type] of MAP2K1 [target] increase?”</i>.
+      The results provide a yes/no answer to the query as well as the time
+      course results of simulations of the target readout
+      (phosphorylated MAP2K1 in the above example) to compare the
       effect of two different initial amounts of the source.
       {% endif %}
       </div>

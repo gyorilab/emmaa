@@ -8,22 +8,23 @@
         <h4 class="my-0 font-weight-normal">Description</h4>
       </div>
       <div class="card-body">
-        This query mode allows finding causal paths to or from a given agent 
-        to identify its upstream regulators and its downstream targets. 
-        The query specification involves specifying the agent by name and role 
-        (subject or object corresponding to finding its downstream targets 
-        or upstream regulators, respectively), a statement type representing 
-        the effect of the regulations (e.g., Phosphorylation, Inhibition), 
-        and optional constraints on the types of up/downstream entities that 
-        are of interest. This allows expressing questions such as “what small 
-        molecules [entity constraint] inhibit [statement type] the 
-        phosphorylation [statement type] of JAK2 [agent]?” or “what 
-        biological process [entity constraint] does TNF [agent] activate 
-        [statement type]?”. The result returns not only the entities but also 
-        the specific causal paths that are consistent with the query 
-        specification. Depending on which EMMAA model is selected, multiple 
-        modeling formalisms (unsigned graph, signed graph, PyBEL model, 
-        PySB model) are used to find paths, each with different causal 
+        This query mode allows finding causal paths to or from a given agent
+        to identify its upstream regulators and its downstream targets.
+        The query specification involves specifying the <b>agent</b>
+        by name and <b>role</b> (<i>subject</i> or <i>object</i> corresponding
+        to finding its downstream targets or upstream regulators, respectively),
+        a <b>statement type</b> representing the effect of the regulations
+        (e.g., <i>Phosphorylation, Inhibition</i>), and optional
+        <b>constraints on the types of up/downstream entities</b> that are of
+        interest. This allows expressing questions such as <i>“what small
+        molecules [entity constraint] inhibit [statement type] the
+        phosphorylation [statement type] of JAK2 [agent]?”</i> or <i>“what
+        biological process [entity constraint] does TNF [agent] activate
+        [statement type]?”</i>. The result returns not only the entities but
+        also the specific causal paths that are consistent with the query
+        specification. Depending on which EMMAA model is selected, multiple
+        modeling formalisms (unsigned graph, signed graph, PyBEL model,
+        PySB model) are used to find paths, each with different causal
         constraint assumptions, potentially resulting in different results.
       </div>
     </div>
