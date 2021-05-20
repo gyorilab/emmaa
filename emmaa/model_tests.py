@@ -346,13 +346,14 @@ class ModelManager(object):
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
-        pysb_model, use_kappa, time_limit, num_times, num_sim = \
+        pysb_model, use_kappa, time_limit, num_times, num_sim, hyp_tester = \
             self._get_dynamic_components('dynamic')
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                pysb_model, tp, num_times=num_times, num_sim=num_sim)
+                pysb_model, tp, num_times=num_times, num_sim=num_sim,
+                hypothesis_tester=hyp_tester)
             if self.mode == 's3':
                 fig_name, ext = os.path.splitext(os.path.basename(fig_path))
                 date_str = make_date_str()
@@ -371,7 +372,7 @@ class ModelManager(object):
 
     def answer_intervention_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user intervention query by simulating a PySB model."""
-        pysb_model, use_kappa, time_limit, num_times, num_sim = \
+        pysb_model, use_kappa, time_limit, num_times, num_sim, _ = \
             self._get_dynamic_components('intervention')
         tra = TRA(use_kappa=use_kappa)
         try:
@@ -563,19 +564,31 @@ class ModelManager(object):
         num_times = 100
         num_sim = 2
         if qtype in self.model.query_config:
-            use_kappa = self.model.query_config[qtype].get(
-                'use_kappa', False)
-            time_limit = self.model.query_config[qtype].get('time_limit')
-            num_times = self.model.query_config[qtype].get(
-                'num_times', 100)
-            num_sim = self.model.query_config[qtype].get('num_sim', 2)
+            qc = self.model.query_config[qtype]
+            use_kappa = qc.get('use_kappa', False)
+            time_limit = qc.get('time_limit')
+            num_times = qc.get('num_times', 100)
+            # If we have a fixed number of simulations, we use that
+            if 'num_sim' in qc:
+                num_sim = qc['num_sim']
+                hyp_tester = None
+            # If we have parameters for a hypothesis tester, we use that
+            elif 'hypothesis_tester' in qc:
+                from bioagents.tra.model_checker import HypothesisTester
+                num_sim = 0
+                hyp_tester = HypothesisTester(**qc['hypothesis_tester'])
+            # If we don't have any specification, we fall back on 2 fixed
+            # simulations
+            else:
+                num_sim = 2
+                hyp_tester = None
         # Either use specially assembled or regular PySB depending on model
         for mc_type in MODEL_TYPES['simulation']:
             if mc_type in self.mc_types:
                 logger.info(f'Using {mc_type} model for simulation')
                 pysb_model = deepcopy(self.mc_types[mc_type]['model'])
                 break
-        return pysb_model, use_kappa, time_limit, num_times, num_sim
+        return pysb_model, use_kappa, time_limit, num_times, num_sim, hyp_tester
 
     def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
