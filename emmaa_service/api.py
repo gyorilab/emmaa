@@ -715,6 +715,8 @@ def get_model_dashboard(model):
                 pass
             description = mmd['description']
             twitter_link = mmd.get('twitter_link')
+            exports = mmd.get('export_formats', [])
+            kappa_ui = 'kappa_ui' in exports
     if ndex_id is None:
         logger.warning(f'No ndex ID found for {model}')
     available_tests = _get_test_corpora(model)
@@ -734,7 +736,7 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
-    if 'kappa' in exp_formats:
+    if kappa_ui and 'kappa' in exp_formats:
         kappa_link = ('https://tools.kappalanguage.org/try/?'
                       f'model={exp_formats["kappa"]}')
         model_info_contents.append([
