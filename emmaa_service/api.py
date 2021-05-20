@@ -1180,6 +1180,13 @@ def run_query():
         "sustained", "transient"), and "quant_value" ("high" or "low", only
         required when "pattern_type" is one of "always_value",
         "eventual_value", "sometime_value").
+
+        Intervention query JSON has to contain keys
+        "type" (simple_intervention_property),
+        "condition_entity" (formatted as INDRA Agent JSON),
+        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
+        "dn").
+
     model : str
         A name of a model to run a query against.
 
@@ -1214,6 +1221,15 @@ def run_query():
                ' ("high" or "low", only required when "pattern_type" is one of'
                ' "always_value", "eventual_value", "sometime_value".')
         if 'entity' not in qj or 'pattern_type' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'simple_intervention_property':
+        msg = ('Intervention query JSON has to contain keys '
+               '"type" (simple_intervention_property), '
+               '"condition_entity" (formatted as INDRA Agent JSON), '
+               '"target_entity" (formatted as INDRA Agent JSON), "direction" '
+               '("up" or "dn").')
+        if 'condition_entity' not in qj or 'target_entity' not in qj or \
+                'direction' not in qj:
             abort(Response(msg, 400))
     model = request.json.get('model')
     query = Query._from_json(qj)
