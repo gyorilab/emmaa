@@ -703,6 +703,7 @@ def get_model_dashboard(model):
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+    exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
     logger.info('Getting model information')
     ndex_id = None
     description = 'None available'
@@ -733,6 +734,12 @@ def get_model_dashboard(model):
             ('', 'Twitter', ''),
             (twitter_link, ''.join(['@', twitter_link.split('/')[-1]]),
              "Click to see model's Twitter page")])
+    if 'kappa' in exp_formats:
+        kappa_link = ('https://tools.kappalanguage.org/try/?'
+                      f'model={exp_formats["kappa"]}')
+        model_info_contents.append([
+            ('', 'Kappa UI', ''),
+            (kappa_link, 'Kappa UI', 'Explore model on Kappa UI')])
     logger.info('Getting model subscription info')
     subscribe = True
     logged_in = False
@@ -804,8 +811,6 @@ def get_model_dashboard(model):
                 (_update_stmt(st_hash, st_value, add_model_links),))
     else:
         added_stmts = 'No new statements were added'
-
-    exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
 
     if not model_stats['paper_summary'].get('paper_titles'):
         paper_distr = 'Paper titles are not currently available'
