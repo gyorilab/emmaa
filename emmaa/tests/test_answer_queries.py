@@ -170,7 +170,8 @@ def test_immediate_intervention():
     assert result_values['model'] == 'test'
     assert result_values['query'] == 'BRAF increases active MAP2K1.'
     assert isinstance(result_values['date'], str)
-    assert result_values['result'] == ['Pass', 'Query is satisfied']
+    assert result_values['result'] == [
+        'Pass', 'Yes, the amount of target entity increased.']
     assert isinstance(result_values['image'], str)
 
 
@@ -227,5 +228,6 @@ def test_answer_get_registered_queries():
     assert results[qh]['model'] == 'test'
     assert results[qh]['query'] == 'BRAF increases active MAP2K1.'
     assert isinstance(results[qh]['date'], str)
-    assert results[qh]['result'] == ['Pass', 'Query is satisfied']
+    assert results[qh]['result'] == [
+        'Pass', 'Yes, the amount of target entity increased.']
     assert isinstance(results[qh]['image'], str)

@@ -153,11 +153,17 @@ def format_results(results, query_type='path_property'):
                 formatted_results[query_hash]['result'] = ['n_a', response]
             else:
                 res = response[0]['result']
+                if res == 'no_change':
+                    action = 'did not change'
+                elif res.endswith('increase'):
+                    action = 'increased'
+                elif res.endswith('decrease'):
+                    action = 'decreased'
                 if res.startswith('no'):
-                    expl = 'Query is not satisfied'
+                    expl = f'No, the amount of target entity {action}.'
                     formatted_results[query_hash]['result'] = ['Fail', expl]
                 else:
-                    expl = 'Query is satisfied'
+                    expl = f'Yes, the amount of target entity {action}.'
                     formatted_results[query_hash]['result'] = ['Pass', expl]
                 formatted_results[query_hash]['image'] = (
                     response[0]['fig_path'])
