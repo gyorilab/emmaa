@@ -91,17 +91,17 @@
                 <!-- subject -->
                 <div class="col" style="padding-right: 2px">
                   {% if latest_query and latest_query['query_json']['queryType'] == tab %}
-                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject" value="{{ latest_query['query_json']['subjectSelection'] }}">
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter source" value="{{ latest_query['query_json']['subjectSelection'] }}">
                   {% else %}
-                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter source">
                   {% endif %}
                 </div>
                 <!-- object -->
                 <div class="col" style="padding-left: 2px; padding-right: 2px">
                   {% if latest_query and latest_query['query_json']['queryType'] == tab %}
-                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object" value="{{ latest_query['query_json']['objectSelection'] }}">
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter target" value="{{ latest_query['query_json']['objectSelection'] }}">
                   {% else %}
-                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter target">
                   {% endif %}
                 </div>
               </div>
