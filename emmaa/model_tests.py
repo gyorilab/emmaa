@@ -563,6 +563,7 @@ class ModelManager(object):
         time_limit = None
         num_times = 100
         num_sim = 2
+        hyp_tester = None
         if qtype in self.model.query_config:
             qc = self.model.query_config[qtype]
             use_kappa = qc.get('use_kappa', False)
