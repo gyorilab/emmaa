@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
+from flask_restx import Api, Resource, fields
 from flask_cors import CORS
 
 from flask_jwt_extended import jwt_optional
@@ -47,12 +48,20 @@ from indra.sources.hypothesis import upload_statement_annotation
 from indra.databases.identifiers import get_identifiers_url
 
 
+# Endpoints for EMMAA website rendering are registered with app
 app = Flask(__name__)
 app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 CORS(app)
+
+# Endpoints for programmatic access are registered with api
+api = Api(app, doc='/doc')
+
+
+# Environment variables
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -87,6 +96,9 @@ pusher = pusher_client = pusher.Pusher(
   cluster=pusher_cluster,
   ssl=True
 )
+
+
+# Helper functions
 
 
 def _sort_pass_fail(row):
@@ -656,6 +668,59 @@ def filter_evidence(stmt, paper_id, paper_id_type):
     return stmt2
 
 
+def get_immediate_queries(query_type):
+    headers = None
+    results = 'Results for submitted queries'
+    if session.get('query_hashes') and session['query_hashes'].get(query_type):
+        query_hashes = session['query_hashes'][query_type]
+        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
+        if query_type in ['path_property', 'open_search_query']:
+            headers = ['Query', 'Model'] + [
+                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+                list(qr.values())[0]] if qr else []
+            results = _format_query_results(qr) if qr else\
+                'No stashed results for subscribed queries. Please re-run ' \
+                'query to see latest result.'
+        elif query_type in ['dynamic_property',
+                            'simple_intervention_property']:
+            headers = ['Query', 'Model', 'Result', 'Image']
+            results = _format_dynamic_query_results(qr)
+    return results, headers
+
+
+def get_subscribed_queries(query_type, user_email=None):
+    headers = []
+    if user_email:
+        res = qm.get_registered_queries(user_email, query_type)
+        if res:
+            if query_type in ['path_property', 'open_search_query']:
+                sub_results = _format_query_results(res)
+                headers = ['Query', 'Model'] + [
+                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
+            elif query_type in ['dynamic_property',
+                                'simple_intervention_property']:
+                sub_results = _format_dynamic_query_results(res)
+                headers = ['Query', 'Model', 'Result', 'Image']
+        else:
+            sub_results = 'You have no subscribed queries'
+    else:
+        sub_results = 'Please log in to see your subscribed queries'
+    return sub_results, headers
+
+
+def _lookup_bioresolver(prefix: str, identifier: str):
+    url = get_config('ENTITY_RESOLVER_URL')
+    if url is None:
+        return
+    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+    res_json = res.json()
+    if not res_json['success']:
+        return  # there was a problem looking up CURIE in the bioresolver
+    return res_json
+
+
+# Dashboard endpoints
+
 # Deletes session after the specified time
 @app.before_request
 def session_expiration_check():
@@ -1069,46 +1134,6 @@ def get_model_tests_page(model):
                            next=next_date)
 
 
-def get_immediate_queries(query_type):
-    headers = None
-    results = 'Results for submitted queries'
-    if session.get('query_hashes') and session['query_hashes'].get(query_type):
-        query_hashes = session['query_hashes'][query_type]
-        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
-        if query_type in ['path_property', 'open_search_query']:
-            headers = ['Query', 'Model'] + [
-                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-                list(qr.values())[0]] if qr else []
-            results = _format_query_results(qr) if qr else\
-                'No stashed results for subscribed queries. Please re-run ' \
-                'query to see latest result.'
-        elif query_type in ['dynamic_property',
-                            'simple_intervention_property']:
-            headers = ['Query', 'Model', 'Result', 'Image']
-            results = _format_dynamic_query_results(qr)
-    return results, headers
-
-
-def get_subscribed_queries(query_type, user_email=None):
-    headers = []
-    if user_email:
-        res = qm.get_registered_queries(user_email, query_type)
-        if res:
-            if query_type in ['path_property', 'open_search_query']:
-                sub_results = _format_query_results(res)
-                headers = ['Query', 'Model'] + [
-                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
-            elif query_type in ['dynamic_property',
-                                'simple_intervention_property']:
-                sub_results = _format_dynamic_query_results(res)
-                headers = ['Query', 'Model', 'Result', 'Image']
-        else:
-            sub_results = 'You have no subscribed queries'
-    else:
-        sub_results = 'Please log in to see your subscribed queries'
-    return sub_results, headers
-
-
 @app.route('/query')
 @jwt_optional
 def get_query_page():
@@ -1153,95 +1178,6 @@ def get_query_page():
                            tab=tab,
                            preselected_model=preselected_model,
                            latest_query=latest_query)
-
-
-@app.route('/run_query', methods=['POST'])
-def run_query():
-    """Run a query.
-
-    Parameters
-    ----------
-    query_json : str(dict)
-        A JSON dump of a standard query JSON representation. The structure of
-        a query json depends on a query type. All query JSONs have to contain
-        a "type" (path_property, dynamic_property, or open_search_query).
-
-        Path (static) query JSON has to contain keys "type" (path_property)
-        and "path" (formatted as INDRA Statement JSON).
-
-        Open search query JSON has to contain keys "type" (open_search_query),
-        "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
-        object), and "stmt_type"; optionally "terminal_ns" (a list of
-        namespaces to filter the result).
-
-        Dynamic query JSON has to contain keys "type" (dynamic_property),
-        "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
-        "always_value", "no_change", "eventual_value", "sometime_value",
-        "sustained", "transient"), and "quant_value" ("high" or "low", only
-        required when "pattern_type" is one of "always_value",
-        "eventual_value", "sometime_value").
-
-        Intervention query JSON has to contain keys
-        "type" (simple_intervention_property),
-        "condition_entity" (formatted as INDRA Agent JSON),
-        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
-        "dn").
-
-    model : str
-        A name of a model to run a query against.
-
-    Returns
-    -------
-    results : dict
-        A dictionary mapping the model type to either paths or result code.
-    """
-    qj = request.json.get('query_json')
-    if 'type' not in qj:
-        msg = ('All query JSONs have to contain a "type" '
-               '(path_property, dynamic_property, or open_search_query).')
-        abort(Response(msg, 400))
-    if qj['type'] == 'path_property':
-        msg = ('Path (static) query JSON has to contain keys "type" and "path"'
-               ' (formatted as INDRA Statement JSON).')
-        if 'path' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'open_search_query':
-        msg = ('Open search query JSON has to contain keys "type", "entity" '
-               '(formatted as INDRA Agent JSON), "entity_role" (subject or '
-               'object), and "stmt_type"; optionally "terminal_ns" (a list of '
-               'namespaces to filter the result).')
-        if 'entity' not in qj or 'entity_role' not in qj or \
-                'stmt_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'dynamic_property':
-        msg = ('Dynamic query JSON has to contain keys "type", "entity" '
-               '(formatted as INDRA Agent JSON), "pattern_type" (one of '
-               '"always_value", "no_change", "eventual_value", '
-               '"sometime_value", "sustained", "transient"), and "quant_value"'
-               ' ("high" or "low", only required when "pattern_type" is one of'
-               ' "always_value", "eventual_value", "sometime_value".')
-        if 'entity' not in qj or 'pattern_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'simple_intervention_property':
-        msg = ('Intervention query JSON has to contain keys '
-               '"type" (simple_intervention_property), '
-               '"condition_entity" (formatted as INDRA Agent JSON), '
-               '"target_entity" (formatted as INDRA Agent JSON), "direction" '
-               '("up" or "dn").')
-        if 'condition_entity' not in qj or 'target_entity' not in qj or \
-                'direction' not in qj:
-            abort(Response(msg, 400))
-    model = request.json.get('model')
-    query = Query._from_json(qj)
-    mm = load_model_manager_from_cache(model)
-    full_results = mm.answer_query(query)
-    results = {}
-    for mc_type, resp, paths in full_results:
-        if mc_type:
-            results[mc_type] = paths
-        else:
-            results['all_types'] = paths
-    return results
 
 
 @app.route('/evidence')
@@ -1333,20 +1269,6 @@ def get_statement_evidence_page():
                            date=date,
                            fig_list=fig_list,
                            tabs=tabs)
-
-
-@app.route('/curated_statements/<model>')
-def get_curated_statements(model):
-    date = request.args.get('date')
-    if not date:
-        date = get_latest_available_date(model, _default_test(model))
-    model_stats = _load_model_stats_from_cache(model, date)
-    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
-    correct, incorrect, partial = _label_curations(include_partial=True,
-                                                   pa_hash=stmt_hashes)
-    return jsonify({'correct': list(correct),
-                    'partial': list(partial),
-                    'incorrect': list(incorrect)})
 
 
 @app.route('/all_statements/<model>')
@@ -1441,6 +1363,50 @@ def get_all_statements_page(model):
                            link=link,
                            date=date,
                            tabs=False)
+
+
+@app.route('/demos')
+@jwt_optional
+def get_demos_page():
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('demos_template.html', link_list=link_list,
+                           user_email=user_email)
+
+
+@app.route('/chat')
+@jwt_optional
+def chat_with_the_model():
+    model = request.args.get('model', '')
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('chat_widget.html',
+                           email=user_email,
+                           model=model,
+                           link_list=link_list,
+                           exclude_footer=True,
+                           pusher_key=pusher_key)
+
+
+@app.route('/new/guest', methods=['POST'])
+def guest_user():
+    data = request.json
+    print('New guest data: %s' % str(data))
+
+    pusher.trigger('general-channel', 'new-guest-details', {
+        'name': data['name'],
+        'email': data['email'],
+        'emmaa_model': data.get('emmaa_model')
+        })
+
+    return json.dumps(data)
+
+
+@app.route("/pusher/auth", methods=['POST'])
+def pusher_authentication():
+    auth = pusher.authenticate(channel=request.form['channel_name'],
+                               socket_id=request.form['socket_id'])
+    return json.dumps(auth)
 
 
 @app.route('/query/<model>')
@@ -1774,6 +1740,9 @@ def list_curations(stmt_hash, src_hash):
     return jsonify(curations)
 
 
+# REST API endpoints
+
+
 @app.route('/latest_statements/<model>', methods=['GET'])
 def load_latest_statements(model):
     """Return model latest statements and link to S3 latest statements file."""
@@ -1841,15 +1810,6 @@ def get_latest_date():
     return jsonify({'date': date})
 
 
-@app.route('/demos')
-@jwt_optional
-def get_demos_page():
-    user, roles = resolve_auth(dict(request.args))
-    user_email = user.email if user else ""
-    return render_template('demos_template.html', link_list=link_list,
-                           user_email=user_email)
-
-
 @app.route('/models', methods=['GET', 'POST'])
 def get_models():
     """Get a list of all available models."""
@@ -1895,41 +1855,6 @@ def get_tests_info(test_corpus):
     return info
 
 
-@app.route('/chat')
-@jwt_optional
-def chat_with_the_model():
-    model = request.args.get('model', '')
-    user, roles = resolve_auth(dict(request.args))
-    user_email = user.email if user else ""
-    return render_template('chat_widget.html',
-                           email=user_email,
-                           model=model,
-                           link_list=link_list,
-                           exclude_footer=True,
-                           pusher_key=pusher_key)
-
-
-@app.route('/new/guest', methods=['POST'])
-def guest_user():
-    data = request.json
-    print('New guest data: %s' % str(data))
-
-    pusher.trigger('general-channel', 'new-guest-details', {
-        'name': data['name'],
-        'email': data['email'],
-        'emmaa_model': data.get('emmaa_model')
-        })
-
-    return json.dumps(data)
-
-
-@app.route("/pusher/auth", methods=['POST'])
-def pusher_authentication():
-    auth = pusher.authenticate(channel=request.form['channel_name'],
-                               socket_id=request.form['socket_id'])
-    return json.dumps(auth)
-
-
 @app.route("/entity_info/<model>", methods=['GET', 'POST'])
 def entity_info(model):
     # For now, the model isn't explicitly used but could be necessary
@@ -1944,16 +1869,6 @@ def entity_info(model):
         rv['definition'] = bioresolver_json.get('definition')
     return rv
 
-
-def _lookup_bioresolver(prefix: str, identifier: str):
-    url = get_config('ENTITY_RESOLVER_URL')
-    if url is None:
-        return
-    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
-    res_json = res.json()
-    if not res_json['success']:
-        return  # there was a problem looking up CURIE in the bioresolver
-    return res_json
 
 
 @app.route('/subscribe/<model>', methods=['POST'])
@@ -1977,6 +1892,109 @@ def model_subscription(model):
     else:
         qm.db.update_email_subscription(user_email, [], [model], False)
         return {'unsubscribe': 'success'}
+
+
+@app.route('/curated_statements/<model>')
+def get_curated_statements(model):
+    date = request.args.get('date')
+    if not date:
+        date = get_latest_available_date(model, _default_test(model))
+    model_stats = _load_model_stats_from_cache(model, date)
+    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
+    correct, incorrect, partial = _label_curations(include_partial=True,
+                                                   pa_hash=stmt_hashes)
+    return jsonify({'correct': list(correct),
+                    'partial': list(partial),
+                    'incorrect': list(incorrect)})
+
+
+@app.route('/run_query', methods=['POST'])
+def run_query():
+    """Run a query.
+
+    Parameters
+    ----------
+    query_json : str(dict)
+        A JSON dump of a standard query JSON representation. The structure of
+        a query json depends on a query type. All query JSONs have to contain
+        a "type" (path_property, dynamic_property, or open_search_query).
+
+        Path (static) query JSON has to contain keys "type" (path_property)
+        and "path" (formatted as INDRA Statement JSON).
+
+        Open search query JSON has to contain keys "type" (open_search_query),
+        "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
+        object), and "stmt_type"; optionally "terminal_ns" (a list of
+        namespaces to filter the result).
+
+        Dynamic query JSON has to contain keys "type" (dynamic_property),
+        "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
+        "always_value", "no_change", "eventual_value", "sometime_value",
+        "sustained", "transient"), and "quant_value" ("high" or "low", only
+        required when "pattern_type" is one of "always_value",
+        "eventual_value", "sometime_value").
+
+        Intervention query JSON has to contain keys
+        "type" (simple_intervention_property),
+        "condition_entity" (formatted as INDRA Agent JSON),
+        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
+        "dn").
+
+    model : str
+        A name of a model to run a query against.
+
+    Returns
+    -------
+    results : dict
+        A dictionary mapping the model type to either paths or result code.
+    """
+    qj = request.json.get('query_json')
+    if 'type' not in qj:
+        msg = ('All query JSONs have to contain a "type" '
+            '(path_property, dynamic_property, or open_search_query).')
+        abort(Response(msg, 400))
+    if qj['type'] == 'path_property':
+        msg = ('Path (static) query JSON has to contain keys "type" and "path"'
+            ' (formatted as INDRA Statement JSON).')
+        if 'path' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'open_search_query':
+        msg = ('Open search query JSON has to contain keys "type", "entity" '
+            '(formatted as INDRA Agent JSON), "entity_role" (subject or '
+            'object), and "stmt_type"; optionally "terminal_ns" (a list of '
+            'namespaces to filter the result).')
+        if 'entity' not in qj or 'entity_role' not in qj or \
+                'stmt_type' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'dynamic_property':
+        msg = ('Dynamic query JSON has to contain keys "type", "entity" '
+            '(formatted as INDRA Agent JSON), "pattern_type" (one of '
+            '"always_value", "no_change", "eventual_value", '
+            '"sometime_value", "sustained", "transient"), and "quant_value"'
+            ' ("high" or "low", only required when "pattern_type" is one of'
+            ' "always_value", "eventual_value", "sometime_value".')
+        if 'entity' not in qj or 'pattern_type' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'simple_intervention_property':
+        msg = ('Intervention query JSON has to contain keys '
+            '"type" (simple_intervention_property), '
+            '"condition_entity" (formatted as INDRA Agent JSON), '
+            '"target_entity" (formatted as INDRA Agent JSON), "direction" '
+            '("up" or "dn").')
+        if 'condition_entity' not in qj or 'target_entity' not in qj or \
+                'direction' not in qj:
+            abort(Response(msg, 400))
+    model = request.json.get('model')
+    query = Query._from_json(qj)
+    mm = load_model_manager_from_cache(model)
+    full_results = mm.answer_query(query)
+    results = {}
+    for mc_type, resp, paths in full_results:
+        if mc_type:
+            results[mc_type] = paths
+        else:
+            results['all_types'] = paths
+    return results
 
 
 if __name__ == '__main__':
