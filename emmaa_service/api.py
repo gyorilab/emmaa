@@ -57,8 +57,17 @@ app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
 CORS(app)
 
 # Endpoints for programmatic access are registered with api
-api = Api(app, doc='/doc')
+api = Api(app, title='EMMAA REST API', description='EMMAA REST API',
+          doc='/doc')
+metadata_ns = api.namespace('Metadata', 'Get EMMAA models metadata',
+                            path='/metadata/')
+latest_ns = api.namespace('Latest', 'Get updates specific to latest models',
+                          path='/latest/')
+query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
 
+# Models for REST API
+query_model = api.model('query', {})
+date_model = api.model('date', {})
 
 # Environment variables
 
@@ -1765,236 +1774,246 @@ def list_curations(stmt_hash, src_hash):
 
 # REST API endpoints
 
-
-@app.route('/latest_statements/<model>', methods=['GET'])
-def load_latest_statements(model):
-    """Return model latest statements and link to S3 latest statements file."""
-    if does_exist(EMMAA_BUCKET_NAME,
-                  f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'
-    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-        fkey = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-    else:
-        fkey = None
-    if fkey:
-        stmt_jsons = load_json_from_s3(EMMAA_BUCKET_NAME, fkey)
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    else:
-        stmt_jsons = []
-        link = ''
-    return {'statements': stmt_jsons, 'link': link}
-
-
-@app.route('/latest_statements_url/<model>', methods=['GET'])
-def get_latest_statements_url(model):
-    """Return a link to model latest statements file on S3."""
-    if does_exist(EMMAA_BUCKET_NAME,
-                  f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-        fkey = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    else:
-        link = None
-    return {'link': link}
-
-
-@app.route('/latest_date', methods=['GET'])
-def get_latest_date():
-    """Return latest available date of model and test stats.
-
-    Parameters
-    ----------
-    model : str
-        Name of the model.
-    test_corpus : Optional[str]
-        Which test corpus stats to check. If not provided, default test corpus
-        for the model is used.
-    date_format : Optional[str]
-        Which format of the date to return: 'date' or 'datetime'. Default:
-        datetime.
-
-    Returns
-    -------
-    json : dict
-        A dictionary with key 'date' and value of a latest available date in a
-        selected format.
-    """
-    model = request.json.get('model')
-    if not model:
-        abort(Response('Need to provide model', 404))
-    date_format = request.json.get('date_format', 'datetime')
-    test_corpus = request.json.get('test_corpus', _default_test(model))
-    date = get_latest_available_date(
-        model, test_corpus, date_format=date_format, bucket=EMMAA_BUCKET_NAME)
-    return jsonify({'date': date})
-
-
-@app.route('/models', methods=['GET', 'POST'])
-def get_models():
-    """Get a list of all available models."""
-    model_meta_data = _get_model_meta_data()
-    models = [model for (model, config) in model_meta_data]
-    return {'models': models}
-
-
-@app.route('/model_info/<model>', methods=['GET', 'POST'])
-def get_model_info(model):
-    """Get metadata for model."""
-    config = get_model_config(model)
-    info = {'name': model,
-            'human_readable_name': config.get('human_readable_name'),
-            'description': config.get('description')}
-    if 'ndex' in config:
-        info['ndex'] = config['ndex'].get('network')
-    if 'twitter_link' in config:
-        info['twitter'] = config['twitter_link']
-    return info
-
-
-@app.route('/test_corpora/<model>', methods=['GET', 'POST'])
-def get_tests(model):
-    """Get a list of available test corpora for model."""
-    tests = _get_test_corpora(model)
-    return {'test_corpora': list(tests)}
-
-
-@app.route('/tests_info/<test_corpus>', methods=['GET', 'POST'])
-def get_tests_info(test_corpus):
-    """Get test corpus metadata."""
-    model_meta_data = _get_model_meta_data()
-    for (model, config) in model_meta_data:
-        tests = _get_test_corpora(model)
-        if test_corpus in tests:
-            tested_model = model
-            break
-    test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
-    info = test_stats['test_round_summary'].get('test_data')
-    if not info:
-        info = {'error': f'Test info for {test_corpus} is not available'}
-    return info
-
-
-@app.route("/entity_info/<model>", methods=['GET', 'POST'])
-def entity_info(model):
-    # For now, the model isn't explicitly used but could be necessary
-    # for adding model-specific entity info later
-    namespace = request.args.get('namespace')
-    identifier = request.args.get('id')
-    url = get_identifiers_url(namespace, identifier)
-    rv = {'url': url}
-    bioresolver_json = _lookup_bioresolver(namespace, identifier)
-    if bioresolver_json:
-        rv['name'] = bioresolver_json.get('name')
-        rv['definition'] = bioresolver_json.get('definition')
-    return rv
-
-
-
-@app.route('/curated_statements/<model>')
-def get_curated_statements(model):
-    date = request.args.get('date')
-    if not date:
-        date = get_latest_available_date(model, _default_test(model))
-    model_stats = _load_model_stats_from_cache(model, date)
-    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
-    correct, incorrect, partial = _label_curations(include_partial=True,
-                                                   pa_hash=stmt_hashes)
-    return jsonify({'correct': list(correct),
-                    'partial': list(partial),
-                    'incorrect': list(incorrect)})
-
-
-@app.route('/run_query', methods=['POST'])
-def run_query():
-    """Run a query.
-
-    Parameters
-    ----------
-    query_json : str(dict)
-        A JSON dump of a standard query JSON representation. The structure of
-        a query json depends on a query type. All query JSONs have to contain
-        a "type" (path_property, dynamic_property, or open_search_query).
-
-        Path (static) query JSON has to contain keys "type" (path_property)
-        and "path" (formatted as INDRA Statement JSON).
-
-        Open search query JSON has to contain keys "type" (open_search_query),
-        "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
-        object), and "stmt_type"; optionally "terminal_ns" (a list of
-        namespaces to filter the result).
-
-        Dynamic query JSON has to contain keys "type" (dynamic_property),
-        "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
-        "always_value", "no_change", "eventual_value", "sometime_value",
-        "sustained", "transient"), and "quant_value" ("high" or "low", only
-        required when "pattern_type" is one of "always_value",
-        "eventual_value", "sometime_value").
-
-        Intervention query JSON has to contain keys
-        "type" (simple_intervention_property),
-        "condition_entity" (formatted as INDRA Agent JSON),
-        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
-        "dn").
-
-    model : str
-        A name of a model to run a query against.
-
-    Returns
-    -------
-    results : dict
-        A dictionary mapping the model type to either paths or result code.
-    """
-    qj = request.json.get('query_json')
-    if 'type' not in qj:
-        msg = ('All query JSONs have to contain a "type" '
-            '(path_property, dynamic_property, or open_search_query).')
-        abort(Response(msg, 400))
-    if qj['type'] == 'path_property':
-        msg = ('Path (static) query JSON has to contain keys "type" and "path"'
-            ' (formatted as INDRA Statement JSON).')
-        if 'path' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'open_search_query':
-        msg = ('Open search query JSON has to contain keys "type", "entity" '
-            '(formatted as INDRA Agent JSON), "entity_role" (subject or '
-            'object), and "stmt_type"; optionally "terminal_ns" (a list of '
-            'namespaces to filter the result).')
-        if 'entity' not in qj or 'entity_role' not in qj or \
-                'stmt_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'dynamic_property':
-        msg = ('Dynamic query JSON has to contain keys "type", "entity" '
-            '(formatted as INDRA Agent JSON), "pattern_type" (one of '
-            '"always_value", "no_change", "eventual_value", '
-            '"sometime_value", "sustained", "transient"), and "quant_value"'
-            ' ("high" or "low", only required when "pattern_type" is one of'
-            ' "always_value", "eventual_value", "sometime_value".')
-        if 'entity' not in qj or 'pattern_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'simple_intervention_property':
-        msg = ('Intervention query JSON has to contain keys '
-            '"type" (simple_intervention_property), '
-            '"condition_entity" (formatted as INDRA Agent JSON), '
-            '"target_entity" (formatted as INDRA Agent JSON), "direction" '
-            '("up" or "dn").')
-        if 'condition_entity' not in qj or 'target_entity' not in qj or \
-                'direction' not in qj:
-            abort(Response(msg, 400))
-    model = request.json.get('model')
-    query = Query._from_json(qj)
-    mm = load_model_manager_from_cache(model)
-    full_results = mm.answer_query(query)
-    results = {}
-    for mc_type, resp, paths in full_results:
-        if mc_type:
-            results[mc_type] = paths
+@latest_ns.route('/statements/<model>')
+class LatestStatements(Resource):
+    def get(self, model):
+        """Return model latest statements and link to S3 latest statements file."""
+        if does_exist(EMMAA_BUCKET_NAME,
+                    f'assembled/{model}/latest_statements_{model}'):
+            fkey = f'assembled/{model}/latest_statements_{model}.json'
+        elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+            fkey = find_latest_s3_file(
+                EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
         else:
-            results['all_types'] = paths
-    return results
+            fkey = None
+        if fkey:
+            stmt_jsons = load_json_from_s3(EMMAA_BUCKET_NAME, fkey)
+            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+        else:
+            stmt_jsons = []
+            link = ''
+        return {'statements': stmt_jsons, 'link': link}
+
+
+@latest_ns.route('/statements_url/<model>')
+class LatestStatementsUrl(Resource):
+    def get(self, model):
+        """Return a link to model latest statements file on S3."""
+        if does_exist(EMMAA_BUCKET_NAME,
+                    f'assembled/{model}/latest_statements_{model}'):
+            fkey = f'assembled/{model}/latest_statements_{model}.json'
+            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+        elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
+            fkey = find_latest_s3_file(
+                EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+        else:
+            link = None
+        return {'link': link}
+
+
+@latest_ns.expect(date_model)
+@latest_ns.route('/date')
+class LatestDate(Resource):
+    def get(self):
+        """Return latest available date of model and test stats.
+
+        Parameters
+        ----------
+        model : str
+            Name of the model.
+        test_corpus : Optional[str]
+            Which test corpus stats to check. If not provided, default test corpus
+            for the model is used.
+        date_format : Optional[str]
+            Which format of the date to return: 'date' or 'datetime'. Default:
+            datetime.
+
+        Returns
+        -------
+        json : dict
+            A dictionary with key 'date' and value of a latest available date in a
+            selected format.
+        """
+        model = request.json.get('model')
+        if not model:
+            abort(Response('Need to provide model', 404))
+        date_format = request.json.get('date_format', 'datetime')
+        test_corpus = request.json.get('test_corpus', _default_test(model))
+        date = get_latest_available_date(
+            model, test_corpus, date_format=date_format, bucket=EMMAA_BUCKET_NAME)
+        return jsonify({'date': date})
+
+
+@latest_ns.route('/curated_statements/<model>')
+class CuratedStatements(Resource):
+    def get(self, model):
+        date = request.args.get('date')
+        if not date:
+            date = get_latest_available_date(model, _default_test(model))
+        model_stats = _load_model_stats_from_cache(model, date)
+        stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
+        correct, incorrect, partial = _label_curations(include_partial=True,
+                                                    pa_hash=stmt_hashes)
+        return jsonify({'correct': list(correct),
+                        'partial': list(partial),
+                        'incorrect': list(incorrect)})
+
+
+@metadata_ns.route('/models')
+class ModelsList(Resource):
+    def get(self):
+        """Get a list of all available models."""
+        model_meta_data = _get_model_meta_data()
+        models = [model for (model, config) in model_meta_data]
+        return {'models': models}
+
+
+@metadata_ns.route('/model_info/<model>')
+class ModelInfo(Resource):
+    def get(self, model):
+        """Get metadata for model."""
+        config = get_model_config(model)
+        info = {'name': model,
+                'human_readable_name': config.get('human_readable_name'),
+                'description': config.get('description')}
+        if 'ndex' in config:
+            info['ndex'] = config['ndex'].get('network')
+        if 'twitter_link' in config:
+            info['twitter'] = config['twitter_link']
+        return info
+
+
+@metadata_ns.route('/test_corpora/<model>')
+class TestCorpora(Resource):
+    def get(self, model):
+        """Get a list of available test corpora for model."""
+        tests = _get_test_corpora(model)
+        return {'test_corpora': list(tests)}
+
+
+@metadata_ns.route('/tests_info/<test_corpus>')
+class TestInfo(Resource):
+    def get(self, test_corpus):
+        """Get test corpus metadata."""
+        model_meta_data = _get_model_meta_data()
+        for (model, config) in model_meta_data:
+            tests = _get_test_corpora(model)
+            if test_corpus in tests:
+                tested_model = model
+                break
+        test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
+        info = test_stats['test_round_summary'].get('test_data')
+        if not info:
+            info = {'error': f'Test info for {test_corpus} is not available'}
+        return info
+
+
+@metadata_ns.route('/entity_info/<model>')
+class EntityInfo(Resource):
+    def get(self, model):
+        # For now, the model isn't explicitly used but could be necessary
+        # for adding model-specific entity info later
+        namespace = request.args.get('namespace')
+        identifier = request.args.get('id')
+        url = get_identifiers_url(namespace, identifier)
+        rv = {'url': url}
+        bioresolver_json = _lookup_bioresolver(namespace, identifier)
+        if bioresolver_json:
+            rv['name'] = bioresolver_json.get('name')
+            rv['definition'] = bioresolver_json.get('definition')
+        return rv
+
+
+@query_ns.expect(query_model)
+@query_ns.route('/run')
+class RunQuery(Resource):
+    def post(self):
+        """Run a query.
+
+        Parameters
+        ----------
+        query_json : str(dict)
+            A JSON dump of a standard query JSON representation. The structure of
+            a query json depends on a query type. All query JSONs have to contain
+            a "type" (path_property, dynamic_property, or open_search_query).
+
+            Path (static) query JSON has to contain keys "type" (path_property)
+            and "path" (formatted as INDRA Statement JSON).
+
+            Open search query JSON has to contain keys "type" (open_search_query),
+            "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
+            object), and "stmt_type"; optionally "terminal_ns" (a list of
+            namespaces to filter the result).
+
+            Dynamic query JSON has to contain keys "type" (dynamic_property),
+            "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
+            "always_value", "no_change", "eventual_value", "sometime_value",
+            "sustained", "transient"), and "quant_value" ("high" or "low", only
+            required when "pattern_type" is one of "always_value",
+            "eventual_value", "sometime_value").
+
+            Intervention query JSON has to contain keys
+            "type" (simple_intervention_property),
+            "condition_entity" (formatted as INDRA Agent JSON),
+            "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
+            "dn").
+
+        model : str
+            A name of a model to run a query against.
+
+        Returns
+        -------
+        results : dict
+            A dictionary mapping the model type to either paths or result code.
+        """
+        qj = request.json.get('query_json')
+        if 'type' not in qj:
+            msg = ('All query JSONs have to contain a "type" '
+                '(path_property, dynamic_property, or open_search_query).')
+            abort(Response(msg, 400))
+        if qj['type'] == 'path_property':
+            msg = ('Path (static) query JSON has to contain keys "type" and "path"'
+                ' (formatted as INDRA Statement JSON).')
+            if 'path' not in qj:
+                abort(Response(msg, 400))
+        elif qj['type'] == 'open_search_query':
+            msg = ('Open search query JSON has to contain keys "type", "entity" '
+                '(formatted as INDRA Agent JSON), "entity_role" (subject or '
+                'object), and "stmt_type"; optionally "terminal_ns" (a list of '
+                'namespaces to filter the result).')
+            if 'entity' not in qj or 'entity_role' not in qj or \
+                    'stmt_type' not in qj:
+                abort(Response(msg, 400))
+        elif qj['type'] == 'dynamic_property':
+            msg = ('Dynamic query JSON has to contain keys "type", "entity" '
+                '(formatted as INDRA Agent JSON), "pattern_type" (one of '
+                '"always_value", "no_change", "eventual_value", '
+                '"sometime_value", "sustained", "transient"), and "quant_value"'
+                ' ("high" or "low", only required when "pattern_type" is one of'
+                ' "always_value", "eventual_value", "sometime_value".')
+            if 'entity' not in qj or 'pattern_type' not in qj:
+                abort(Response(msg, 400))
+        elif qj['type'] == 'simple_intervention_property':
+            msg = ('Intervention query JSON has to contain keys '
+                '"type" (simple_intervention_property), '
+                '"condition_entity" (formatted as INDRA Agent JSON), '
+                '"target_entity" (formatted as INDRA Agent JSON), "direction" '
+                '("up" or "dn").')
+            if 'condition_entity' not in qj or 'target_entity' not in qj or \
+                    'direction' not in qj:
+                abort(Response(msg, 400))
+        model = request.json.get('model')
+        query = Query._from_json(qj)
+        mm = load_model_manager_from_cache(model)
+        full_results = mm.answer_query(query)
+        results = {}
+        for mc_type, resp, paths in full_results:
+            if mc_type:
+                results[mc_type] = paths
+            else:
+                results['all_types'] = paths
+        return results
 
 
 if __name__ == '__main__':
