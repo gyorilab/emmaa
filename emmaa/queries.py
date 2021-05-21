@@ -196,6 +196,8 @@ class SimpleInterventionProperty(Query):
         # Get condition and target agents
         # Modification
         if isinstance(stmt, Modification):
+            # TODO use Modification's _get_mod_condition when
+            # _add_modification_to_agent is refactored in INDRA
             condition_entity = stmt.enz
             # Add the mod for the agent
             mod_condition_name = modclass_to_modtype[stmt.__class__]
