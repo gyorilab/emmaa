@@ -1637,6 +1637,29 @@ def email_unsubscribe_post():
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
+@app.route('/subscribe/<model>', methods=['POST'])
+@jwt_optional
+def model_subscription(model):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        logger.warning('User is not logged in')
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    user_email = user.email
+    user_id = user.id
+
+    subscribe = request.json.get('subscribe')
+    logger.info(f'Change subscription status for {model} and {user_email} to '
+                f'{subscribe}')
+    if subscribe:
+        qm.db.subscribe_to_model(user_email, user_id, model)
+        return {'subscription': 'success'}
+    else:
+        qm.db.update_email_subscription(user_email, [], [model], False)
+        return {'unsubscribe': 'success'}
+
+
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
@@ -1869,29 +1892,6 @@ def entity_info(model):
         rv['definition'] = bioresolver_json.get('definition')
     return rv
 
-
-
-@app.route('/subscribe/<model>', methods=['POST'])
-@jwt_optional
-def model_subscription(model):
-    user, roles = resolve_auth(dict(request.args))
-    if not roles and not user:
-        logger.warning('User is not logged in')
-        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
-        return jsonify(res_dict), 401
-
-    user_email = user.email
-    user_id = user.id
-
-    subscribe = request.json.get('subscribe')
-    logger.info(f'Change subscription status for {model} and {user_email} to '
-                f'{subscribe}')
-    if subscribe:
-        qm.db.subscribe_to_model(user_email, user_id, model)
-        return {'subscription': 'success'}
-    else:
-        qm.db.update_email_subscription(user_email, [], [model], False)
-        return {'unsubscribe': 'success'}
 
 
 @app.route('/curated_statements/<model>')
