@@ -31,6 +31,15 @@ open_qj = {'type': 'open_search_query',
                       'db_refs': {'HGNC': '1097'}},
            'entity_role': 'subject', 'stmt_type': 'Activation'}
 open_query = Query._from_json(open_qj)
+interv_qj = {'type': 'simple_intervention_property',
+             'condition_entity': {'type': 'Agent', 'name': 'BRAF',
+                                  'db_refs': {'HGNC': '1097'}},
+             'target_entity': {'type': 'Agent', 'name': 'MAP2K1',
+                               'db_refs': {'HGNC': '6840'},
+                               'activity': {'activity_type': 'activity',
+                                            'is_active': True}},
+             'direction': 'up'}
+interv_query = Query._from_json(interv_qj)
 test_response = {
     '3801854542': {
         'path': 'BRAF → MAP2K1 → MAPK1',
@@ -146,16 +155,35 @@ def test_immediate_open():
 
 
 @attr('nonpublic')
+def test_immediate_intervention():
+    db = _get_test_db()
+    qm = QueryManager(db=db, model_managers=[test_mm])
+    query_hashes = qm.answer_immediate_query(
+        test_email, 1, interv_query, ['test'], subscribe=False)[
+            'simple_intervention_property']
+    assert query_hashes == [14834228758745381], query_hashes
+    results = qm.retrieve_results_from_hashes(
+        query_hashes, 'simple_intervention_property')
+    assert len(results) == 1, results
+    assert query_hashes[0] in results
+    result_values = results[query_hashes[0]]
+    assert result_values['model'] == 'test'
+    assert result_values['query'] == 'BRAF increases active MAP2K1.'
+    assert isinstance(result_values['date'], str)
+    assert result_values['result'] == [
+        'Pass', 'Yes, the amount of target entity increased.']
+    assert isinstance(result_values['image'], str)
+
+
+@attr('nonpublic')
 def test_answer_get_registered_queries():
     db = _get_test_db()
     qm = QueryManager(db=db, model_managers=[test_mm])
     # Put all types of queries in db, answer together
-    qm.db.put_queries(test_email, 1, query_object, ['test'],
-                      subscribe=True)
-    qm.db.put_queries(test_email, 1, dyn_query, ['test'],
-                      subscribe=True)
-    qm.db.put_queries(test_email, 1, open_query, ['test'],
-                      subscribe=True)
+    qm.db.put_queries(test_email, 1, query_object, ['test'], subscribe=True)
+    qm.db.put_queries(test_email, 1, dyn_query, ['test'], subscribe=True)
+    qm.db.put_queries(test_email, 1, open_query, ['test'], subscribe=True)
+    qm.db.put_queries(test_email, 1, interv_query, ['test'], subscribe=True)
     qm.answer_registered_queries('test')
     # Retrieve results for path query
     results = qm.get_registered_queries(test_email, 'path_property')
@@ -192,3 +220,14 @@ def test_answer_get_registered_queries():
         assert isinstance(results[qh][mc_type][1], list)
         assert test_response['3801854542']['path'] in [
             res['path'] for res in results[qh][mc_type][1]]
+    # Retrieve results for intervention query
+    results = qm.get_registered_queries(
+        test_email, 'simple_intervention_property')
+    qh = interv_query.get_hash_with_model('test')
+    assert qh in results, results
+    assert results[qh]['model'] == 'test'
+    assert results[qh]['query'] == 'BRAF increases active MAP2K1.'
+    assert isinstance(results[qh]['date'], str)
+    assert results[qh]['result'] == [
+        'Pass', 'Yes, the amount of target entity increased.']
+    assert isinstance(results[qh]['image'], str)

@@ -6,21 +6,12 @@ function postQuery(queryContainer) {
   console.log('function postQuery(queryContainer)');
 
   // Collect model query
-  let querySel = collectQuery(queryContainer);
-  if (queryContainer.id == 'query-container') {
-    var statusId = 'query-status';
-    var tab = 'static';
-    var reg = document.getElementById('register-query').checked;
-  } else if (queryContainer.id == 'dynamic-container') {
-    var statusId = 'dyn-query-status';
-    var tab = 'dynamic';
-    var reg = document.getElementById('register-dyn-query').checked;
-  } else {
-    var statusId = 'open-query-status';
-    var tab = 'open';
-    var reg = document.getElementById('register-open-query').checked;
-  }
+  let tab = queryContainer.id.split('-')[0]
+  let statusId = `${tab}-status`
+  let reg = document.getElementById(`register-${tab}-query`).checked;
+  let querySel = collectQuery(queryContainer, tab);
   console.log(querySel)
+  console.log(querySel[1])
   if (querySel == null || querySel.length < 2) {
     queryNotify('Did not send query', statusId);
     let loc = window.location.href;
@@ -40,7 +31,7 @@ function postQuery(queryContainer) {
   console.log(ajax_response);
 }
 
-function collectQuery(queryContainer) {
+function collectQuery(queryContainer, tab) {
   console.log('function collectQuery(queryContainer)');
   console.log(queryContainer.id)
   let dropdownSelections = queryContainer.getElementsByClassName('custom-select');
@@ -50,22 +41,11 @@ function collectQuery(queryContainer) {
   let models = [];
 
   // Get checked models
-  if (queryContainer.id == 'query-container') {
-    for (op of document.getElementById('model-select').children) {
-      console.log(op.value);
-      models.push(op.value);
-    }
-  } else  if (queryContainer.id == 'dynamic-container') {
-    for (op of document.getElementById('dynamic-select').children) {
-      console.log(op.value);
-      models.push(op.value);
-    };
-  } else {
-    for (op of document.getElementById('open-select').children) {
-      console.log(op.value);
-      models.push(op.value);
-    };
-  };
+  for (op of document.getElementById(`${tab}-select`).children) {
+    console.log(op.value);
+    models.push(op.value);
+  }
+
   if (models.length === 0) {
     // Handle no boxes ticked
     alert('Must select at least one model!');
@@ -75,15 +55,19 @@ function collectQuery(queryContainer) {
 
   //  Collect dropdown selections
   for (let selection of dropdownSelections) {
-    let selId = selection.id;
+    var selId = selection.id;
+    if (['static-typeSelection', 'intervention-typeSelection'].includes(selId)) {
+      var selId = 'typeSelection';
+    };
     // Use the IDs of the select tags as keys in the query json
     query[selId] = selection.options[selection.selectedIndex].value;
   }
 
+  query['queryType'] = tab;
   // Collect subject/object/agent from forms
-  if (queryContainer.id == 'query-container') {
-    query['subjectSelection'] = document.getElementById('subjectInput').value;
-    query['objectSelection'] = document.getElementById('objectInput').value;
+  if (['static', 'intervention'].includes(tab)) {
+    query['subjectSelection'] = document.getElementById(`${tab}-subjectInput`).value;
+    query['objectSelection'] = document.getElementById(`${tab}-objectInput`).value;
     if (query['subjectSelection'] === '') {
       alert('Must provide a subject!');
       return;
@@ -92,13 +76,13 @@ function collectQuery(queryContainer) {
       alert('Must provide an object!');
       return;
     }
-  } else if (queryContainer.id == 'dynamic-container') {
+  } else if (tab == 'dynamic') {
     query['agentSelection'] = document.getElementById('agentInput').value;
     if (query['agentSelection'] === '') {
       alert('Must provide an agent description!');
       return;
     } 
-  } else {
+  } else if (tab == 'open') {
     query['openAgentSelection'] = document.getElementById('openAgentInput').value;
     if (query['openAgentSelection'] === '') {
       alert('Must provide an agent description!');
@@ -122,16 +106,8 @@ function submitQuery(queryDict, tab, test) {
   if (test) queryDict['test'] = true;
 
   // submit POST to emmaa user db 
-  if (tab == 'static') {
-    $('#query-status-gif').show();
-    var statusId = 'query-status';
-  } else if (tab == 'dynamic') {
-    $('#dyn-query-status-gif').show();
-    var statusId = 'dyn-query-status';
-  } else {
-    $('#open-query-status-gif').show();
-    var statusId = 'open-query-status';
-  }
+  $(`#${tab}-query-status-gif`).show();
+  var statusId = `${tab}-query-status`
   queryNotify('Waiting for server response', statusId);
   return $.ajax({
     url: EMMAA_API,
@@ -143,8 +119,10 @@ function submitQuery(queryDict, tab, test) {
       console.log('responseJSON');
       console.log(xhr.responseJSON);
       console.log(statusText);
-      $('#query-status-gif').hide();
-      $('#dyn-query-status-gif').hide();
+      $('#static-query-status-gif').hide();
+      $('#dynamic-query-status-gif').hide();
+      $('#intervention-query-status-gif').hide()
+      $('#open-query-status-gif').hide()
       switch (xhr.status) {
         case 200:
           console.log('200 response');

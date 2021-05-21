@@ -23,7 +23,8 @@ from bioagents.tra.tra import TRA, MissingMonomerError, MissingMonomerSiteError
 from emmaa.model import EmmaaModel, get_assembled_statements, \
     load_config_from_s3
 from emmaa.statements import filter_indra_stmts_by_metadata
-from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery
+from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery, \
+    SimpleInterventionProperty
 from emmaa.util import make_date_str, get_s3_client, \
     EMMAA_BUCKET_NAME, find_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
@@ -55,6 +56,10 @@ ARROW_DICT = {'Complex': u"\u2194",
               'Inhibition': u"\u22A3",
               'DecreaseAmount': u"\u22A3"}
 
+# This mapping configures the use of different model types
+# path: regular tests and path-based queries will be run against these models
+# simulation: priority list for running simulation based queries (only first
+# available model type will be used)
 MODEL_TYPES = {'path': ['pysb', 'pybel', 'signed_graph', 'unsigned_graph'],
                'simulation': ['dynamic', 'pysb']}
 
@@ -316,6 +321,8 @@ class ModelManager(object):
             return self.answer_path_query(query)
         if isinstance(query, OpenSearchQuery):
             return self.answer_open_query(query)
+        if isinstance(query, SimpleInterventionProperty):
+            return self.answer_intervention_query(query)
 
     def answer_path_query(self, query):
         """Answer user query with a path if it is found."""
@@ -339,13 +346,14 @@ class ModelManager(object):
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
-        pysb_model, use_kappa, time_limit, num_times, num_sim = \
-            self._get_dynamic_components()
+        pysb_model, use_kappa, time_limit, num_times, num_sim, hyp_tester = \
+            self._get_dynamic_components('dynamic')
         tra = TRA(use_kappa=use_kappa)
         tp = query.get_temporal_pattern(time_limit)
         try:
             sat_rate, num_sim, kpat, pat_obj, fig_path = tra.check_property(
-                pysb_model, tp, num_times=num_times)
+                pysb_model, tp, num_times=num_times, num_sim=num_sim,
+                hypothesis_tester=hyp_tester)
             if self.mode == 's3':
                 fig_name, ext = os.path.splitext(os.path.basename(fig_path))
                 date_str = make_date_str()
@@ -358,6 +366,32 @@ class ModelManager(object):
                 fig_path = s3_path
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
                          'kpat': kpat, 'fig_path': fig_path}
+        except (MissingMonomerError, MissingMonomerSiteError):
+            resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
+        return [('pysb', self.hash_response_list(resp_json), resp_json)]
+
+    def answer_intervention_query(self, query, bucket=EMMAA_BUCKET_NAME):
+        """Answer user intervention query by simulating a PySB model."""
+        pysb_model, use_kappa, time_limit, num_times, num_sim, _ = \
+            self._get_dynamic_components('intervention')
+        tra = TRA(use_kappa=use_kappa)
+        try:
+            res, fig_path = tra.compare_conditions(pysb_model,
+                                                   query.condition_entity,
+                                                   query.target_entity,
+                                                   query.direction,
+                                                   time_limit, num_times)
+            if self.mode == 's3':
+                fig_name, ext = os.path.splitext(os.path.basename(fig_path))
+                date_str = make_date_str()
+                s3_key = (f'query_images/{self.model.name}/{fig_name}_'
+                          f'{date_str}{ext}')
+                s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
+                client = get_s3_client(unsigned=False)
+                logger.info(f'Uploading image to {s3_path}')
+                client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
+                fig_path = s3_path
+            resp_json = {'result': res, 'fig_path': fig_path}
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
         return [('pysb', self.hash_response_list(resp_json), resp_json)]
@@ -390,7 +424,8 @@ class ModelManager(object):
         g = mc.get_graph()
         subj_nodes, obj_nodes, res_code = mc.process_statement(query.path_stmt)
         if res_code:
-            return self.hash_response_list(RESULT_CODES[res_code])
+            return self.hash_response_list(RESULT_CODES[res_code]), \
+                RESULT_CODES[res_code]
         else:
             if query.entity_role == 'subject':
                 reverse = False
@@ -439,6 +474,10 @@ class ModelManager(object):
             # path and open queries some parts can be shared
             if isinstance(query, DynamicProperty):
                 mc_type, response, resp_json = self.answer_dynamic_query(
+                    query, **kwargs)[0]
+                responses.append((query, mc_type, response))
+            if isinstance(query, SimpleInterventionProperty):
+                mc_type, response, resp_json = self.answer_intervention_query(
                     query, **kwargs)[0]
                 responses.append((query, mc_type, response))
             elif isinstance(query, PathProperty):
@@ -524,20 +563,33 @@ class ModelManager(object):
         time_limit = None
         num_times = 100
         num_sim = 2
+        hyp_tester = None
         if qtype in self.model.query_config:
-            use_kappa = self.model.query_config[qtype].get(
-                'use_kappa', False)
-            time_limit = self.model.query_config[qtype].get('time_limit')
-            num_times = self.model.query_config[qtype].get(
-                'num_times', 100)
-            num_sim = self.model.query_config[qtype].get('num_sim', 2)
+            qc = self.model.query_config[qtype]
+            use_kappa = qc.get('use_kappa', False)
+            time_limit = qc.get('time_limit')
+            num_times = qc.get('num_times', 100)
+            # If we have a fixed number of simulations, we use that
+            if 'num_sim' in qc:
+                num_sim = qc['num_sim']
+                hyp_tester = None
+            # If we have parameters for a hypothesis tester, we use that
+            elif 'hypothesis_tester' in qc:
+                from bioagents.tra.model_checker import HypothesisTester
+                num_sim = 0
+                hyp_tester = HypothesisTester(**qc['hypothesis_tester'])
+            # If we don't have any specification, we fall back on 2 fixed
+            # simulations
+            else:
+                num_sim = 2
+                hyp_tester = None
         # Either use specially assembled or regular PySB depending on model
         for mc_type in MODEL_TYPES['simulation']:
             if mc_type in self.mc_types:
                 logger.info(f'Using {mc_type} model for simulation')
                 pysb_model = deepcopy(self.mc_types[mc_type]['model'])
                 break
-        return pysb_model, use_kappa, time_limit, num_times, num_sim
+        return pysb_model, use_kappa, time_limit, num_times, num_sim, hyp_tester
 
     def process_response(self, mc_type, result):
         """Return a dictionary in which every key is a hash and value is a list
@@ -579,9 +631,12 @@ class ModelManager(object):
                 response_hash = str(fnv1a_32(response_str.encode('utf-8')))
                 response_dict[response_hash] = resp
         elif isinstance(response, dict):
-            results = [str(response.get('sat_rate')),
-                       str(response.get('num_sim'))]
-            response_str = ' '.join(results)
+            if 'sat_rate' in response:
+                results = [str(response.get('sat_rate')),
+                           str(response.get('num_sim'))]
+                response_str = ' '.join(results)
+            else:
+                response_str = response.get('result')
             response_hash = str(fnv1a_32(response_str.encode('utf-8')))
             response_dict[response_hash] = response
         else:

@@ -148,6 +148,25 @@ def format_results(results, query_type='path_property'):
                 formatted_results[query_hash][mc_type] = ['Fail', response]
             else:
                 formatted_results[query_hash][mc_type] = ['Pass', response]
+        elif query_type == 'simple_intervention_property':
+            if response == 'Query is not applicable for this model':
+                formatted_results[query_hash]['result'] = ['n_a', response]
+            else:
+                res = response[0]['result']
+                if res == 'no_change':
+                    action = 'did not change'
+                elif res.endswith('increase'):
+                    action = 'increased'
+                elif res.endswith('decrease'):
+                    action = 'decreased'
+                if res.startswith('no'):
+                    expl = f'No, the amount of target entity {action}.'
+                    formatted_results[query_hash]['result'] = ['Fail', expl]
+                else:
+                    expl = f'Yes, the amount of target entity {action}.'
+                    formatted_results[query_hash]['result'] = ['Pass', expl]
+                formatted_results[query_hash]['image'] = (
+                    response[0]['fig_path'])
         elif query_type == 'dynamic_property':
             if response == 'Query is not applicable for this model':
                 formatted_results[query_hash]['result'] = ['n_a', response]

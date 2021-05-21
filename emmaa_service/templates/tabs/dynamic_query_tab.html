@@ -1,12 +1,33 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers) -%}
+{% macro dynamic_tab(model_data, immediate_results, subscribed_results, tab, latest_query=None ) -%}
   <!-- Dynamic queries -->
-  <div class="container" id="dynamic-container">
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+        This query mode uses dynamical simulation to verify if the baseline
+        dynamics (i.e., no intervention) of the model meets a given qualitative
+        pattern. Specifying the query involves providing an <b>agent state
+        description</b> (e.g., <i>“active KRAS”</i>,
+        <i>“phosphorylated BRAF”</i>, <i>“DUSP6 bound to MAPK1”</i>),
+        a <b>pattern type</b> (e.g., <i>sometime_value</i>)
+        and in some pattern types, a <b>value</b> (e.g., <i>low/high</i>).
+        This allows expressing queries such as <i>“is the amount of
+        phosphorylated BRAF [agent state description] at any point in time
+        [pattern] high [value]?”</i>. The result provides a yes/no answer to
+        the query as well as the time course results of simulations of
+        the given agent state.
+      </div>
+    </div>
+  </div>
+  <div class="container" id="dynamic-container" style="margin-top: 20px;">
 
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
       </div>
       <div class="card-body">
 
@@ -16,8 +37,12 @@
           <div class="form-select">
             <select name="dynamic-select" id="dynamic-select" placeholder="Select model" multiple>
             {% for model_id, config_json in model_data %}
-            {% if 'query' in config_json and 'dynamic' in config_json['query'] %}
+            {% if 'query' in config_json and tab in config_json['query'] %}
+              {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
+              <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% endif %}
             {% endif %}
             {% endfor %}
             </select>
@@ -32,7 +57,11 @@
               <div class="row" style="align-items: center">
                 <!-- agent -->
                 <div class="col" style="padding-right: 2px">
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
+                  <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description" value="{{ latest_query['query_json']['agentSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="agentInput" type="text" name="agentText" style="width: 400px;" placeholder="Enter agent description">
+                  {% endif %}
                 </div>
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                   <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
@@ -40,7 +69,11 @@
                   <select onchange="checkPattern()" class="custom-select" style="width: 300px;" id="patternSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select pattern type</option>
                     {% for pattern_type in ['always_value', 'no_change', 'eventual_value', 'sometime_value', 'sustained', 'transient'] %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['patternSelection'] == pattern_type %}
+                    <option value="{{ pattern_type }}" selected="{{ pattern_type }}">{{ pattern_type }}</option>
+                    {% else %}
                     <option value="{{ pattern_type }}">{{ pattern_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
@@ -50,17 +83,24 @@
                   <select class="custom-select" id="valueSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select value</option>
                     {% for val in ['high', 'low'] %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['valueSelection'] == val %}
+                    <option value="{{ val }}" selected="{{ val }}">{{ val }}</option>
+                    {% else %}
                     <option value="{{ val }}">{{ val }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['patternSelection'] %}
+                  <script>checkPattern();</script>
+                  {% endif %}
                 </div>
               </div>
               <!-- formsubmit -->
               <div class="row">
                 <div class="container">
-                  <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="dyn-query-submit" id="dyn-query-submit">
-                  <input type="checkbox" name="register" style="margin-top: 20px" id="register-dyn-query" style="padding-top: 3000px;"><label
-                  for="register-dyn-query">  Subscribe To Query</label>
+                  <input class="btn btn-query-submit" style="margin-top: 2px" type="submit" text="Submit query" name="dynamic-query-submit" id="dynamic-query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 20px" id="register-dynamic-query" style="padding-top: 3000px;"><label
+                  for="register-dynamic-query">  Subscribe To Query</label>
                 </div>
               </div>
             </form>
@@ -69,19 +109,19 @@
 
         <div class="container">
           <div class="container">
-            <div id="dyn-query-status-gif" style="display: none;">
+            <div id="dynamic-query-status-gif" style="display: none;">
               <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
             </div>
-            <span><i id="dyn-query-status"></i></span>
+            <span><i id="dynamic-query-status"></i></span>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="container">
-    {{ path_card(immediate_dynamic_results, 'Query Results', 'dyn-query-results', dynamic_immediate_headers, 'dynQueryResults') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(immediate_results[tab][0], 'Query Results', 'dynamic-query-results', immediate_results[tab][1], 'dynQueryResults') }}
   </div>
-  <div class="container">
-    {{ path_card(subscribed_dynamic_results, 'Subscribed Queries', 'dyn-user-queries', subscribed_dynamic_headers, 'dyn-old-results') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', 'dynamic-user-queries', subscribed_results[tab][1], 'dyn-old-results') }}
   </div>
 {%- endmacro %}

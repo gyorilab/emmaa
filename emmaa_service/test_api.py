@@ -3,7 +3,8 @@ import unittest
 from moto import mock_s3
 from emmaa.util import make_date_str
 from emmaa.tests.test_s3 import setup_bucket, TEST_BUCKET_NAME
-from emmaa.queries import PathProperty, DynamicProperty
+from emmaa.queries import PathProperty, DynamicProperty, OpenSearchQuery, \
+    SimpleInterventionProperty
 
 
 @mock_s3
@@ -36,17 +37,35 @@ def test_api_load_from_s3():
 def test_make_query():
     from emmaa_service.api import _make_query
     query, tab = _make_query({
+        'queryType': 'static',
         'typeSelection': 'Activation',
         'subjectSelection': 'BRAF',
         'objectSelection': 'MAPK1'})
     assert isinstance(query, PathProperty)
     assert tab == 'static'
     query, tab = _make_query({
+        'queryType': 'dynamic',
         'agentSelection': 'phosphorylated MAP2K1',
         'valueSelection': 'low',
         'patternSelection': 'always_value'})
     assert isinstance(query, DynamicProperty)
     assert tab == 'dynamic'
+    query, tab = _make_query({
+        'queryType': 'intervention',
+        'typeSelection': 'Activation',
+        'subjectSelection': 'BRAF',
+        'objectSelection': 'MAPK1'})
+    assert isinstance(query, SimpleInterventionProperty)
+    assert tab == 'intervention'
+    query, tab = _make_query({
+        'queryType': 'open',
+        'stmtTypeSelection': 'Inhibition',
+        'openAgentSelection': 'MAPK1',
+        'roleSelection': 'object',
+        'nsSelection': ['small molecules']
+    })
+    assert isinstance(query, OpenSearchQuery)
+    assert tab == 'open'
 
 
 class EmmaaApiTest(unittest.TestCase):
@@ -67,7 +86,8 @@ class EmmaaApiTest(unittest.TestCase):
                                'name': 'joshua',
                                'slack_id': '123456abcdef'},
                       'models': ['aml', 'luad'],
-                      'query': {'objectSelection': 'ERK',
+                      'query': {'queryType': 'static',
+                                'objectSelection': 'ERK',
                                 'subjectSelection': 'BRAF',
                                 'typeSelection': 'activation'},
                       'register': False,
@@ -81,13 +101,14 @@ class EmmaaApiTest(unittest.TestCase):
         """Test querying a model"""
 
         test_query = {'user': {'email': 'joshua@emmaa.com',
-                                   'name': 'joshua',
-                                   'slack_id': '123456abcdef'},
-                          'models': ['rasmodel'],
-                          'query': {'objectSelection': 'AKT1',
-                                    'subjectSelection': 'PIK3CA',
-                                    'typeSelection': 'activation'},
-                          'register': False}
+                               'name': 'joshua',
+                               'slack_id': '123456abcdef'},
+                      'models': ['rasmodel'],
+                      'query': {'queryType': 'static',
+                                'objectSelection': 'AKT1',
+                                'subjectSelection': 'PIK3CA',
+                                'typeSelection': 'activation'},
+                      'register': False}
 
         resp = self.app.post('/query/submit', json=test_query)
 

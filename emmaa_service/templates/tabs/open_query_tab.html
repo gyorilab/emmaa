@@ -1,24 +1,49 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers) -%}
+{% macro open_tab(model_data, stmt_types, ns_groups, immediate_results, subscribed_results, tab, latest_query=None, preselected_model=None) -%}
   <!-- Open Search Queries -->
-  <div class="container" id="open-container">
+  <div class="container">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Description</h4>
       </div>
       <div class="card-body">
-
+        This query mode allows finding causal paths to or from a given agent
+        to identify its upstream regulators and its downstream targets.
+        The query specification involves specifying the <b>agent</b>
+        by name and <b>role</b> (<i>subject</i> or <i>object</i> corresponding
+        to finding its downstream targets or upstream regulators, respectively),
+        a <b>statement type</b> representing the effect of the regulations
+        (e.g., <i>Phosphorylation, Inhibition</i>), and optional
+        <b>constraints on the types of up/downstream entities</b> that are of
+        interest. This allows expressing questions such as <i>“what small
+        molecules [entity constraint] inhibit [statement type] the
+        phosphorylation [statement type] of JAK2 [agent]?”</i> or <i>“what
+        biological process [entity constraint] does TNF [agent] activate
+        [statement type]?”</i>. The result returns not only the entities but
+        also the specific causal paths that are consistent with the query
+        specification. Depending on which EMMAA model is selected, multiple
+        modeling formalisms (unsigned graph, signed graph, PyBEL model,
+        PySB model) are used to find paths, each with different causal
+        constraint assumptions, potentially resulting in different results.
+      </div>
+    </div>
+  </div>
+  <div class="container" id="open-container" style="margin-top: 20px;">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
+      </div>
+      <div class="card-body">
         <!-- model selection -->
         <h6><b>Model selection</b></h6>
         <div class="checkbox-container">
           <div class="form-select">
             <select name="open-select" id="open-select" placeholder="Select models" multiple>
-            {% if preselected_val and preselected_name %}
-              <option value="{{ preselected_val }}" selected="{{ preselected_val }}">{{ preselected_name }}</option>
-            {% endif %}
             {% for model_id, config_json in model_data %}
-              {% if model_id != preselected_val %}
+              {% if model_id == preselected_model or (latest_query and latest_query['query_json']['queryType'] == 'open' and model_id in latest_query['models']) %}
+              <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% else %}
               <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
               {% endif %}
             {% endfor %}
@@ -37,19 +62,31 @@
                   <select class="custom-select" style="width: 400px;" id="stmtTypeSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                     {% for stmt_type in stmt_types %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and latest_query['query_json']['stmtTypeSelection'] == stmt_type %}
+                    <option value="{{ stmt_type }}" selected="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% else %}
                     <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
                 <!-- agent -->
                 <div class="col" style="padding-right: 2px; width: 300px;">
+                  {% if latest_query and latest_query['query_json']['queryType'] == 'open' %}
+                  <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent" value="{{ latest_query['query_json']['openAgentSelection'] }}">
+                  {% else %}
                   <input class="form-control" id="openAgentInput" type="text" name="openAgentText" placeholder="Enter agent">
+                  {% endif %}
                 </div>
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px;">
                   <select class="custom-select" id="roleSelection" style="width: 300px">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select agent's role</option>
                     {% for role, descr in {'subject': 'subject (downstream search)', 'object': 'object (upstream search)'}.items() %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and latest_query['query_json']['roleSelection'] == role %}
+                    <option value="{{ role }}" selected="{{ role }}">{{ descr }}</option>
+                    {% else %}
                     <option value="{{ role }}">{{ descr }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
@@ -64,7 +101,11 @@
                   <select name="ns-select" id="ns-select" placeholder="Select namespaces" multiple>
                     <option value="" disabled="disabled" hidden="hidden">Limit entity types to (optional)</option>
                   {% for group, options in ns_groups.items() %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == 'open' and group in latest_query['query_json']['nsSelection'] %}
+                    <option value="{{ group }}" selected="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
+                    {% else %}
                     <option value="{{ group }}">{{ group }} ({{ options|join(", ")|upper }})</option>
+                    {% endif %}
                   {% endfor %}
                   </select>
                 </div>
@@ -74,7 +115,7 @@
               <!-- formsubmit -->
               <div class="row">
                 <div class="container">
-                  <input class="btn" style="margin-top: 5px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
+                  <input class="btn btn-query-submit" style="margin-top: 5px" type="submit" text="Submit query" name="open-query-submit" id="open-query-submit">
                   <input type="checkbox" name="register" style="margin-top: 15px" id="register-open-query" style="padding-top: 3000px;"><label
                     for="register-open-query">  Subscribe To Query</label>
                 </div>
@@ -96,12 +137,12 @@
   </div>
 
   <!-- Query results -->
-  <div class="container">
-    {{ path_card(open_immediate_results, 'Query Results', 'open-query-results', open_immediate_headers, 'openQueryResults') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(immediate_results[tab][0], 'Query Results', 'open-query-results', immediate_results[tab][1], 'openQueryResults') }}
   </div>
   <!-- List user queries -->
-  <div class="container">
-    {{ path_card(subscribed_open_results, 'Subscribed Queries', 'open-user-queries', subscribed_open_headers, 'open-old-results') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', 'open-user-queries', subscribed_results[tab][1], 'open-old-results') }}
   </div>
 </div>
 {%- endmacro %}

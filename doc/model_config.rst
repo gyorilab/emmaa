@@ -344,12 +344,15 @@ following fields:
 Model queries configuration
 ---------------------------
 Configuration for model queries represented as a dictionary keyed by the type
-of query (`statement_checking` (static paths queries), `open_search` and
-`dynamic`). Configuration for `statement_checking` and `open_search` queries
-is similar to the model test `statement_checking` format. Same as in test
-config, it is possible to set different values for different model types.
+of query: `statement_checking` (source-target paths), `open_search`
+(up/down-stream paths), `dynamic` (temporal properties), and `intervention`
+(source-target dynamics). Configuration for `statement_checking` and
+`open_search` queries is similar to the model test `statement_checking` format.
+Same as in test config, it is possible to set different values for different
+model types.
 
-Configuration for dynamic queries has different fields (all optional):
+Configuration for `dynamic` and `intervention` queries has different fields 
+(all optional):
 
 - `use_kappa` : bool
     Determines the mode of the simulation. If True, uses `kappa`, otherwise,
@@ -362,10 +365,21 @@ Configuration for dynamic queries has different fields (all optional):
     Number of time points in the simulation plot. Default: 100.
 
 - `num_sim` : int
-    Number of simulations to run. Default: 2.
+    Number of simulations to run. This should be only provided if
+    `hypothesis_tester` is not set. Default: 2.
 
-Having a `dynamic` key in query config is required for a model to be listed as
-an option for model selection on dynamic queries page.
+- `hypothesis_tester` : dict; currently only for `dynamic`, not `intervention`.
+    Configuration to test a hypothesis using random samples with adaptive size.
+    If this is given, `num_sim` should not be provided. The `hypothesis_tester`
+    dictionary should include the following keys: `alpha` (Type-I error limit,
+    between 0 and 1), `beta` (Type-II error limit, between 0 and 1), `delta`
+    (indifference parameter for interval around `prob` in both directions),
+    `prob` (probability threshold for the hypothesis, between 0 and 1).
+
+Having `dynamic` and `intervention` key in query config is required for a
+model to be listed as an option for model selection on temporal properties
+and source-target dynamics queries pages (for path-based queries all models
+will be listed).
 
     - Example (all query types):
 
@@ -387,8 +401,17 @@ an option for model selection on dynamic queries page.
             "use_kappa": true,
             "time_limit": 100,
             "num_times": 100,
+            "hypothesis_tester": {"alpha": 0.1,
+                                  "beta": 0.1,
+                                  "delta": 0.05,
+                                  "prob": 0.8}
+            },
+         "intervention": {
+            "use_kappa": true,
+            "time_limit": 1000,
+            "num_times": 100,
             "num_sim": 1
-            }
+            },
         }
 
 .. _make_tests_config:

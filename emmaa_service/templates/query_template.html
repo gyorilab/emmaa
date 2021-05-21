@@ -7,7 +7,10 @@
   <script src="{{ url_for('static', filename='queryFunctions.js') }}"></script>
   <script>
     $(document).ready(function() {
-      let modelSelect = new Choices('#model-select');
+      let modelSelect = new Choices('#static-select');
+    })
+    $(document).ready(function() {
+      let modelSelect = new Choices('#intervention-select');
     })
     $(document).ready(function() {
       let modelSelect = new Choices('#dynamic-select');
@@ -31,17 +34,25 @@
   <nav>
     <div class="nav nav-tabs" id="nav-tab" role="tablist">
       {% if tab == 'static' %}
-      <a class="nav-item nav-link active" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="true">Static</a>
-      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Dynamic</a>
-      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Open Search</a>
+      <a class="nav-item nav-link active" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="true">Source-target paths</a>
+      <a class="nav-item nav-link" id="nav-intervention-tab" data-toggle="tab" href="#nav-intervention" role="tab" aria-controls="nav-intervention" aria-selected="false">Source-target dynamics</a>
+      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Temporal properties</a>
+      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Up/down-stream paths</a>
       {% elif tab == 'open' %}
-      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Static</a>
-      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Dynamic</a>
-      <a class="nav-item nav-link active" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="true">Open Search</a>
+      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Source-target paths</a>
+      <a class="nav-item nav-link" id="nav-intervention-tab" data-toggle="tab" href="#nav-intervention" role="tab" aria-controls="nav-intervention" aria-selected="false">Source-target dynamics</a>
+      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Temporal properties</a>
+      <a class="nav-item nav-link active" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="true">Up/down-stream paths</a>
       {% elif tab == 'dynamic' %}
-      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Static</a>
-      <a class="nav-item nav-link active" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="true">Dynamic</a>
-      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Open Search</a>
+      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Source-target paths</a>
+      <a class="nav-item nav-link" id="nav-intervention-tab" data-toggle="tab" href="#nav-intervention" role="tab" aria-controls="nav-intervention" aria-selected="false">Source-target dynamics</a>
+      <a class="nav-item nav-link active" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="true">Temporal properties</a>
+      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Up/down-stream paths</a>
+      {% elif tab == 'intervention' %}
+      <a class="nav-item nav-link" id="nav-static-tab" data-toggle="tab" href="#nav-static" role="tab" aria-controls="nav-static" aria-selected="false">Source-target paths</a>
+      <a class="nav-item nav-link active" id="nav-intervention-tab" data-toggle="tab" href="#nav-intervention" role="tab" aria-controls="nav-intervention" aria-selected="true">Source-target dynamics</a>
+      <a class="nav-item nav-link" id="nav-dynamic-tab" data-toggle="tab" href="#nav-dynamic" role="tab" aria-controls="nav-dynamic" aria-selected="false">Temporal properties</a>
+      <a class="nav-item nav-link" id="nav-open-tab" data-toggle="tab" href="#nav-open" role="tab" aria-controls="nav-open" aria-selected="false">Up/down-stream paths</a>
       {% endif %}     
     </div>
   </nav>
@@ -53,7 +64,16 @@
   <div class="tab-pane" id="nav-static" role="tabpanel" aria-labelledby="nav-static-tab">
   {% endif %}
 
-  {{ static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers) }}
+  {{ static_tab(model_data, stmt_types, immediate_results, subscribed_results, 'static', latest_query=latest_query) }}
+
+  </div>
+  {% if tab == 'intervention' %}
+  <div class="tab-pane fade show active" id="nav-intervention" role="tabpanel" aria-labelledby="nav-intervention-tab">
+  {% else %}
+  <div class="tab-pane" id="nav-intervention" role="tabpanel" aria-labelledby="nav-intervention-tab">
+  {% endif %}
+
+  {{ static_tab(model_data, stmt_types, immediate_results, subscribed_results, 'intervention', model_filter='intervention', latest_query=latest_query) }}
 
   </div>
   {% if tab == 'dynamic' %}
@@ -62,7 +82,7 @@
   <div class="tab-pane fade" id="nav-dynamic" role="tabpanel" aria-labelledby="nav-dynamic-tab">
   {% endif %}
 
-  {{ dynamic_tab(model_data, immediate_dynamic_results, subscribed_dynamic_results, dynamic_immediate_headers, subscribed_dynamic_headers) }}
+  {{ dynamic_tab(model_data, immediate_results, subscribed_results, 'dynamic', latest_query=latest_query) }}
   
   </div>
   {% if tab == 'open' %}
@@ -71,7 +91,7 @@
   <div class="tab-pane" id="nav-open" role="tabpanel" aria-labelledby="nav-open-tab">
   {% endif %}
 
-  {{ open_tab(model_data, stmt_types, ns_groups, open_immediate_results, subscribed_open_results, open_immediate_headers, subscribed_open_headers) }}
+  {{ open_tab(model_data, stmt_types, ns_groups, immediate_results, subscribed_results, 'open',  latest_query=latest_query, preselected_model=preselected_model) }}
 
 </div>
 

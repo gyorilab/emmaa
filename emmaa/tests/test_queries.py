@@ -1,9 +1,10 @@
 import json
 from os.path import abspath, dirname, join
-from indra.statements import Phosphorylation, Agent, ModCondition, Inhibition
+from indra.statements import Phosphorylation, Agent, ModCondition, Inhibition,\
+    Activation
 from emmaa.queries import Query, PathProperty, DynamicProperty, \
-    OpenSearchQuery, get_agent_from_text, get_agent_from_trips, \
-    get_agent_from_gilda
+    OpenSearchQuery, SimpleInterventionProperty, get_agent_from_text, \
+    get_agent_from_trips, get_agent_from_gilda
 
 
 def test_path_property_from_json():
@@ -161,6 +162,73 @@ def test_open_query_to_english():
     assert q3.to_english() == 'What does EGFR activate?'
 
 
+def test_intervention_query_from_json():
+    query_file = join(
+        dirname(abspath(__file__)), 'intervention_query.json')
+    with open(query_file, 'r') as f:
+        json_dict = json.load(f)
+    query = Query._from_json(json_dict)
+    assert query
+    assert isinstance(query, SimpleInterventionProperty)
+    assert isinstance(query.condition_entity, Agent)
+    assert query.condition_entity.name == 'EGF'
+    assert isinstance(query.target_entity, Agent)
+    assert query.target_entity.name == 'ERK'
+    assert query.direction == 'up'
+
+
+def test_intervention_query_to_json():
+    condition = Agent('EGF', db_refs={'HGNC': '3229'})
+    target = Agent('ERK', db_refs={'FPLX': 'ERK'})
+    query = SimpleInterventionProperty(condition, target, 'up')
+    assert query
+    qj = query.to_json()
+    assert qj.get('type') == 'simple_intervention_property'
+    cond_json = qj.get('condition_entity')
+    target_json = qj.get('target_entity')
+    assert cond_json.get('name') == 'EGF'
+    assert cond_json.get('db_refs') == {'HGNC': '3229'}
+    assert target_json.get('name') == 'ERK'
+    assert target_json.get('db_refs') == {'FPLX': 'ERK'}
+    assert qj.get('direction') == 'up'
+
+
+def test_intervention_query_from_stmt():
+    stmt = Activation(Agent('EGF', db_refs={'HGNC': '3229'}),
+                      Agent('ERK', db_refs={'FPLX': 'ERK'}))
+    query = SimpleInterventionProperty.from_stmt(stmt)
+    assert isinstance(query.condition_entity, Agent)
+    assert query.condition_entity.name == 'EGF'
+    assert isinstance(query.target_entity, Agent)
+    assert query.target_entity.name == 'ERK'
+    assert query.target_entity.activity
+    stmt = Phosphorylation(Agent('EGF', db_refs={'HGNC': '3229'}),
+                           Agent('ERK', db_refs={'FPLX': 'ERK'}))
+    query = SimpleInterventionProperty.from_stmt(stmt)
+    assert query.target_entity.mods
+
+
+def test_stringify_intervention_query():
+    condition = Agent('EGF', db_refs={'HGNC': '3229'})
+    target = Agent('ERK', db_refs={'FPLX': 'ERK'})
+    query = SimpleInterventionProperty(condition, target, 'up')
+    assert str(query) == ('SimpleInterventionPropertyQuery(condition=EGF(), '
+                          'target=ERK(), direction=up)')
+
+
+def test_intervention_query_to_english():
+    condition = Agent('EGF', db_refs={'HGNC': '3229'})
+    target = Agent('ERK', db_refs={'FPLX': 'ERK'})
+    phos = Agent('ERK', db_refs={'FPLX': 'ERK'},
+                 mods=[ModCondition('phosphorylation')])
+    query = SimpleInterventionProperty(condition, target, 'up')
+    assert query.to_english() == 'EGF increases ERK.'
+    query = SimpleInterventionProperty(condition, target, 'down')
+    assert query.to_english() == 'EGF decreases ERK.'
+    query = SimpleInterventionProperty(condition, phos, 'up')
+    assert query.to_english() == 'EGF increases phosphorylated ERK.'
+
+
 def test_get_sign():
     ag = Agent('EGFR', db_refs={'HGNC': '3236'})
     # When entity role is object, sign is always 0 (sign of upstream node)
@@ -210,12 +278,12 @@ def test_agent_from_trips():
 
 
 def test_generic_agent_from_text():
-    agent = get_agent_from_gilda('MAPK1')
+    agent = get_agent_from_text('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
                              'MESH': 'C535150', 'EGID': '5594'}, agent.db_refs
     assert not agent.mods
-    ag_phos = get_agent_from_trips('the phosphorylated MAP2K1')
+    ag_phos = get_agent_from_text('the phosphorylated MAP2K1')
     assert ag_phos.db_refs.get('HGNC') == '6840'
     assert ag_phos.mods

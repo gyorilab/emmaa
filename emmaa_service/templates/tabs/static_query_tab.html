@@ -1,11 +1,45 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro static_tab(model_data, stmt_types, immediate_query_result, subscribed_results, immediate_table_headers, subscribed_headers) -%}
+{% macro static_tab(model_data, stmt_types, immediate_results, subscribed_results, tab, model_filter=None, latest_query=None) -%}
   <!-- Static Queries -->
-  <div class="container" id="query-container">
+  <div class="container">
     <div class="card">
       <div class="card-header">
-        <h4 class="my-0 font-weight-normal">Model Queries</h4>
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+      {% if tab == 'static' %}
+      This query mode uses causal path finding to explain an effect between
+      a source and a target. Specifying the query involves choosing a
+      <b>source</b> and a <b>target</b> by name, and a <b>statement type</b>
+      (e.g., <i>Phosphorylation, Inhibition, IncreaseAmount</i>) which
+      represents the effect between them to answer questions such as
+      <i>“How does EGF [source] lead to the phosphorylation [statement type]
+      of MAPK1 [target]”</i>? Depending on which EMMAA model is selected,
+      multiple modeling formalisms (unsigned graph, signed graph, PyBEL model,
+      PySB model) are used to find paths, each with different causal
+      constraint assumptions, potentially resulting in different results.
+      {% elif tab == 'intervention' %}
+      This query mode uses dynamical simulation to describe the effect of an
+      intervention from a given source on a given target. Specifying the query
+      involves choosing a <b>source</b> and a <b>target</b> by name, and a
+      <b>statement type</b>(e.g., <i>Phosphorylation, Inhibition,
+      IncreaseAmount</i>) which represents the effect of the intervention
+      on the target. An example question that can be answered using this query
+      type is <i>“if the initial amount of BRAF [source] is increased, does
+      the phosphorylation [statement type] of MAP2K1 [target] increase?”</i>.
+      The results provide a yes/no answer to the query as well as the time
+      course results of simulations of the target readout
+      (phosphorylated MAP2K1 in the above example) to compare the
+      effect of two different initial amounts of the source.
+      {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="container" id="{{ tab }}-container" style="margin-top: 20px;">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Query specification</h4>
       </div>
       <div class="card-body">
 
@@ -13,9 +47,23 @@
         <h6><b>Model selection</b></h6>
         <div class="checkbox-container">
           <div class="form-select">
-            <select name="model-select" id="model-select" placeholder="Select models" multiple>
+            <select name="model-select" id="{{ tab }}-select" placeholder="Select models" multiple>
             {% for model_id, config_json in model_data %}
-              <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+              {% if model_filter %}
+                {% if 'query' in config_json and model_filter in config_json['query'] %}
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
+                  <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                  {% else %}
+                  <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                  {% endif %}
+                {% endif %}
+              {% else %}
+                {% if latest_query and latest_query['query_json']['queryType'] == tab and model_id in latest_query['models'] %}
+                <option value="{{ model_id }}" selected="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% else %}
+                <option value="{{ model_id }}">{{ config_json.human_readable_name }}</option>
+                {% endif %}
+              {% endif %}
             {% endfor %}
             </select>
           </div>
@@ -24,25 +72,37 @@
         <h6 style="padding-top: 20px;"><b>Query selection</b></h6>
         <div class="form-container" style="display: inline-block; vertical-align: top;">
           <div class="text" style="display: table;">
-            <form onsubmit="postQuery(document.getElementById('query-container')); return false;">
+            <form onsubmit="postQuery(document.getElementById('{{ tab }}-container')); return false;">
               <div class="row" style="align-items: center">
                 <div class="dropdown col" style="display: table-cell; padding-right: 2px">
                   <!-- WARNING: The id of the select tag goes into the query dictionary, do NOT change it unless it is
                     changed in the rest API and query handling -->
-                  <select class="custom-select" style="width: 400px;" id="typeSelection">
+                  <select class="custom-select" style="width: 400px;" id="{{ tab }}-typeSelection">
                     <option value="" selected="selected" disabled="disabled" hidden="hidden">select statement type</option>
                     {% for stmt_type in stmt_types %}
+                    {% if latest_query and latest_query['query_json']['queryType'] == tab and latest_query['query_json']['typeSelection'] == stmt_type %}
+                    <option value="{{ stmt_type }}" selected="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% else %}
                     <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+                    {% endif %}
                     {% endfor %}
                   </select>
                 </div>
                 <!-- subject -->
                 <div class="col" style="padding-right: 2px">
-                  <input class="form-control" id="subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter subject">
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter source" value="{{ latest_query['query_json']['subjectSelection'] }}">
+                  {% else %}
+                  <input class="form-control" id="{{ tab }}-subjectInput" style="width: 300px;" type="text" name="subjectText" placeholder="Enter source">
+                  {% endif %}
                 </div>
                 <!-- object -->
                 <div class="col" style="padding-left: 2px; padding-right: 2px">
-                  <input class="form-control" id="objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter object">
+                  {% if latest_query and latest_query['query_json']['queryType'] == tab %}
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter target" value="{{ latest_query['query_json']['objectSelection'] }}">
+                  {% else %}
+                  <input class="form-control" id="{{ tab }}-objectInput" type="text" style="width: 300px;" name="objectText" placeholder="Enter target">
+                  {% endif %}
                 </div>
               </div>
               <!-- indra docs text -->
@@ -53,8 +113,8 @@
               <!-- formsubmit -->
               <div class="row">
                 <div class="container">
-                  <input class="btn" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="query-submit">
-                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-query" style="padding-top: 3000px;"><label
+                  <input class="btn btn-query-submit" style="margin-top: 2px" type="submit" text="Submit query" name="query-submit" id="{{ tab }}-query-submit">
+                  <input type="checkbox" name="register" style="margin-top: 15px" id="register-{{ tab }}-query" style="padding-top: 3000px;"><label
                       for="register-query">Subscribe To Query</label>
                 </div>
               </div>
@@ -64,10 +124,10 @@
 
         <div class="container">
           <div class="container">
-            <div id="query-status-gif" style="display: none;">
+            <div id="{{ tab }}-query-status-gif" style="display: none;">
               <img src="https://indralab.github.io/emmaa/emmaa_service/dashboard/images/ajax-loader.gif">
             </div>
-            <span><i id="query-status"></i></span>
+            <span><i id="{{ tab }}-query-status"></i></span>
           </div>
         </div>
       </div>
@@ -75,11 +135,11 @@
   </div>
 
   <!-- Query results -->
-  <div class="container">
-    {{ path_card(immediate_query_result, 'Query Results', 'query-results', immediate_table_headers, 'queryResults') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(immediate_results[tab][0], 'Query Results', '{{ tab }}-query-results', immediate_results[tab][1], 'queryResults') }}
   </div>
   <!-- List user queries -->
-  <div class="container">
-    {{ path_card(subscribed_results, 'Subscribed Queries', 'user-queries', subscribed_headers, 'old-results') }}
+  <div class="container" style="margin-top: 20px;">
+    {{ path_card(subscribed_results[tab][0], 'Subscribed Queries', '{{ tab }}-user-queries', subscribed_results[tab][1], 'old-results') }}
   </div>
 {%- endmacro %}

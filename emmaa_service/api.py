@@ -36,7 +36,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery, Query
+    DynamicProperty, OpenSearchQuery, Query, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title
 
@@ -306,7 +306,8 @@ def get_queryable_stmt_types():
 
 
 def _make_query(query_dict):
-    if 'typeSelection' in query_dict.keys():
+    query_type = query_dict['queryType']
+    if query_type in ['static', 'intervention']:
         stmt_type = query_dict['typeSelection']
         stmt_class = get_statement_by_name(stmt_type)
         subj = get_agent_from_text(
@@ -314,17 +315,18 @@ def _make_query(query_dict):
         obj = get_agent_from_text(
             query_dict['objectSelection'])
         stmt = stmt_class(subj, obj)
-        query = PathProperty(path_stmt=stmt)
-        tab = 'static'
-    elif 'patternSelection' in query_dict.keys():
+        if query_type == 'static':
+            query = PathProperty(path_stmt=stmt)
+        elif query_type == 'intervention':
+            query = SimpleInterventionProperty.from_stmt(stmt)
+    elif query_type == 'dynamic':
         agent = get_agent_from_text(query_dict['agentSelection'])
         value = query_dict['valueSelection']
         if not value:
             value = None
         pattern = query_dict['patternSelection']
         query = DynamicProperty(agent, pattern, value)
-        tab = 'dynamic'
-    elif 'openAgentSelection' in query_dict.keys():
+    elif query_type == 'open':
         agent = get_agent_from_text(query_dict['openAgentSelection'])
         stmt_type = query_dict['stmtTypeSelection']
         role = query_dict['roleSelection']
@@ -335,9 +337,8 @@ def _make_query(query_dict):
             terminal_ns = []
             for gr in ns_groups:
                 terminal_ns += ns_mapping[gr]
-        tab = 'open'
         query = OpenSearchQuery(agent, stmt_type, role, terminal_ns)
-    return query, tab
+    return query, query_type
 
 
 def _new_applied_tests(test_stats_json, model_types, model_name, date,
@@ -1081,10 +1082,11 @@ def get_immediate_queries(query_type):
             results = _format_query_results(qr) if qr else\
                 'No stashed results for subscribed queries. Please re-run ' \
                 'query to see latest result.'
-        elif query_type == 'dynamic_property':
+        elif query_type in ['dynamic_property',
+                            'simple_intervention_property']:
             headers = ['Query', 'Model', 'Result', 'Image']
             results = _format_dynamic_query_results(qr)
-    return headers, results
+    return results, headers
 
 
 def get_subscribed_queries(query_type, user_email=None):
@@ -1096,14 +1098,15 @@ def get_subscribed_queries(query_type, user_email=None):
                 sub_results = _format_query_results(res)
                 headers = ['Query', 'Model'] + [
                     FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
-            elif query_type == 'dynamic_property':
+            elif query_type in ['dynamic_property',
+                                'simple_intervention_property']:
                 sub_results = _format_dynamic_query_results(res)
                 headers = ['Query', 'Model', 'Result', 'Image']
         else:
             sub_results = 'You have no subscribed queries'
     else:
         sub_results = 'Please log in to see your subscribed queries'
-    return headers, sub_results
+    return sub_results, headers
 
 
 @app.route('/query')
@@ -1112,52 +1115,44 @@ def get_query_page():
     """Render queries page."""
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
-    tab = request.args.get('tab', 'model')
+    tab = request.args.get('tab', 'static')
     model_meta_data = _get_model_meta_data()
     stmt_types = get_queryable_stmt_types()
-    preselected_name = None
-    preselected_val = request.args.get('preselected')
-    if preselected_val:
-        for model, config in model_meta_data:
-            if model == preselected_val:
-                preselected_name = config['human_readable_name']
-                break
-    # Queried results
-    immediate_table_headers, queried_results = get_immediate_queries(
-        'path_property')
-    open_headers, open_results = get_immediate_queries('open_search_query')
-    dynamic_immediate_headers, dynamic_results = get_immediate_queries(
-        'dynamic_property')
+    preselected_model = request.args.get('preselected')
+    latest_query = session.pop('latest_query', None)
+    logger.info(f'Prefiling the form with previous values: {latest_query}')
+
+    # Queried immediate results
+    immediate_results = {}
+    immediate_results['static'] = get_immediate_queries('path_property')
+    immediate_results['open'] = get_immediate_queries('open_search_query')
+    immediate_results['dynamic'] = get_immediate_queries('dynamic_property')
+    immediate_results['intervention'] = get_immediate_queries(
+        'simple_intervention_property')
 
     # Subscribed results
     # user_email = 'joshua@emmaa.com'
-    subscribed_path_headers, subscribed_path_results = get_subscribed_queries(
+    subscribed_results = {}
+    subscribed_results['static'] = get_subscribed_queries(
         'path_property', user_email)
-    subscribed_dyn_headers, subscribed_dyn_results = get_subscribed_queries(
+    subscribed_results['dynamic'] = get_subscribed_queries(
         'dynamic_property', user_email)
-    subscribed_open_headers, subscribed_open_results = get_subscribed_queries(
+    subscribed_results['open'] = get_subscribed_queries(
         'open_search_query', user_email)
+    subscribed_results['intervention'] = get_subscribed_queries(
+        'simple_intervention_property', user_email)
+
     return render_template('query_template.html',
-                           immediate_table_headers=immediate_table_headers,
-                           immediate_query_result=queried_results,
-                           immediate_dynamic_results=dynamic_results,
-                           dynamic_immediate_headers=dynamic_immediate_headers,
-                           open_immediate_headers=open_headers,
-                           open_immediate_results=open_results,
                            model_data=model_meta_data,
                            stmt_types=stmt_types,
-                           subscribed_results=subscribed_path_results,
-                           subscribed_headers=subscribed_path_headers,
-                           subscribed_dynamic_headers=subscribed_dyn_headers,
-                           subscribed_dynamic_results=subscribed_dyn_results,
-                           subscribed_open_headers=subscribed_open_headers,
-                           subscribed_open_results=subscribed_open_results,
+                           immediate_results=immediate_results,
+                           subscribed_results=subscribed_results,
                            ns_groups=ns_mapping,
                            link_list=link_list,
                            user_email=user_email,
                            tab=tab,
-                           preselected_val=preselected_val,
-                           preselected_name=preselected_name)
+                           preselected_model=preselected_model,
+                           latest_query=latest_query)
 
 
 @app.route('/run_query', methods=['POST'])
@@ -1185,6 +1180,13 @@ def run_query():
         "sustained", "transient"), and "quant_value" ("high" or "low", only
         required when "pattern_type" is one of "always_value",
         "eventual_value", "sometime_value").
+
+        Intervention query JSON has to contain keys
+        "type" (simple_intervention_property),
+        "condition_entity" (formatted as INDRA Agent JSON),
+        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
+        "dn").
+
     model : str
         A name of a model to run a query against.
 
@@ -1219,6 +1221,15 @@ def run_query():
                ' ("high" or "low", only required when "pattern_type" is one of'
                ' "always_value", "eventual_value", "sometime_value".')
         if 'entity' not in qj or 'pattern_type' not in qj:
+            abort(Response(msg, 400))
+    elif qj['type'] == 'simple_intervention_property':
+        msg = ('Intervention query JSON has to contain keys '
+               '"type" (simple_intervention_property), '
+               '"condition_entity" (formatted as INDRA Agent JSON), '
+               '"target_entity" (formatted as INDRA Agent JSON), "direction" '
+               '("up" or "dn").')
+        if 'condition_entity' not in qj or 'target_entity' not in qj or \
+                'direction' not in qj:
             abort(Response(msg, 400))
     model = request.json.get('model')
     query = Query._from_json(qj)
@@ -1493,12 +1504,17 @@ def process_query():
     user_id = user.id if user else None
 
     # Extract info.
-    expected_static_query_keys = {f'{pos}Selection'
-                                  for pos in ['subject', 'object', 'type']}
-    expected_dynamic_query_keys = {f'{pos}Selection'
-                                   for pos in ['pattern', 'value', 'agent']}
-    expected_open_query_keys = {f'{pos}Selection' for pos in
-                                ['openAgent', 'stmtType', 'role', 'ns']}
+    def get_expected_keys(fields):
+        keys = {f'{pos}Selection' for pos in fields}
+        keys.update({'queryType'})
+        return keys
+
+    expected_static_query_keys = get_expected_keys(
+        ['subject', 'object', 'type'])
+    expected_dynamic_query_keys = get_expected_keys(
+        ['pattern', 'value', 'agent'])
+    expected_open_query_keys = get_expected_keys(
+        ['openAgent', 'stmtType', 'role', 'ns'])
     expected_models = {mid for mid, _ in _get_model_meta_data()}
     tab = 'static'
     try:
@@ -1555,6 +1571,8 @@ def process_query():
 
         # Replace existing entry
         session['query_hashes'] = result
+        session['latest_query'] = {'query_json': query_json,
+                                   'models': list(models)}
         res = {'redirectURL': redir_url}
 
     logger.info('Result: %s' % str(res))
