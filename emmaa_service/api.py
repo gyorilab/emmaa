@@ -1774,6 +1774,7 @@ def list_curations(stmt_hash, src_hash):
 
 # REST API endpoints
 
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @latest_ns.route('/statements/<model>')
 class LatestStatements(Resource):
     def get(self, model):
@@ -1795,6 +1796,7 @@ class LatestStatements(Resource):
         return {'statements': stmt_jsons, 'link': link}
 
 
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @latest_ns.route('/statements_url/<model>')
 class LatestStatementsUrl(Resource):
     def get(self, model):
@@ -1845,6 +1847,7 @@ class LatestDate(Resource):
         return jsonify({'date': date})
 
 
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @latest_ns.route('/curated_statements/<model>')
 class CuratedStatements(Resource):
     def get(self, model):
@@ -1869,6 +1872,7 @@ class ModelsList(Resource):
         return {'models': models}
 
 
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/model_info/<model>')
 class ModelInfo(Resource):
     def get(self, model):
@@ -1884,6 +1888,7 @@ class ModelInfo(Resource):
         return info
 
 
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/test_corpora/<model>')
 class TestCorpora(Resource):
     def get(self, model):
@@ -1892,6 +1897,8 @@ class TestCorpora(Resource):
         return {'test_corpora': list(tests)}
 
 
+@metadata_ns.param('test_corpus',
+                   'Name of test corpus, e.g. covid19_mitre_tests')
 @metadata_ns.route('/tests_info/<test_corpus>')
 class TestInfo(Resource):
     def get(self, test_corpus):
@@ -1909,6 +1916,7 @@ class TestInfo(Resource):
         return info
 
 
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/entity_info/<model>')
 class EntityInfo(Resource):
     def get(self, model):
