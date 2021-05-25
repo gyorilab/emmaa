@@ -67,8 +67,15 @@ query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
 
 # Models for REST API
 query_model = api.model('query', {})
-date_model = api.model('date', {})
-
+date_model = api.model('date', {
+    'model': fields.String(example='aml'),
+    'test_corpus': fields.String(example='large_corpus_tests'),
+    'date_format': fields.String(example='date')
+})
+entity_model = api.model('entity', {
+    'namespace': fields.String(example='HGNC'),
+    'id': fields.String(example='6840')
+})
 # Environment variables
 
 logger = logging.getLogger(__name__)
