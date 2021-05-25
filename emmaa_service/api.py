@@ -1925,12 +1925,27 @@ class TestInfo(Resource):
 
 @metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/entity_info/<model>')
+@metadata_ns.expect(entity_model)
 class EntityInfo(Resource):
-    def get(self, model):
+    def post(self, model):
+        """Get metadata for an entity.
+
+        Parameters
+        ----------
+        namespace : str
+            A namespace of entity reference (e.g. HGNC, CHEBI).
+        id : str
+            Entity's ID in a given namespace.
+
+        Returns
+        -------
+        rv : dict
+            A dictionary containing metadata about an entity.
+        """
         # For now, the model isn't explicitly used but could be necessary
         # for adding model-specific entity info later
-        namespace = request.args.get('namespace')
-        identifier = request.args.get('id')
+        namespace = request.get_json().get('namespace')
+        identifier = request.get_json().get('id')
         url = get_identifiers_url(namespace, identifier)
         rv = {'url': url}
         bioresolver_json = _lookup_bioresolver(namespace, identifier)
