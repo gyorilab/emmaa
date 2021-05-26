@@ -1893,6 +1893,7 @@ class LatestStatsDate(Resource):
 @latest_ns.route('/curated_statements/<model>')
 class CuratedStatements(Resource):
     def get(self, model):
+        """Get hashes of curated statements by category."""
         model_stats = _load_model_stats_from_cache(model, None)
         stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
         correct, incorrect, partial = _label_curations(include_partial=True,
@@ -1960,6 +1961,7 @@ class TestInfo(Resource):
 @metadata_ns.route('/entity_info/<model>')
 class EntityInfo(Resource):
     def get(self, model):
+        """Get information about an entity."""
         # For now, the model isn't explicitly used but could be necessary
         # for adding model-specific entity info later
         namespace = request.args.get('namespace')
@@ -1977,6 +1979,22 @@ class EntityInfo(Resource):
 @query_ns.route('/source_target_path')
 class SourceTargetPath(Resource):
     def post(self):
+        """Explain an effect between source and target.
+
+        Request Body Parameters
+        -----------------------
+        model : str
+            A name of EMMAA model to query (e.g. aml, covid19, etc.)
+
+        source : indra.statements.Agent.to_json()
+            INDRA Agent JSON as a source.
+
+        target : indra.statements.Agent.to_json()
+            INDRA Agent JSON as a target.
+
+        stmt_type : str
+            Type of effect between source and target.
+        """
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
@@ -2002,6 +2020,23 @@ class SourceTargetPath(Resource):
 @query_ns.route('/up_down_stream_path')
 class UpDownStreamPath(Resource):
     def post(self):
+        """Find causal paths to or from a given entity.
+
+        Request Body Parameters
+        -----------------------
+        model : str
+            A name of EMMAA model to query (e.g. aml, covid19, etc.)
+
+        entity : indra.statements.Agent.to_json()
+            INDRA Agent JSON to start the search from.
+
+        entity_role : str
+            'subject' for downstream or 'object' for upstream search.
+
+        terminal_ns : Optional[list[str]]
+            Optional list of namespaces to constrain the types of
+            up/downstream entities.
+        """
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
@@ -2027,6 +2062,24 @@ class UpDownStreamPath(Resource):
 @query_ns.route('/temporal_dynamic')
 class TemporalDynamic(Resource):
     def post(self):
+        """Simulate a model to verify baseline dynamics.
+
+        Request Body Parameters
+        -----------------------
+        model : str
+            A name of EMMAA model to query (e.g. aml, covid19, etc.)
+
+        entity : indra.statements.Agent.to_json()
+            INDRA Agent JSON to start the search from. Agent can have a state.
+
+        pattern_type : str
+            One of 'always_value', 'sometime_value', 'eventual_value',
+            'no_change', 'sustained', 'transient'.
+
+        quant_value : str
+            'high' or 'low' (only required for 'always_value',
+            'sometime_value', 'eventual_value' pattern types).
+        """
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
@@ -2057,6 +2110,23 @@ class TemporalDynamic(Resource):
 @query_ns.route('/source_target_dynamic')
 class SourceTargetDynamic(Resource):
     def post(self):
+        """Simulate a model to describe the effect of an intervention.
+
+        Request Body Parameters
+        -----------------------
+        model : str
+            A name of EMMAA model to query (e.g. aml, covid19, etc.)
+
+        source : indra.statements.Agent.to_json()
+            INDRA Agent JSON as a source.
+
+        target : indra.statements.Agent.to_json()
+            INDRA Agent JSON as a target. Agent can have a state.
+
+        direction : str
+            'up' or 'dn' to test whether the target increased or decreased
+            with intervention.
+        """
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
