@@ -3,12 +3,13 @@ import json
 import boto3
 import logging
 import argparse
+from matplotlib.pyplot import cla
 import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
-from flask_restx import Api, Resource, fields
+from flask_restx import Api, Resource, fields, abort as restx_abort
 from flask_cors import CORS
 
 from flask_jwt_extended import jwt_optional
@@ -21,7 +22,7 @@ from indra_db.exceptions import BadHashError
 from indra_db import get_db
 from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
-    DecreaseAmount, Activation, Inhibition, AddModification, \
+    DecreaseAmount, Activation, Inhibition, AddModification, Agent, \
     RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
@@ -66,7 +67,7 @@ latest_ns = api.namespace('Latest', 'Get updates specific to latest models',
 query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
 
 # Models for REST API
-query_model = api.model('query', {})
+dict_model = api.model('dict', {})
 date_model = api.model('date', {
     'model': fields.String(example='aml'),
     'test_corpus': fields.String(example='large_corpus_tests'),
@@ -76,6 +77,36 @@ entity_model = api.model('entity', {
     'namespace': fields.String(example='HGNC'),
     'id': fields.String(example='6840')
 })
+egfr = {'type': 'Agent', 'name': 'EGFR', 'db_refs': {'HGNC': '3236'}}
+akt1 = {'type': 'Agent', 'name': 'AKT1', 'db_refs': {'HGNC': '391'}}
+path_query_model = api.model('path_query', {
+    'model': fields.String(example='rasmodel'),
+    'source': fields.Nested(dict_model, example=egfr),
+    'target': fields.Nested(dict_model, example=akt1),
+    'stmt_type': fields.String(example='Activation')
+})
+open_query_model = api.model('open_query', {
+    'model': fields.String(example='rasmodel'),
+    'entity': fields.Nested(dict_model, example=akt1),
+    'entity_role': fields.String(example='object'),
+    'stmt_type': fields.String(example='Activation'),
+    'terminal_ns': fields.List(fields.String, example=['HGNC', 'UP', 'FPLX'],
+                               required=False)
+})
+dynamic_query_model = api.model('dynamic_query', {
+    'model': fields.String(example='rasmodel'),
+    'entity': fields.Nested(dict_model, example=akt1),
+    'pattern_type': fields.String(example='eventual_value'),
+    'quant_value': fields.String(example='high', required=False)
+})
+intervention_query_model = api.model('intervention_query', {
+    'model': fields.String(example='rasmodel'),
+    'source': fields.Nested(dict_model, example=egfr),
+    'target': fields.Nested(dict_model, example=akt1),
+    'direction': fields.String(example='up')
+})
+
+
 # Environment variables
 
 logger = logging.getLogger(__name__)
@@ -733,6 +764,18 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     if not res_json['success']:
         return  # there was a problem looking up CURIE in the bioresolver
     return res_json
+
+
+def _run_query(query, model):
+    mm = load_model_manager_from_cache(model)
+    full_results = mm.answer_query(query)
+    results = {}
+    for mc_type, _, paths in full_results:
+        if mc_type:
+            results[mc_type] = paths
+        else:
+            results['all_types'] = paths
+    return results
 
 
 # Dashboard endpoints
@@ -1862,13 +1905,10 @@ class LatestDate(Resource):
 @latest_ns.route('/curated_statements/<model>')
 class CuratedStatements(Resource):
     def get(self, model):
-        date = request.args.get('date')
-        if not date:
-            date = get_latest_available_date(model, _default_test(model))
-        model_stats = _load_model_stats_from_cache(model, date)
+        model_stats = _load_model_stats_from_cache(model, None)
         stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
         correct, incorrect, partial = _label_curations(include_partial=True,
-                                                    pa_hash=stmt_hashes)
+                                                       pa_hash=stmt_hashes)
         return jsonify({'correct': list(correct),
                         'partial': list(partial),
                         'incorrect': list(incorrect)})
@@ -1959,95 +1999,106 @@ class EntityInfo(Resource):
         return rv
 
 
-@query_ns.expect(query_model)
-@query_ns.route('/run')
-class RunQuery(Resource):
+@query_ns.expect(path_query_model)
+@query_ns.route('/source_target_path')
+class SourceTargetPath(Resource):
     def post(self):
-        """Run a query.
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        source = request.get_json().get('source')
+        target = request.get_json().get('target')
+        if not source or not target:
+            msg = ('Provide a "source" and a "target" '
+                   '(formatted as INDRA Agent JSONs).')
+            restx_abort(400, msg)
+        source = Agent._from_json(source)
+        target = Agent._from_json(target)
+        stmt_type = request.get_json().get('stmt_type')
+        if not stmt_type:
+            msg = 'Provide a "stmt_type" (one of INDRA Statement types).'
+            restx_abort(400, msg)
+        stmt_class = get_statement_by_name(stmt_type)
+        stmt = stmt_class(source, target)
+        query = PathProperty(stmt)
+        return _run_query(query, model)
 
-        Parameters
-        ----------
-        query_json : str(dict)
-            A JSON dump of a standard query JSON representation. The structure of
-            a query json depends on a query type. All query JSONs have to contain
-            a "type" (path_property, dynamic_property, or open_search_query).
 
-            Path (static) query JSON has to contain keys "type" (path_property)
-            and "path" (formatted as INDRA Statement JSON).
+@query_ns.expect(open_query_model)
+@query_ns.route('/up_down_stream_path')
+class UpDownStreamPath(Resource):
+    def post(self):
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        entity = request.get_json().get('entity')
+        if not entity:
+            msg = 'Provide an "entity" (formatted as INDRA Agent JSON).'
+            restx_abort(400, msg)
+        entity = Agent._from_json(entity)
+        entity_role = request.get_json().get('entity_role')
+        if not entity_role or entity_role not in ('subject', 'object'):
+            msg = ('Provide an "entity_role" ("subject" for downstream or '
+                   '"object" for upstream search).')
+            restx_abort(400, msg)
+        stmt_type = request.get_json().get('stmt_type')
+        if not stmt_type:
+            msg = 'Provide a "stmt_type" (one of INDRA Statement types).'
+        terminal_ns = request.get_json().get('terminal_ns')
+        query = OpenSearchQuery(entity, stmt_type, entity_role, terminal_ns)
+        return _run_query(query, model)
 
-            Open search query JSON has to contain keys "type" (open_search_query),
-            "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
-            object), and "stmt_type"; optionally "terminal_ns" (a list of
-            namespaces to filter the result).
 
-            Dynamic query JSON has to contain keys "type" (dynamic_property),
-            "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
-            "always_value", "no_change", "eventual_value", "sometime_value",
-            "sustained", "transient"), and "quant_value" ("high" or "low", only
-            required when "pattern_type" is one of "always_value",
-            "eventual_value", "sometime_value").
+@query_ns.expect(dynamic_query_model)
+@query_ns.route('/temporal_dynamic')
+class TemporalDynamic(Resource):
+    def post(self):
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        entity = request.get_json().get('entity')
+        if not entity:
+            msg = 'Provide an "entity" (formatted as INDRA Agent JSON).'
+            restx_abort(400, msg)
+        entity = Agent._from_json(entity)
+        pattern_type = request.get_json().get('pattern_type')
+        acceptable_patterns = ('always_value', 'sometime_value',
+                               'eventual_value', 'no_change', 'sustained',
+                               'transient')
+        if not pattern_type or pattern_type not in acceptable_patterns:
+            msg = f'Provide "pattern_type" (one of {acceptable_patterns})'
+        if pattern_type in acceptable_patterns[3:]:
+            quant_value = None
+        else:
+            quant_value = request.get_json().get('quant_value')
+            if not quant_value:
+                msg = (f'{pattern_type} pattern type requires a '
+                       '"quant_value" ("high" or "low")')
+                restx_abort(400, msg)
+        query = DynamicProperty(entity, pattern_type, quant_value)
+        return _run_query(query, model)
 
-            Intervention query JSON has to contain keys
-            "type" (simple_intervention_property),
-            "condition_entity" (formatted as INDRA Agent JSON),
-            "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
-            "dn").
 
-        model : str
-            A name of a model to run a query against.
-
-        Returns
-        -------
-        results : dict
-            A dictionary mapping the model type to either paths or result code.
-        """
-        qj = request.json.get('query_json')
-        if 'type' not in qj:
-            msg = ('All query JSONs have to contain a "type" '
-                '(path_property, dynamic_property, or open_search_query).')
-            abort(Response(msg, 400))
-        if qj['type'] == 'path_property':
-            msg = ('Path (static) query JSON has to contain keys "type" and "path"'
-                ' (formatted as INDRA Statement JSON).')
-            if 'path' not in qj:
-                abort(Response(msg, 400))
-        elif qj['type'] == 'open_search_query':
-            msg = ('Open search query JSON has to contain keys "type", "entity" '
-                '(formatted as INDRA Agent JSON), "entity_role" (subject or '
-                'object), and "stmt_type"; optionally "terminal_ns" (a list of '
-                'namespaces to filter the result).')
-            if 'entity' not in qj or 'entity_role' not in qj or \
-                    'stmt_type' not in qj:
-                abort(Response(msg, 400))
-        elif qj['type'] == 'dynamic_property':
-            msg = ('Dynamic query JSON has to contain keys "type", "entity" '
-                '(formatted as INDRA Agent JSON), "pattern_type" (one of '
-                '"always_value", "no_change", "eventual_value", '
-                '"sometime_value", "sustained", "transient"), and "quant_value"'
-                ' ("high" or "low", only required when "pattern_type" is one of'
-                ' "always_value", "eventual_value", "sometime_value".')
-            if 'entity' not in qj or 'pattern_type' not in qj:
-                abort(Response(msg, 400))
-        elif qj['type'] == 'simple_intervention_property':
-            msg = ('Intervention query JSON has to contain keys '
-                '"type" (simple_intervention_property), '
-                '"condition_entity" (formatted as INDRA Agent JSON), '
-                '"target_entity" (formatted as INDRA Agent JSON), "direction" '
-                '("up" or "dn").')
-            if 'condition_entity' not in qj or 'target_entity' not in qj or \
-                    'direction' not in qj:
-                abort(Response(msg, 400))
-        model = request.json.get('model')
-        query = Query._from_json(qj)
-        mm = load_model_manager_from_cache(model)
-        full_results = mm.answer_query(query)
-        results = {}
-        for mc_type, resp, paths in full_results:
-            if mc_type:
-                results[mc_type] = paths
-            else:
-                results['all_types'] = paths
-        return results
+@query_ns.expect(intervention_query_model)
+@query_ns.route('/source_target_dynamic')
+class SourceTargetDynamic(Resource):
+    def post(self):
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        source = request.get_json().get('source')
+        target = request.get_json().get('target')
+        if not source or not target:
+            msg = ('Provide a "source" and a "target" '
+                   '(formatted as INDRA Agent JSONs).')
+            restx_abort(400, msg)
+        source = Agent._from_json(source)
+        target = Agent._from_json(target)
+        direction = request.get_json().get('direction')
+        if not direction:
+            restx_abort(400, 'Provide a "direction" ("up" or "dn")')
+        query = SimpleInterventionProperty(source, target, direction)
+        return _run_query(query, model)
 
 
 if __name__ == '__main__':
