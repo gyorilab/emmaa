@@ -1824,16 +1824,18 @@ class LatestStatementsUrl(Resource):
 @latest_ns.expect(date_model)
 @latest_ns.route('/date')
 class LatestDate(Resource):
-    def get(self):
+    def post(self):
         """Return latest available date of model and test stats.
 
         Parameters
         ----------
         model : str
             Name of the model.
+
         test_corpus : Optional[str]
-            Which test corpus stats to check. If not provided, default test corpus
-            for the model is used.
+            Which test corpus stats to check. If not provided, default test
+            corpus for the model is used.
+
         date_format : Optional[str]
             Which format of the date to return: 'date' or 'datetime'. Default:
             datetime.
@@ -1841,17 +1843,19 @@ class LatestDate(Resource):
         Returns
         -------
         json : dict
-            A dictionary with key 'date' and value of a latest available date in a
-            selected format.
+            A dictionary with key 'date' and value of a latest available date
+            in a selected format.
         """
-        model = request.json.get('model')
+        model = request.get_json().get('model')
         if not model:
             abort(Response('Need to provide model', 404))
-        date_format = request.json.get('date_format', 'datetime')
-        test_corpus = request.json.get('test_corpus', _default_test(model))
+        date_format = request.get_json().get('date_format', 'datetime')
+        test_corpus = request.get_json().get(
+            'test_corpus', _default_test(model))
         date = get_latest_available_date(
-            model, test_corpus, date_format=date_format, bucket=EMMAA_BUCKET_NAME)
-        return jsonify({'date': date})
+            model, test_corpus, date_format=date_format,
+            bucket=EMMAA_BUCKET_NAME)
+        return {'date': date}
 
 
 @latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
