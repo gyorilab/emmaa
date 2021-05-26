@@ -1829,20 +1829,9 @@ def list_curations(stmt_hash, src_hash):
 class LatestStatements(Resource):
     def get(self, model):
         """Return model latest statements and link to S3 latest statements file."""
-        if does_exist(EMMAA_BUCKET_NAME,
-                    f'assembled/{model}/latest_statements_{model}'):
-            fkey = f'assembled/{model}/latest_statements_{model}.json'
-        elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-            fkey = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-        else:
-            fkey = None
-        if fkey:
-            stmt_jsons = load_json_from_s3(EMMAA_BUCKET_NAME, fkey)
-            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-        else:
-            stmt_jsons = []
-            link = ''
+        stmts, fkey = get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME)
+        stmt_jsons = stmts_to_json(stmts)
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
         return {'statements': stmt_jsons, 'link': link}
 
 
