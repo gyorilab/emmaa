@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
-from flask_restx import Api, Resource, fields, abort as restx_abort
+from flask_restx import Api, Resource, fields, inputs, abort as restx_abort
 from flask_cors import CORS
 
 from flask_jwt_extended import jwt_optional
@@ -66,17 +66,8 @@ latest_ns = api.namespace('Latest', 'Get updates specific to latest models',
                           path='/latest/')
 query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
 
-# Models for REST API
+# Models (for request body) and parsers (for query arguments) for REST API
 dict_model = api.model('dict', {})
-date_model = api.model('date', {
-    'model': fields.String(example='aml'),
-    'test_corpus': fields.String(example='large_corpus_tests'),
-    'date_format': fields.String(example='date')
-})
-entity_model = api.model('entity', {
-    'namespace': fields.String(example='HGNC'),
-    'id': fields.String(example='6840')
-})
 egfr = {'type': 'Agent', 'name': 'EGFR', 'db_refs': {'HGNC': '3236'}}
 akt1 = {'type': 'Agent', 'name': 'AKT1', 'db_refs': {'HGNC': '391'}}
 path_query_model = api.model('path_query', {
@@ -105,6 +96,30 @@ intervention_query_model = api.model('intervention_query', {
     'target': fields.Nested(dict_model, example=akt1),
     'direction': fields.String(example='up')
 })
+
+entity_parser = api.parser()
+entity_parser.add_argument('namespace', required=True,
+                           help='Namespace, e.g. HGNC, CHEBI, etc.',
+                           default='HGNC')
+entity_parser.add_argument('id', required=True,
+                           help="Entity's ID in a given namespace")
+
+date_parser = api.parser()
+date_parser.add_argument(
+    'model', required=True,
+    help='Name of EMMAA model to find stats for, e.g. aml, covid19, etc.')
+date_parser.add_argument(
+    'test_corpus',
+    help=('Name of test corpus to find stats for, if not given default test '
+          'corpus for the model will be used.'))
+date_parser.add_argument(
+    'date_format', help='Format of the date to return (date or datetime)')
+
+url_parser = api.parser()
+url_parser.add_argument(
+    'dated', type=inputs.boolean,
+    help='Whether the returned URL should be a dated version',
+    default=False)
 
 
 # Environment variables
@@ -1836,58 +1851,42 @@ class LatestStatements(Resource):
 
 
 @latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@latest_ns.expect(url_parser)
 @latest_ns.route('/statements_url/<model>')
 class LatestStatementsUrl(Resource):
     def get(self, model):
         """Return a link to model latest statements file on S3."""
-        if does_exist(EMMAA_BUCKET_NAME,
-                    f'assembled/{model}/latest_statements_{model}'):
-            fkey = f'assembled/{model}/latest_statements_{model}.json'
-            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-        elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-            fkey = find_latest_s3_file(
-                EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
+        dated = request.args.get('dated', type=inputs.boolean)
+        fkey = None
+        if dated:
+            prefix = f'assembled/{model}/statements_'
+            fkey = find_latest_s3_file(EMMAA_BUCKET_NAME, prefix, '.gz')
+        else:
+            if does_exist(EMMAA_BUCKET_NAME,
+                          f'assembled/{model}/latest_statements_{model}'):
+                fkey = f'assembled/{model}/latest_statements_{model}.json'
+        if fkey:
             link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
         else:
             link = None
         return {'link': link}
 
 
-@latest_ns.expect(date_model)
-@latest_ns.route('/date')
-class LatestDate(Resource):
-    def post(self):
-        """Return latest available date of model and test stats.
-
-        Parameters
-        ----------
-        model : str
-            Name of the model.
-
-        test_corpus : Optional[str]
-            Which test corpus stats to check. If not provided, default test
-            corpus for the model is used.
-
-        date_format : Optional[str]
-            Which format of the date to return: 'date' or 'datetime'. Default:
-            datetime.
-
-        Returns
-        -------
-        json : dict
-            A dictionary with key 'date' and value of a latest available date
-            in a selected format.
-        """
-        model = request.get_json().get('model')
+@latest_ns.expect(date_parser)
+@latest_ns.route('/stats_date')
+class LatestStatsDate(Resource):
+    def get(self):
+        """Get latest date for which both model and test stats are available"""
+        model = request.args.get('model')
         if not model:
             abort(Response('Need to provide model', 404))
-        date_format = request.get_json().get('date_format', 'datetime')
-        test_corpus = request.get_json().get(
+        date_format = request.args.get('date_format', 'datetime')
+        test_corpus = request.args.get(
             'test_corpus', _default_test(model))
         date = get_latest_available_date(
             model, test_corpus, date_format=date_format,
             bucket=EMMAA_BUCKET_NAME)
-        return {'date': date}
+        return {'model': model, 'test_corpus': test_corpus, 'date': date}
 
 
 @latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
@@ -1957,28 +1956,14 @@ class TestInfo(Resource):
 
 
 @metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@metadata_ns.expect(entity_parser)
 @metadata_ns.route('/entity_info/<model>')
-@metadata_ns.expect(entity_model)
 class EntityInfo(Resource):
-    def post(self, model):
-        """Get metadata for an entity.
-
-        Parameters
-        ----------
-        namespace : str
-            A namespace of entity reference (e.g. HGNC, CHEBI).
-        id : str
-            Entity's ID in a given namespace.
-
-        Returns
-        -------
-        rv : dict
-            A dictionary containing metadata about an entity.
-        """
+    def get(self, model):
         # For now, the model isn't explicitly used but could be necessary
         # for adding model-specific entity info later
-        namespace = request.get_json().get('namespace')
-        identifier = request.get_json().get('id')
+        namespace = request.args.get('namespace')
+        identifier = request.args.get('id')
         url = get_identifiers_url(namespace, identifier)
         rv = {'url': url}
         bioresolver_json = _lookup_bioresolver(namespace, identifier)
