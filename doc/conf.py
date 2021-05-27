@@ -172,7 +172,7 @@ texinfo_documents = [
 intersphinx_mapping = {
     'https://docs.python.org/': None,
     'pykeen': ('https://pykeen.readthedocs.io/en/latest/', None),
-
+    'accelerate': ('https://huggingface.co/docs/accelerate/', None),
 }
 
 
