@@ -160,41 +160,63 @@ url_parser.add_argument(
 # Models for documenting responses in REST API endpoints
 link_model = api.model('link', {
     'link': fields.String(example=('https://emmaa.s3.amazonaws.com/assembled/'
-                                   'aml/statements_2021-05-26-17-31-41.gz'))})
+                                   'aml/statements_2021-05-26-17-31-41.gz'),
+                          description='Link to statements file of S3')})
 date_model = api.model('date', {
-    'model': fields.String(example='aml'),
-    'test_corpus': fields.String(example='large_corpus_tests'),
-    'date': fields.String(example='2021-01-01')
+    'model': fields.String(example='aml', description='EMMAA model'),
+    'test_corpus': fields.String(example='large_corpus_tests',
+                                 description='Test corpus'),
+    'date': fields.String(
+        example='2021-01-01',
+        description='Date of latest stats in requested format')
 })
 curations_model = api.model('curations', {
-    'correct': fields.List(fields.String, example=['-32768958892027373']),
-    'incorrect': fields.List(fields.String, example=['12768358492025322']),
-    'partial': fields.List(fields.String, example=['52768978892027576'])
+    'correct': fields.List(
+        fields.String, example=['-32768958892027373'],
+        description='Hashes of statements curated as correct'),
+    'incorrect': fields.List(
+        fields.String, example=['12768358492025322'],
+        description='Hashes of statements curated as incorrect'),
+    'partial': fields.List(
+        fields.String, example=['52768978892027576'],
+        description='Hashes of statements curated as having minor problems')
 })
 models_model = api.model('models', {
     'models': fields.List(fields.String, example=['aml', 'brca', 'covid19'])
 })
 model_info_model = api.model('model_info', {
-    'name': fields.String(example='covid19'),
-    'human_readable_name': fields.String(example='Covid-19'),
+    'name': fields.String(example='covid19',
+                          description='Short name of EMMAA model'),
+    'human_readable_name': fields.String(
+        example='Covid-19', description='Human readable name of EMMAA model'),
     'description': fields.String(example=(
         'Covid-19 knowledge network automatically assembled from the '
-        'CORD-19 document corpus.')),
-    'ndex': fields.String(example='a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf'),
-    'twitter': fields.String(example='https://twitter.com/covid19_emmaa')
+        'CORD-19 document corpus.'),
+        description='Description of a model'),
+    'ndex': fields.String(example='a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf',
+                          description='NDEx ID of EMMAA model'),
+    'twitter': fields.String(example='https://twitter.com/covid19_emmaa',
+                             description='Link to model Twitter account')
 })
 test_corpora_model = api.model('test_corpora', {
-    'test_corpora': fields.List(fields.String, example=['large_corpus_tests'])
+    'test_corpora': fields.List(
+        fields.String, example=['large_corpus_tests'],
+        description='List of test corpora used for this EMMAA model'
+    )
 })
 test_info_model = api.model('test_info', {
-    'name': fields.String(example='Literature-reported corpus'),
-    'description': fields.String(example='Tests were curated from literature')
+    'name': fields.String(example='Literature-reported corpus',
+                          description='Test corpus name'),
+    'description': fields.String(example='Tests were curated from literature',
+                                 description='Test corpus description')
 })
 entity_info_model = api.model('entity_info', {
-    'name': fields.String(example='BRAF'),
+    'name': fields.String(example='BRAF', description='Entity name'),
     'definition': fields.String(
-        example='B-Raf proto-oncogene, serine/threonine kinase'),
-    'url': fields.String(example='https://identifiers.org/hgnc:1097')
+        example='B-Raf proto-oncogene, serine/threonine kinase',
+        description='Entity definition'),
+    'url': fields.String(example='https://identifiers.org/hgnc:1097',
+                         description='URL for entity')
 })
 edge_model = api.model('edge', {
     'type': fields.String(example='statements', description='Type of edge'),
@@ -207,9 +229,10 @@ path_model = api.model('path_result', {
     'edges': fields.List(fields.Nested(edge_model, skip_none=True),
                          description='List of edges in the found path'),
     'graph_type': fields.String(
-        example='signed_graph', description='Type of graph the path was found in'),
+        example='signed_graph',
+        description='Type of graph the path was found in'),
     'fail_reason': fields.String(
-        example='No paths found that satisfy this query',
+        example='Statement object state not in model',
         description='Reason why path was not found')
 })
 path_result_model = api.model('result', {
@@ -2192,8 +2215,7 @@ class UpDownStreamPath(Resource):
 class TemporalDynamic(Resource):
     @query_ns.marshal_with(dynamic_result_model)
     def post(self):
-        """Simulate a model to verify if the baseline dynamics meets a certain
-        pattern.
+        """Simulate a model to verify if a certain pattern is met.
         """
         model = request.get_json().get('model')
         if not model:
