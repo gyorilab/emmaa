@@ -73,18 +73,34 @@ dict_model = api.model('dict', {})
 egfr = {'type': 'Agent', 'name': 'EGFR', 'db_refs': {'HGNC': '3236'}}
 akt1 = {'type': 'Agent', 'name': 'AKT1', 'db_refs': {'HGNC': '391'}}
 path_query_model = api.model('path_query', {
-    'model': fields.String(example='rasmodel'),
-    'source': fields.Nested(dict_model, example=egfr),
-    'target': fields.Nested(dict_model, example=akt1),
-    'stmt_type': fields.String(example='Activation')
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'source': fields.Nested(dict_model, example=egfr,
+                            description='INDRA Agent JSON as a source.'),
+    'target': fields.Nested(dict_model, example=akt1,
+                            description='INDRA Agent JSON as a target.'),
+    'stmt_type': fields.String(
+        example='Activation',
+        description='Type of effect between source and target.')
 })
 open_query_model = api.model('open_query', {
-    'model': fields.String(example='rasmodel'),
-    'entity': fields.Nested(dict_model, example=akt1),
-    'entity_role': fields.String(example='object'),
-    'stmt_type': fields.String(example='Activation'),
-    'terminal_ns': fields.List(fields.String, example=['HGNC', 'UP', 'FPLX'],
-                               required=False)
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'entity': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON to start the search from.'),
+    'entity_role': fields.String(
+        example='object',
+        description='subject for downstream or object for upstream search.'),
+    'stmt_type': fields.String(
+        example='Activation',
+        description='Type of effect to search for.'),
+    'terminal_ns': fields.List(
+        fields.String, example=['HGNC', 'UP', 'FPLX'], required=False,
+        description=('Optional list of namespaces to constrain the types of '
+                     'up/downstream entities'))
 })
 dynamic_query_model = api.model('dynamic_query', {
     'model': fields.String(example='rasmodel'),
@@ -163,8 +179,35 @@ entity_info_model = api.model('entity_info', {
         example='B-Raf proto-oncogene, serine/threonine kinase'),
     'url': fields.String(example='https://identifiers.org/hgnc:1097')
 })
-
-
+edge_model = api.model('edge', {
+    'type': fields.String(example='statements', description='Type of edge'),
+    'hashes': fields.List(fields.Integer, example=[-24400716388202410],
+                          description='Hashes of statements for the edge')
+})
+path_model = api.model('path_result', {
+    'nodes': fields.List(fields.String, example=['EGFR', 'SRC', 'AKT1'],
+                         description='List of nodes in the found path'),
+    'edges': fields.List(fields.Nested(edge_model, skip_none=True),
+                         description='List of edges in the found path'),
+    'graph_type': fields.String(
+        example='signed_graph', description='Type of graph the path was found in'),
+    'fail_reason': fields.String(
+        example='No paths found that satisfy this query',
+        description='Reason why path was not found')
+})
+path_result_model = api.model('result', {
+    'pysb': fields.Nested(path_model, skip_none=True,
+                          description='Results in PySB model'),
+    'pybel': fields.Nested(path_model, skip_none=True,
+                           description='Results in PyBEL model'),
+    'signed_graph': fields.Nested(path_model, skip_none=True,
+                                  description='Results in signed graph'),
+    'unsigned_graph': fields.Nested(path_model, skip_none=True,
+                                    description='Results in unsigned graph'),
+    'all_types': fields.String(
+        example='Query is not applicable for this model', skip_none=True,
+        description='If query is not applicable, only this will be returned')
+})
 # Environment variables
 
 logger = logging.getLogger(__name__)
@@ -2032,23 +2075,9 @@ class EntityInfo(Resource):
 @query_ns.expect(path_query_model)
 @query_ns.route('/source_target_path')
 class SourceTargetPath(Resource):
+    @query_ns.marshal_with(path_result_model, skip_none=True)
     def post(self):
-        """Explain an effect between source and target.
-
-        Request Body Parameters
-        -----------------------
-        model : str
-            A name of EMMAA model to query (e.g. aml, covid19, etc.)
-
-        source : indra.statements.Agent.to_json()
-            INDRA Agent JSON as a source.
-
-        target : indra.statements.Agent.to_json()
-            INDRA Agent JSON as a target.
-
-        stmt_type : str
-            Type of effect between source and target.
-        """
+        """Explain an effect between source and target."""
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
@@ -2073,24 +2102,9 @@ class SourceTargetPath(Resource):
 @query_ns.expect(open_query_model)
 @query_ns.route('/up_down_stream_path')
 class UpDownStreamPath(Resource):
+    @query_ns.marshal_with(path_result_model, skip_none=True)
     def post(self):
-        """Find causal paths to or from a given entity.
-
-        Request Body Parameters
-        -----------------------
-        model : str
-            A name of EMMAA model to query (e.g. aml, covid19, etc.)
-
-        entity : indra.statements.Agent.to_json()
-            INDRA Agent JSON to start the search from.
-
-        entity_role : str
-            'subject' for downstream or 'object' for upstream search.
-
-        terminal_ns : Optional[list[str]]
-            Optional list of namespaces to constrain the types of
-            up/downstream entities.
-        """
+        """Find causal paths to or from a given entity."""
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')

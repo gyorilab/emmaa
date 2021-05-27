@@ -342,7 +342,7 @@ class ModelManager(object):
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
-                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
+                     [{'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']}])]
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
@@ -417,7 +417,7 @@ class ModelManager(object):
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
-                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
+                     [{'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']}])]
 
     def open_query_per_mc(self, mc_type, mc, query, max_path_length,
                           max_paths):
@@ -603,7 +603,7 @@ class ModelManager(object):
             return self.hash_response_list(response), path_lines
         else:
             response = self.make_result_code(result)
-            return self.hash_response_list(response), response
+            return self.hash_response_list(response), [{'fail_reason': response}]
 
     def process_open_query_response(self, mc_type, paths):
         if paths:
@@ -611,7 +611,7 @@ class ModelManager(object):
             return self.hash_response_list(response), path_lines
         else:
             response = 'No paths found that satisfy this query'
-            return self.hash_response_list(response), response
+            return self.hash_response_list(response), [{'fail_reason': response}]
 
     def hash_response_list(self, response):
         """Return a dictionary mapping a hash with a response in a response
