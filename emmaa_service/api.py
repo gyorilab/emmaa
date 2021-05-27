@@ -103,16 +103,33 @@ open_query_model = api.model('open_query', {
                      'up/downstream entities'))
 })
 dynamic_query_model = api.model('dynamic_query', {
-    'model': fields.String(example='rasmodel'),
-    'entity': fields.Nested(dict_model, example=akt1),
-    'pattern_type': fields.String(example='eventual_value'),
-    'quant_value': fields.String(example='high', required=False)
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'entity': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON for entity of interest.'),
+    'pattern_type': fields.String(
+        example='eventual_value', description=(
+            "One of 'always_value', 'sometime_value', 'eventual_value', "
+            "'no_change', 'sustained', 'transient'.")),
+    'quant_value': fields.String(
+        example='high', required=False, description=(
+            "'high' or 'low' (only required for 'always_value', "
+            "'sometime_value', 'eventual_value' pattern types)."))
 })
 intervention_query_model = api.model('intervention_query', {
-    'model': fields.String(example='rasmodel'),
-    'source': fields.Nested(dict_model, example=egfr),
-    'target': fields.Nested(dict_model, example=akt1),
-    'direction': fields.String(example='up')
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'source': fields.Nested(dict_model, example=egfr,
+                            description='INDRA Agent JSON as a source.'),
+    'target': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON as a target. Agent can have a state.'),
+    'direction': fields.String(example='up', description=(
+        "'up' or 'dn' to test whether the target increased or decreased "
+        "with intervention."))
 })
 
 # Parsers for query string parameters in REST API endpoints
@@ -207,6 +224,50 @@ path_result_model = api.model('result', {
     'all_types': fields.String(
         example='Query is not applicable for this model', skip_none=True,
         description='If query is not applicable, only this will be returned')
+})
+quant_model = api.model('quantity', {
+    'type': fields.String(example='qualitative',
+                          description='Molecular quantity type'),
+    'value': fields.String(example='low',
+                           description='Molecular quantity value')
+})
+pattern_model = api.model('pattern', {
+    'type': fields.String(example='no_change', description='Pattern type'),
+    'value': fields.Nested(quant_model, skip_none=True,
+                           description='Molecular quantity of an entity')
+})
+dynamic_fields_model = api.model('dynamic_fields', {
+    'sat_rate': fields.Float(example=1.0, description='Saturation rate'),
+    'num_sim': fields.Integer(example=2, description='Number of simulations'),
+    'kpat': fields.Nested(pattern_model, skip_none=True,
+                          description='Discovered pattern'),
+    'fig_path': fields.String(
+        example=('https://emmaa.s3.amazonaws.com/query_images/rasmodel/'
+                 '20210527145113_AKT1_obs_2021-05-27-18-51-13.png'),
+        description='Path to a resulting plot on S3'),
+    'fail_reason': fields.String(
+        example='Query is not applicable for this model',
+        description='If query is not applicable, only this will be returned')
+})
+interv_fields_model = api.model('interv_fields', {
+    'result': fields.String(
+        example='yes_increase',
+        description='Whether the target changed as expected'),
+    'fig_path': fields.String(
+        example=('https://emmaa.s3.amazonaws.com/query_images/rasmodel/'
+                 '20210527145113_AKT1_obs_2021-05-27-18-51-13.png'),
+        description='Path to a resulting plot on S3'),
+    'fail_reason': fields.String(
+        example='Query is not applicable for this model',
+        description='If query is not applicable, only this will be returned')
+})
+dynamic_result_model = api.model('dynamic_result', {
+    'pysb': fields.Nested(dynamic_fields_model, skip_none=True,
+                          description='Results of simulating PySB model')
+})
+interv_result_model = api.model('interv_result', {
+    'pysb': fields.Nested(interv_fields_model, skip_none=True,
+                          description='Results of simulating PySB model')
 })
 # Environment variables
 
@@ -2129,24 +2190,10 @@ class UpDownStreamPath(Resource):
 @query_ns.expect(dynamic_query_model)
 @query_ns.route('/temporal_dynamic')
 class TemporalDynamic(Resource):
+    @query_ns.marshal_with(dynamic_result_model)
     def post(self):
-        """Simulate a model to verify baseline dynamics.
-
-        Request Body Parameters
-        -----------------------
-        model : str
-            A name of EMMAA model to query (e.g. aml, covid19, etc.)
-
-        entity : indra.statements.Agent.to_json()
-            INDRA Agent JSON to start the search from. Agent can have a state.
-
-        pattern_type : str
-            One of 'always_value', 'sometime_value', 'eventual_value',
-            'no_change', 'sustained', 'transient'.
-
-        quant_value : str
-            'high' or 'low' (only required for 'always_value',
-            'sometime_value', 'eventual_value' pattern types).
+        """Simulate a model to verify if the baseline dynamics meets a certain
+        pattern.
         """
         model = request.get_json().get('model')
         if not model:
@@ -2177,24 +2224,9 @@ class TemporalDynamic(Resource):
 @query_ns.expect(intervention_query_model)
 @query_ns.route('/source_target_dynamic')
 class SourceTargetDynamic(Resource):
+    @query_ns.marshal_with(interv_result_model)
     def post(self):
-        """Simulate a model to describe the effect of an intervention.
-
-        Request Body Parameters
-        -----------------------
-        model : str
-            A name of EMMAA model to query (e.g. aml, covid19, etc.)
-
-        source : indra.statements.Agent.to_json()
-            INDRA Agent JSON as a source.
-
-        target : indra.statements.Agent.to_json()
-            INDRA Agent JSON as a target. Agent can have a state.
-
-        direction : str
-            'up' or 'dn' to test whether the target increased or decreased
-            with intervention.
-        """
+        """Simulate a model to describe the effect of an intervention."""
         model = request.get_json().get('model')
         if not model:
             restx_abort(400, 'Provide a "model"')
