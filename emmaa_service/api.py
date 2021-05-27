@@ -17,6 +17,7 @@ from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
 from pusher import pusher
+from sympy.polys.fields import field
 
 from indra_db.exceptions import BadHashError
 from indra_db import get_db
@@ -55,6 +56,7 @@ app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
+app.config['RESTX_MASK_SWAGGER'] = False
 CORS(app)
 
 # Endpoints for programmatic access are registered with api
@@ -66,7 +68,7 @@ latest_ns = api.namespace('Latest', 'Get updates specific to latest models',
                           path='/latest/')
 query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
 
-# Models (for request body) and parsers (for query arguments) for REST API
+# Models for request body of REST API endpoints
 dict_model = api.model('dict', {})
 egfr = {'type': 'Agent', 'name': 'EGFR', 'db_refs': {'HGNC': '3236'}}
 akt1 = {'type': 'Agent', 'name': 'AKT1', 'db_refs': {'HGNC': '391'}}
@@ -97,6 +99,7 @@ intervention_query_model = api.model('intervention_query', {
     'direction': fields.String(example='up')
 })
 
+# Parsers for query string parameters in REST API endpoints
 entity_parser = api.parser()
 entity_parser.add_argument('namespace', required=True,
                            help='Namespace, e.g. HGNC, CHEBI, etc.',
@@ -120,6 +123,46 @@ url_parser.add_argument(
     'dated', type=inputs.boolean,
     help='Whether the returned URL should be a dated version',
     default=False)
+
+# Models for documenting responses in REST API endpoints
+link_model = api.model('link', {
+    'link': fields.String(example=('https://emmaa.s3.amazonaws.com/assembled/'
+                                   'aml/statements_2021-05-26-17-31-41.gz'))})
+date_model = api.model('date', {
+    'model': fields.String(example='aml'),
+    'test_corpus': fields.String(example='large_corpus_tests'),
+    'date': fields.String(example='2021-01-01')
+})
+curations_model = api.model('curations', {
+    'correct': fields.List(fields.String, example=['-32768958892027373']),
+    'incorrect': fields.List(fields.String, example=['12768358492025322']),
+    'partial': fields.List(fields.String, example=['52768978892027576'])
+})
+models_model = api.model('models', {
+    'models': fields.List(fields.String, example=['aml', 'brca', 'covid19'])
+})
+model_info_model = api.model('model_info', {
+    'name': fields.String(example='covid19'),
+    'human_readable_name': fields.String(example='Covid-19'),
+    'description': fields.String(example=(
+        'Covid-19 knowledge network automatically assembled from the '
+        'CORD-19 document corpus.')),
+    'ndex': fields.String(example='a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf'),
+    'twitter': fields.String(example='https://twitter.com/covid19_emmaa')
+})
+test_corpora_model = api.model('test_corpora', {
+    'test_corpora': fields.List(fields.String, example=['large_corpus_tests'])
+})
+test_info_model = api.model('test_info', {
+    'name': fields.String(example='Literature-reported corpus'),
+    'description': fields.String(example='Tests were curated from literature')
+})
+entity_info_model = api.model('entity_info', {
+    'name': fields.String(example='BRAF'),
+    'definition': fields.String(
+        example='B-Raf proto-oncogene, serine/threonine kinase'),
+    'url': fields.String(example='https://identifiers.org/hgnc:1097')
+})
 
 
 # Environment variables
@@ -1854,6 +1897,7 @@ class LatestStatements(Resource):
 @latest_ns.expect(url_parser)
 @latest_ns.route('/statements_url/<model>')
 class LatestStatementsUrl(Resource):
+    @latest_ns.marshal_with(link_model)
     def get(self, model):
         """Return a link to model latest statements file on S3."""
         dated = request.args.get('dated', type=inputs.boolean)
@@ -1875,6 +1919,7 @@ class LatestStatementsUrl(Resource):
 @latest_ns.expect(date_parser)
 @latest_ns.route('/stats_date')
 class LatestStatsDate(Resource):
+    @latest_ns.marshal_with(date_model)
     def get(self):
         """Get latest date for which both model and test stats are available"""
         model = request.args.get('model')
@@ -1892,19 +1937,21 @@ class LatestStatsDate(Resource):
 @latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @latest_ns.route('/curated_statements/<model>')
 class CuratedStatements(Resource):
+    @latest_ns.marshal_with(curations_model)
     def get(self, model):
         """Get hashes of curated statements by category."""
         model_stats = _load_model_stats_from_cache(model, None)
         stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
         correct, incorrect, partial = _label_curations(include_partial=True,
                                                        pa_hash=stmt_hashes)
-        return jsonify({'correct': list(correct),
-                        'partial': list(partial),
-                        'incorrect': list(incorrect)})
+        return {'correct': list(correct),
+                'partial': list(partial),
+                'incorrect': list(incorrect)}
 
 
 @metadata_ns.route('/models')
 class ModelsList(Resource):
+    @metadata_ns.marshal_with(models_model)
     def get(self):
         """Get a list of all available models."""
         model_meta_data = _get_model_meta_data()
@@ -1915,6 +1962,7 @@ class ModelsList(Resource):
 @metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/model_info/<model>')
 class ModelInfo(Resource):
+    @metadata_ns.marshal_with(model_info_model, skip_none=True)
     def get(self, model):
         """Get metadata for model."""
         config = get_model_config(model)
@@ -1931,6 +1979,7 @@ class ModelInfo(Resource):
 @metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @metadata_ns.route('/test_corpora/<model>')
 class TestCorpora(Resource):
+    @metadata_ns.marshal_with(test_corpora_model)
     def get(self, model):
         """Get a list of available test corpora for model."""
         tests = _get_test_corpora(model)
@@ -1941,18 +1990,22 @@ class TestCorpora(Resource):
                    'Name of test corpus, e.g. covid19_mitre_tests')
 @metadata_ns.route('/tests_info/<test_corpus>')
 class TestInfo(Resource):
+    @metadata_ns.marshal_with(test_info_model, skip_none=True)
     def get(self, test_corpus):
         """Get test corpus metadata."""
         model_meta_data = _get_model_meta_data()
+        tested_model = None
         for (model, config) in model_meta_data:
             tests = _get_test_corpora(model)
             if test_corpus in tests:
                 tested_model = model
                 break
+        if not tested_model:
+            restx_abort(404, f'Test info for {test_corpus} is not available')
         test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
         info = test_stats['test_round_summary'].get('test_data')
         if not info:
-            info = {'error': f'Test info for {test_corpus} is not available'}
+            restx_abort(404, f'Test info for {test_corpus} is not available')
         return info
 
 
@@ -1960,6 +2013,7 @@ class TestInfo(Resource):
 @metadata_ns.expect(entity_parser)
 @metadata_ns.route('/entity_info/<model>')
 class EntityInfo(Resource):
+    @metadata_ns.marshal_with(entity_info_model)
     def get(self, model):
         """Get information about an entity."""
         # For now, the model isn't explicitly used but could be necessary
