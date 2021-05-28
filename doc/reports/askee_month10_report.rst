@@ -23,6 +23,50 @@ Integration with the Kappa dynamical modeling and analysis UI
 
 Improved EMMAA query UI and REST API
 ------------------------------------
+This month we made various changes to EMMAA service to improve user experience
+for both users querying models via interactive interface and accessing
+REST API programmatically. 
+
+With adding intervention-based dynamical queries described in the previous
+section, we now support four types of queries. We updated the names of the
+query types to more descriptive and added instructions on how to submit and
+interpret the results for each of the query types using EMMAA interactive
+query tool.
+
+.. image:: ../_static/images/query_page_4_types.png
+   :align: center
+*Query page showing four types of queries, description and the form*
+
+Over the last several months we reported adding various endpoints to EMMAA REST
+API to facilitate integration with Uncharted UI. During this reporting period
+we extended and improved the REST API and added a Swagger documentation that
+describes the methods, input requirements, and expected responses for each
+endpoint. We grouped the endpoints into three categories corresponding to the
+goals for which they can be used (retrieving EMMAA models' metadata, getting
+latest models' updates, and running EMMAA queries). Previous `/run_query`
+endpoint that allowed running any type of queries was replaced with four
+separate endpoints for each of the query type for convinience and better
+validation of user input.
+
+.. image:: ../_static/images/rest_api.png
+   :align: center
+*EMMAA REST API endpoints*
+
+The documentation contains the descriptions and example values for each
+parameter that a given endpoint can accept. The interactive Swagger
+documentation also allows manually modify the example input and try out the
+endpoints.
+
+.. image:: ../_static/images/endpoint_input.png
+   :align: center
+*Example input and parameters description for Up/down-stream query endpoint*
+
+In addition, we provide the examples and descriptions for the responses to
+validate the output and facilitate the results interpretation.
+
+.. image:: ../_static/images/endpoint_response.png
+   :align: center
+*Example response and interpretation*
 
 
 Network representation learning for EMMAA models
