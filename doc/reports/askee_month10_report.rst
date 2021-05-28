@@ -1,12 +1,85 @@
 ASKE-E Month 10 Milestone Report
 ================================
 
-
 Dynamical model analysis
 ------------------------
 
+We made several developments that significantly extend the ways in which
+EMMAA models can be analyzed using simulation.
+
 Extended automated assembly for model simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As described previously, EMMAA contains models built using several different
+approaches ranging from small human-defined models written in simple English to
+large fully automatically assembled models from up to hundreds of thousands
+of publications. There is a special set of challenges associated with models
+build automatically from source knowledge as follows:
+- Several EMMAA models are very large, making simulation impractical.
+- EMMAA models that are automatically assembled from literature and
+  pathway databases can by default include "bypass edges", i.e., relationships
+  that are reported in some source which are not direct physical interactions
+  but indirect effects.
+- There are complicated redundancies at the level of individual mechanisms,
+  for instance a model can simultaneously contain "A activates B", and
+  "A phosphorylates B", without an explicit relationship between the two.
+  This can create inconsistent "parallel" pathways over different states
+  of B.
+- Models that include text mining output are naturally subject to some amoun
+  of incorrect information due to various random and systematic errors.
+- Any mechanisms not explicitly stated in text (or in pathway databases) are
+  not represented. One common set of mechanisms are "reverse effects". For
+  instance, there may be several known mechanisms for the positive regulation
+  of the amount of a given protein, but no explicit mention of proteins
+  naturally degrading.
+
+To address these challenges, we have developed a number of assembly procedures
+and implemented support for running an additional assembly pipeline consisting
+of these steps for EMMAA models, specifically to support dynamical simulation.
+Similar to the generic knowledge assembly pipeline that is applied to
+each EMMAA model, these assembly steps are still applied at the
+knowledge/statement level before generating a rule-base dynamical model
+from the statements using the PySB model assembler.
+
+To demonstrate this, we chose The Ras Machine model and configured
+an extended assembly pipeline with the following steps:
+- Filter out complex formation statements, since they can lead to unconstrained
+  polymerization unless additional conditions are supplied.
+- Filter to statements that are known to be direct, either based on annotations
+  from pathway databases or determined from linguistic cues during text mining.
+- Filter to high-confidence statement that have belief score > 0.95.
+- Filter to the most specific version of statements in case a statement appears
+  at multiple refinement levels.
+- Filter strictly to genes in the Ras pathway (which are also the prior search
+  terms around which The Ras Machine is built).
+- Apply a set of semantic filters: filter phosphorylations to ones where the
+  subject is a kinase, filter to amount regulation statements where the
+  subject is a transcription factor, etc.
+- Run the "Mechanism Linker" which applies logic over sets of statements
+  to fill in missing information and remove certain redundancies as follows:
+  - Find the most specific activity type known for each protein and "reduce"
+    all active forms to that activity type. For example, if a protein is
+    known to have generic "activity", but also "kinase" activity, and "kinase"
+    activity is the only known specific activity type, then all the generic
+    "activity" states will be reduced to "kinase" activity.
+  - Find the most specific modifications known for each protein and "reduce"
+    all modifications to that form.
+  - Remove any activation statements that are redundant with respect to
+    a modification and an active form statement. (For instance, if we know
+    that A activates B, and also that A phosphorylates B, and Phosphorylated
+    B is active, then we can remove the redundant A activates B statement.
+  - Rewrite all agents that appear in an active position in a statement (
+    e.g., A in the statement A activates B) to be in one of their known
+    active forms. For example, if we have the statement A activates B,
+    and we know that A is active when it's bound to C, then the statement
+    is rewritten to A bound to C activates B.
+  - Filter out inconsequential modifications and activations, in other words,
+    remove any statements that modify the state of an agent in a way that
+    doesn't have any further downstream effect and is therefore
+    inconsequential.
+
+Having performed these steps, we were able to simulate the model using
+network-free stochastic simulation.
 
 Supporting network-free simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,29 +96,29 @@ Integration with the Kappa dynamical modeling and analysis UI
 
 Improved EMMAA query UI and REST API
 ------------------------------------
-This month we made various changes to EMMAA service to improve user experience
-for both users querying models via interactive interface and accessing
-REST API programmatically. 
+This month we made various changes to the EMMAA service to improve user
+experience for both users querying models via the interactive web interface and
+through the REST API programmatically.
 
-With adding intervention-based dynamical queries described in the previous
+Having added intervention-based dynamical queries as described in the previous
 section, we now support four types of queries. We updated the names of the
-query types to more descriptive and added instructions on how to submit and
-interpret the results for each of the query types using EMMAA interactive
+query types to be more descriptive and added instructions on how to submit and
+interpret the results for each of the query types using the EMMAA interactive
 query tool.
 
 .. image:: ../_static/images/query_page_4_types.png
    :align: center
 *Query page showing four types of queries, description and the form*
 
-Over the last several months we reported adding various endpoints to EMMAA REST
-API to facilitate integration with Uncharted UI. During this reporting period
-we extended and improved the REST API and added a Swagger documentation that
+Over the last several months we reported adding various endpoints to the EMMAA REST
+API to facilitate integration with the Uncharted UI. During this reporting period
+we extended and improved the REST API and added an automatically rendered Swagger documentation that
 describes the methods, input requirements, and expected responses for each
 endpoint. We grouped the endpoints into three categories corresponding to the
 goals for which they can be used (retrieving EMMAA models' metadata, getting
-latest models' updates, and running EMMAA queries). Previous `/run_query`
-endpoint that allowed running any type of queries was replaced with four
-separate endpoints for each of the query type for convinience and better
+latest models' updates, and running EMMAA queries). The previous `/run_query`
+endpoint that allowed running any type of query was replaced with four
+separate endpoints for each of the query types for convinience and better
 validation of user input.
 
 .. image:: ../_static/images/rest_api.png
@@ -54,15 +127,15 @@ validation of user input.
 
 The documentation contains the descriptions and example values for each
 parameter that a given endpoint can accept. The interactive Swagger
-documentation also allows manually modify the example input and try out the
+documentation also allows manually modifying the example input and trying out the
 endpoints.
 
 .. image:: ../_static/images/endpoint_input.png
    :align: center
 *Example input and parameters description for Up/down-stream query endpoint*
 
-In addition, we provide the examples and descriptions for the responses to
-validate the output and facilitate the results interpretation.
+In addition, we provide examples and descriptions for responses to
+validate the output and facilitate the interpretation of results.
 
 .. image:: ../_static/images/endpoint_response.png
    :align: center
@@ -154,8 +227,3 @@ for network representation learning. We are making improvements to the :mod:`pyk
 embeddings in order to make it more scalable and applicable for the directed graph with typed edges assembly of
 INDRA statements. So far, we have made several improvements to its memory management on large graphs and begun work
 integrating the :mod:`accelerate` for scaling across multiple GPUs.
-
-Integration with the Uncharted UI
----------------------------------
-
-
