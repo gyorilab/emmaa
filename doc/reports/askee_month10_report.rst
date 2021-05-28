@@ -83,12 +83,51 @@ network-free stochastic simulation.
 
 Supporting network-free simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Until recently, EMMAA only supported deterministic ODE-based simulation for
+models. The main limitation is that ODE-based simulation requires fully
+defining the set of variables and equations representing system behavior up
+front. This implies that a reaction network (from which ODEs can be derived)
+needs to be generated, where the reaction network describes all biochemical
+reactions that change the amount or state of entities (typically proteins and
+small molecules). However, reaction networks can be very large (and potentially
+infinitely large) due to the combinatorial complexity of entities interacting
+with each other. (Consider for instance the trivial polymerization reaction
+where some entity X has two binding sites each of which can bind X, resulting
+in chains of X of unlimited length).
+
+Network-free, agent-based simulation overcomes this challenge since
+it doesn't require enumerating all states up front, rather, one can
+provide an initial mixture from which the state of the system evolves
+as reaction events happen over time. To support this simulation mode,
+we integrated the Kappa simulator with EMMAA via the kappy Python package.
+We implemented the API to the Kappa simulator such that it is consistent with
+the previous ODE-based simulator.
+
+One specific example of a model which - due to combinatorial complexity -
+cannot be generated into a reaction network but can be simulated using this
+network-free approach.
 
 Adaptive sample-size dynamical property checking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+One property of stochastic network-free simulation is that each simulation
+trace is different, and given any qualitative property, whether a trace
+satisfies that property or not can differ due to this stochasticity. So the
+question arises: how many simulations should one do to conclude - assuming
+pre-specified statistical error bounds - that a given property holds with
+at least a given probability. We integrated a sequential hypothesis testing
+algorithm with the property checking surrounding network-free simulation
+which can decide (after each simulation) whether to stop or to perform
+another simulation to decide about the satisfaction of the property. This way,
+sample sizes are chosen adaptively and automatically in a principled way.
+
+In the future, we will work on integrating parametric uncertainty in EMMAA
+model analysis. In that case, even deterministic ODE-based simulations will
+be subject to uncertainty, and the same sequential hypothesis testing
+approach will be applicable in that simulation mode too.
 
 Intervention-based dynamical queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Integration with the Kappa dynamical modeling and analysis UI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
