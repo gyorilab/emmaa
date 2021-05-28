@@ -15,6 +15,7 @@ approaches ranging from small human-defined models written in simple English to
 large fully automatically assembled models from up to hundreds of thousands
 of publications. There is a special set of challenges associated with models
 build automatically from source knowledge as follows:
+
 - Several EMMAA models are very large, making simulation impractical.
 - EMMAA models that are automatically assembled from literature and
   pathway databases can by default include "bypass edges", i.e., relationships
@@ -43,6 +44,7 @@ from the statements using the PySB model assembler.
 
 To demonstrate this, we chose The Ras Machine model and configured
 an extended assembly pipeline with the following steps:
+
 - Filter out complex formation statements, since they can lead to unconstrained
   polymerization unless additional conditions are supplied.
 - Filter to statements that are known to be direct, either based on annotations
@@ -57,6 +59,7 @@ an extended assembly pipeline with the following steps:
   subject is a transcription factor, etc.
 - Run the "Mechanism Linker" which applies logic over sets of statements
   to fill in missing information and remove certain redundancies as follows:
+
   - Find the most specific activity type known for each protein and "reduce"
     all active forms to that activity type. For example, if a protein is
     known to have generic "activity", but also "kinase" activity, and "kinase"
@@ -128,9 +131,50 @@ approach will be applicable in that simulation mode too.
 Intervention-based dynamical queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+One of the query modes we have planned to support involves interventions
+where the amount of a given entity is modulated and the effect on a specific
+readout is examined. We implemented a query specification schema to describe
+such queries, implemented a new EMMAA Query UI tab for specifying these
+queries in and intuitive way, and integrated the back-end simulation
+engine supporting setting up, running, and then evaluating the results
+of such queries.
+
+In the example below, we asked whether SOS1 leads to the activation of
+KRAS in a dynamical sense. This is evaluated by modulating the total amount
+of SOS1 between a high level (which can loosely model "overexpression")
+and a low level (which can loosely model "knock out"), and comparing
+the time course of active KRAS between the two conditions. In this case,
+we find that active KRAS is substantially higher when SOS1 is present
+at a high level, therefore the property is satisfied:
+
+.. image:: ../_static/images/dynamical_intervention_sos_kras.png
+   :align: center
 
 Integration with the Kappa dynamical modeling and analysis UI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The team behind the Kappa language and tool set has developed an
+incredibly powerful integrated development environment for Kappa models
+using an easy-to-use web inteface which integrates panels for
+defining and modifying the model, and examining static analysis and
+simulation-based dynamical analysis results: https://tools.kappalanguage.org/try.
+
+The Kappa UI supports loading models directly from URLs which allows
+straightforward integration with EMMAA. Namely, each EMMAA model (where
+this makes sense) is also generated into a Kappa export after each daily
+model update, and these exports come with a stable URL. We now added a link
+out to the Kappa UI for each model where such an export is available, allowing
+users to perform analysis on that interface.
+
+The screenshot below shows the Ras Model in the Kappa UI. On the left, the
+Kappa export of the model can be edited directly. On the right, the contact
+map (one of the static analysis outputs) is shown, and in the bottom, warning
+messages about "dead rules" (rules that are inconsequential from a dynamical
+perspective) can be browsed. Numerous further tabs support a variety of other
+analysis modes.
+
+.. image:: ../_static/images/rasmodel_kappa_ui.png
+   :align: center
 
 
 Improved EMMAA query UI and REST API
@@ -147,6 +191,7 @@ query tool.
 
 .. image:: ../_static/images/query_page_4_types.png
    :align: center
+
 *Query page showing four types of queries, description and the form*
 
 Over the last several months we reported adding various endpoints to the EMMAA REST
@@ -162,6 +207,7 @@ validation of user input.
 
 .. image:: ../_static/images/rest_api.png
    :align: center
+
 *EMMAA REST API endpoints*
 
 The documentation contains the descriptions and example values for each
