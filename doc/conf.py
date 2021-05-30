@@ -169,7 +169,11 @@ texinfo_documents = [
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'https://docs.python.org/': None,
+    'pykeen': ('https://pykeen.readthedocs.io/en/latest/', None),
+    'accelerate': ('https://huggingface.co/docs/accelerate/', None),
+}
 
 
 MOCK_MODULES = [
