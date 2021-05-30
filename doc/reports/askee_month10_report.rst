@@ -14,7 +14,7 @@ As described previously, EMMAA contains models built using several different
 approaches ranging from small human-defined models written in simple English to
 large fully automatically assembled models from up to hundreds of thousands
 of publications. There is a special set of challenges associated with models
-build automatically from source knowledge as follows:
+built automatically from source knowledge as follows:
 
 - Several EMMAA models are very large, making simulation impractical.
 - EMMAA models that are automatically assembled from literature and
@@ -26,12 +26,12 @@ build automatically from source knowledge as follows:
   "A phosphorylates B", without an explicit relationship between the two.
   This can create inconsistent "parallel" pathways over different states
   of B.
-- Models that include text mining output are naturally subject to some amoun
+- Models that include text mining output are naturally subject to some amount
   of incorrect information due to various random and systematic errors.
 - Any mechanisms not explicitly stated in text (or in pathway databases) are
   not represented. One common set of mechanisms are "reverse effects". For
   instance, there may be several known mechanisms for the positive regulation
-  of the amount of a given protein, but no explicit mention of proteins
+  of the amount of a given protein, but no explicit mention of the protein
   naturally degrading.
 
 To address these challenges, we have developed a number of assembly procedures
@@ -49,7 +49,7 @@ an extended assembly pipeline with the following steps:
   polymerization unless additional conditions are supplied.
 - Filter to statements that are known to be direct, either based on annotations
   from pathway databases or determined from linguistic cues during text mining.
-- Filter to high-confidence statement that have belief score > 0.95.
+- Filter to high-confidence statements that have belief score > 0.95.
 - Filter to the most specific version of statements in case a statement appears
   at multiple refinement levels.
 - Filter strictly to genes in the Ras pathway (which are also the prior search
@@ -82,7 +82,11 @@ an extended assembly pipeline with the following steps:
     inconsequential.
 
 Having performed these steps, we were able to simulate the model using
-network-free stochastic simulation.
+network-free stochastic simulation. Below is an example simulation trace
+for the amount of MAP2K1 phosphorylated on the S222 site:
+
+.. image:: ../_static/images/rasmachine_map2k1_phos.png
+   :align: center
 
 Supporting network-free simulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +112,11 @@ the previous ODE-based simulator.
 
 One specific example of a model which - due to combinatorial complexity -
 cannot be generated into a reaction network but can be simulated using this
-network-free approach.
+network-free approach is the Ras Model. The example below shows simulations of
+MAPK1 phosphorylated on T185.
+
+.. image:: ../_static/images/rasmodel_mapk1_phos.png
+   :align: center
 
 Adaptive sample-size dynamical property checking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +128,7 @@ pre-specified statistical error bounds - that a given property holds with
 at least a given probability. We integrated a sequential hypothesis testing
 algorithm with the property checking surrounding network-free simulation
 which can decide (after each simulation) whether to stop or to perform
-another simulation to decide about the satisfaction of the property. This way,
+another simulation to determine the satisfaction of the property. This way,
 sample sizes are chosen adaptively and automatically in a principled way.
 
 In the future, we will work on integrating parametric uncertainty in EMMAA
@@ -153,15 +161,15 @@ at a high level, therefore the property is satisfied:
 Integration with the Kappa dynamical modeling and analysis UI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The team behind the Kappa language and tool set has developed an
-incredibly powerful integrated development environment for Kappa models
+The team behind the Kappa language and tool set has developed a
+powerful integrated development environment for Kappa models
 using an easy-to-use web inteface which integrates panels for
 defining and modifying the model, and examining static analysis and
 simulation-based dynamical analysis results: https://tools.kappalanguage.org/try.
 
 The Kappa UI supports loading models directly from URLs which allows
 straightforward integration with EMMAA. Namely, each EMMAA model (where
-this makes sense) is also generated into a Kappa export after each daily
+this makes sense) is generated into a Kappa export after each daily
 model update, and these exports come with a stable URL. We now added a link
 out to the Kappa UI for each model where such an export is available, allowing
 users to perform analysis on that interface.
@@ -189,10 +197,10 @@ query types to be more descriptive and added instructions on how to submit and
 interpret the results for each of the query types using the EMMAA interactive
 query tool.
 
-.. image:: ../_static/images/query_page_4_types.png
+.. figure:: ../_static/images/query_page_4_types.png
    :align: center
 
-*Query page showing four types of queries, description and the form*
+   *Query page showing four types of queries, description and the form*
 
 Over the last several months we reported adding various endpoints to the EMMAA REST
 API to facilitate integration with the Uncharted UI. During this reporting period
@@ -205,26 +213,28 @@ endpoint that allowed running any type of query was replaced with four
 separate endpoints for each of the query types for convinience and better
 validation of user input.
 
-.. image:: ../_static/images/rest_api.png
+.. figure:: ../_static/images/rest_api.png
    :align: center
 
-*EMMAA REST API endpoints*
+   *EMMAA REST API endpoints*
 
 The documentation contains the descriptions and example values for each
 parameter that a given endpoint can accept. The interactive Swagger
 documentation also allows manually modifying the example input and trying out the
 endpoints.
 
-.. image:: ../_static/images/endpoint_input.png
+.. figure:: ../_static/images/endpoint_input.png
    :align: center
-*Example input and parameters description for Up/down-stream query endpoint*
+
+   *Example input and parameters description for Up/down-stream query endpoint*
 
 In addition, we provide examples and descriptions for responses to
 validate the output and facilitate the interpretation of results.
 
-.. image:: ../_static/images/endpoint_response.png
+.. figure:: ../_static/images/endpoint_response.png
    :align: center
-*Example response and interpretation*
+
+   *Example response and interpretation*
 
 
 Network representation learning for EMMAA models
