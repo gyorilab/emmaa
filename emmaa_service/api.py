@@ -304,7 +304,10 @@ stmt_fields = fields.Raw(example={
         }, description='INDRA Statement JSON')
 
 stmts_model = api.model('Statements', {
-    'statements': fields.List(stmt_fields)
+    'statements': fields.List(stmt_fields),
+    'link': fields.List(fields.String, example=(
+        'https://emmaa.s3.amazonaws.com/assembled/'
+        'aml/statements_2021-05-26-17-31-41.gz'))
 })
 # Environment variables
 
