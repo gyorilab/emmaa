@@ -3,7 +3,6 @@ import json
 import boto3
 import logging
 import argparse
-from matplotlib.pyplot import cla
 import requests
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
@@ -17,7 +16,6 @@ from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
 from pusher import pusher
-from sympy.polys.fields import field
 
 from indra_db.exceptions import BadHashError
 from indra_db import get_db
@@ -31,7 +29,7 @@ from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
-    find_number_of_files_on_s3, load_json_from_s3, FORMATTED_TYPE_NAMES
+    find_number_of_files_on_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test, get_assembled_statements
 from emmaa.model_tests import load_tests_from_s3
@@ -39,7 +37,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery, Query, SimpleInterventionProperty
+    DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title
 
