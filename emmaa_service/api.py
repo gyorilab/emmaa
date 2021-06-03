@@ -292,6 +292,20 @@ interv_result_model = api.model('interv_result', {
     'pysb': fields.Nested(interv_fields_model, skip_none=True,
                           description='Results of simulating PySB model')
 })
+stmt_fields = fields.Raw(example={
+        "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+        "type": "Complex",
+        "members": [
+            {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+            {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
+        ],
+        "sbo": "https://identifiers.org/SBO:0000526",
+        "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
+        }, description='INDRA Statement JSON')
+
+stmts_model = api.model('Statements', {
+    'statements': fields.List(stmt_fields)
+})
 # Environment variables
 
 logger = logging.getLogger(__name__)
@@ -2012,6 +2026,7 @@ def list_curations(stmt_hash, src_hash):
 @latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
 @latest_ns.route('/statements/<model>')
 class LatestStatements(Resource):
+    @latest_ns.response(200, 'INDRA Statements', stmts_model)
     def get(self, model):
         """Return model latest statements and link to S3 latest statements file."""
         stmts, fkey = get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME)
