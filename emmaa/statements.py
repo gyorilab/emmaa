@@ -20,7 +20,7 @@ class EmmaaStatement(object):
         Additional metadata for the statement.
     """
     def __init__(self, stmt, date, search_terms, metadata=None):
-        ann = emmaa_metadata_json(search_terms, date, metadata)
+        ann = emmaa_metadata_json(search_terms, metadata)
         add_emmaa_annotations(stmt, ann)
         self.stmt = stmt
         self.date = date
@@ -32,8 +32,8 @@ class EmmaaStatement(object):
                                    self.date, self.search_terms)
 
     def to_json(self):
-        output_json = emmaa_metadata_json(self.search_terms, self.date,
-                                          self.metadata)
+        output_json = emmaa_metadata_json(self.search_terms, self.metadata)
+        output_json['date'] = self.date.strftime('%Y-%m-%d-%H-%M-%S')
         # Get json representation of statement
         json_stmt = self.stmt.to_json(use_sbo=False)
         # Stringify source hashes: JavaScript can't handle int's of length > 16
@@ -54,11 +54,10 @@ def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     return emmaa_stmts
 
 
-def emmaa_metadata_json(search_terms, date, metadata):
+def emmaa_metadata_json(search_terms, metadata):
     if not metadata:
         metadata = {}
     return {'search_terms': [st.to_json() for st in search_terms],
-            'date': date.strftime('%Y-%m-%d-%H-%M-%S'),
             'metadata': metadata}
 
 
