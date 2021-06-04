@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
     session
+from flask_restx import Api, Resource, fields, inputs, abort as restx_abort
 from flask_cors import CORS
 
 from flask_jwt_extended import jwt_optional
@@ -20,7 +21,7 @@ from indra_db.exceptions import BadHashError
 from indra_db import get_db
 from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
-    DecreaseAmount, Activation, Inhibition, AddModification, \
+    DecreaseAmount, Activation, Inhibition, AddModification, Agent, \
     RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
@@ -28,7 +29,7 @@ from indra_db.client.principal.curation import get_curations, submit_curation
 
 from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
-    find_number_of_files_on_s3, load_json_from_s3, FORMATTED_TYPE_NAMES
+    find_number_of_files_on_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
     get_model_stats, _default_test, get_assembled_statements
 from emmaa.model_tests import load_tests_from_s3
@@ -36,7 +37,7 @@ from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
     register_email_unsubscribe, get_email_subscriptions
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
-    DynamicProperty, OpenSearchQuery, Query, SimpleInterventionProperty
+    DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title
 
@@ -47,12 +48,264 @@ from indra.sources.hypothesis import upload_statement_annotation
 from indra.databases.identifiers import get_identifiers_url
 
 
+# Endpoints for EMMAA website rendering are registered with app
 app = Flask(__name__)
 app.register_blueprint(auth)
 app.register_blueprint(path_temps)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('EMMAA_SERVICE_SESSION_KEY', '')
+app.config['RESTX_MASK_SWAGGER'] = False
 CORS(app)
+
+# Endpoints for programmatic access are registered with api
+api = Api(app, title='EMMAA REST API', description='EMMAA REST API',
+          doc='/doc')
+metadata_ns = api.namespace('Metadata', 'Get EMMAA models metadata',
+                            path='/metadata/')
+latest_ns = api.namespace('Latest', 'Get updates specific to latest models',
+                          path='/latest/')
+query_ns = api.namespace('Query', 'Run EMMAA queries', path='/query/')
+
+# Models for request body of REST API endpoints
+dict_model = api.model('dict', {})
+egfr = {'type': 'Agent', 'name': 'EGFR', 'db_refs': {'HGNC': '3236'}}
+akt1 = {'type': 'Agent', 'name': 'AKT1', 'db_refs': {'HGNC': '391'}}
+path_query_model = api.model('path_query', {
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'source': fields.Nested(dict_model, example=egfr,
+                            description='INDRA Agent JSON as a source.'),
+    'target': fields.Nested(dict_model, example=akt1,
+                            description='INDRA Agent JSON as a target.'),
+    'stmt_type': fields.String(
+        example='Activation',
+        description='Type of effect between source and target.')
+})
+open_query_model = api.model('open_query', {
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'entity': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON to start the search from.'),
+    'entity_role': fields.String(
+        example='object',
+        description='subject for downstream or object for upstream search.'),
+    'stmt_type': fields.String(
+        example='Activation',
+        description='Type of effect to search for.'),
+    'terminal_ns': fields.List(
+        fields.String, example=['HGNC', 'UP', 'FPLX'], required=False,
+        description=('Optional list of namespaces to constrain the types of '
+                     'up/downstream entities'))
+})
+dynamic_query_model = api.model('dynamic_query', {
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'entity': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON for entity of interest.'),
+    'pattern_type': fields.String(
+        example='eventual_value', description=(
+            "One of 'always_value', 'sometime_value', 'eventual_value', "
+            "'no_change', 'sustained', 'transient'.")),
+    'quant_value': fields.String(
+        example='high', required=False, description=(
+            "'high' or 'low' (only required for 'always_value', "
+            "'sometime_value', 'eventual_value' pattern types)."))
+})
+intervention_query_model = api.model('intervention_query', {
+    'model': fields.String(
+        example='rasmodel',
+        description='A name of EMMAA model to query (e.g. aml, covid19)'),
+    'source': fields.Nested(dict_model, example=egfr,
+                            description='INDRA Agent JSON as a source.'),
+    'target': fields.Nested(
+        dict_model, example=akt1,
+        description='INDRA Agent JSON as a target. Agent can have a state.'),
+    'direction': fields.String(example='up', description=(
+        "'up' or 'dn' to test whether the target increased or decreased "
+        "with intervention."))
+})
+
+# Parsers for query string parameters in REST API endpoints
+entity_parser = api.parser()
+entity_parser.add_argument('namespace', required=True,
+                           help='Namespace, e.g. HGNC, CHEBI, etc.',
+                           default='HGNC')
+entity_parser.add_argument('id', required=True,
+                           help="Entity's ID in a given namespace")
+
+date_parser = api.parser()
+date_parser.add_argument(
+    'test_corpus',
+    help=('Name of test corpus to find stats for, if not given default test '
+          'corpus for the model will be used.'))
+date_parser.add_argument(
+    'date_format', help='Format of the date to return (date or datetime)')
+
+url_parser = api.parser()
+url_parser.add_argument(
+    'dated', type=inputs.boolean,
+    help='Whether the returned URL should be a dated version',
+    default=False)
+
+# Models for documenting responses in REST API endpoints
+link_model = api.model('link', {
+    'link': fields.String(example=('https://emmaa.s3.amazonaws.com/assembled/'
+                                   'aml/statements_2021-05-26-17-31-41.gz'),
+                          description='Link to statements file of S3')})
+date_model = api.model('date', {
+    'model': fields.String(example='aml', description='EMMAA model'),
+    'test_corpus': fields.String(example='large_corpus_tests',
+                                 description='Test corpus'),
+    'date': fields.String(
+        example='2021-01-01',
+        description='Date of latest stats in requested format')
+})
+curations_model = api.model('curations', {
+    'correct': fields.List(
+        fields.String, example=['-32768958892027373'],
+        description='Hashes of statements curated as correct'),
+    'incorrect': fields.List(
+        fields.String, example=['12768358492025322'],
+        description='Hashes of statements curated as incorrect'),
+    'partial': fields.List(
+        fields.String, example=['52768978892027576'],
+        description='Hashes of statements curated as having minor problems')
+})
+models_model = api.model('models', {
+    'models': fields.List(fields.String, example=['aml', 'brca', 'covid19'])
+})
+model_info_model = api.model('model_info', {
+    'name': fields.String(example='covid19',
+                          description='Short name of EMMAA model'),
+    'human_readable_name': fields.String(
+        example='Covid-19', description='Human readable name of EMMAA model'),
+    'description': fields.String(example=(
+        'Covid-19 knowledge network automatically assembled from the '
+        'CORD-19 document corpus.'),
+        description='Description of a model'),
+    'ndex': fields.String(example='a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf',
+                          description='NDEx ID of EMMAA model'),
+    'twitter': fields.String(example='https://twitter.com/covid19_emmaa',
+                             description='Link to model Twitter account')
+})
+test_corpora_model = api.model('test_corpora', {
+    'test_corpora': fields.List(
+        fields.String, example=['large_corpus_tests'],
+        description='List of test corpora used for this EMMAA model'
+    )
+})
+test_info_model = api.model('test_info', {
+    'name': fields.String(example='Literature-reported corpus',
+                          description='Test corpus name'),
+    'description': fields.String(example='Tests were curated from literature',
+                                 description='Test corpus description')
+})
+entity_info_model = api.model('entity_info', {
+    'name': fields.String(example='BRAF', description='Entity name'),
+    'definition': fields.String(
+        example='B-Raf proto-oncogene, serine/threonine kinase',
+        description='Entity definition'),
+    'url': fields.String(example='https://identifiers.org/hgnc:1097',
+                         description='URL for entity')
+})
+edge_model = api.model('edge', {
+    'type': fields.String(example='statements', description='Type of edge'),
+    'hashes': fields.List(fields.Integer, example=[-24400716388202410],
+                          description='Hashes of statements for the edge')
+})
+path_model = api.model('path_result', {
+    'nodes': fields.List(fields.String, example=['EGFR', 'SRC', 'AKT1'],
+                         description='List of nodes in the found path'),
+    'edges': fields.List(fields.Nested(edge_model, skip_none=True),
+                         description='List of edges in the found path'),
+    'graph_type': fields.String(
+        example='signed_graph',
+        description='Type of graph the path was found in'),
+    'fail_reason': fields.String(
+        example='Statement object state not in model',
+        description='Reason why path was not found')
+})
+path_result_model = api.model('result', {
+    'pysb': fields.Nested(path_model, skip_none=True,
+                          description='Results in PySB model'),
+    'pybel': fields.Nested(path_model, skip_none=True,
+                           description='Results in PyBEL model'),
+    'signed_graph': fields.Nested(path_model, skip_none=True,
+                                  description='Results in signed graph'),
+    'unsigned_graph': fields.Nested(path_model, skip_none=True,
+                                    description='Results in unsigned graph'),
+    'all_types': fields.String(
+        example='Query is not applicable for this model', skip_none=True,
+        description='If query is not applicable, only this will be returned')
+})
+quant_model = api.model('quantity', {
+    'type': fields.String(example='qualitative',
+                          description='Molecular quantity type'),
+    'value': fields.String(example='low',
+                           description='Molecular quantity value')
+})
+pattern_model = api.model('pattern', {
+    'type': fields.String(example='no_change', description='Pattern type'),
+    'value': fields.Nested(quant_model, skip_none=True,
+                           description='Molecular quantity of an entity')
+})
+dynamic_fields_model = api.model('dynamic_fields', {
+    'sat_rate': fields.Float(example=1.0, description='Saturation rate'),
+    'num_sim': fields.Integer(example=2, description='Number of simulations'),
+    'kpat': fields.Nested(pattern_model, skip_none=True,
+                          description='Discovered pattern'),
+    'fig_path': fields.String(
+        example=('https://emmaa.s3.amazonaws.com/query_images/rasmodel/'
+                 '20210527145113_AKT1_obs_2021-05-27-18-51-13.png'),
+        description='Path to a resulting plot on S3'),
+    'fail_reason': fields.String(
+        example='Query is not applicable for this model',
+        description='If query is not applicable, only this will be returned')
+})
+interv_fields_model = api.model('interv_fields', {
+    'result': fields.String(
+        example='yes_increase',
+        description='Whether the target changed as expected'),
+    'fig_path': fields.String(
+        example=('https://emmaa.s3.amazonaws.com/query_images/rasmodel/'
+                 '20210527145113_AKT1_obs_2021-05-27-18-51-13.png'),
+        description='Path to a resulting plot on S3'),
+    'fail_reason': fields.String(
+        example='Query is not applicable for this model',
+        description='If query is not applicable, only this will be returned')
+})
+dynamic_result_model = api.model('dynamic_result', {
+    'pysb': fields.Nested(dynamic_fields_model, skip_none=True,
+                          description='Results of simulating PySB model')
+})
+interv_result_model = api.model('interv_result', {
+    'pysb': fields.Nested(interv_fields_model, skip_none=True,
+                          description='Results of simulating PySB model')
+})
+stmt_fields = fields.Raw(example={
+        "id": "acc6d47c-f622-41a4-8ae9-d7b0f3d24a2f",
+        "type": "Complex",
+        "members": [
+            {"db_refs": {"TEXT": "MEK", "FPLX": "MEK"}, "name": "MEK"},
+            {"db_refs": {"TEXT": "ERK", "FPLX": "ERK"}, "name": "ERK"}
+        ],
+        "sbo": "https://identifiers.org/SBO:0000526",
+        "evidence": [{"text": "MEK binds ERK", "source_api": "trips"}]
+        }, description='INDRA Statement JSON')
+
+stmts_model = api.model('Statements', {
+    'statements': fields.List(stmt_fields),
+    'link': fields.List(fields.String, example=(
+        'https://emmaa.s3.amazonaws.com/assembled/'
+        'aml/statements_2021-05-26-17-31-41.gz'))
+})
+# Environment variables
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -87,6 +340,9 @@ pusher = pusher_client = pusher.Pusher(
   cluster=pusher_cluster,
   ssl=True
 )
+
+
+# Helper functions
 
 
 def _sort_pass_fail(row):
@@ -526,8 +782,8 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     evid_count = len(stmt.evidence)
     evid = []
     if with_evid and cur_dict is not None:
-        evid = _format_evidence_text(
-            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])[:10]
+        evid = json.loads(json.dumps(_format_evidence_text(
+            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])))[:10]
     params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
               'format': 'json', 'date': date}
     if test_corpus:
@@ -655,6 +911,71 @@ def filter_evidence(stmt, paper_id, paper_id_type):
             stmt2.evidence.append(evid)
     return stmt2
 
+
+def get_immediate_queries(query_type):
+    headers = None
+    results = 'Results for submitted queries'
+    if session.get('query_hashes') and session['query_hashes'].get(query_type):
+        query_hashes = session['query_hashes'][query_type]
+        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
+        if query_type in ['path_property', 'open_search_query']:
+            headers = ['Query', 'Model'] + [
+                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
+                list(qr.values())[0]] if qr else []
+            results = _format_query_results(qr) if qr else\
+                'No stashed results for subscribed queries. Please re-run ' \
+                'query to see latest result.'
+        elif query_type in ['dynamic_property',
+                            'simple_intervention_property']:
+            headers = ['Query', 'Model', 'Result', 'Image']
+            results = _format_dynamic_query_results(qr)
+    return results, headers
+
+
+def get_subscribed_queries(query_type, user_email=None):
+    headers = []
+    if user_email:
+        res = qm.get_registered_queries(user_email, query_type)
+        if res:
+            if query_type in ['path_property', 'open_search_query']:
+                sub_results = _format_query_results(res)
+                headers = ['Query', 'Model'] + [
+                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
+            elif query_type in ['dynamic_property',
+                                'simple_intervention_property']:
+                sub_results = _format_dynamic_query_results(res)
+                headers = ['Query', 'Model', 'Result', 'Image']
+        else:
+            sub_results = 'You have no subscribed queries'
+    else:
+        sub_results = 'Please log in to see your subscribed queries'
+    return sub_results, headers
+
+
+def _lookup_bioresolver(prefix: str, identifier: str):
+    url = get_config('ENTITY_RESOLVER_URL')
+    if url is None:
+        return
+    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+    res_json = res.json()
+    if not res_json['success']:
+        return  # there was a problem looking up CURIE in the bioresolver
+    return res_json
+
+
+def _run_query(query, model):
+    mm = load_model_manager_from_cache(model)
+    full_results = mm.answer_query(query)
+    results = {}
+    for mc_type, _, paths in full_results:
+        if mc_type:
+            results[mc_type] = paths
+        else:
+            results['all_types'] = paths
+    return results
+
+
+# Dashboard endpoints
 
 # Deletes session after the specified time
 @app.before_request
@@ -1069,46 +1390,6 @@ def get_model_tests_page(model):
                            next=next_date)
 
 
-def get_immediate_queries(query_type):
-    headers = None
-    results = 'Results for submitted queries'
-    if session.get('query_hashes') and session['query_hashes'].get(query_type):
-        query_hashes = session['query_hashes'][query_type]
-        qr = qm.retrieve_results_from_hashes(query_hashes, query_type)
-        if query_type in ['path_property', 'open_search_query']:
-            headers = ['Query', 'Model'] + [
-                FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES if mt in
-                list(qr.values())[0]] if qr else []
-            results = _format_query_results(qr) if qr else\
-                'No stashed results for subscribed queries. Please re-run ' \
-                'query to see latest result.'
-        elif query_type in ['dynamic_property',
-                            'simple_intervention_property']:
-            headers = ['Query', 'Model', 'Result', 'Image']
-            results = _format_dynamic_query_results(qr)
-    return results, headers
-
-
-def get_subscribed_queries(query_type, user_email=None):
-    headers = []
-    if user_email:
-        res = qm.get_registered_queries(user_email, query_type)
-        if res:
-            if query_type in ['path_property', 'open_search_query']:
-                sub_results = _format_query_results(res)
-                headers = ['Query', 'Model'] + [
-                    FORMATTED_TYPE_NAMES[mt] for mt in ALL_MODEL_TYPES]
-            elif query_type in ['dynamic_property',
-                                'simple_intervention_property']:
-                sub_results = _format_dynamic_query_results(res)
-                headers = ['Query', 'Model', 'Result', 'Image']
-        else:
-            sub_results = 'You have no subscribed queries'
-    else:
-        sub_results = 'Please log in to see your subscribed queries'
-    return sub_results, headers
-
-
 @app.route('/query')
 @jwt_optional
 def get_query_page():
@@ -1153,95 +1434,6 @@ def get_query_page():
                            tab=tab,
                            preselected_model=preselected_model,
                            latest_query=latest_query)
-
-
-@app.route('/run_query', methods=['POST'])
-def run_query():
-    """Run a query.
-
-    Parameters
-    ----------
-    query_json : str(dict)
-        A JSON dump of a standard query JSON representation. The structure of
-        a query json depends on a query type. All query JSONs have to contain
-        a "type" (path_property, dynamic_property, or open_search_query).
-
-        Path (static) query JSON has to contain keys "type" (path_property)
-        and "path" (formatted as INDRA Statement JSON).
-
-        Open search query JSON has to contain keys "type" (open_search_query),
-        "entity" (formatted as INDRA Agent JSON), "entity_role" (subject or
-        object), and "stmt_type"; optionally "terminal_ns" (a list of
-        namespaces to filter the result).
-
-        Dynamic query JSON has to contain keys "type" (dynamic_property),
-        "entity" (formatted as INDRA Agent JSON), "pattern_type" (one of
-        "always_value", "no_change", "eventual_value", "sometime_value",
-        "sustained", "transient"), and "quant_value" ("high" or "low", only
-        required when "pattern_type" is one of "always_value",
-        "eventual_value", "sometime_value").
-
-        Intervention query JSON has to contain keys
-        "type" (simple_intervention_property),
-        "condition_entity" (formatted as INDRA Agent JSON),
-        "target_entity" (formatted as INDRA Agent JSON), "direction" ("up" or
-        "dn").
-
-    model : str
-        A name of a model to run a query against.
-
-    Returns
-    -------
-    results : dict
-        A dictionary mapping the model type to either paths or result code.
-    """
-    qj = request.json.get('query_json')
-    if 'type' not in qj:
-        msg = ('All query JSONs have to contain a "type" '
-               '(path_property, dynamic_property, or open_search_query).')
-        abort(Response(msg, 400))
-    if qj['type'] == 'path_property':
-        msg = ('Path (static) query JSON has to contain keys "type" and "path"'
-               ' (formatted as INDRA Statement JSON).')
-        if 'path' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'open_search_query':
-        msg = ('Open search query JSON has to contain keys "type", "entity" '
-               '(formatted as INDRA Agent JSON), "entity_role" (subject or '
-               'object), and "stmt_type"; optionally "terminal_ns" (a list of '
-               'namespaces to filter the result).')
-        if 'entity' not in qj or 'entity_role' not in qj or \
-                'stmt_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'dynamic_property':
-        msg = ('Dynamic query JSON has to contain keys "type", "entity" '
-               '(formatted as INDRA Agent JSON), "pattern_type" (one of '
-               '"always_value", "no_change", "eventual_value", '
-               '"sometime_value", "sustained", "transient"), and "quant_value"'
-               ' ("high" or "low", only required when "pattern_type" is one of'
-               ' "always_value", "eventual_value", "sometime_value".')
-        if 'entity' not in qj or 'pattern_type' not in qj:
-            abort(Response(msg, 400))
-    elif qj['type'] == 'simple_intervention_property':
-        msg = ('Intervention query JSON has to contain keys '
-               '"type" (simple_intervention_property), '
-               '"condition_entity" (formatted as INDRA Agent JSON), '
-               '"target_entity" (formatted as INDRA Agent JSON), "direction" '
-               '("up" or "dn").')
-        if 'condition_entity' not in qj or 'target_entity' not in qj or \
-                'direction' not in qj:
-            abort(Response(msg, 400))
-    model = request.json.get('model')
-    query = Query._from_json(qj)
-    mm = load_model_manager_from_cache(model)
-    full_results = mm.answer_query(query)
-    results = {}
-    for mc_type, resp, paths in full_results:
-        if mc_type:
-            results[mc_type] = paths
-        else:
-            results['all_types'] = paths
-    return results
 
 
 @app.route('/evidence')
@@ -1333,20 +1525,6 @@ def get_statement_evidence_page():
                            date=date,
                            fig_list=fig_list,
                            tabs=tabs)
-
-
-@app.route('/curated_statements/<model>')
-def get_curated_statements(model):
-    date = request.args.get('date')
-    if not date:
-        date = get_latest_available_date(model, _default_test(model))
-    model_stats = _load_model_stats_from_cache(model, date)
-    stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
-    correct, incorrect, partial = _label_curations(include_partial=True,
-                                                   pa_hash=stmt_hashes)
-    return jsonify({'correct': list(correct),
-                    'partial': list(partial),
-                    'incorrect': list(incorrect)})
 
 
 @app.route('/all_statements/<model>')
@@ -1441,6 +1619,50 @@ def get_all_statements_page(model):
                            link=link,
                            date=date,
                            tabs=False)
+
+
+@app.route('/demos')
+@jwt_optional
+def get_demos_page():
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('demos_template.html', link_list=link_list,
+                           user_email=user_email)
+
+
+@app.route('/chat')
+@jwt_optional
+def chat_with_the_model():
+    model = request.args.get('model', '')
+    user, roles = resolve_auth(dict(request.args))
+    user_email = user.email if user else ""
+    return render_template('chat_widget.html',
+                           email=user_email,
+                           model=model,
+                           link_list=link_list,
+                           exclude_footer=True,
+                           pusher_key=pusher_key)
+
+
+@app.route('/new/guest', methods=['POST'])
+def guest_user():
+    data = request.json
+    print('New guest data: %s' % str(data))
+
+    pusher.trigger('general-channel', 'new-guest-details', {
+        'name': data['name'],
+        'email': data['email'],
+        'emmaa_model': data.get('emmaa_model')
+        })
+
+    return json.dumps(data)
+
+
+@app.route("/pusher/auth", methods=['POST'])
+def pusher_authentication():
+    auth = pusher.authenticate(channel=request.form['channel_name'],
+                               socket_id=request.form['socket_id'])
+    return json.dumps(auth)
 
 
 @app.route('/query/<model>')
@@ -1671,6 +1893,29 @@ def email_unsubscribe_post():
         return jsonify({'result': False, 'reason': 'Invalid signature'}), 401
 
 
+@app.route('/subscribe/<model>', methods=['POST'])
+@jwt_optional
+def model_subscription(model):
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        logger.warning('User is not logged in')
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        return jsonify(res_dict), 401
+
+    user_email = user.email
+    user_id = user.id
+
+    subscribe = request.json.get('subscribe')
+    logger.info(f'Change subscription status for {model} and {user_email} to '
+                f'{subscribe}')
+    if subscribe:
+        qm.db.subscribe_to_model(user_email, user_id, model)
+        return {'subscription': 'success'}
+    else:
+        qm.db.update_email_subscription(user_email, [], [model], False)
+        return {'unsubscribe': 'success'}
+
+
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
@@ -1774,209 +2019,262 @@ def list_curations(stmt_hash, src_hash):
     return jsonify(curations)
 
 
-@app.route('/latest_statements/<model>', methods=['GET'])
-def load_latest_statements(model):
-    """Return model latest statements and link to S3 latest statements file."""
-    if does_exist(EMMAA_BUCKET_NAME,
-                  f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'
-    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-        fkey = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-    else:
+# REST API endpoints
+
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@latest_ns.route('/statements/<model>')
+class LatestStatements(Resource):
+    @latest_ns.response(200, 'INDRA Statements', stmts_model)
+    def get(self, model):
+        """Return model latest statements and link to S3 latest statements file."""
+        stmts, fkey = get_assembled_statements(model, bucket=EMMAA_BUCKET_NAME)
+        stmt_jsons = stmts_to_json(stmts)
+        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+        return {'statements': stmt_jsons, 'link': link}
+
+
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@latest_ns.expect(url_parser)
+@latest_ns.route('/statements_url/<model>')
+class LatestStatementsUrl(Resource):
+    @latest_ns.marshal_with(link_model)
+    def get(self, model):
+        """Return a link to model latest statements file on S3."""
+        dated = request.args.get('dated', type=inputs.boolean)
         fkey = None
-    if fkey:
-        stmt_jsons = load_json_from_s3(EMMAA_BUCKET_NAME, fkey)
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    else:
-        stmt_jsons = []
-        link = ''
-    return {'statements': stmt_jsons, 'link': link}
+        if dated:
+            prefix = f'assembled/{model}/statements_'
+            fkey = find_latest_s3_file(EMMAA_BUCKET_NAME, prefix, '.gz')
+        else:
+            if does_exist(EMMAA_BUCKET_NAME,
+                          f'assembled/{model}/latest_statements_{model}'):
+                fkey = f'assembled/{model}/latest_statements_{model}.json'
+        if fkey:
+            link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
+        else:
+            link = None
+        return {'link': link}
 
 
-@app.route('/latest_statements_url/<model>', methods=['GET'])
-def get_latest_statements_url(model):
-    """Return a link to model latest statements file on S3."""
-    if does_exist(EMMAA_BUCKET_NAME,
-                  f'assembled/{model}/latest_statements_{model}'):
-        fkey = f'assembled/{model}/latest_statements_{model}.json'
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    elif does_exist(EMMAA_BUCKET_NAME, f'assembled/{model}/statements_'):
-        fkey = find_latest_s3_file(
-            EMMAA_BUCKET_NAME, f'assembled/{model}/statements_', '.json')
-        link = f'https://{EMMAA_BUCKET_NAME}.s3.amazonaws.com/{fkey}'
-    else:
-        link = None
-    return {'link': link}
+@latest_ns.expect(date_parser)
+@latest_ns.route('/stats_date/<model>')
+class LatestStatsDate(Resource):
+    @latest_ns.marshal_with(date_model)
+    def get(self, model):
+        """Get latest date for which both model and test stats are available"""
+        date_format = request.args.get('date_format', 'datetime')
+        test_corpus = request.args.get(
+            'test_corpus', _default_test(model))
+        date = get_latest_available_date(
+            model, test_corpus, date_format=date_format,
+            bucket=EMMAA_BUCKET_NAME)
+        return {'model': model, 'test_corpus': test_corpus, 'date': date}
 
 
-@app.route('/latest_date', methods=['GET'])
-def get_latest_date():
-    """Return latest available date of model and test stats.
-
-    Parameters
-    ----------
-    model : str
-        Name of the model.
-    test_corpus : Optional[str]
-        Which test corpus stats to check. If not provided, default test corpus
-        for the model is used.
-    date_format : Optional[str]
-        Which format of the date to return: 'date' or 'datetime'. Default:
-        datetime.
-
-    Returns
-    -------
-    json : dict
-        A dictionary with key 'date' and value of a latest available date in a
-        selected format.
-    """
-    model = request.json.get('model')
-    if not model:
-        abort(Response('Need to provide model', 404))
-    date_format = request.json.get('date_format', 'datetime')
-    test_corpus = request.json.get('test_corpus', _default_test(model))
-    date = get_latest_available_date(
-        model, test_corpus, date_format=date_format, bucket=EMMAA_BUCKET_NAME)
-    return jsonify({'date': date})
+@latest_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@latest_ns.route('/curated_statements/<model>')
+class CuratedStatements(Resource):
+    @latest_ns.marshal_with(curations_model)
+    def get(self, model):
+        """Get hashes of curated statements by category."""
+        model_stats = _load_model_stats_from_cache(model, None)
+        stmt_hashes = set(model_stats['model_summary']['all_stmts'].keys())
+        correct, incorrect, partial = _label_curations(include_partial=True,
+                                                       pa_hash=stmt_hashes)
+        return {'correct': list(correct),
+                'partial': list(partial),
+                'incorrect': list(incorrect)}
 
 
-@app.route('/demos')
-@jwt_optional
-def get_demos_page():
-    user, roles = resolve_auth(dict(request.args))
-    user_email = user.email if user else ""
-    return render_template('demos_template.html', link_list=link_list,
-                           user_email=user_email)
+@metadata_ns.route('/models')
+class ModelsList(Resource):
+    @metadata_ns.marshal_with(models_model)
+    def get(self):
+        """Get a list of all available models."""
+        model_meta_data = _get_model_meta_data()
+        models = [model for (model, config) in model_meta_data]
+        return {'models': models}
 
 
-@app.route('/models', methods=['GET', 'POST'])
-def get_models():
-    """Get a list of all available models."""
-    model_meta_data = _get_model_meta_data()
-    models = [model for (model, config) in model_meta_data]
-    return {'models': models}
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@metadata_ns.route('/model_info/<model>')
+class ModelInfo(Resource):
+    @metadata_ns.marshal_with(model_info_model, skip_none=True)
+    def get(self, model):
+        """Get metadata for model."""
+        config = get_model_config(model)
+        info = {'name': model,
+                'human_readable_name': config.get('human_readable_name'),
+                'description': config.get('description')}
+        if 'ndex' in config:
+            info['ndex'] = config['ndex'].get('network')
+        if 'twitter_link' in config:
+            info['twitter'] = config['twitter_link']
+        return info
 
 
-@app.route('/model_info/<model>', methods=['GET', 'POST'])
-def get_model_info(model):
-    """Get metadata for model."""
-    config = get_model_config(model)
-    info = {'name': model,
-            'human_readable_name': config.get('human_readable_name'),
-            'description': config.get('description')}
-    if 'ndex' in config:
-        info['ndex'] = config['ndex'].get('network')
-    if 'twitter_link' in config:
-        info['twitter'] = config['twitter_link']
-    return info
-
-
-@app.route('/test_corpora/<model>', methods=['GET', 'POST'])
-def get_tests(model):
-    """Get a list of available test corpora for model."""
-    tests = _get_test_corpora(model)
-    return {'test_corpora': list(tests)}
-
-
-@app.route('/tests_info/<test_corpus>', methods=['GET', 'POST'])
-def get_tests_info(test_corpus):
-    """Get test corpus metadata."""
-    model_meta_data = _get_model_meta_data()
-    for (model, config) in model_meta_data:
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@metadata_ns.route('/test_corpora/<model>')
+class TestCorpora(Resource):
+    @metadata_ns.marshal_with(test_corpora_model)
+    def get(self, model):
+        """Get a list of available test corpora for model."""
         tests = _get_test_corpora(model)
-        if test_corpus in tests:
-            tested_model = model
-            break
-    test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
-    info = test_stats['test_round_summary'].get('test_data')
-    if not info:
-        info = {'error': f'Test info for {test_corpus} is not available'}
-    return info
+        return {'test_corpora': list(tests)}
 
 
-@app.route('/chat')
-@jwt_optional
-def chat_with_the_model():
-    model = request.args.get('model', '')
-    user, roles = resolve_auth(dict(request.args))
-    user_email = user.email if user else ""
-    return render_template('chat_widget.html',
-                           email=user_email,
-                           model=model,
-                           link_list=link_list,
-                           exclude_footer=True,
-                           pusher_key=pusher_key)
+@metadata_ns.param('test_corpus',
+                   'Name of test corpus, e.g. covid19_mitre_tests')
+@metadata_ns.route('/tests_info/<test_corpus>')
+class TestInfo(Resource):
+    @metadata_ns.marshal_with(test_info_model, skip_none=True)
+    def get(self, test_corpus):
+        """Get test corpus metadata."""
+        model_meta_data = _get_model_meta_data()
+        tested_model = None
+        for (model, config) in model_meta_data:
+            tests = _get_test_corpora(model)
+            if test_corpus in tests:
+                tested_model = model
+                break
+        if not tested_model:
+            restx_abort(404, f'Test info for {test_corpus} is not available')
+        test_stats, _ = _load_test_stats_from_cache(tested_model, test_corpus)
+        info = test_stats['test_round_summary'].get('test_data')
+        if not info:
+            restx_abort(404, f'Test info for {test_corpus} is not available')
+        return info
 
 
-@app.route('/new/guest', methods=['POST'])
-def guest_user():
-    data = request.json
-    print('New guest data: %s' % str(data))
-
-    pusher.trigger('general-channel', 'new-guest-details', {
-        'name': data['name'],
-        'email': data['email'],
-        'emmaa_model': data.get('emmaa_model')
-        })
-
-    return json.dumps(data)
-
-
-@app.route("/pusher/auth", methods=['POST'])
-def pusher_authentication():
-    auth = pusher.authenticate(channel=request.form['channel_name'],
-                               socket_id=request.form['socket_id'])
-    return json.dumps(auth)
-
-
-@app.route("/entity_info/<model>", methods=['GET', 'POST'])
-def entity_info(model):
-    # For now, the model isn't explicitly used but could be necessary
-    # for adding model-specific entity info later
-    namespace = request.args.get('namespace')
-    identifier = request.args.get('id')
-    url = get_identifiers_url(namespace, identifier)
-    rv = {'url': url}
-    bioresolver_json = _lookup_bioresolver(namespace, identifier)
-    if bioresolver_json:
-        rv['name'] = bioresolver_json.get('name')
-        rv['definition'] = bioresolver_json.get('definition')
-    return rv
+@metadata_ns.param('model', 'Name of EMMAA model, e.g. aml, covid19, etc.')
+@metadata_ns.expect(entity_parser)
+@metadata_ns.route('/entity_info/<model>')
+class EntityInfo(Resource):
+    @metadata_ns.marshal_with(entity_info_model)
+    def get(self, model):
+        """Get information about an entity."""
+        # For now, the model isn't explicitly used but could be necessary
+        # for adding model-specific entity info later
+        namespace = request.args.get('namespace')
+        identifier = request.args.get('id')
+        url = get_identifiers_url(namespace, identifier)
+        rv = {'url': url}
+        bioresolver_json = _lookup_bioresolver(namespace, identifier)
+        if bioresolver_json:
+            rv['name'] = bioresolver_json.get('name')
+            rv['definition'] = bioresolver_json.get('definition')
+        return rv
 
 
-def _lookup_bioresolver(prefix: str, identifier: str):
-    url = get_config('ENTITY_RESOLVER_URL')
-    if url is None:
-        return
-    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
-    res_json = res.json()
-    if not res_json['success']:
-        return  # there was a problem looking up CURIE in the bioresolver
-    return res_json
+@query_ns.expect(path_query_model)
+@query_ns.route('/source_target_path')
+class SourceTargetPath(Resource):
+    @query_ns.marshal_with(path_result_model, skip_none=True)
+    def post(self):
+        """Explain an effect between source and target."""
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        source = request.get_json().get('source')
+        target = request.get_json().get('target')
+        if not source or not target:
+            msg = ('Provide a "source" and a "target" '
+                   '(formatted as INDRA Agent JSONs).')
+            restx_abort(400, msg)
+        source = Agent._from_json(source)
+        target = Agent._from_json(target)
+        stmt_type = request.get_json().get('stmt_type')
+        if not stmt_type:
+            msg = 'Provide a "stmt_type" (one of INDRA Statement types).'
+            restx_abort(400, msg)
+        stmt_class = get_statement_by_name(stmt_type)
+        stmt = stmt_class(source, target)
+        query = PathProperty(stmt)
+        return _run_query(query, model)
 
 
-@app.route('/subscribe/<model>', methods=['POST'])
-@jwt_optional
-def model_subscription(model):
-    user, roles = resolve_auth(dict(request.args))
-    if not roles and not user:
-        logger.warning('User is not logged in')
-        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
-        return jsonify(res_dict), 401
+@query_ns.expect(open_query_model)
+@query_ns.route('/up_down_stream_path')
+class UpDownStreamPath(Resource):
+    @query_ns.marshal_with(path_result_model, skip_none=True)
+    def post(self):
+        """Find causal paths to or from a given entity."""
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        entity = request.get_json().get('entity')
+        if not entity:
+            msg = 'Provide an "entity" (formatted as INDRA Agent JSON).'
+            restx_abort(400, msg)
+        entity = Agent._from_json(entity)
+        entity_role = request.get_json().get('entity_role')
+        if not entity_role or entity_role not in ('subject', 'object'):
+            msg = ('Provide an "entity_role" ("subject" for downstream or '
+                   '"object" for upstream search).')
+            restx_abort(400, msg)
+        stmt_type = request.get_json().get('stmt_type')
+        if not stmt_type:
+            msg = 'Provide a "stmt_type" (one of INDRA Statement types).'
+        terminal_ns = request.get_json().get('terminal_ns')
+        query = OpenSearchQuery(entity, stmt_type, entity_role, terminal_ns)
+        return _run_query(query, model)
 
-    user_email = user.email
-    user_id = user.id
 
-    subscribe = request.json.get('subscribe')
-    logger.info(f'Change subscription status for {model} and {user_email} to '
-                f'{subscribe}')
-    if subscribe:
-        qm.db.subscribe_to_model(user_email, user_id, model)
-        return {'subscription': 'success'}
-    else:
-        qm.db.update_email_subscription(user_email, [], [model], False)
-        return {'unsubscribe': 'success'}
+@query_ns.expect(dynamic_query_model)
+@query_ns.route('/temporal_dynamic')
+class TemporalDynamic(Resource):
+    @query_ns.marshal_with(dynamic_result_model)
+    def post(self):
+        """Simulate a model to verify if a certain pattern is met.
+        """
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        entity = request.get_json().get('entity')
+        if not entity:
+            msg = 'Provide an "entity" (formatted as INDRA Agent JSON).'
+            restx_abort(400, msg)
+        entity = Agent._from_json(entity)
+        pattern_type = request.get_json().get('pattern_type')
+        acceptable_patterns = ('always_value', 'sometime_value',
+                               'eventual_value', 'no_change', 'sustained',
+                               'transient')
+        if not pattern_type or pattern_type not in acceptable_patterns:
+            msg = f'Provide "pattern_type" (one of {acceptable_patterns})'
+        if pattern_type in acceptable_patterns[3:]:
+            quant_value = None
+        else:
+            quant_value = request.get_json().get('quant_value')
+            if not quant_value:
+                msg = (f'{pattern_type} pattern type requires a '
+                       '"quant_value" ("high" or "low")')
+                restx_abort(400, msg)
+        query = DynamicProperty(entity, pattern_type, quant_value)
+        return _run_query(query, model)
+
+
+@query_ns.expect(intervention_query_model)
+@query_ns.route('/source_target_dynamic')
+class SourceTargetDynamic(Resource):
+    @query_ns.marshal_with(interv_result_model)
+    def post(self):
+        """Simulate a model to describe the effect of an intervention."""
+        model = request.get_json().get('model')
+        if not model:
+            restx_abort(400, 'Provide a "model"')
+        source = request.get_json().get('source')
+        target = request.get_json().get('target')
+        if not source or not target:
+            msg = ('Provide a "source" and a "target" '
+                   '(formatted as INDRA Agent JSONs).')
+            restx_abort(400, msg)
+        source = Agent._from_json(source)
+        target = Agent._from_json(target)
+        direction = request.get_json().get('direction')
+        if not direction:
+            restx_abort(400, 'Provide a "direction" ("up" or "dn")')
+        query = SimpleInterventionProperty(source, target, direction)
+        return _run_query(query, model)
 
 
 if __name__ == '__main__':

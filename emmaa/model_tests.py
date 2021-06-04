@@ -342,7 +342,7 @@ class ModelManager(object):
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
-                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
+                     [{'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']}])]
 
     def answer_dynamic_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user query by simulating a PySB model."""
@@ -366,9 +366,11 @@ class ModelManager(object):
                 fig_path = s3_path
             resp_json = {'sat_rate': sat_rate, 'num_sim': num_sim,
                          'kpat': kpat, 'fig_path': fig_path}
+            return [('pysb', self.hash_response_list(resp_json),resp_json)]
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
-        return [('pysb', self.hash_response_list(resp_json), resp_json)]
+            return [('pysb', self.hash_response_list(resp_json),
+                     {'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']})]
 
     def answer_intervention_query(self, query, bucket=EMMAA_BUCKET_NAME):
         """Answer user intervention query by simulating a PySB model."""
@@ -392,9 +394,11 @@ class ModelManager(object):
                 client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
                 fig_path = s3_path
             resp_json = {'result': res, 'fig_path': fig_path}
+            return [('pysb', self.hash_response_list(resp_json), resp_json)]
         except (MissingMonomerError, MissingMonomerSiteError):
             resp_json = RESULT_CODES['QUERY_NOT_APPLICABLE']
-        return [('pysb', self.hash_response_list(resp_json), resp_json)]
+            return [('pysb', self.hash_response_list(resp_json),
+                     {'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']})]
 
     def answer_open_query(self, query):
         """Answer user open search query with found paths."""
@@ -417,7 +421,7 @@ class ModelManager(object):
         else:
             return [('', self.hash_response_list(
                 RESULT_CODES['QUERY_NOT_APPLICABLE']),
-                     RESULT_CODES['QUERY_NOT_APPLICABLE'])]
+                     [{'fail_reason': RESULT_CODES['QUERY_NOT_APPLICABLE']}])]
 
     def open_query_per_mc(self, mc_type, mc, query, max_path_length,
                           max_paths):
@@ -425,7 +429,7 @@ class ModelManager(object):
         subj_nodes, obj_nodes, res_code = mc.process_statement(query.path_stmt)
         if res_code:
             return self.hash_response_list(RESULT_CODES[res_code]), \
-                RESULT_CODES[res_code]
+                [{'fail_reason': RESULT_CODES[res_code]}]
         else:
             if query.entity_role == 'subject':
                 reverse = False
@@ -603,7 +607,7 @@ class ModelManager(object):
             return self.hash_response_list(response), path_lines
         else:
             response = self.make_result_code(result)
-            return self.hash_response_list(response), response
+            return self.hash_response_list(response), [{'fail_reason': response}]
 
     def process_open_query_response(self, mc_type, paths):
         if paths:
@@ -611,7 +615,7 @@ class ModelManager(object):
             return self.hash_response_list(response), path_lines
         else:
             response = 'No paths found that satisfy this query'
-            return self.hash_response_list(response), response
+            return self.hash_response_list(response), [{'fail_reason': response}]
 
     def hash_response_list(self, response):
         """Return a dictionary mapping a hash with a response in a response
