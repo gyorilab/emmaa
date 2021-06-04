@@ -33,7 +33,6 @@ def test_to_emmaa_stmts():
     emmaa_anns = estmt.stmt.evidence[0].annotations.get('emmaa')
     assert emmaa_anns
     assert len(emmaa_anns['search_terms']) == 2
-    assert isinstance(emmaa_anns['date'], str)
     assert emmaa_anns['metadata'] == {'internal': True}
 
 
