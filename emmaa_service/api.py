@@ -140,9 +140,6 @@ entity_parser.add_argument('id', required=True,
 
 date_parser = api.parser()
 date_parser.add_argument(
-    'model', required=True,
-    help='Name of EMMAA model to find stats for, e.g. aml, covid19, etc.')
-date_parser.add_argument(
     'test_corpus',
     help=('Name of test corpus to find stats for, if not given default test '
           'corpus for the model will be used.'))
@@ -2060,14 +2057,11 @@ class LatestStatementsUrl(Resource):
 
 
 @latest_ns.expect(date_parser)
-@latest_ns.route('/stats_date')
+@latest_ns.route('/stats_date/<model>')
 class LatestStatsDate(Resource):
     @latest_ns.marshal_with(date_model)
-    def get(self):
+    def get(self, model):
         """Get latest date for which both model and test stats are available"""
-        model = request.args.get('model')
-        if not model:
-            abort(Response('Need to provide model', 404))
         date_format = request.args.get('date_format', 'datetime')
         test_corpus = request.args.get(
             'test_corpus', _default_test(model))
