@@ -44,6 +44,7 @@ jobs:
         pip install nose coverage flask pyyaml boto3 openpyxl
         pip install git+https://github.com/sorgerlab/indra.git
         pip uninstall -y enum34
+        pip install cachetools matplotlib
         pip install git+https://github.com/indralab/indra_db.git
         pip install git+https://github.com/indralab/indra_reading.git
         pip install git+https://github.com/sorgerlab/bioagents.git
