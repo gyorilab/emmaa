@@ -29,6 +29,9 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
 # Install covid-19
 RUN git clone https://github.com/indralab/covid-19.git
 
+# Install automates
+RUN git clone https://github.com/ml4ai/automates.git
+
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git[misc] && \
     pip install git+https://github.com/sorgerlab/bioagents.git && \
