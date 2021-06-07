@@ -544,8 +544,12 @@ class EmmaaModel(object):
                 if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm',
                                  'bngl', 'sbgn', 'pysb_flat'}:
                     continue
-                fname = f'{exp_f}_{self.date_str}.{exp_f}'
-                pa.export_model(exp_f, fname)
+                elif exp_f == 'gromet':
+                    fname = f'gromet_{self.date_str}.json'
+                    pysb_to_gromet(pysb_model, fname)
+                else:
+                    fname = f'{exp_f}_{self.date_str}.{exp_f}'
+                    pa.export_model(exp_f, fname)
                 logger.info(f'Uploading {fname}')
                 client = get_s3_client(unsigned=False)
                 client.upload_file(fname, bucket,
@@ -922,3 +926,7 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
 def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     config = load_config_from_s3(model, bucket=bucket)
     return [st['name'] for st in config['search_terms']]
+
+
+def pysb_to_gromet(pysb_model, fname):
+    pass
