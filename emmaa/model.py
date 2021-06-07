@@ -940,6 +940,11 @@ def pysb_to_gromet(pysb_model, model_name, fname):
         A name of EMMAA model.
     fname : str
         Filename to save the GroMEt JSON.
+
+    Returns
+    -------
+    g : automates.script.gromet.gromet.Gromet
+        A GroMEt object built from PySB model.
     """
     from automates.scripts.gromet.gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
@@ -1034,3 +1039,4 @@ def pysb_to_gromet(pysb_model, model_name, fname):
     )
     # Save Gromet to JSON file
     gromet_to_json(g, fname)
+    return g
