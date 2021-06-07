@@ -384,7 +384,8 @@ class OpenSearchQuery(Query):
         self.entity = entity
         self.stmt_type = stmt_type
         self.entity_role = entity_role
-        self.terminal_ns = terminal_ns
+        self.terminal_ns = [ns.lower() for ns in terminal_ns] if terminal_ns \
+            else None
         self.path_stmt = self.make_stmt()
 
     def make_stmt(self):
