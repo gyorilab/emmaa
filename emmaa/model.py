@@ -543,7 +543,7 @@ class EmmaaModel(object):
         if mode == 's3':
             for exp_f in self.export_formats:
                 if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm',
-                                 'bngl', 'sbgn', 'pysb_flat'}:
+                                 'bngl', 'sbgn', 'pysb_flat', 'gromet'}:
                     continue
                 elif exp_f == 'gromet':
                     fname = f'gromet_{self.date_str}.json'
