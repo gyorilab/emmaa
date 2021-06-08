@@ -547,7 +547,7 @@ class EmmaaModel(object):
                     continue
                 elif exp_f == 'gromet':
                     fname = f'gromet_{self.date_str}.json'
-                    pysb_to_gromet(pysb_model, fname)
+                    pysb_to_gromet(pysb_model, self.name, fname)
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
