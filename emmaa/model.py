@@ -946,7 +946,7 @@ def pysb_to_gromet(pysb_model, model_name, fname):
     g : automates.script.gromet.gromet.Gromet
         A GroMEt object built from PySB model.
     """
-    from automates.scripts.gromet.gromet import Gromet, gromet_to_json, \
+    from gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
     from pysb import Parameter
