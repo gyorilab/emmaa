@@ -950,6 +950,10 @@ def pysb_to_gromet(pysb_model, model_name, fname):
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
     from pysb import Parameter
+    from pysb.bng import generate_equations
+
+    generate_equations(pysb_model)
+
     junctions = []
     wires = []
     # Get all species values
