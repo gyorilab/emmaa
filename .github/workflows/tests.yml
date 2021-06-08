@@ -57,6 +57,9 @@ jobs:
         pip install .
         cd ../..
         git clone https://github.com/ml4ai/automates.git
+        cd automates
+        git checkout claytonm/gromet
+        cd ..
         pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors
         pip install --no-dependencies .
         pip install -U sqlalchemy==1.3.23

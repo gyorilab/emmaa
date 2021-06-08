@@ -30,7 +30,10 @@ RUN git clone https://github.com/pagreene/pgcopy.git && \
 RUN git clone https://github.com/indralab/covid-19.git
 
 # Install automates
-RUN git clone https://github.com/ml4ai/automates.git
+RUN git clone https://github.com/ml4ai/automates.git && \
+    cd automates && \
+    git checkout claytonm/gromet && \
+    cd ..
 
 # Clone and install EMMAA
 RUN pip install git+https://github.com/indralab/indra_db.git[misc] && \
