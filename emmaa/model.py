@@ -4,6 +4,7 @@ import logging
 import datetime
 import pybel
 from botocore.exceptions import ClientError
+from sqlalchemy.sql.functions import mode
 from indra.databases import ndex_client
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
@@ -542,10 +543,14 @@ class EmmaaModel(object):
         if mode == 's3':
             for exp_f in self.export_formats:
                 if exp_f not in {'sbml', 'kappa', 'kappa_im', 'kappa_cm',
-                                 'bngl', 'sbgn', 'pysb_flat'}:
+                                 'bngl', 'sbgn', 'pysb_flat', 'gromet'}:
                     continue
-                fname = f'{exp_f}_{self.date_str}.{exp_f}'
-                pa.export_model(exp_f, fname)
+                elif exp_f == 'gromet':
+                    fname = f'gromet_{self.date_str}.json'
+                    pysb_to_gromet(pysb_model, self.name, fname)
+                else:
+                    fname = f'{exp_f}_{self.date_str}.{exp_f}'
+                    pa.export_model(exp_f, fname)
                 logger.info(f'Uploading {fname}')
                 client = get_s3_client(unsigned=False)
                 client.upload_file(fname, bucket,
@@ -922,3 +927,121 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
 def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     config = load_config_from_s3(model, bucket=bucket)
     return [st['name'] for st in config['search_terms']]
+
+
+def pysb_to_gromet(pysb_model, model_name, fname=None):
+    """Convert PySB model to GroMEt object and save it to a JSON file.
+
+    Parameters
+    ----------
+    pysb_model : pysb.Model
+        PySB model object.
+    model_name : str
+        A name of EMMAA model.
+    fname : Optional[str]
+        If given, the GroMEt will be dumped into JSON file.
+
+    Returns
+    -------
+    g : automates.script.gromet.gromet.Gromet
+        A GroMEt object built from PySB model.
+    """
+    from gromet.gromet import Gromet, gromet_to_json, \
+        Junction, Wire, UidJunction, UidType, UidWire, Relation, \
+        UidBox, UidGromet, Literal, Val
+    from pysb import Parameter
+    from pysb.bng import generate_equations
+
+    generate_equations(pysb_model)
+
+    junctions = []
+    wires = []
+    # Get all species values
+    species_values = {}
+    for initial in pysb_model.initials:
+        ix = pysb_model.get_species_index(initial.pattern)
+        if initial.value:
+            species_values[ix] = Literal(
+                uid=None, type=UidType("T:Integer"),
+                value=Val(initial.value.value),
+                name=None, metadata=None)
+    # Store species names to refer later
+    species_nodes = [str(sp) for sp in pysb_model.species]
+    # Add all species junctions (uid and name are the same for now)
+    for ix, sp in enumerate(species_nodes):
+        junctions.append(Junction(uid=UidJunction(sp),
+                                  type=UidType('State'),
+                                  name=sp,
+                                  value=species_values.get(ix),
+                                  value_type=UidType('T:Integer'),
+                                  metadata=None))
+    # Add all rate junctions (uid and name are the same for now)
+    junctions += [Junction(uid=UidJunction(par.name),
+                           type=UidType('Rate'),
+                           name=par.name,
+                           value=Literal(uid=None,
+                                         type=UidType("T:Float"),
+                                         value=Val(par.value),
+                                         name=None,
+                                         metadata=None),
+                           value_type=UidType('T:Float'),
+                           metadata=None)
+                  for par in pysb_model.parameters]
+    # Add wires for each reaction
+    for rxn in pysb_model.reactions:
+        rate_params = [rate_term for rate_term in rxn['rate'].args
+                       if isinstance(rate_term, Parameter)]
+        assert len(rate_params) == 1
+        rate_node = rate_params[0].name
+        # Add wires from reactant to rate
+        for reactant_ix in rxn['reactants']:
+            reactant = species_nodes[reactant_ix]
+            wires.append(Wire(uid=UidWire(f'{reactant}_{rate_node}'),
+                              type=None,
+                              value_type=None,
+                              name=None,
+                              value=None,
+                              metadata=None,
+                              src=UidJunction(reactant),
+                              tgt=UidJunction(rate_node)))
+        # Add wires from rate to product
+        for prod_ix in rxn['products']:
+            prod = species_nodes[prod_ix]
+            wires.append(Wire(uid=UidWire(f'{rate_node}_{prod}'),
+                              type=None,
+                              value_type=None,
+                              name=None,
+                              value=None,
+                              metadata=None,
+                              src=UidJunction(rate_node),
+                              tgt=UidJunction(prod)))
+    # Create relation
+    pnc = Relation(uid=UidBox(model_name),
+                   type=UidType("PetriNetClassic"),
+                   name=model_name,
+                   ports=None,
+                   # contents
+                   junctions=[j.uid for j in junctions],
+                   wires=[w.uid for w in wires],
+                   boxes=None,
+                   metadata=None)
+    boxes = [pnc]
+    # Create Gromet object
+    g = Gromet(
+        uid=UidGromet(f'{model_name}_pnc'),
+        name=model_name,
+        type=UidType("PetriNetClassic"),
+        root=pnc.uid,
+        types=None,
+        literals=None,
+        junctions=junctions,
+        ports=None,
+        wires=wires,
+        boxes=boxes,
+        variables=None,
+        metadata=None
+    )
+    # Optionally save Gromet to JSON file
+    if fname:
+        gromet_to_json(g, fname)
+    return g

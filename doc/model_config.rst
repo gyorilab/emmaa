@@ -78,7 +78,7 @@ First level fields of config.json
 
 - `export_formats` : list[str], optional
     A list of formats the model can be exported to. Accepted values include:
-    `indranet`, `pybel`, `sbml`, `kappa`, `kappa_im`, `kappa_cm`,
+    `indranet`, `pybel`, `sbml`, `kappa`, `kappa_im`, `kappa_cm`, `gromet`,
     `bngl`, `sbgn`, `pysb_flat`, `kappa_ui`. Note that `kappa_ui` option does
     not generate a separate export file but adds a link to Kappa interactive
     UI that uses model's kappa export (generated if `kappa` is in this list).
