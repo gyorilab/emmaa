@@ -929,7 +929,7 @@ def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     return [st['name'] for st in config['search_terms']]
 
 
-def pysb_to_gromet(pysb_model, model_name, fname):
+def pysb_to_gromet(pysb_model, model_name, fname=None):
     """Convert PySB model to GroMEt object and save it to a JSON file.
 
     Parameters
@@ -938,8 +938,8 @@ def pysb_to_gromet(pysb_model, model_name, fname):
         PySB model object.
     model_name : str
         A name of EMMAA model.
-    fname : str
-        Filename to save the GroMEt JSON.
+    fname : Optional[str]
+        If given, the GroMEt will be dumped into JSON file.
 
     Returns
     -------
@@ -1041,6 +1041,7 @@ def pysb_to_gromet(pysb_model, model_name, fname):
         variables=None,
         metadata=None
     )
-    # Save Gromet to JSON file
-    gromet_to_json(g, fname)
+    # Optionally save Gromet to JSON file
+    if fname:
+        gromet_to_json(g, fname)
     return g
