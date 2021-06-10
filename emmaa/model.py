@@ -6,12 +6,14 @@ import pybel
 from botocore.exceptions import ClientError
 from sqlalchemy.sql.functions import mode
 from indra.databases import ndex_client
+from indra.databases.identifiers import parse_identifiers_url
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.pysb.sites import states
 from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.statements import stmts_from_json
+from indra.statements import stmts_from_json, Agent, ModCondition
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra.sources.minerva import process_from_web
@@ -954,7 +956,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     from gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
-    from pysb import Parameter
+    from pysb import Parameter, WILD
     from pysb.bng import generate_equations
 
     generate_equations(pysb_model)
@@ -970,13 +972,63 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                 uid=None, type=UidType("T:Integer"),
                 value=Val(initial.value.value),
                 name=None, metadata=None)
+
+    # Get groundings for monomers
+    groundings_by_monomer = {}
+    # Build up db_refs for each monomer object
+    for ann in pysb_model.annotations:
+        if ann.predicate == 'is':
+            m = ann.subject
+            db_name, db_id = parse_identifiers_url(ann.object)
+            if m in groundings_by_monomer:
+                groundings_by_monomer[m][db_name] = db_id
+            else:
+                groundings_by_monomer[m] = {db_name: db_id}
     # Store species names to refer later
     species_nodes = [str(sp) for sp in pysb_model.species]
     # Add all species junctions (uid and name are the same for now)
-    for ix, sp in enumerate(species_nodes):
-        junctions.append(Junction(uid=UidJunction(sp),
+    for ix, sp in enumerate(pysb_model.species):
+        # Map to a list of agents
+        agents = []
+        for mp in sp.monomer_patterns:
+            mods = []
+            if hasattr(mp.monomer, 'site_annotations'):
+                for site, state in mp.site_conditions.items():
+                    if isinstance(state, tuple) and state[1] == WILD:
+                        state = state[0]
+                    mod, mod_type, res, pos = None, None, None, None
+                    for ann in mp.monomer.site_annotations:
+                        if ann.subject == (site, state):
+                            mod_type = ann.object
+                        elif ann.subject == site and \
+                                ann.predicate == 'is_residue':
+                            res = ann.object
+                        if ann.subject == site and \
+                                ann.predicate == 'is_position':
+                            pos = ann.object
+                        if mod_type:
+                            not_mod, mod = states[mod_type]
+                            if state == mod:
+                                is_mod = True
+                            elif state == not_mod:
+                                is_mod = False
+                            else:
+                                logger.warning('Unknown state %s for %s, '
+                                               'setting as not modified' % (
+                                                    state, mod_type))
+                                is_mod = False
+                            mod = ModCondition(mod_type, res, pos, is_mod)
+                    if mod:
+                        mods.append(mod)
+            if not mods:
+                mods = None
+            ag = Agent(mp.monomer.name, mods=mods,
+                       db_refs=groundings_by_monomer.get(mp.monomer))
+            agents.append(ag)
+        # TODO Put agents (JSONs?) into junction metadata
+        junctions.append(Junction(uid=UidJunction(species_nodes[ix]),
                                   type=UidType('State'),
-                                  name=sp,
+                                  name=species_nodes[ix],
                                   value=species_values.get(ix),
                                   value_type=UidType('T:Integer'),
                                   metadata=None))
@@ -1005,7 +1057,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         assert len(rxn['reverse']) == 1
         rule = rxn['rule'][0]
         reverse = rxn['reverse'][0]
-        stmt = stmt_from_rule(rule, pysb_model, statements)
+        if statements:
+            stmt = stmt_from_rule(rule, pysb_model, statements)
 
         # TODO add rule, reverse and stmt hash into rate junction metadata
         # Add wires from reactant to rate
