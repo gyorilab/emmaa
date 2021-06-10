@@ -1032,20 +1032,6 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                                   value=species_values.get(ix),
                                   value_type=UidType('T:Integer'),
                                   metadata=None))
-    # Add all rate junctions (uid and name are the same for now)
-    # TODO Should we keep all of the parameters or only those that are in
-    # reactions? Maybe add them when looping through reactions instead
-    junctions += [Junction(uid=UidJunction(par.name),
-                           type=UidType('Rate'),
-                           name=par.name,
-                           value=Literal(uid=None,
-                                         type=UidType("T:Float"),
-                                         value=Val(par.value),
-                                         name=None,
-                                         metadata=None),
-                           value_type=UidType('T:Float'),
-                           metadata=None)
-                  for par in pysb_model.parameters]
     # Add wires for each reaction
     for rxn in pysb_model.reactions:
         rate_params = [rate_term for rate_term in rxn['rate'].args
@@ -1059,8 +1045,18 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         reverse = rxn['reverse'][0]
         if statements:
             stmt = stmt_from_rule(rule, pysb_model, statements)
-
+        # Add rate junction for a reaction (uid and name are the same for now)
         # TODO add rule, reverse and stmt hash into rate junction metadata
+        junctions.append(Junction(uid=UidJunction(rate_node),
+                                  type=UidType('Rate'),
+                                  name=rate_node,
+                                  value=Literal(uid=None,
+                                                type=UidType("T:Float"),
+                                                value=Val(rate_params[0].value),
+                                                name=None,
+                                                metadata=None),
+                                  value_type=UidType('T:Float'),
+                                  metadata=None))
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
