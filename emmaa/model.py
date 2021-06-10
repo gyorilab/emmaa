@@ -15,6 +15,7 @@ from indra.statements import stmts_from_json
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra.sources.minerva import process_from_web
+from indra.explanation.reporting import stmt_from_rule
 from indra_db.client.principal.curation import get_curations
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
@@ -547,7 +548,8 @@ class EmmaaModel(object):
                     continue
                 elif exp_f == 'gromet':
                     fname = f'gromet_{self.date_str}.json'
-                    pysb_to_gromet(pysb_model, self.name, fname)
+                    pysb_to_gromet(pysb_model, self.name, self.assembled_stmts,
+                                   fname)
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
@@ -929,7 +931,7 @@ def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     return [st['name'] for st in config['search_terms']]
 
 
-def pysb_to_gromet(pysb_model, model_name, fname=None):
+def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     """Convert PySB model to GroMEt object and save it to a JSON file.
 
     Parameters
@@ -938,6 +940,9 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
         PySB model object.
     model_name : str
         A name of EMMAA model.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements a PySB model was assembled from. If
+        provided the statement hashes will be propagated into GroMEt metadata.
     fname : Optional[str]
         If given, the GroMEt will be dumped into JSON file.
 
@@ -976,6 +981,8 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
                                   value_type=UidType('T:Integer'),
                                   metadata=None))
     # Add all rate junctions (uid and name are the same for now)
+    # TODO Should we keep all of the parameters or only those that are in
+    # reactions? Maybe add them when looping through reactions instead
     junctions += [Junction(uid=UidJunction(par.name),
                            type=UidType('Rate'),
                            name=par.name,
@@ -993,6 +1000,14 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
                        if isinstance(rate_term, Parameter)]
         assert len(rate_params) == 1
         rate_node = rate_params[0].name
+        # Get metadata for rate node
+        assert len(rxn['rule']) == 1
+        assert len(rxn['reverse']) == 1
+        rule = rxn['rule'][0]
+        reverse = rxn['reverse'][0]
+        stmt = stmt_from_rule(rule, pysb_model, statements)
+
+        # TODO add rule, reverse and stmt hash into rate junction metadata
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
