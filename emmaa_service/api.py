@@ -25,7 +25,7 @@ from indra.statements import get_all_descendants, IncreaseAmount, \
     RemoveModification, get_statement_by_name, stmts_to_json
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
-from indra_db.client.principal.curation import get_curations, submit_curation
+from indra.sources.indra_db_rest import submit_curation, get_curations
 
 from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
@@ -728,7 +728,7 @@ def _set_curation(stmt_hash, correct, incorrect):
 
 def _label_curations(include_partial=False, **kwargs):
     logger.info('Getting curations')
-    curations = get_curations(**kwargs)
+    curations = get_curations()
     logger.info('Labeling curations')
     if include_partial:
         correct = {str(c['pa_hash']) for c in curations if
@@ -1283,7 +1283,9 @@ def get_paper_statements(model):
     stmts_by_hash = {}
     for stmt in updated_stmts:
         stmts_by_hash[str(stmt.get_hash())] = stmt
-    curations = get_curations(pa_hash=paper_hashes)
+    all_curations = get_curations()
+    curations = [
+        cur for cur in all_curations if cur['pa_hash'] in paper_hashes]
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1490,7 +1492,9 @@ def get_statement_evidence_page():
         stmts_by_hash = {}
         for stmt in stmts:
             stmts_by_hash[str(stmt.get_hash())] = stmt
-        curations = get_curations(pa_hash=stmt_hashes)
+        all_curations = get_curations()
+        curations = [
+            cur for cur in all_curations if cur['pa_hash'] in stmt_hashes]
         cur_dict = defaultdict(list)
         for cur in curations:
             cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1921,7 +1925,7 @@ def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
-    curations = get_curations(pa_hash=hash_val)
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1939,7 +1943,7 @@ def get_statement_by_hash_model(model, date, hash_val):
 def get_tests_by_hash(test_corpus, hash_val):
     """Get test statement JSON by hash."""
     tests = _load_tests_from_cache(test_corpus)
-    curations = get_curations(pa_hash=hash_val)
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1960,7 +1964,7 @@ def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
     """Get model statement by hash and paper ID."""
     stmts = _load_stmts_from_cache(model, date)
     st_json = {}
-    curations = get_curations(pa_hash=hash_val)
+    curations = get_curations(hash_val=hash_val)
     cur_dict = defaultdict(list)
     for cur in curations:
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
@@ -1991,31 +1995,57 @@ def submit_curation_endpoint(hash_val, **kwargs):
             res_dict = {"result": "failure",
                         "reason": "POST with API key requires a user email."}
             return jsonify(res_dict), 400
-
+    api_key = roles[0].api_key
+    if not api_key:
+        res_dict = {"result": "failure",
+                    "reason": "API key is required to submit curations."}
+        return jsonify(res_dict), 401
     logger.info("Adding curation for statement %s." % hash_val)
     ev_hash = request.json.get('ev_hash')
-    source_api = request.json.pop('source', 'EMMAA')
     tag = request.json.get('tag')
-    ip = request.remote_addr
     text = request.json.get('text')
+    ev_json = request.json.get('ev_json')
     is_test = 'test' in request.args
     if not is_test:
         assert tag != 'test'
         try:
-            dbid = submit_curation(hash_val, tag, email, ip, text, ev_hash,
-                                   source_api)
+            res = submit_curation(hash_val, tag, email, text, source='EMMAA',
+                                  ev_hash=ev_hash, ev_json=ev_json,
+                                  api_key=api_key)
         except BadHashError as e:
             abort(Response("Invalid hash: %s." % e.mk_hash, 400))
-        res = {'result': 'success', 'ref': {'id': dbid}}
     else:
-        res = {'result': 'test passed', 'ref': None}
+        res = {'result': 'test passed', 'ref': None}        
     logger.info("Got result: %s" % str(res))
     return jsonify(res)
 
 
 @app.route('/curation/list/<stmt_hash>/<src_hash>', methods=['GET'])
+@jwt_optional
 def list_curations(stmt_hash, src_hash):
-    curations = get_curations(pa_hash=stmt_hash, source_hash=src_hash)
+    user, roles = resolve_auth(dict(request.args))
+    if not roles and not user:
+        res_dict = {"result": "failure", "reason": "Invalid Credentials"}
+        logger.debug(res_dict)
+        return jsonify(res_dict), 401
+
+    if user:
+        email = user.email
+    else:
+        email = request.json.get('email')
+        if not email:
+            res_dict = {"result": "failure",
+                        "reason": "POST with API key requires a user email."}
+            logger.debug(res_dict)
+            return jsonify(res_dict), 400
+    api_key = roles[0].api_key
+    if not api_key:
+        res_dict = {"result": "failure",
+                    "reason": "API key is required to view curations."}
+        logger.debug(res_dict)
+        return jsonify(res_dict), 401
+    curations = get_curations(hash_val=stmt_hash, source_hash=src_hash,
+                              api_key=api_key)
     return jsonify(curations)
 
 
