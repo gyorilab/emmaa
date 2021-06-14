@@ -447,8 +447,11 @@ def _get_all_tests(bucket=EMMAA_BUCKET_NAME):
 
 def _load_tests_from_cache(test_corpus):
     tests, file_key = tests_cache.get(test_corpus, (None, None))
-    latest_on_s3 = find_latest_s3_file(
-        EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
+    try:
+        latest_on_s3 = find_latest_s3_file(
+            EMMAA_BUCKET_NAME, f'tests/{test_corpus}', '.pkl')
+    except ValueError:
+        latest_on_s3 = f'tests/{test_corpus}.pkl'
     if file_key != latest_on_s3:
         tests, file_key = load_tests_from_s3(test_corpus, EMMAA_BUCKET_NAME)
         if isinstance(tests, dict):
