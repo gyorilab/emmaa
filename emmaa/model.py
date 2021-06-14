@@ -969,7 +969,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         ix = pysb_model.get_species_index(initial.pattern)
         if initial.value:
             species_values[ix] = Literal(
-                uid=None, type=UidType("T:Integer"),
+                uid=None, type=UidType("Integer"),
                 value=Val(initial.value.value),
                 name=None, metadata=None)
 
@@ -1030,7 +1030,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                                   type=UidType('State'),
                                   name=species_nodes[ix],
                                   value=species_values.get(ix),
-                                  value_type=UidType('T:Integer'),
+                                  value_type=UidType('Integer'),
                                   metadata=None))
     # Add wires for each reaction
     for rxn in pysb_model.reactions:
@@ -1051,16 +1051,16 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                                   type=UidType('Rate'),
                                   name=rate_node,
                                   value=Literal(uid=None,
-                                                type=UidType("T:Float"),
+                                                type=UidType("Float"),
                                                 value=Val(rate_params[0].value),
                                                 name=None,
                                                 metadata=None),
-                                  value_type=UidType('T:Float'),
+                                  value_type=UidType('Float'),
                                   metadata=None))
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
-            wires.append(Wire(uid=UidWire(f'{reactant}_{rate_node}'),
+            wires.append(Wire(uid=UidWire(f'W:{reactant}_{rate_node}'),
                               type=None,
                               value_type=None,
                               name=None,
@@ -1071,7 +1071,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         # Add wires from rate to product
         for prod_ix in rxn['products']:
             prod = species_nodes[prod_ix]
-            wires.append(Wire(uid=UidWire(f'{rate_node}_{prod}'),
+            wires.append(Wire(uid=UidWire(f'W:{rate_node}_{prod}'),
                               type=None,
                               value_type=None,
                               name=None,
