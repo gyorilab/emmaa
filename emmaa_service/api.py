@@ -780,7 +780,7 @@ def _count_curations(curations, stmts_by_hash):
 def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
                   path_counts=None, cur_dict=None, with_evid=False,
                   paper_id=None, paper_id_type=None):
-    stmt_hash = str(stmt.get_hash())
+    stmt_hash = str(stmt.get_hash(refresh=True))
     english = _format_stmt_text(stmt)
     evid_count = len(stmt.evidence)
     evid = []
@@ -803,7 +803,7 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     badges = _make_badges(evid_count, json_link, path_count,
                           cur_counts.get(stmt_hash))
     stmt_row = [
-        (stmt.get_hash(), english, evid, evid_count, badges)]
+        (stmt.get_hash(refresh=True), english, evid, evid_count, badges)]
     return stmt_row
 
 
@@ -1215,7 +1215,7 @@ def annotate_paper_statements(model):
     model_stats = _load_model_stats_from_cache(model, date)
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
     paper_stmts = [stmt for stmt in all_stmts
-                   if stmt.get_hash() in paper_hashes]
+                   if stmt.get_hash(refresh=True) in paper_hashes]
     for stmt in paper_stmts:
         stmt.evidence = [ev for ev in stmt.evidence
                          if str(ev.text_refs.get('TRID')) == trid]
@@ -1272,7 +1272,7 @@ def get_paper_statements(model):
     if paper_hashes:
         all_stmts = _load_stmts_from_cache(model, date)
         paper_stmts = [stmt for stmt in all_stmts
-                       if stmt.get_hash() in paper_hashes]
+                       if stmt.get_hash(refresh=True) in paper_hashes]
         updated_stmts = [filter_evidence(stmt, trid, 'TRID')
                          for stmt in paper_stmts]
         updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
@@ -1285,7 +1285,7 @@ def get_paper_statements(model):
     stmt_rows = []
     stmts_by_hash = {}
     for stmt in updated_stmts:
-        stmts_by_hash[str(stmt.get_hash())] = stmt
+        stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
     curations = get_curations(pa_hash=paper_hashes)
     cur_dict = defaultdict(list)
     for cur in curations:
@@ -1468,13 +1468,13 @@ def get_statement_evidence_page():
         all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
-                if str(stmt.get_hash()) == str(stmt_hash):
+                if str(stmt.get_hash(refresh=True)) == str(stmt_hash):
                     stmts.append(stmt)
     elif source == 'paper':
         all_stmts = _load_stmts_from_cache(model, date)
         for stmt in all_stmts:
             for stmt_hash in stmt_hashes:
-                if str(stmt.get_hash()) == str(stmt_hash):
+                if str(stmt.get_hash(refresh=True)) == str(stmt_hash):
                     stmts.append(filter_evidence(stmt, paper_id, paper_id_type))
     elif source == 'test':
         if not test_corpus:
@@ -1483,7 +1483,7 @@ def get_statement_evidence_page():
         stmt_counts_dict = None
         for t in tests:
             for stmt_hash in stmt_hashes:
-                if str(t.stmt.get_hash()) == str(stmt_hash):
+                if str(t.stmt.get_hash(refresh=True)) == str(stmt_hash):
                     stmts.append(t.stmt)
     else:
         abort(Response(f'Source should be model_statement or test', 404))
@@ -1492,7 +1492,7 @@ def get_statement_evidence_page():
         stmt_rows = []
         stmts_by_hash = {}
         for stmt in stmts:
-            stmts_by_hash[str(stmt.get_hash())] = stmt
+            stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
         curations = get_curations(pa_hash=stmt_hashes)
         cur_dict = defaultdict(list)
         for cur in curations:
@@ -1544,13 +1544,13 @@ def get_all_statements_page(model):
     stmts = _load_stmts_from_cache(model, date)
     stmts_by_hash = {}
     for stmt in stmts:
-        stmts_by_hash[str(stmt.get_hash())] = stmt
+        stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
     msg = None
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
-        stmts = [stmt for stmt in stmts if str(stmt.get_hash()) not in
-                 cur_counts]
+        stmts = [stmt for stmt in stmts if str(stmt.get_hash(refresh=True))
+                 not in cur_counts]
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
@@ -1930,7 +1930,7 @@ def get_statement_by_hash_model(model, date, hash_val):
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
             {'error_type': cur['tag']})
     for st in stmts:
-        if str(st.get_hash()) == str(hash_val):
+        if str(st.get_hash(refresh=True)) == str(hash_val):
             st_json = st.to_json()
             ev_list = _format_evidence_text(
                 st, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
@@ -1949,7 +1949,7 @@ def get_tests_by_hash(test_corpus, hash_val):
             {'error_type': cur['tag']})
     st_json = {}
     for test in tests:
-        if str(test.stmt.get_hash()) == str(hash_val):
+        if str(test.stmt.get_hash(refresh=True)) == str(hash_val):
             st_json = test.stmt.to_json()
             ev_list = _format_evidence_text(
                 test.stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])
@@ -1969,7 +1969,7 @@ def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
         cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
             {'error_type': cur['tag']})
     for st in stmts:
-        if str(st.get_hash()) == str(hash_val):
+        if str(st.get_hash(refresh=True)) == str(hash_val):
             stmt = filter_evidence(st, paper_id, paper_id_type)
             st_json = stmt.to_json()
             ev_list = _format_evidence_text(
