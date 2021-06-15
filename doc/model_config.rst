@@ -106,7 +106,13 @@ First level fields of config.json
                 "Viral replication": {"MESH": "D014779"},
                 "viral replication cycle": {"MESH": "D014779"}}}},
             {"function": "run_preassembly",
-             "kwargs": {"return_toplevel": false}},
+             "kwargs": {"return_toplevel": false,
+                        "belief_scorer": {
+                            "function": "load_belief_scorer",
+                            "kwargs": {"bucket": "indra-belief",
+                                       "key": "1.20.0/default_scorer.pkl"}
+                            }
+                        }},
             {"function": "filter_by_curation",
              "args": [{"function": "get_curations"},
                       "any",
