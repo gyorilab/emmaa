@@ -809,13 +809,14 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     if path_counts:
         path_count = path_counts.get(stmt_hash)
     badges = _make_badges(evid_count, json_link, path_count,
+                          round(stmt.belief, 2),
                           cur_counts.get(stmt_hash))
     stmt_row = [
         (stmt.get_hash(refresh=True), english, evid, evid_count, badges)]
     return stmt_row
 
 
-def _make_badges(evid_count, json_link, path_count, cur_counts=None):
+def _make_badges(evid_count, json_link, path_count, belief, cur_counts=None):
     badges = [
         {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
          'symbol': None, 'title': 'View statement JSON', 'href': json_link,
@@ -824,7 +825,10 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
          'symbol': None, 'title': 'Evidence count for this statement',
          'loc': 'right'},
         {'label': 'paths', 'num': path_count, 'symbol': '\u2691',
-         'color': '#0099ff', 'title': 'Number of paths with this statement'}]
+         'color': '#0099ff', 'title': 'Number of paths with this statement'},
+        {'label': 'belief', 'num': belief, 'color': '#ffc266',
+         'symbol': None, 'title': 'Belief score for this statement',
+         'loc': 'right'}]
     if cur_counts:
         badges += [
             {'label': 'correct_this', 'num': cur_counts['this']['correct'],
