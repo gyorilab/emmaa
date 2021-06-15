@@ -945,6 +945,13 @@ def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     return [st['name'] for st in config['search_terms']]
 
 
+@register_pipeline
+def load_belief_scorer(bucket, key):
+    logger.info(f'Loading the belief model from {key}')
+    scorer = load_pickle_from_s3(bucket, key)
+    return scorer
+
+
 def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     """Convert PySB model to GroMEt object and save it to a JSON file.
 
