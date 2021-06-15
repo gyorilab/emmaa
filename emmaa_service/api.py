@@ -1599,6 +1599,9 @@ def get_all_statements_page(model):
                     stmts.append(stmts_by_hash[stmt_hash])
                 except KeyError:
                     continue
+    elif sort_by == 'belief':
+        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
+            offset:offset+1000]
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,

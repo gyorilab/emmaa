@@ -61,7 +61,7 @@
     {% endif %}
     <div class="d-inline-flex p-2 input-group" style="width: 410px;">
       <select class="custom-select" id="sortSelect" aria-label="Example select with button addon">
-      {% for sorting in ['evidence', 'paths'] %}
+      {% for sorting in ['evidence', 'paths', 'belief'] %}
         {% if sort_by == sorting %}
           <option selected value="{{ sorting }}">Sorting by {{ sorting }}</option>
         {% else %}
