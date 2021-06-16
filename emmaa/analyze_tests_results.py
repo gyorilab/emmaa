@@ -222,7 +222,7 @@ class ModelRound(Round):
         logger.info('Mapping papers to statements')
         stmts_by_papers = {}
         for stmt in self.statements:
-            stmt_hash = stmt.get_hash()
+            stmt_hash = stmt.get_hash(refresh=True)
             for evid in stmt.evidence:
                 paper_id = None
                 if id_type == 'pii':

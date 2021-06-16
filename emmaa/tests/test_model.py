@@ -138,7 +138,7 @@ def test_papers():
 
 
 def test_pysb_to_gromet():
-    from gromet.gromet import Gromet
+    from gromet import Gromet
     emmaa_model = create_model()
     pysb_model = emmaa_model.assemble_pysb()
     gromet = pysb_to_gromet(pysb_model, 'test_model', 'gromet_test.json')
