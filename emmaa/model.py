@@ -989,7 +989,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                 groundings_by_monomer[m] = {db_name: db_id}
     # Store species names to refer later
     species_nodes = [str(sp) for sp in pysb_model.species]
-    # Add all species junctions (uid and name are the same for now)
+    # Add all species junctions
     for ix, sp in enumerate(pysb_model.species):
         # Map to a list of agents
         agents = []
@@ -1033,7 +1033,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
             provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
                                   timestamp=get_current_datetime()),
             indra_agent_references=[IndraAgent(ag.to_json()) for ag in agents])
-        junctions.append(Junction(uid=UidJunction(species_nodes[ix]),
+        junctions.append(Junction(uid=UidJunction(f'J:{species_nodes[ix]}'),
                                   type=UidType('State'),
                                   name=species_nodes[ix],
                                   value=species_values.get(ix),
@@ -1060,7 +1060,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
             indra_stmt_hash=stmt.get_hash(),
             reaction_rule=rule,
             is_reverse=reverse)
-        junctions.append(Junction(uid=UidJunction(rate_node),
+        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}'),
                                   type=UidType('Rate'),
                                   name=rate_node,
                                   value=Literal(uid=None,
@@ -1079,8 +1079,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(reactant),
-                              tgt=UidJunction(rate_node)))
+                              src=UidJunction(f'J:{reactant}'),
+                              tgt=UidJunction(f'J:{rate_node}')))
         # Add wires from rate to product
         for prod_ix in rxn['products']:
             prod = species_nodes[prod_ix]
@@ -1090,8 +1090,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(rate_node),
-                              tgt=UidJunction(prod)))
+                              src=UidJunction(f'J:{rate_node}'),
+                              tgt=UidJunction(f'J:{prod}')))
     # Create relation
     pnc = Relation(uid=UidBox(model_name),
                    type=UidType("PetriNetClassic"),
