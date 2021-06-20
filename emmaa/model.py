@@ -956,6 +956,9 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     from gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
+    from gromet_metadata import IndraAgent, IndraAgentReferenceSet, \
+        ReactionReference, UidMetadatum, MetadatumMethod, Provenance, \
+        get_current_datetime
     from pysb import Parameter, WILD
     from pysb.bng import generate_equations
 
@@ -1025,13 +1028,17 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
             ag = Agent(mp.monomer.name, mods=mods,
                        db_refs=groundings_by_monomer.get(mp.monomer))
             agents.append(ag)
-        # TODO Put agents (JSONs?) into junction metadata
+        agent_metadata = IndraAgentReferenceSet(
+            uid=UidMetadatum(f'{species_nodes[ix]}_metadata'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            indra_agent_references=[IndraAgent(ag.to_json()) for ag in agents])
         junctions.append(Junction(uid=UidJunction(species_nodes[ix]),
                                   type=UidType('State'),
                                   name=species_nodes[ix],
                                   value=species_values.get(ix),
                                   value_type=UidType('Integer'),
-                                  metadata=None))
+                                  metadata=[agent_metadata]))
     # Add wires for each reaction
     for rxn in pysb_model.reactions:
         rate_params = [rate_term for rate_term in rxn['rate'].args
@@ -1046,7 +1053,13 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         if statements:
             stmt = stmt_from_rule(rule, pysb_model, statements)
         # Add rate junction for a reaction (uid and name are the same for now)
-        # TODO add rule, reverse and stmt hash into rate junction metadata
+        reaction_metadata = ReactionReference(
+            uid=UidMetadatum(f'{rate_node}_metadata'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            indra_stmt_hash=stmt.get_hash(),
+            reaction_rule=rule,
+            is_reverse=reverse)
         junctions.append(Junction(uid=UidJunction(rate_node),
                                   type=UidType('Rate'),
                                   name=rate_node,
@@ -1056,7 +1069,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                                                 name=None,
                                                 metadata=None),
                                   value_type=UidType('Float'),
-                                  metadata=None))
+                                  metadata=[reaction_metadata]))
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
