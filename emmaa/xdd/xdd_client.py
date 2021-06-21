@@ -127,7 +127,12 @@ def get_figures_from_query(query, limit=None):
 
 def send_request(url, params):
     """Send a request and handle potential errors."""
-    res = requests.get(url, params=params)
+    try:
+        res = requests.get(url, params=params)
+    # Catch connection error
+    except Exception as e:
+        logger.info(e)
+        return
     try:
         rj = res.json()
         if 'objects' not in rj:
@@ -136,6 +141,7 @@ def send_request(url, params):
             if 'error' in rj:
                 logger.warning(rj['error'])
             return
+    # Catch bad response
     except Exception as e:
         logger.info(e)
         return
