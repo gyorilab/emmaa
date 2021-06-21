@@ -958,7 +958,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         UidBox, UidGromet, Literal, Val
     from gromet_metadata import IndraAgent, IndraAgentReferenceSet, \
         ReactionReference, UidMetadatum, MetadatumMethod, Provenance, \
-        get_current_datetime
+        get_current_datetime, ModelInterface
     from pysb import Parameter, WILD
     from pysb.bng import generate_equations
 
@@ -1103,6 +1103,16 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                    boxes=None,
                    metadata=None)
     boxes = [pnc]
+
+    # Create model interface metadata
+    model_interface = \
+        ModelInterface(
+            uid=UidMetadatum(f'{model_name}_model_interface'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            variables=[j.uid for j in junctions],
+            parameters=[j.uid for j in junctions if j.type == 'Rate'],
+            initial_conditions=[j.uid for j in junctions if j.type == 'State'])
     # Create Gromet object
     g = Gromet(
         uid=UidGromet(f'{model_name}_pnc'),
@@ -1116,7 +1126,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         wires=wires,
         boxes=boxes,
         variables=None,
-        metadata=None
+        metadata=[model_interface]
     )
     # Optionally save Gromet to JSON file
     if fname:
