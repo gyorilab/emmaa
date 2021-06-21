@@ -549,9 +549,11 @@ class EmmaaModel(object):
                                  'bngl', 'sbgn', 'pysb_flat', 'gromet'}:
                     continue
                 elif exp_f == 'gromet':
-                    fname = f'gromet_{self.date_str}.json'
-                    pysb_to_gromet(pysb_model, self.name, self.assembled_stmts,
-                                   fname)
+                    # Export gromet here if there's no separate "dynamic" pysb
+                    if 'dynamic' not in self.assembly_config:
+                        fname = f'gromet_{self.date_str}.json'
+                        pysb_to_gromet(pysb_model, self.name,
+                                       self.assembled_stmts, fname)
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
@@ -604,7 +606,7 @@ class EmmaaModel(object):
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
 
-    def assemble_dynamic_pysb(self, **kwargs):
+    def assemble_dynamic_pysb(self, mode='local', **kwargs):
         """Assemble a version of a PySB model for dynamic simulation."""
         # First need to run regular assembly
         if not self.assembled_stmts:
@@ -618,6 +620,9 @@ class EmmaaModel(object):
             pa = PysbAssembler()
             pa.add_statements(new_stmts)
             pysb_model = pa.make_model()
+            if mode == 's3' and 'gromet' in self.export_formats:
+                fname = f'gromet_{self.date_str}.json'
+                pysb_to_gromet(pysb_model, self.name, new_stmts, fname)
             return pysb_model
         logger.info('Did not find dynamic assembly steps')
 
