@@ -84,6 +84,7 @@ class EmmaaModel(object):
         self.export_formats = []
         self._load_config(config)
         self.assembled_stmts = []
+        self.dynamic_assembled_stmts = []
         if paper_ids:
             self.paper_ids = set(paper_ids)
         else:
@@ -616,13 +617,14 @@ class EmmaaModel(object):
             ap = AssemblyPipeline(self.assembly_config['dynamic'])
             # Not overwrite assembled stmts
             stmts = deepcopy(self.assembled_stmts)
-            new_stmts = ap.run(stmts)
+            self.dynamic_assembled_stmts = ap.run(stmts)
             pa = PysbAssembler()
-            pa.add_statements(new_stmts)
+            pa.add_statements(self.dynamic_assembled_stmts)
             pysb_model = pa.make_model()
             if mode == 's3' and 'gromet' in self.export_formats:
                 fname = f'gromet_{self.date_str}.json'
-                pysb_to_gromet(pysb_model, self.name, new_stmts, fname)
+                pysb_to_gromet(pysb_model, self.name,
+                               self.dynamic_assembled_stmts, fname)
                 logger.info(f'Uploading {fname}')
                 client = get_s3_client(unsigned=False)
                 client.upload_file(fname, bucket,
@@ -971,8 +973,10 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     from pysb import Parameter, WILD
     from pysb.bng import generate_equations
 
+    logger.info('Generating equations ...')
     generate_equations(pysb_model)
 
+    logger.info('Creating GroMEt')
     junctions = []
     wires = []
     # Get all species values
@@ -1137,6 +1141,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         variables=None,
         metadata=[model_interface]
     )
+    logger.info('Created GroMEt')
     # Optionally save Gromet to JSON file
     if fname:
         gromet_to_json(g, fname)
