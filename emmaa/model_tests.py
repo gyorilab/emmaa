@@ -698,22 +698,29 @@ class ModelManager(object):
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        stmts = self.model.assembled_stmts
-        stmts_json = stmts_to_json(stmts)
-        # Save a timestapmed version and a generic latest version of files
-        dated_key = f'assembled/{self.model.name}/statements_{self.date_str}'
-        latest_key = f'assembled/{self.model.name}/' \
-                     f'latest_statements_{self.model.name}'
-        for ext in ('json', 'jsonl'):
-            latest_obj_key = latest_key + '.' + ext
-            logger.info(f'Uploading assembled statements to {latest_obj_key}')
-            save_json_to_s3(stmts_json, bucket, latest_obj_key, ext)
-        dated_jsonl = dated_key + '.jsonl'
-        dated_zip = dated_key + '.gz'
-        logger.info(f'Uploading assembled statements to {dated_jsonl}')
-        save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
-        logger.info(f'Uploading assembled statements to {dated_zip}')
-        save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
+        def save_stmts(model_name, stmts):
+            stmts_json = stmts_to_json(stmts)
+            # Save a timestapmed version and a generic latest version of files
+            dated_key = f'assembled/{model_name}/statements_{self.date_str}'
+            latest_key = f'assembled/{model_name}/' \
+                         f'latest_statements_{model_name}'
+            for ext in ('json', 'jsonl'):
+                latest_obj_key = latest_key + '.' + ext
+                logger.info('Uploading assembled statements to '
+                            f'{latest_obj_key}')
+                save_json_to_s3(stmts_json, bucket, latest_obj_key, ext)
+            dated_jsonl = dated_key + '.jsonl'
+            dated_zip = dated_key + '.gz'
+            logger.info(f'Uploading assembled statements to {dated_jsonl}')
+            save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
+            logger.info(f'Uploading assembled statements to {dated_zip}')
+            save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
+
+        save_stmts(self.model.assembled_stmts, self.model.name)
+        if hasattr(self.model, 'dynamic_assembled_stmts') and \
+                self.model.dynamic_assembled_stmts:
+            save_stmts(self.model.dynamic_assembled_stmts,
+                       f'{self.model.name}_dynamic')
 
 
 class TestManager(object):
@@ -894,6 +901,7 @@ def save_model_manager_to_s3(model_name, model_manager,
     date_str = model_manager.date_str
     model_manager.model.stmts = []
     model_manager.model.assembled_stmts = []
+    model_manager.model.dynamic_assembled_stmts = []
     save_pickle_to_s3(model_manager, bucket,
                       f'results/{model_name}/model_manager_{date_str}.pkl')
 
