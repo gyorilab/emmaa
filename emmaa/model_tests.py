@@ -698,7 +698,7 @@ class ModelManager(object):
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        def save_stmts(model_name, stmts):
+        def save_stmts(stmts, model_name):
             stmts_json = stmts_to_json(stmts)
             # Save a timestapmed version and a generic latest version of files
             dated_key = f'assembled/{model_name}/statements_{self.date_str}'
