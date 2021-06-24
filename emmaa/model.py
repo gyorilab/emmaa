@@ -1,3 +1,4 @@
+from collections import defaultdict
 from copy import deepcopy
 import time
 import logging
@@ -1053,11 +1054,13 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                                   value_type=UidType('Integer'),
                                   metadata=[agent_metadata]))
     # Add wires for each reaction
+    rate_counts = defaultdict(int)
     for rxn in pysb_model.reactions:
         rate_params = [rate_term for rate_term in rxn['rate'].args
                        if isinstance(rate_term, Parameter)]
         assert len(rate_params) == 1
         rate_node = rate_params[0].name
+        rate_counts[rate_node] += 1
         # Get metadata for rate node
         assert len(rxn['rule']) == 1
         assert len(rxn['reverse']) == 1
@@ -1073,7 +1076,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
             indra_stmt_hash=stmt.get_hash(),
             reaction_rule=rule,
             is_reverse=reverse)
-        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}'),
+        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}:'
+                                                  f'{rate_counts[rate_node]}'),
                                   type=UidType('Rate'),
                                   name=rate_node,
                                   value=Literal(uid=None,
@@ -1093,7 +1097,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                               value=None,
                               metadata=None,
                               src=UidJunction(f'J:{reactant}'),
-                              tgt=UidJunction(f'J:{rate_node}')))
+                              tgt=UidJunction(f'J:{rate_node}:'
+                                              f'{rate_counts[rate_node]}')))
         # Add wires from rate to product
         for prod_ix in rxn['products']:
             prod = species_nodes[prod_ix]
@@ -1103,7 +1108,8 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(f'J:{rate_node}'),
+                              src=UidJunction(f'J:{rate_node}:'
+                                              f'{rate_counts[rate_node]}'),
                               tgt=UidJunction(f'J:{prod}')))
     # Create relation
     pnc = Relation(uid=UidBox(model_name),
