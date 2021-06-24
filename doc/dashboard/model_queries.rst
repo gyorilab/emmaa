@@ -42,13 +42,25 @@ Which query type do I need?
 
 .. _source_target_paths:
 
+Source-target paths queries
+---------------------------
+
+This query mode uses causal path finding to explain an effect between a source
+and a target. It allows to answer questions like *“How does EGF lead
+to the phosphorylation of MAPK1”?* Depending on
+which EMMAA model is selected, multiple modeling formalisms
+(unsigned graph, signed graph, PyBEL model, PySB model) are used to find paths,
+each with different causal constraint assumptions, potentially resulting
+in different results.
+
 Submitting a Query
 ~~~~~~~~~~~~~~~~~~
 
-The model queries page can answer direct queries about one or more models.
-A static query consists of a statement type, a subject, and an object.
-Together with the query, at least one model needs to be selected for the query
-submission to be valid.
+Specifying the query involves providing names for a source and a target and
+selecting a statement type (e.g., Phosphorylation, Inhibition, IncreaseAmount).
+It is possible to run the queries against one or more EMMAA models to see the
+results in different contexts. At least one model needs to be selected for the
+query submission to be valid.
 
 .. figure:: ../_static/images/query_filled.png
   :align: center
@@ -64,14 +76,14 @@ shown stating the type of error.
 Viewing the results
 ~~~~~~~~~~~~~~~~~~~
 
-The query will be received by the query service and return a response which is
-displayed in the Results table below. Similarly to the results of tests on the
-model page, query results are presented as a grid of green, red and grey marks.
-A green check mark is shown for queries that passed and a red cross is shown
-for the queries that did not. Grey cirlce will be shown for queries not
-applicable for selected model. The marks can be clicked on and link to a
-detailed query results page where the detailed path(s) or a reason for the
-model not having passed the test will be shown.
+The query service will receive the query and return a response which is
+displayed in the Query Results table below. Query results are presented as a
+grid of green, red and grey marks. A green check mark is shown for queries
+that passed and a red cross is shown for the queries that did not. Grey cirlce
+will be shown for queries not applicable for selected model.
+The marks can be clicked on and link to a :ref:`detailed_tests_page` page
+where the detailed path(s) or a reason for the model not having passed
+the query will be shown.
 
 .. figure:: ../_static/images/path_query_result.png
   :align: center
@@ -81,22 +93,75 @@ model not having passed the test will be shown.
   Detailed results can be viewed by clicking on a green/red mark.*
 
 
-.. _dashboard_dyn_query:
+.. _source_target_dynamics:
 
-Dynamical Queries
------------------
+Source-target dynamics queries
+------------------------------
 
-This tab allows to submit and view the results for queries about dynamical
-model properties. To answer these queries simulations are run on a
-PySB-assembled EMMAA model.
+This query mode uses dynamical simulation to describe the effect of an
+intervention from a given source on a given target. An example question that
+can be answered using this query type is *“If the initial amount of BRAF is
+increased, does the phosphorylation of MAP2K1 increase?”*.
+The results provide a yes/no answer to the query as well as the time course
+results of simulations of the target readout (phosphorylated MAP2K1 in the
+above example) to compare the effect of two different initial amounts of the source.
 
 Submitting a Query
 ~~~~~~~~~~~~~~~~~~
 
-Dynamical query requires the user to specify the model, the entity to run
-simulations for, a temporal pattern and, for some patterns, whether the entity
-amount should be high or low. An observable entity can be described using
-natural language, e.g. "phosphorylated MAP2K1".
+Source-target dynamics query requires the user to specify the model, a source
+and a target by name, and select a statement type(e.g., Phosphorylation,
+Inhibition, IncreaseAmount) which represents the effect of the
+intervention on the target. It is possible to run the queries
+against one or more EMMAA models to see the results in different contexts.
+At least one model needs to be selected for the query submission to be valid.
+
+.. figure:: ../_static/images/interv_query_filled.png
+  :align: center
+  :figwidth: 100 %
+
+  *The query ready to be submitted that asks whether SOS1 leads to the
+  activation of KRAS in simulation of RAS model.*
+
+If the query is badly formatted or missing information, an error will be
+shown stating the type of error.
+
+Viewing the results
+~~~~~~~~~~~~~~~~~~~
+
+Results include a green/red mark showing whether the expected intervention
+effect was oserved in the simulation and a plot of the observable's time course
+during the simulation with and without the intervention.
+
+.. figure:: ../_static/images/dynamical_intervention_sos_kras.png
+  :align: center
+  :figwidth: 100 %
+
+  *The above query resolved, showing that active KRAS is substantially higher
+  when SOS1 is present at a high level*
+
+.. _dashboard_dyn_query:
+
+Temporal properties queries
+---------------------------
+
+This query mode uses dynamical simulation to verify if the baseline dynamics
+(i.e., no intervention) of the model meets a given qualitative pattern.
+To answer these queries simulations are run on a PySB-assembled EMMAA model.
+Temporal properties query allows answering questions like
+*“Is the amount of phosphorylated BRAF at any point in time high?”*.
+The result provides a yes/no answer to the query as well as the time course
+results of simulations of the given agent state.
+
+Submitting a Query
+~~~~~~~~~~~~~~~~~~
+
+Temporal properties query requires the user to specify the model, provide an
+agent state description (e.g., “active KRAS”, “phosphorylated BRAF”,
+“DUSP6 bound to MAPK1”), a pattern type (e.g., sometime_value) and in some
+pattern types, a value (e.g., low/high). It is possible to run the queries
+against one or more EMMAA models to see the results in different contexts.
+At least one model needs to be selected for the query submission to be valid.
 
 .. figure:: ../_static/images/dynamic_query.png
   :align: center
@@ -105,38 +170,49 @@ natural language, e.g. "phosphorylated MAP2K1".
   *The query ready to be submitted that asks whether phosphorylated MAP2K1 is
   eventually high in the MARM model.*
 
+If the query is badly formatted or missing information, an error will be
+shown stating the type of error.
+
 Viewing the results
 ~~~~~~~~~~~~~~~~~~~
 
 Results of the dynamical queries include a green/red mark showing whether the
 required condition was satisfied in more than a half of simulations and a plot
-of the observable's time cours during the simulation.
+of the observable's time course during the simulation.
 
 .. figure:: ../_static/images/dynamic_result.png
   :align: center
   :figwidth: 100 %
 
-  *The above query resolved, showing the result per model.*
+  *The above query resolved, showing how the amount of phosphorylated MAP2K1
+  changes during the simulation*
 
 
 .. _dashboard_open_query:
 
-Open Search Queries
--------------------
+Up/down-stream paths queries
+----------------------------
 
-This tab allows submitting and viewing the results of open search queries
-that involve finding mechanistic paths upstream or downstream of an entity of
-interest. Similar to static queries, open search queries are run against
-four model types: PySB, PyBEL, signed graph, and unsigned graph.
+This query mode allows finding causal paths to or from a given agent to
+identify its upstream regulators and its downstream targets. A user can
+optionally limit the up/downstream entities to genes/proteins, small molecules
+or biological processes. It allows expressing questions such as
+*“What small molecules inhibit the phosphorylation of JAK2?”*
+or *“What biological process does TNF activate?”*.
+The result returns not only the entities but also the specific causal paths
+that are consistent with the query specification. Depending on which EMMAA
+model is selected, multiple modeling formalisms (unsigned graph, signed graph,
+PyBEL model, PySB model) are used to find paths, each with different causal
+constraint assumptions, potentially resulting in different results.
 
 Submitting a Query
 ~~~~~~~~~~~~~~~~~~
 
-The model queries page can answer direct queries about one or more models.
-An open search query consists of a statement type, an agent (entity), and 
-an agent's role (subject for downstream search and object for upstream search).
-Optionally, a user can also limit the search results to only include paths to
-or from genes/proteins, small molecules, or biological processes.
+The query specification involves specifying the agent by name and role
+(subject or object corresponding to finding its downstream targets or upstream
+regulators, respectively), a statement type representing the effect of the
+regulations (e.g., Phosphorylation, Inhibition), and optional constraints on
+the types of up/downstream entities that are of interest.
 Together with the query, at least one model needs to be selected for the query
 submission to be valid.
 
@@ -154,8 +230,14 @@ shown stating the type of error.
 Viewing the results
 ~~~~~~~~~~~~~~~~~~~
 
-The query is received by the query service which returns a response in a
-format similar to the result of static queries.
+The query service will receive the query and return a response which is
+displayed in the Query Results table below. Query results are presented as a
+grid of green, red and grey marks. A green check mark is shown for queries
+that passed and a red cross is shown for the queries that did not. Grey cirlce
+will be shown for queries not applicable for selected model.
+The marks can be clicked on and link to a :ref:`detailed_tests_page` page
+where the detailed path(s) or a reason for the model not having passed
+the query will be shown.
 
 .. figure:: ../_static/images/open_query_result.png
   :align: center
