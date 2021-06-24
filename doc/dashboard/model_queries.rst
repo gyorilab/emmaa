@@ -4,15 +4,43 @@ EMMAA Model Queries
 ===================
 The Queries page can be accessed by clicking the "Queries" link at the top
 of the Dashboard website. The page contains the forms to submit queries and
-results of queries in three tabs *Static*, *Dynamic*, and *Open Search* 
+results of queries in four tabs *Source-target paths*, *Source-target dynamics*,
+*Temporal properties*, and *Up/down-stream paths*
 corresponding to three currently supported query types.
 
-Static Queries
---------------
+Each tab has the following boxes:
 
-This tab allows to submit queries and view the results for static queries that
-involve finding mechanistic paths to explain causal relation. Queries are run
-against four model types: PySB, PyBEL, signed graph, and unsigned graph.
+- **Description** - a brief description of selected query mode, what questions
+  can it answer and how to specify it properly.
+
+- **Query specification** - a form to select which models the query should be run
+  on and to specify query parameters.
+
+- **Query results** - here the immediate results for the recently run query will
+  be displayed.
+
+- **Subscribed queries** - if a user is logged in and has previously subscribed to
+  any queries of a given type, these queries are rerun every time the models are
+  updated and the latest results will be displayed in this box.
+
+
+Which query type do I need?
+---------------------------
+
+- If you want to explain an effect between two entities, read more about
+  :ref:`source_target_paths`
+
+- If you want to observe the effect of intervention in dynamical simulation,
+  read more about :ref:`source_target_dynamics`
+
+- If you want to observe the baseline dynamics of an entity in the model in
+  dynamical simulation, read more about :ref:`dashboard_dyn_query`
+
+- If you want to find the downstream targets or upstream regulators of an
+  entity, read more about :ref:`dashboard_open_query`
+
+
+.. _source_target_paths:
 
 Submitting a Query
 ~~~~~~~~~~~~~~~~~~
