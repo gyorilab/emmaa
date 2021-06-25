@@ -36,7 +36,7 @@ RUN git clone https://github.com/ml4ai/automates.git && \
     cd ..
 
 # Clone and install EMMAA
-RUN pip install --install-option="--extras-require=misc" git+https://github.com/indralab/indra_db.git && \
+RUN pip install git+https://github.com/indralab/indra_db.git#egg=indra_db[misc] && \
     pip install git+https://github.com/sorgerlab/bioagents.git && \
     git clone https://github.com/indralab/indra_world.git && \
     pip install -U gilda && \
