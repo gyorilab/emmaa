@@ -1,5 +1,7 @@
-Test and query result interpretation
-====================================
+.. _fail_result:
+
+Failing test/query result interpretation
+========================================
 Model tests and queries can sometimes fail to produce an explicit result (i.e.,
 a sequence of mechanisms constituting an answer to a query). There are several
 possible reasons for this. Below, we explain the various result "codes" that

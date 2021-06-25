@@ -1,7 +1,7 @@
 .. _detailed_tests_page:
 
-EMMAA Detailed Test Results
-===========================
+EMMAA Detailed Test or Query Results
+====================================
 
 The detailed test results page shows a test result at in high detail for a
 specific model and model type. The left column describes the paths found that
@@ -40,7 +40,7 @@ Non-passing Tests
 -----------------
 
 When a test fails, the detailed test page show a message that describes why
-the test failed instead of results.
+the test failed instead of results. For more details see :ref:`fail_result`
 
 .. figure:: ../_static/images/detailed_results_fail.png
   :align: center
