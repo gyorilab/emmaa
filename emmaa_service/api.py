@@ -1,5 +1,6 @@
 import os
 import json
+from re import S
 import boto3
 import logging
 import argparse
@@ -16,6 +17,7 @@ from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
 from pusher import pusher
+from sqlalchemy.sql.sqltypes import String
 
 from indra_db.exceptions import BadHashError
 from indra_db import get_db
@@ -191,7 +193,13 @@ model_info_model = api.model('model_info', {
     'ndex': fields.String(example='a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf',
                           description='NDEx ID of EMMAA model'),
     'twitter': fields.String(example='https://twitter.com/covid19_emmaa',
-                             description='Link to model Twitter account')
+                             description='Link to model Twitter account'),
+    'stmts_for_dynamic_key': fields.String(
+        example='rasmachine_dynamic',
+        description=(
+            'A key to load statements for dynamic models, only available for '
+            'models that require additional assembly steps to create a '
+            'simulatable model'))
 })
 test_corpora_model = api.model('test_corpora', {
     'test_corpora': fields.List(
@@ -2113,6 +2121,8 @@ class ModelInfo(Resource):
             info['ndex'] = config['ndex'].get('network')
         if 'twitter_link' in config:
             info['twitter'] = config['twitter_link']
+        if 'dynamic' in config['assembly']:
+            info['stmts_for_dynamic_key'] = f'{model}_dynamic'
         return info
 
 

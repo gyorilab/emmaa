@@ -1,3 +1,4 @@
+from collections import defaultdict
 from copy import deepcopy
 import time
 import logging
@@ -6,15 +7,18 @@ import pybel
 from botocore.exceptions import ClientError
 from sqlalchemy.sql.functions import mode
 from indra.databases import ndex_client
+from indra.databases.identifiers import parse_identifiers_url
 from indra.literature import pubmed_client, elsevier_client, biorxiv_client
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.pysb.sites import states
 from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.statements import stmts_from_json
+from indra.statements import stmts_from_json, Agent, ModCondition
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only
 from indra.sources.minerva import process_from_web
+from indra.explanation.reporting import stmt_from_rule
 from indra_db.client.principal.curation import get_curations
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
@@ -81,6 +85,7 @@ class EmmaaModel(object):
         self.export_formats = []
         self._load_config(config)
         self.assembled_stmts = []
+        self.dynamic_assembled_stmts = []
         if paper_ids:
             self.paper_ids = set(paper_ids)
         else:
@@ -546,8 +551,11 @@ class EmmaaModel(object):
                                  'bngl', 'sbgn', 'pysb_flat', 'gromet'}:
                     continue
                 elif exp_f == 'gromet':
-                    fname = f'gromet_{self.date_str}.json'
-                    pysb_to_gromet(pysb_model, self.name, fname)
+                    # Export gromet here if there's no separate "dynamic" pysb
+                    if 'dynamic' not in self.assembly_config:
+                        fname = f'gromet_{self.date_str}.json'
+                        pysb_to_gromet(pysb_model, self.name,
+                                       self.assembled_stmts, fname)
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
@@ -600,7 +608,7 @@ class EmmaaModel(object):
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
 
-    def assemble_dynamic_pysb(self, **kwargs):
+    def assemble_dynamic_pysb(self, mode='local', bucket=EMMAA_BUCKET_NAME):
         """Assemble a version of a PySB model for dynamic simulation."""
         # First need to run regular assembly
         if not self.assembled_stmts:
@@ -610,10 +618,18 @@ class EmmaaModel(object):
             ap = AssemblyPipeline(self.assembly_config['dynamic'])
             # Not overwrite assembled stmts
             stmts = deepcopy(self.assembled_stmts)
-            new_stmts = ap.run(stmts)
+            self.dynamic_assembled_stmts = ap.run(stmts)
             pa = PysbAssembler()
-            pa.add_statements(new_stmts)
+            pa.add_statements(self.dynamic_assembled_stmts)
             pysb_model = pa.make_model()
+            if mode == 's3' and 'gromet' in self.export_formats:
+                fname = f'gromet_{self.date_str}.json'
+                pysb_to_gromet(pysb_model, self.name,
+                               self.dynamic_assembled_stmts, fname)
+                logger.info(f'Uploading {fname}')
+                client = get_s3_client(unsigned=False)
+                client.upload_file(fname, bucket,
+                                   f'exports/{self.name}/{fname}')
             return pysb_model
         logger.info('Did not find dynamic assembly steps')
 
@@ -929,7 +945,7 @@ def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     return [st['name'] for st in config['search_terms']]
 
 
-def pysb_to_gromet(pysb_model, model_name, fname=None):
+def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     """Convert PySB model to GroMEt object and save it to a JSON file.
 
     Parameters
@@ -938,6 +954,9 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
         PySB model object.
     model_name : str
         A name of EMMAA model.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements a PySB model was assembled from. If
+        provided the statement hashes will be propagated into GroMEt metadata.
     fname : Optional[str]
         If given, the GroMEt will be dumped into JSON file.
 
@@ -949,11 +968,16 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
     from gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
-    from pysb import Parameter
+    from gromet_metadata import IndraAgent, IndraAgentReferenceSet, \
+        ReactionReference, UidMetadatum, MetadatumMethod, Provenance, \
+        get_current_datetime, ModelInterface
+    from pysb import Parameter, WILD
     from pysb.bng import generate_equations
 
+    logger.info('Generating equations ...')
     generate_equations(pysb_model)
 
+    logger.info('Creating GroMEt')
     junctions = []
     wires = []
     # Get all species values
@@ -962,59 +986,131 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
         ix = pysb_model.get_species_index(initial.pattern)
         if initial.value:
             species_values[ix] = Literal(
-                uid=None, type=UidType("T:Integer"),
+                uid=None, type=UidType("Integer"),
                 value=Val(initial.value.value),
                 name=None, metadata=None)
+
+    # Get groundings for monomers
+    groundings_by_monomer = {}
+    # Build up db_refs for each monomer object
+    for ann in pysb_model.annotations:
+        if ann.predicate == 'is':
+            m = ann.subject
+            db_name, db_id = parse_identifiers_url(ann.object)
+            if m in groundings_by_monomer:
+                groundings_by_monomer[m][db_name] = db_id
+            else:
+                groundings_by_monomer[m] = {db_name: db_id}
     # Store species names to refer later
     species_nodes = [str(sp) for sp in pysb_model.species]
-    # Add all species junctions (uid and name are the same for now)
-    for ix, sp in enumerate(species_nodes):
-        junctions.append(Junction(uid=UidJunction(sp),
+    # Add all species junctions
+    for ix, sp in enumerate(pysb_model.species):
+        # Map to a list of agents
+        agents = []
+        for mp in sp.monomer_patterns:
+            mods = []
+            if hasattr(mp.monomer, 'site_annotations'):
+                for site, state in mp.site_conditions.items():
+                    if isinstance(state, tuple) and state[1] == WILD:
+                        state = state[0]
+                    mod, mod_type, res, pos = None, None, None, None
+                    for ann in mp.monomer.site_annotations:
+                        if ann.subject == (site, state):
+                            mod_type = ann.object
+                        elif ann.subject == site and \
+                                ann.predicate == 'is_residue':
+                            res = ann.object
+                        if ann.subject == site and \
+                                ann.predicate == 'is_position':
+                            pos = ann.object
+                        if mod_type:
+                            not_mod, mod = states[mod_type]
+                            if state == mod:
+                                is_mod = True
+                            elif state == not_mod:
+                                is_mod = False
+                            else:
+                                logger.warning('Unknown state %s for %s, '
+                                               'setting as not modified' % (
+                                                    state, mod_type))
+                                is_mod = False
+                            mod = ModCondition(mod_type, res, pos, is_mod)
+                    if mod:
+                        mods.append(mod)
+            if not mods:
+                mods = None
+            ag = Agent(mp.monomer.name, mods=mods,
+                       db_refs=groundings_by_monomer.get(mp.monomer))
+            agents.append(ag)
+        agent_metadata = IndraAgentReferenceSet(
+            uid=UidMetadatum(f'{species_nodes[ix]}_metadata'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            indra_agent_references=[IndraAgent(ag.to_json()) for ag in agents])
+        junctions.append(Junction(uid=UidJunction(f'J:{species_nodes[ix]}'),
                                   type=UidType('State'),
-                                  name=sp,
+                                  name=species_nodes[ix],
                                   value=species_values.get(ix),
-                                  value_type=UidType('T:Integer'),
-                                  metadata=None))
-    # Add all rate junctions (uid and name are the same for now)
-    junctions += [Junction(uid=UidJunction(par.name),
-                           type=UidType('Rate'),
-                           name=par.name,
-                           value=Literal(uid=None,
-                                         type=UidType("T:Float"),
-                                         value=Val(par.value),
-                                         name=None,
-                                         metadata=None),
-                           value_type=UidType('T:Float'),
-                           metadata=None)
-                  for par in pysb_model.parameters]
+                                  value_type=UidType('Integer'),
+                                  metadata=[agent_metadata]))
     # Add wires for each reaction
+    rate_counts = defaultdict(int)
     for rxn in pysb_model.reactions:
         rate_params = [rate_term for rate_term in rxn['rate'].args
                        if isinstance(rate_term, Parameter)]
         assert len(rate_params) == 1
         rate_node = rate_params[0].name
+        rate_counts[rate_node] += 1
+        # Get metadata for rate node
+        assert len(rxn['rule']) == 1
+        assert len(rxn['reverse']) == 1
+        rule = rxn['rule'][0]
+        reverse = rxn['reverse'][0]
+        if statements:
+            stmt = stmt_from_rule(rule, pysb_model, statements)
+        # Add rate junction for a reaction (uid and name are the same for now)
+        reaction_metadata = ReactionReference(
+            uid=UidMetadatum(f'{rate_node}_metadata'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            indra_stmt_hash=stmt.get_hash(),
+            reaction_rule=rule,
+            is_reverse=reverse)
+        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}:'
+                                                  f'{rate_counts[rate_node]}'),
+                                  type=UidType('Rate'),
+                                  name=rate_node,
+                                  value=Literal(uid=None,
+                                                type=UidType("Float"),
+                                                value=Val(rate_params[0].value),
+                                                name=None,
+                                                metadata=None),
+                                  value_type=UidType('Float'),
+                                  metadata=[reaction_metadata]))
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
-            wires.append(Wire(uid=UidWire(f'{reactant}_{rate_node}'),
+            wires.append(Wire(uid=UidWire(f'W:{reactant}_{rate_node}'),
                               type=None,
                               value_type=None,
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(reactant),
-                              tgt=UidJunction(rate_node)))
+                              src=UidJunction(f'J:{reactant}'),
+                              tgt=UidJunction(f'J:{rate_node}:'
+                                              f'{rate_counts[rate_node]}')))
         # Add wires from rate to product
         for prod_ix in rxn['products']:
             prod = species_nodes[prod_ix]
-            wires.append(Wire(uid=UidWire(f'{rate_node}_{prod}'),
+            wires.append(Wire(uid=UidWire(f'W:{rate_node}_{prod}'),
                               type=None,
                               value_type=None,
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(rate_node),
-                              tgt=UidJunction(prod)))
+                              src=UidJunction(f'J:{rate_node}:'
+                                              f'{rate_counts[rate_node]}'),
+                              tgt=UidJunction(f'J:{prod}')))
     # Create relation
     pnc = Relation(uid=UidBox(model_name),
                    type=UidType("PetriNetClassic"),
@@ -1026,6 +1122,16 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
                    boxes=None,
                    metadata=None)
     boxes = [pnc]
+
+    # Create model interface metadata
+    model_interface = \
+        ModelInterface(
+            uid=UidMetadatum(f'{model_name}_model_interface'),
+            provenance=Provenance(method=MetadatumMethod('from_emmaa_model'),
+                                  timestamp=get_current_datetime()),
+            variables=[j.uid for j in junctions],
+            parameters=[j.uid for j in junctions if j.type == 'Rate'],
+            initial_conditions=[j.uid for j in junctions if j.type == 'State'])
     # Create Gromet object
     g = Gromet(
         uid=UidGromet(f'{model_name}_pnc'),
@@ -1039,8 +1145,9 @@ def pysb_to_gromet(pysb_model, model_name, fname=None):
         wires=wires,
         boxes=boxes,
         variables=None,
-        metadata=None
+        metadata=[model_interface]
     )
+    logger.info('Created GroMEt')
     # Optionally save Gromet to JSON file
     if fname:
         gromet_to_json(g, fname)

@@ -141,17 +141,17 @@ def test_pysb_to_gromet():
     from gromet import Gromet
     emmaa_model = create_model()
     pysb_model = emmaa_model.assemble_pysb()
-    gromet = pysb_to_gromet(pysb_model, 'test_model', 'gromet_test.json')
+    gromet = pysb_to_gromet(pysb_model, 'test_model',
+                            emmaa_model.assembled_stmts)
     assert isinstance(gromet, Gromet)
     # Test PySB properties are correctly represented in GroMEt
-    # Model species and parameters match junctions
+    # Model species and reaction rates match junctions
     assert len(pysb_model.species) == 5
-    assert len(pysb_model.parameters) == 5
-    assert len(gromet.junctions) == 10
-    assert len([j for j in gromet.junctions if j.type == 'State']) == 5
-    assert len([j for j in gromet.junctions if j.type == 'Rate']) == 5
-    # Number of wires match total number of reactants and products in reactions
     assert len(pysb_model.reactions) == 2
+    assert len(gromet.junctions) == 7
+    assert len([j for j in gromet.junctions if j.type == 'State']) == 5
+    assert len([j for j in gromet.junctions if j.type == 'Rate']) == 2
+    # Number of wires match total number of reactants and products in reactions
     assert sum([len(r['reactants']) + len(r['products'])
                 for r in pysb_model.reactions]) == 8
     assert len(gromet.wires) == 8
