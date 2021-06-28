@@ -1059,8 +1059,9 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         rate_params = [rate_term for rate_term in rxn['rate'].args
                        if isinstance(rate_term, Parameter)]
         assert len(rate_params) == 1
-        rate_node = rate_params[0].name
-        rate_counts[rate_node] += 1
+        rate = rate_params[0].name
+        rate_counts[rate] += 1
+        rate_node = f'{rate}:{rate_counts[rate]}'
         # Get metadata for rate node
         assert len(rxn['rule']) == 1
         assert len(rxn['reverse']) == 1
@@ -1076,10 +1077,10 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
             indra_stmt_hash=stmt.get_hash(),
             reaction_rule=rule,
             is_reverse=reverse)
-        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}:'
-                                                  f'{rate_counts[rate_node]}'),
+        wire_count = defaultdict(int)
+        junctions.append(Junction(uid=UidJunction(f'J:{rate_node}'),
                                   type=UidType('Rate'),
-                                  name=rate_node,
+                                  name=rate,
                                   value=Literal(uid=None,
                                                 type=UidType("Float"),
                                                 value=Val(rate_params[0].value),
@@ -1090,26 +1091,28 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
         # Add wires from reactant to rate
         for reactant_ix in rxn['reactants']:
             reactant = species_nodes[reactant_ix]
-            wires.append(Wire(uid=UidWire(f'W:{reactant}_{rate_node}'),
+            wire = f'{reactant}_{rate_node}'
+            wire_count[wire] += 1
+            wires.append(Wire(uid=UidWire(f'W:{wire}:w{wire_count[wire]}'),
                               type=None,
                               value_type=None,
                               name=None,
                               value=None,
                               metadata=None,
                               src=UidJunction(f'J:{reactant}'),
-                              tgt=UidJunction(f'J:{rate_node}:'
-                                              f'{rate_counts[rate_node]}')))
+                              tgt=UidJunction(f'J:{rate_node}')))
         # Add wires from rate to product
         for prod_ix in rxn['products']:
             prod = species_nodes[prod_ix]
-            wires.append(Wire(uid=UidWire(f'W:{rate_node}_{prod}'),
+            wire = f'{rate_node}_{prod}'
+            wire_count[wire] += 1
+            wires.append(Wire(uid=UidWire(f'W:{wire}:w{wire_count[wire]}'),
                               type=None,
                               value_type=None,
                               name=None,
                               value=None,
                               metadata=None,
-                              src=UidJunction(f'J:{rate_node}:'
-                                              f'{rate_counts[rate_node]}'),
+                              src=UidJunction(f'J:{rate_node}'),
                               tgt=UidJunction(f'J:{prod}')))
     # Create relation
     pnc = Relation(uid=UidBox(model_name),
