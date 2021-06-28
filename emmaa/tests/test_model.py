@@ -155,3 +155,6 @@ def test_pysb_to_gromet():
     assert sum([len(r['reactants']) + len(r['products'])
                 for r in pysb_model.reactions]) == 8
     assert len(gromet.wires) == 8
+    # All junctions and wires have unique uids
+    assert len(set([j.uid for j in gromet.junctions])) == len(gromet.junctions)
+    assert len(set([w.uid for w in gromet.wires])) == len(gromet.wires)
