@@ -1548,12 +1548,17 @@ def get_all_statements_page(model):
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
+    stmt_types = request.args.getlist('stmt_type')
     date = request.args.get('date')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = _load_stmts_from_cache(model, date)
+    if stmt_types:
+        stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
+        stmts = [stmt for stmt in stmts if
+                 type(stmt).__name__.lower() in stmt_types]
     stmts_by_hash = {}
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
