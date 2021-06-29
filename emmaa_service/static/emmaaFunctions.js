@@ -144,7 +144,11 @@ function redirectOneStep(value, isQuery) {
 function redirectOneArgument(newValue, param) {
   let loc = window.location.href;
   let currentValue = new URL(loc).searchParams.get(param);
-  var redirect = loc.replace(`${param}=${currentValue}`, `${param}=${newValue}`)
+  if (currentValue) {
+    var redirect = loc.replace(`${param}=${currentValue}`, `${param}=${newValue}`)
+  } else {
+    var redirect = loc.concat(`&${param}=${newValue}`)
+  }
   location.replace(redirect);
 }
 
@@ -162,6 +166,12 @@ function redirectSelection(ddSelect, param) {
   redirectOneArgument(newValue, param);
 }
 
+function removeArgument(param) {
+  let loc = window.location.href;
+  let currentValue = new URL(loc).searchParams.get(param);
+  var redirect = loc.replace(`${param}=${currentValue}`, '')
+  location.replace(redirect);
+}
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {

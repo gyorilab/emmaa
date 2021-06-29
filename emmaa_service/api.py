@@ -1641,7 +1641,9 @@ def get_all_statements_page(model):
                            sort_by=sort_by,
                            link=link,
                            date=date,
-                           tabs=False)
+                           tabs=False,
+                           all_stmt_types=get_queryable_stmt_types(),
+                           stmt_types=stmt_types)
 
 
 @app.route('/demos')
