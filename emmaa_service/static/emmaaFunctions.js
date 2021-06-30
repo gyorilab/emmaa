@@ -169,7 +169,7 @@ function redirectSelection(ddSelect, param) {
 function removeArgument(param) {
   let loc = window.location.href;
   let currentValue = new URL(loc).searchParams.get(param);
-  var redirect = loc.replace(`${param}=${currentValue}`, '')
+  var redirect = loc.replace(`&${param}=${currentValue}`, '')
   location.replace(redirect);
 }
 
