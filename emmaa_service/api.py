@@ -1566,8 +1566,9 @@ def get_all_statements_page(model):
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
-        stmts = [stmt for stmt in stmts if str(stmt.get_hash(refresh=True))
-                 not in cur_counts]
+        stmts_by_hash = {k: v for (k, v) in stmts_by_hash.items()
+                         if k not in cur_counts}
+        stmts = list(stmts_by_hash.values())
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
