@@ -16,7 +16,8 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.statements import stmts_from_json, Agent, ModCondition
 from indra.pipeline import AssemblyPipeline, register_pipeline
-from indra.tools.assemble_corpus import filter_grounded_only
+from indra.tools.assemble_corpus import filter_grounded_only, run_preassembly
+from indra.sources.indra_db_rest import get_statements_by_hash
 from indra.sources.minerva import process_from_web
 from indra.explanation.reporting import stmt_from_rule
 from indra_db.client.principal.curation import get_curations
@@ -950,6 +951,62 @@ def load_belief_scorer(bucket, key):
     logger.info(f'Loading the belief model from {key}')
     scorer = load_pickle_from_s3(bucket, key)
     return scorer
+
+
+def load_extra_evidence(stmts):
+    stmt_hashes = [stmt.get_hash() for stmt in stmts]
+    # get stmts from database
+    logger.info(f'Loading additional evidences for {len(stmts)} stmts from db')
+    # TODO handle batches of 2000 hashes at a time
+    proc = get_statements_by_hash(stmt_hashes)
+    new_stmts = proc.statements
+    logger.info(f'Found {len(new_stmts)} stmts in the database')
+    evid_by_hash = {stmt.get_hash(): stmt.evidence for stmt in new_stmts}
+    # add db evidence to emmaa stmts evidence
+    # this can create duplicates but they are handled by preassembly
+    for stmt in stmts:
+        stmt.evidence += evid_by_hash.get(stmt.get_hash(), [])
+    return stmts
+
+
+@register_pipeline
+def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
+                                        belief_scorer=None, **kwargs):
+    """Run preassembly on a list of statements.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to preassemble.
+    return_toplevel : Optional[bool]
+        If True, only the top-level statements are returned. If False,
+        all statements are returned irrespective of level of specificity.
+        Default: True
+    belief_scorer : Optional[indra.belief.BeliefScorer]
+        Instance of BeliefScorer class to use in calculating Statement
+        probabilities. If None is provided (default), then the default
+        scorer is used.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of preassembled top-level statements.
+    """
+    temp_stmts = deepcopy(stmts_in)
+    temp_stmts = load_extra_evidence(temp_stmts)
+    preassembled_stmts = run_preassembly(
+        temp_stmts, return_toplevel=return_toplevel,
+        belief_scorer=belief_scorer, **kwargs)
+    belief_by_hash = {stmt.get_hash(): stmt.belief
+                      for stmt in preassembled_stmts}
+    logger.info('Assigning new beliefs to original statements')
+    stmts_out = []
+    for stmt in stmts_in:
+        stmt_hash = stmt.get_hash()
+        if stmt_hash in belief_by_hash:
+            stmt.belief = belief_by_hash[stmt_hash]
+            stmts_out.append(stmt)
+    return stmts_out
 
 
 def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
