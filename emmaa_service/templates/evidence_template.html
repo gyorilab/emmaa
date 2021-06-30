@@ -75,8 +75,9 @@
         <button class="btn btn-outline-secondary" onClick="redirectSelection(document.getElementById('sortSelect'), 'sort_by')" type="button">Load Statements</button>
       </div>
     </div>
-    <div class="d-inline-flex p-2 input-group" style="width: 500px;  padding:0%">
+    <div class="dropdown col d-inline-flex p-2 input-group" style="width: 500px;  padding:0%">
       <select class="custom-select" id="stmtTypeSelect" aria-label="Example select with button addon">
+      <option value="" selected="selected" disabled="disabled" hidden="hidden">Filter by statement type</option>
       {% for stmt_type in all_stmt_types %}
         {% if stmt_type|lower in stmt_types %}
           <option selected value="{{ stmt_type }}">{{ stmt_type }}</option>
