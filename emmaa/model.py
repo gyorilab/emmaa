@@ -957,9 +957,14 @@ def load_extra_evidence(stmts):
     stmt_hashes = [stmt.get_hash() for stmt in stmts]
     # get stmts from database
     logger.info(f'Loading additional evidences for {len(stmts)} stmts from db')
-    # TODO handle batches of 2000 hashes at a time
-    proc = get_statements_by_hash(stmt_hashes)
-    new_stmts = proc.statements
+    new_stmts = []
+    offset = 0
+    while True:
+        proc = get_statements_by_hash(stmt_hashes[offset:(offset + 2000)])
+        new_stmts += proc.statements
+        offset += 2000
+        if offset >= len(stmt_hashes):
+            break
     logger.info(f'Found {len(new_stmts)} stmts in the database')
     evid_by_hash = {stmt.get_hash(): stmt.evidence for stmt in new_stmts}
     # add db evidence to emmaa stmts evidence
