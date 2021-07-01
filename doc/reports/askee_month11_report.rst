@@ -60,7 +60,7 @@ model. It can be often useful to focus on one type of interactions when
 browsing or curating statements. To enable this, we added a filter by statement
 type that is shown on the image below.
 
-.. figure:: ../_static/images/query_links.png
+.. figure:: ../_static/images/stmts_by_type.png
    :align: center
 
    *COVID-19 model statements filtered to Inhibition*
