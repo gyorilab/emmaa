@@ -1,6 +1,6 @@
 import logging
 
-__version__ = '1.15.0'
+__version__ = '1.16.0'
 
 logging_format = '%(levelname)s: [%(asctime)s] %(name)s - %(message)s'
 logging.basicConfig(format=logging_format, level=logging.INFO,
