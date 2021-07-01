@@ -144,7 +144,11 @@ function redirectOneStep(value, isQuery) {
 function redirectOneArgument(newValue, param) {
   let loc = window.location.href;
   let currentValue = new URL(loc).searchParams.get(param);
-  var redirect = loc.replace(`${param}=${currentValue}`, `${param}=${newValue}`)
+  if (currentValue) {
+    var redirect = loc.replace(`${param}=${currentValue}`, `${param}=${newValue}`)
+  } else {
+    var redirect = loc.concat(`&${param}=${newValue}`)
+  }
   location.replace(redirect);
 }
 
@@ -162,6 +166,12 @@ function redirectSelection(ddSelect, param) {
   redirectOneArgument(newValue, param);
 }
 
+function removeArgument(param) {
+  let loc = window.location.href;
+  let currentValue = new URL(loc).searchParams.get(param);
+  var redirect = loc.replace(`&${param}=${currentValue}`, '')
+  location.replace(redirect);
+}
 
 function clearTables(arrayOfTableBodies) {
   for (let tableBody of arrayOfTableBodies) {
@@ -422,7 +432,12 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     columns: [
       stmt_freq_array
     ],
-    type: 'bar'
+    type: 'bar',
+    onclick: function (d) { 
+      console.log(d)
+      let model_name = window.location.href.split('/')[4].split('?')[0]
+      window.open(`/all_statements/${model_name}?sort_by=evidence&page=1&filter_curated=False&stmt_type=${stmt_type_array[d.x]}`)
+    }
   };
 
   let stmtTypeChart = generateBar(stmtTypDistId, stmtTypeDataParams, stmt_type_array, '');

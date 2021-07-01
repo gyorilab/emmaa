@@ -47,21 +47,22 @@
   {{ msg }}
   {% endif %}
   <div>
-    <button class="btn btn-outline-secondary" {% if not prev %} disabled {% endif %} onClick="redirectOneArgument('{{ prev }}', 'page')" type="button">❮ Previous</button>
-    <button class="btn btn-outline-secondary" {% if not next %} disabled {% endif %} onClick="redirectOneArgument('{{ next }}', 'page')" type="button">Next ❯</button>
+    <button class="btn btn-outline-secondary p-2" style="position: relative; left: 16px" {% if not prev %} disabled {% endif %} onClick="redirectOneArgument('{{ prev }}', 'page')" type="button">❮ Previous</button>
+    <button class="btn btn-outline-secondary p-2" style="position: relative; left: 15px" {% if not next %} disabled {% endif %} onClick="redirectOneArgument('{{ next }}', 'page')" type="button">Next ❯</button>
     {% if filter_curated %}
-    <button class="btn btn-outline-secondary" onClick="redirectOneArgument('false', 'filter_curated')" type="button">Show Curated</button>
+    <button class="btn btn-outline-secondary p-2" style="position: relative; left: 15px" onClick="redirectOneArgument('false', 'filter_curated')" type="button">Show Curated</button>
     {% else %}
-    <button class="btn btn-outline-secondary" onClick="redirectOneArgument('true', 'filter_curated')" type="button">Filter Curated</button>
+    <button class="btn btn-outline-secondary p-2" style="position: relative; left: 15px" onClick="redirectOneArgument('true', 'filter_curated')" type="button">Filter Curated</button>
     {% endif %}
     {% if link %}
     <a href='{{ link }}' download>
-      <button class="btn btn-outline-secondary" type="button">Download Statements</button>
+      <button class="btn btn-outline-secondary p-2" style="position: relative; left: 15px" type="button">Download Statements</button>
     </a> 
     {% endif %}
-    <div class="d-inline-flex p-2 input-group" style="width: 410px;">
+    <br>
+    <div class="d-inline-flex p-2 input-group" style="width: 410px; position: relative; left: 8px; padding:0%">
       <select class="custom-select" id="sortSelect" aria-label="Example select with button addon">
-      {% for sorting in ['evidence', 'paths'] %}
+      {% for sorting in ['evidence', 'paths', 'belief'] %}
         {% if sort_by == sorting %}
           <option selected value="{{ sorting }}">Sorting by {{ sorting }}</option>
         {% else %}
@@ -74,6 +75,25 @@
         <button class="btn btn-outline-secondary" onClick="redirectSelection(document.getElementById('sortSelect'), 'sort_by')" type="button">Load Statements</button>
       </div>
     </div>
+    <div class="dropdown col d-inline-flex p-2 input-group" style="width: 500px;  padding:0%">
+      <select class="custom-select" id="stmtTypeSelect" aria-label="Example select with button addon">
+      <option value="" selected="selected" disabled="disabled" hidden="hidden">Filter by statement type</option>
+      {% for stmt_type in all_stmt_types %}
+        {% if stmt_type|lower in stmt_types %}
+          <option selected value="{{ stmt_type }}">{{ stmt_type }}</option>
+        {% else %}
+          <option value="{{ stmt_type }}">{{ stmt_type }}</option>
+        {% endif %}
+      {% endfor %}
+      </select>
+      <!-- selectModel(modelInfoTableBody, listTestResultsTableBody, testResultTableBody, ddSelect) -->
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" onClick="redirectSelection(document.getElementById('stmtTypeSelect'), 'stmt_type')" type="button">Filter Statements</button>
+      </div>
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" onClick="removeArgument('stmt_type')" type="button">Reset Filter</button>
+      </div>
+    </div>   
   </div>
 {% endif %}
 <div class="container" id="app">

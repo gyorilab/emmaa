@@ -809,13 +809,14 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     if path_counts:
         path_count = path_counts.get(stmt_hash)
     badges = _make_badges(evid_count, json_link, path_count,
+                          round(stmt.belief, 2),
                           cur_counts.get(stmt_hash))
     stmt_row = [
         (stmt.get_hash(refresh=True), english, evid, evid_count, badges)]
     return stmt_row
 
 
-def _make_badges(evid_count, json_link, path_count, cur_counts=None):
+def _make_badges(evid_count, json_link, path_count, belief, cur_counts=None):
     badges = [
         {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
          'symbol': None, 'title': 'View statement JSON', 'href': json_link,
@@ -824,7 +825,10 @@ def _make_badges(evid_count, json_link, path_count, cur_counts=None):
          'symbol': None, 'title': 'Evidence count for this statement',
          'loc': 'right'},
         {'label': 'paths', 'num': path_count, 'symbol': '\u2691',
-         'color': '#0099ff', 'title': 'Number of paths with this statement'}]
+         'color': '#0099ff', 'title': 'Number of paths with this statement'},
+        {'label': 'belief', 'num': belief, 'color': '#ffc266',
+         'symbol': None, 'title': 'Belief score for this statement',
+         'loc': 'right'}]
     if cur_counts:
         badges += [
             {'label': 'correct_this', 'num': cur_counts['this']['correct'],
@@ -1544,12 +1548,17 @@ def get_all_statements_page(model):
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
+    stmt_types = request.args.getlist('stmt_type')
     date = request.args.get('date')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
     stmts = _load_stmts_from_cache(model, date)
+    if stmt_types:
+        stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
+        stmts = [stmt for stmt in stmts if
+                 type(stmt).__name__.lower() in stmt_types]
     stmts_by_hash = {}
     for stmt in stmts:
         stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
@@ -1557,8 +1566,9 @@ def get_all_statements_page(model):
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
     if filter_curated:
-        stmts = [stmt for stmt in stmts if str(stmt.get_hash(refresh=True))
-                 not in cur_counts]
+        stmts_by_hash = {k: v for (k, v) in stmts_by_hash.items()
+                         if k not in cur_counts}
+        stmts = list(stmts_by_hash.values())
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
@@ -1599,6 +1609,9 @@ def get_all_statements_page(model):
                     stmts.append(stmts_by_hash[stmt_hash])
                 except KeyError:
                     continue
+    elif sort_by == 'belief':
+        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
+            offset:offset+1000]
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
@@ -1629,7 +1642,9 @@ def get_all_statements_page(model):
                            sort_by=sort_by,
                            link=link,
                            date=date,
-                           tabs=False)
+                           tabs=False,
+                           all_stmt_types=get_queryable_stmt_types(),
+                           stmt_types=stmt_types)
 
 
 @app.route('/demos')
