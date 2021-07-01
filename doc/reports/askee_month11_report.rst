@@ -94,6 +94,60 @@ an option to sort statements by their belief score.
 Using custom belief scorers for EMMAA models
 --------------------------------------------
 
+During this period we have developed an approach to deploying custom
+probability models to estimate the reliability ("belief") of statements in
+EMMAA models. As part of our ongoing efforts to validate and improve the
+accuracy of these belief estimates, we have developed and validated several
+machine learning models (e.g. logistic regression, random forest) to
+empirically estimate belief based on a dataset of roughly 5,000 statements that
+we have manually curated. A valuable feature of these models is that they can
+capture the role of features other than reader evidence counts in estimating
+belief; for example, we have found that statement type and number of unique
+supporting PMIDs are also informative. We have also extended this approach to
+include "hybrid" models that incorporate machine learning for estimating
+reliability from text mining sources and a set of priors for curated databases.
+
+We created a framework for deploying versioned, alternative belief models to S3
+after training and subsequently making use of them during the assembly of EMMAA
+models. The EMMAA model configuration now takes a user-configurable parameter
+specifying which belief model to load and use. Statement belief estimates are
+now also displayed in the front-end and can be used to sort statements in the
+All Statements view (see screenshot below).
+
+.. figure:: ../_static/images/belief_badge_screenshot.png
+   :align: center
+
+   *All statements view for the BRCA model, showing the orange belief badges on
+   the right*
+
+We are working to draw on additional statement evidences that are in the INDRA
+Database (but outside the scope of the EMMAA model) to enhance estimates of
+belief. This way, a statement that may appear rarely in text for a specific
+disease context can be corroborated by information appearing outside that
+context, such as in a pathway database or in papers not incorporated by the
+EMMAA model. This will separate the technical estimate of a statement's
+reliability from its canonicalness in a specific context, allowing users to
+identify high-confidence extractions that may be novel in the context of a
+particular disease.
+
+To demonstrate these new developments, we computed belief estimates for the
+neurofibromatosis model in four different configurations: with the default
+belief model vs. a new, partly machine-learned "hybrid" model, and with
+EMMAA-only evidences vs. evidences from both EMMAA and the INDRA DB. As shown
+in the figure below, the inclusion of additional evidence from the INDRA DB
+shifts belief estimates to the right due to the addition of extra evidence,
+while the hybrid model provides a more continuous stratification of belief than the default belief model. In the upcoming period we will evaluate the use of
+this approach in other models and determine whether the new belief estimates are well-calibrated.
+
+.. figure:: ../_static/images/hybrid_db_belief.png
+   :align: center
+
+   *Belief scores of statements in the EMMAA model, using the default belief
+   model (left plots) or random-forest-based hybrid model (right plots); and
+   using only EMMAA evidence (top plots) or including evidences from the
+   INDRA DB (bottom plots).*
+
+
 Developments in relation extraction from text
 ---------------------------------------------
 
