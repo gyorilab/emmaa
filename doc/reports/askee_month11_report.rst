@@ -23,9 +23,21 @@ their daily updated JSON exports are available for download on S3 and on EMMAA
 dashboard. We also uploaded two examples of GroMEt exports to the shared GitHub
 repo maintained by Galois team for the upcoming ASKE-E final demo.
 
-
 BioCreative participation
 -------------------------
+The BioCreative challenge is a longstanding community effort to evaluate text
+mining systems applied to biology. This year, BioCreative includes a special
+track for COVID-19 text mining tool interactive demos which focuses on text
+mining-based tools specifically developed to support COVID-19 research efforts.
+We registered for this track with a proposal on the EMMAA COVID-19 model titled
+"A self-updating causal model of COVID-19 mechanisms built from the scientific
+literature", and our proposal was accepted for participation. We also received
+some useful feedback on how to improve the EMMAA model query interface and the
+statement browser interface which we subsequently implemented (as described in
+this report). Going forward, we will continue to improve the EMMAA COVID-19
+model and surrounding features, and aim to highlight ways in which EMMAA goes
+significantly beyond just text mining and knowledge assembly, encompassing also
+automated modeling and data analysis based on text mining results.
 
 Improving the EMMAA model query interface
 -----------------------------------------
@@ -85,4 +97,29 @@ Using custom belief scorers for EMMAA models
 Developments in relation extraction from text
 ---------------------------------------------
 
+We have previously reported on completing our goals to enable named entity
+recognition and grounding in the Reach reading system for (1) viral proteins
+(2) human and non-human (including viral) protein chains and fragments, and
+have developed new algorithms in INDRA for organism disambiguation for proteins
+in the context of a given publication.
 
+This month, we continued our work on creating a training data set for
+recognizing causal precedence in text. The goal is to find a set of positive
+and negative examples where a paper describes an A-B interaction and also
+a B-C interaction, and an A->B->C causal chain is implied (in the positive
+case) or not implied (in the negative case). This labeled data can then be
+used to train a classifier that can be run on elementary relation extractions
+to reconstruct causal precedence relations. We have previously reported on
+our approach to automatically finding positive examples. Since then, we have
+worked on an alternative approach to finding negative examples. First, we
+searched for papers in which both the A-B and the B-C relationship could be
+found within a specified distance of each other. To improve the
+quality/reliability of each example, we also implemented a filter to
+retain only A-B, B-C pairs where each is supported by additional background
+evidence beyond the given paper (this helps eliminate text mining errors).
+We then reviewed the results to curate positive vs negative examples.
+We found that the vast majority of examples remaining were positive
+for causal precedence. This imples that proximity in text may often be
+sufficient to infer causal precedence across A-B, B-C relations. We are
+investigating this further while continuing to develop an improved method
+for finding negative examples.
