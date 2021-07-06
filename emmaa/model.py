@@ -953,14 +953,29 @@ def load_belief_scorer(bucket, key):
     return scorer
 
 
-def load_extra_evidence(stmts):
+def load_extra_evidence(stmts, ev_limit=10):
+    """Load additional evidence for statements from database.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of statements to load evidence for.
+    ev_limit : Optional[int]
+        How many evidences to load from the database for each statement.
+
+    Returns
+    -------
+    stmts : list[indra.statements.Statement]
+        A list of statements with additional evidence.
+    """
     stmt_hashes = [stmt.get_hash() for stmt in stmts]
     # get stmts from database
     logger.info(f'Loading additional evidences for {len(stmts)} stmts from db')
     new_stmts = []
     offset = 0
     while True:
-        proc = get_statements_by_hash(stmt_hashes[offset:(offset + 2000)])
+        proc = get_statements_by_hash(stmt_hashes[offset:(offset + 2000)],
+                                      ev_limit=ev_limit)
         new_stmts += proc.statements
         offset += 2000
         if offset >= len(stmt_hashes):
@@ -976,7 +991,8 @@ def load_extra_evidence(stmts):
 
 @register_pipeline
 def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
-                                        belief_scorer=None, **kwargs):
+                                        belief_scorer=None, ev_limit=10,
+                                        **kwargs):
     """Run preassembly on a list of statements.
 
     Parameters
@@ -991,6 +1007,8 @@ def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
+    ev_limit : Optional[int]
+        How many evidences to load from the database for each statement.
 
     Returns
     -------
@@ -998,7 +1016,7 @@ def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
         A list of preassembled top-level statements.
     """
     temp_stmts = deepcopy(stmts_in)
-    temp_stmts = load_extra_evidence(temp_stmts)
+    temp_stmts = load_extra_evidence(temp_stmts, ev_limit=ev_limit)
     preassembled_stmts = run_preassembly(
         temp_stmts, return_toplevel=return_toplevel,
         belief_scorer=belief_scorer, **kwargs)
