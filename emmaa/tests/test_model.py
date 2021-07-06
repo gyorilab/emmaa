@@ -2,7 +2,8 @@ import datetime
 from nose.plugins.attrib import attr
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
-from emmaa.model import EmmaaModel, pysb_to_gromet, load_extra_evidence
+from emmaa.model import EmmaaModel, pysb_to_gromet, load_extra_evidence, \
+    filter_eidos_ungrounded
 from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
 
@@ -176,3 +177,38 @@ def test_load_extra_evidence():
     assert len(updated) == 1
     assert updated[0].get_hash() == stmt_hash
     assert len(updated[0].evidence) > 10
+
+
+def test_filter_eidos_ungrounded():
+    stmts = [
+        # Grounded Eidos
+        Activation(Agent('A', db_refs={'HGNC': '1097'}),
+                   Agent('B', db_refs={'HGNC': '6840'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='eidos',
+                                      text_refs={'TRID': '1234'})]),
+        # Ungrounded Eidos
+        Activation(Agent('B', db_refs={'TEXT': 'B'}),
+                   Agent('C', db_refs={'TEXT': 'C'}),
+                   evidence=[Evidence(text='B activates C.',
+                                      source_api='eidos',
+                                      text_refs={'TRID': '2345'})]),
+        # Grounded not Eidos
+        Activation(Agent('C', db_refs={'HGNC': '1097'}),
+                   Agent('D', db_refs={'HGNC': '6840'}),
+                   evidence=[Evidence(text='C activates D.',
+                                      source_api='trips',
+                                      text_refs={'TRID': '1234'})]),
+        # Ungrounded not Eidos
+        Activation(Agent('D', db_refs={'TEXT': 'D'},
+                         activity=ActivityCondition('activity', True)),
+                   Agent('E', db_refs={'TEXT': 'E'}),
+                   evidence=[Evidence(text='D activates E.',
+                                      source_api='trips',
+                                      text_refs={'TRID': '2345'})])
+        ]
+    hashes = [stmt.get_hash() for stmt in stmts]
+    filtered = filter_eidos_ungrounded(stmts)
+    assert len(filtered) == 3
+    filtered_hashes = [stmt.get_hash() for stmt in filtered]
+    assert set(hashes) - set(filtered_hashes) == {hashes[1]}
