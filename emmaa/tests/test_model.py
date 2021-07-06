@@ -1,7 +1,8 @@
 import datetime
+from nose.plugins.attrib import attr
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
-from emmaa.model import EmmaaModel, pysb_to_gromet
+from emmaa.model import EmmaaModel, pysb_to_gromet, load_extra_evidence
 from emmaa.priors import SearchTerm
 from emmaa.statements import EmmaaStatement
 
@@ -158,3 +159,20 @@ def test_pysb_to_gromet():
     # All junctions and wires have unique uids
     assert len(set([j.uid for j in gromet.junctions])) == len(gromet.junctions)
     assert len(set([w.uid for w in gromet.wires])) == len(gromet.wires)
+
+
+# queries INDRA DB
+@attr('notravis', 'nonpublic')
+def test_load_extra_evidence():
+    stmt = Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                      Agent('MAP2K1', db_refs={'HGNC': '6840'}),
+                      evidence=[Evidence(text='BRAF activates MAP2K1.',
+                                         source_api='assertion',
+                                         text_refs={'TRID': '1234'})])
+    assert len(stmt.evidence) == 1
+    stmt_hash = stmt.get_hash()
+    updated = load_extra_evidence([stmt])
+    # Get back the same statement with extra evidence
+    assert len(updated) == 1
+    assert updated[0].get_hash() == stmt_hash
+    assert len(updated[0].evidence) > 10
