@@ -90,6 +90,17 @@ def add_chebi_parents(bio_ontology: BioOntology):
     bio_ontology.add_edges_from(edges_to_add)
 
 
+def add_ido_parents(bio_ontology: BioOntology):
+    ido_root = bio_ontology.label('IDO', '0')
+    bio_ontology.add_node(ido_root, name='infectious disease concept')
+    edges_to_add = []
+    for node in bio_ontology.nodes():
+        if bio_ontology.get_ns(node) == 'IDO' and not \
+                bio_ontology.get_parents(*bio_ontology.get_ns_id(node)):
+            edges_to_add.append((node, ido_root, {'type': 'isa'}))
+    bio_ontology.add_edges_from(edges_to_add)
+
+
 def add_protein_parents(bio_ontology):
     """Add parent categories for proteins in the ontology."""
     # Add root nodes for human and non-human proteins
@@ -166,7 +177,6 @@ def add_drugbank_parents(bio_ontology):
             edges_to_add.append((node, drugbank_root, {'type': 'isa'}))
     print('Adding %d DRUGBANK isa edges.' % len(edges_to_add))
     bio_ontology.add_edges_from(edges_to_add)
-
 
 
 def get_category(node):
@@ -263,6 +273,7 @@ if __name__ == '__main__':
     add_efo_parents(bio_ontology)
     map_node_names(bio_ontology, rename_map)
     add_drugbank_parents(bio_ontology)
+    add_ido_parents(bio_ontology)
     node_link = networkx.node_link_data(bio_ontology)
     fname = 'bio_ontology_v%s_export_v%s.json.gz' % \
         (bio_ontology.version, export_version)
