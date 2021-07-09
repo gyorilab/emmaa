@@ -953,7 +953,7 @@ def load_belief_scorer(bucket, key):
     return scorer
 
 
-def load_extra_evidence(stmts, ev_limit=10):
+def load_extra_evidence(stmts, ev_limit=10, batch_size=2000):
     """Load additional evidence for statements from database.
 
     Parameters
@@ -974,10 +974,10 @@ def load_extra_evidence(stmts, ev_limit=10):
     new_stmts = []
     offset = 0
     while True:
-        proc = get_statements_by_hash(stmt_hashes[offset:(offset + 2000)],
+        proc = get_statements_by_hash(stmt_hashes[offset:(offset + batch_size)],
                                       ev_limit=ev_limit)
         new_stmts += proc.statements
-        offset += 2000
+        offset += batch_size
         if offset >= len(stmt_hashes):
             break
     logger.info(f'Found {len(new_stmts)} stmts in the database')
