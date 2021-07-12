@@ -21,6 +21,7 @@ from indra.sources.indra_db_rest import get_statements_by_hash
 from indra.sources.minerva import process_from_web
 from indra.explanation.reporting import stmt_from_rule
 from indra_db.client.principal.curation import get_curations
+from indra_db.client import HasHash
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -953,15 +954,22 @@ def load_belief_scorer(bucket, key):
     return scorer
 
 
-def load_extra_evidence(stmts, ev_limit=10, batch_size=2000):
+def load_extra_evidence(stmts, method='db_query', ev_limit=1000,
+                        batch_size=3000):
     """Load additional evidence for statements from database.
 
     Parameters
     ----------
     stmts : list[indra.statements.Statement]
         A list of statements to load evidence for.
+    method : str
+        What method to use to load evidence (accepted values: db_query and
+        rest_api). Default: db_query.
     ev_limit : Optional[int]
         How many evidences to load from the database for each statement.
+        Default: 1000.
+    batch_size : Optional[int]
+        Batch size used for querying. Default: 3000.
 
     Returns
     -------
@@ -970,13 +978,23 @@ def load_extra_evidence(stmts, ev_limit=10, batch_size=2000):
     """
     stmt_hashes = [stmt.get_hash() for stmt in stmts]
     # get stmts from database
-    logger.info(f'Loading additional evidences for {len(stmts)} stmts from db')
+    logger.info(f'Loading additional evidences for {len(stmts)} stmts from db'
+                f' using {method} method')
     new_stmts = []
     offset = 0
     while True:
-        proc = get_statements_by_hash(stmt_hashes[offset:(offset + batch_size)],
-                                      ev_limit=ev_limit)
-        new_stmts += proc.statements
+        if batch_size:
+            hashes_batch = stmt_hashes[offset:(offset + batch_size)]
+        else:
+            hashes_batch = stmt_hashes
+        if method == 'rest_api':
+            proc = get_statements_by_hash(hashes_batch, ev_limit=ev_limit)
+            batch_stmts = proc.statements
+        elif method == 'db_query':
+            q = HasHash(hashes_batch)
+            res = q.get_statements(ev_limit=ev_limit)
+            batch_stmts = res.statements()
+        new_stmts += batch_stmts
         offset += batch_size
         if offset >= len(stmt_hashes):
             break
@@ -991,8 +1009,9 @@ def load_extra_evidence(stmts, ev_limit=10, batch_size=2000):
 
 @register_pipeline
 def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
-                                        belief_scorer=None, ev_limit=10,
-                                        **kwargs):
+                                        belief_scorer=None,
+                                        query_method='db_query', ev_limit=10,
+                                        batch_size=3000, **kwargs):
     """Run preassembly on a list of statements.
 
     Parameters
@@ -1007,8 +1026,16 @@ def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
+    query_method : str
+        What method to use to load evidence (accepted values: db_query and
+        rest_api). Default: db_query.
     ev_limit : Optional[int]
         How many evidences to load from the database for each statement.
+        Default: 1000.
+    batch_size : Optional[int]
+        Batch size used for querying. Default: 3000.
+    kwargs : dict
+        Other keyword arguments to pass to run_preassembly.
 
     Returns
     -------
@@ -1016,7 +1043,8 @@ def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
         A list of preassembled top-level statements.
     """
     temp_stmts = deepcopy(stmts_in)
-    temp_stmts = load_extra_evidence(temp_stmts, ev_limit=ev_limit)
+    temp_stmts = load_extra_evidence(
+        temp_stmts, query_method, ev_limit=ev_limit, batch_size=batch_size)
     preassembled_stmts = run_preassembly(
         temp_stmts, return_toplevel=return_toplevel,
         belief_scorer=belief_scorer, **kwargs)
