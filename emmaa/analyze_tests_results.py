@@ -403,6 +403,9 @@ class ModelRound(Round):
         }
         return cur_stats
 
+    def get_beliefs(self):
+        return [stmt.belief for stmt in self.statements]
+
 
 class TestRound(Round):
     """Analyzes the results of one test round.
@@ -679,6 +682,7 @@ class ModelStatsGenerator(StatsGenerator):
             'agent_distr': self.latest_round.get_agent_distribution(),
             'stmts_by_evidence': self.latest_round.get_statements_by_evidence(),
             'sources': self.latest_round.get_sources_distribution(),
+            'assembled_beliefs': self.latest_round.get_beliefs(),
             'all_stmts': self.latest_round.get_english_statements_by_hash()
         }
 
