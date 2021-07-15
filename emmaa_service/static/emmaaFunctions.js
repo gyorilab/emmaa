@@ -700,22 +700,27 @@ Found here:
 https://c3js.org/
 */
 
-function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
+function generateBar(chartDivId, dataParams, ticksLabels, chartTitle, widthRatio=0.5, axisOverride=null) {
+  if (axisOverride) {
+    var axis = axisOverride;
+  } else {
+    var axis = {
+      rotated: true,
+      x: {
+          type: 'category',
+          categories: ticksLabels
+          }
+      };
+  }
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
     bar:  {
       width: {
-        ratio: 0.5 // this makes bar width 50% of length between ticks
+        ratio: widthRatio // this makes bar width 50% of length between ticks
       }
     },
-    axis: {
-      rotated: true,
-      x: {
-          type: 'category',
-          categories: ticksLabels
-      }
-    },
+    axis: axis,
     title: {
       text: chartTitle
     }
