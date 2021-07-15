@@ -5,6 +5,7 @@ import boto3
 import logging
 import argparse
 import requests
+import numpy as np
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 from flask import abort, Flask, request, Response, render_template, jsonify,\
@@ -1161,6 +1162,14 @@ def get_model_dashboard(model):
                         ('', str(c), '')] for paper_id, c in trids_counts]
         new_papers = get_new_papers(model, model_stats, date)
 
+    belief_data = {}
+    beliefs = model_stats['model_summary'].get('assembled_beliefs')
+    if beliefs:
+        belief_freq, belief_x = np.histogram(
+            beliefs, np.linspace(min(beliefs), max(beliefs), 11))
+        belief_x = [round(n, 2) for n in belief_x]
+        belief_freq = ['Beliefs'] + list(belief_freq) + [0]
+        belief_data = {'x': belief_x, 'freq': belief_freq}
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -1193,7 +1202,8 @@ def get_model_dashboard(model):
                            tab=tab,
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
-                           new_papers=new_papers)
+                           new_papers=new_papers,
+                           belief_data=belief_data)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
