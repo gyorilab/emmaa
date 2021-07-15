@@ -1,6 +1,11 @@
 {% from "path_macros.html" import path_card %}
 
 {% macro belief_tab(belief_data) -%}
+<style>
+.beliefDistr .c3-axis-x .tick text {
+  transform: translate(-50px,0);
+}
+</style>
 <div class="container">
   <div class="card">
     <div class="card-header">
