@@ -386,8 +386,8 @@ function subscribe_model(api_route, subscribe) {
 
 
 // Populate model and test stats jsons to modelTestResultBody
-function populateTestResultTable(tableBody, model_json, test_json) {
-
+function populateTestResultTable(tableBody, model_json, test_json, belief_data) {
+  console.log(belief_data)
   // IDs
   let stmtTypDistId = '#modelTestResultBody';
   let pasRatId = '#passedRatio';
@@ -400,6 +400,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let stmtCur = '#stmtCurations';
   let tagCur = '#tagCurations';
   let curTime = '#dateCurations';
+  let beliefs = '#beliefDistr';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -663,6 +664,33 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     var curCountChart = generateLineArea(curTime, curCountDataParams, '', curTicks, format='%Y-%m-%d');
   }
 
+  // Belief histogram
+  var beliefChart = NaN;
+  if (Object.keys(belief_data).length > 0) {
+    let belief_array = belief_data.x;
+    let belief_freq_array = belief_data.freq;
+    console.log(belief_array)
+    console.log(belief_freq_array)
+    let beliefDataParams = {
+      columns: [
+        belief_freq_array
+      ],
+      type: 'bar'
+    };
+    let axis = {
+      rotated: false,
+      x: {
+          max: 9,
+          type: 'category',
+          categories: belief_array,
+          tick: {
+            outer: true
+          }
+      }
+    };
+    var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis);
+  }
+
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
@@ -679,7 +707,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     if (curCountChart) {
       curCountChart.flush();
     }
+    if (beliefChart) {
+      beliefChart.flush();
+    }
   });
+
   $(function() {
     //Executed on page load with URL containing an anchor tag.
     if($(location.href.split("#")[1])) {
