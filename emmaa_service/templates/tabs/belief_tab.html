@@ -1,0 +1,18 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro belief_tab(belief_data) -%}
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Belief Distribution</h4>
+    </div>
+    <div class="card-body">
+    {% if belief_data %}
+    <div class="container" id="beliefDistr"></div>
+    {% else %}
+    No belief data is available at the moment
+    {% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}
