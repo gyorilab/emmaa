@@ -688,7 +688,13 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
           }
       }
     };
-    var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis);
+    // Move the bar text to between the bars (histogram view)
+    // https://stackoverflow.com/questions/43258981/c3js-bar-chart-align-data-to-x-tick-start-position-not-centered
+    let onrendered_func = function () {
+      var thisChart = d3.select(this.config.bindto);
+      thisChart.selectAll(".c3-axis-x .tick text").style("transform", "translate(-50px,0)");
+    }
+    var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis, onrendered_func);
   }
 
   // Force redraw of charts to prevent chart overflow
@@ -732,7 +738,7 @@ Found here:
 https://c3js.org/
 */
 
-function generateBar(chartDivId, dataParams, ticksLabels, chartTitle, widthRatio=0.5, axisOverride=null) {
+function generateBar(chartDivId, dataParams, ticksLabels, chartTitle, widthRatio=0.5, axisOverride=null, onrendered_func=null) {
   if (axisOverride) {
     var axis = axisOverride;
   } else {
@@ -755,7 +761,8 @@ function generateBar(chartDivId, dataParams, ticksLabels, chartTitle, widthRatio
     axis: axis,
     title: {
       text: chartTitle
-    }
+    },
+    onrendered: onrendered_func
   });
 }
 
