@@ -1,6 +1,69 @@
 {% from "path_macros.html" import path_card %}
 
 {% macro belief_tab(belief_data) -%}
+<!-- Belief range CSS and HTML adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
+<style>
+  section.range-slider {
+    position: relative;
+    width: 500px;
+    height: 15px;
+    text-align: center;
+}
+
+section.range-slider input {
+    -webkit-appearance: none;
+    pointer-events: none;
+    position: absolute;
+    overflow: hidden;
+    left: 0;
+    top: 25px;
+    width: 500px;
+    outline: none;
+    height: 15px;
+    border-radius: 5px; 
+    margin: 0;
+    padding: 0;
+    background: #d3d3d3;
+}
+
+section.range-slider input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: all;
+    position: relative;
+    z-index: 1;
+    outline: 0;
+    height: 20px;
+    width: 15px;
+    cursor: pointer;
+    border-radius: 50%; 
+    background: #007bff;
+}
+
+section.range-slider input::-moz-range-thumb {
+    pointer-events: all;
+    position: relative;
+    z-index: 10;
+    -moz-appearance: none;
+    width: 9px;
+    
+}
+
+section.range-slider input::-moz-range-track {
+    position: relative;
+    z-index: -1;
+    background-color: rgba(0, 0, 0, 1);
+    border: 0;
+}
+section.range-slider input:last-of-type::-moz-range-track {
+    -moz-appearance: none;
+    background: none transparent;
+    border: 0;
+}
+  section.range-slider input[type=range]::-moz-focus-outer {
+  border: 0;
+}
+</style>
 <div class="container">
   <div class="card">
     <div class="card-header">
@@ -14,5 +77,18 @@
     {% endif %}
     </div>
   </div>
+  <div class="card" style="height: 200px;">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">View Statements within Belief Range</h4>
+    </div>
+    <div class="card-body">
+      <section class="range-slider">
+        <span class="rangeValues"></span>
+        <input value="{{ belief_data.x[8] }}" min="{{ belief_data.x[0] }}" max="{{ belief_data.x[10] }}" step="0.01" type="range">
+        <input value="{{ belief_data.x[10] }}" min="{{ belief_data.x[0] }}" max="{{ belief_data.x[10] }}" step="0.01" type="range">
+      </section>
+    </div>
+  </div>
 </div>
+
 {%- endmacro %}
