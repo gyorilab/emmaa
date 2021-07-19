@@ -1555,30 +1555,43 @@ def get_statement_evidence_page():
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
     """Render page with all statements for the model."""
+    # Get all arguments
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
     filter_curated = request.args.get('filter_curated', False)
     stmt_types = request.args.getlist('stmt_type')
+    if stmt_types:
+        stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
     date = request.args.get('date')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
+
+    # Load full list of statements
     stmts = _load_stmts_from_cache(model, date)
-    if stmt_types:
-        stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
-        stmts = [stmt for stmt in stmts if
-                 type(stmt).__name__.lower() in stmt_types]
-    stmts_by_hash = {}
-    for stmt in stmts:
-        stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
+
+    stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt for stmt in stmts}
     msg = None
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
-    if filter_curated:
-        stmts_by_hash = {k: v for (k, v) in stmts_by_hash.items()
-                         if k not in cur_counts}
-        stmts = list(stmts_by_hash.values())
+
+    # Helper function for filtering statements on different conditions
+    def filter_stmt(stmt):
+        accepted = []
+        stmt_hash = str(stmt.get_hash(refresh=True))
+        if stmt_types:
+            accepted.append(type(stmt).__name__.lower() in stmt_types)
+        if filter_curated:
+            accepted.append(stmt_hash not in cur_counts)
+        keep = all(accepted)
+        if not keep:
+            stmts_by_hash.pop(stmt_hash, None)
+        return all(accepted)
+
+    # Filter statements with all filters
+    stmts = list(filter(filter_stmt, stmts))
+
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
