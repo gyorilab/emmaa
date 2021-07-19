@@ -823,3 +823,15 @@ window.onload = function(){
         }
       }
 }
+
+function filterBelief(){
+  // Get slider values
+  var sliderSections = document.getElementsByClassName("range-slider");
+  var slides = sliderSections[0].getElementsByTagName("input");
+    var slide1 = parseFloat( slides[0].value );
+    var slide2 = parseFloat( slides[1].value );
+  // Neither slider will clip the other, so make sure we determine which is larger
+  if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
+  let model_name = window.location.href.split('/')[4].split('?')[0]
+  window.open(`/statements_by_belief/${model_name}?min=${slide1}&max=${slide2}`, target="_blank")    
+}
