@@ -1010,7 +1010,7 @@ def load_extra_evidence(stmts, method='db_query', ev_limit=1000,
 @register_pipeline
 def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
                                         belief_scorer=None,
-                                        query_method='db_query', ev_limit=10,
+                                        query_method='db_query', ev_limit=1000,
                                         batch_size=3000, **kwargs):
     """Run preassembly on a list of statements.
 
