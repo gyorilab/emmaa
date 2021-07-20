@@ -1589,6 +1589,10 @@ def get_all_statements_page(model):
             accepted.append(type(stmt).__name__.lower() in stmt_types)
         if filter_curated:
             accepted.append(stmt_hash not in cur_counts)
+        if min_belief:
+            accepted.append(stmt.belief >= float(min_belief))
+        if max_belief:
+            accepted.append(stmt.belief <= float(max_belief))
         keep = all(accepted)
         if not keep:
             stmts_by_hash.pop(stmt_hash, None)
