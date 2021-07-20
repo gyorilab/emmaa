@@ -832,6 +832,23 @@ function filterBelief(){
     var slide2 = parseFloat( slides[1].value );
   // Neither slider will clip the other, so make sure we determine which is larger
   if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
-  let model_name = window.location.href.split('/')[4].split('?')[0]
-  window.open(`/statements_by_belief/${model_name}?min=${slide1}&max=${slide2}`, target="_blank")    
+  let loc = window.location.href;
+  if (loc.includes('all_statements')) {
+    if (loc.includes('min_belief')) {
+      min_belief = new URL(loc).searchParams.get('min_belief');
+      loc = loc.replace(`min_belief=${min_belief}`, `min_belief=${slide1}`)
+    } else {
+      loc = loc.concat(`&min_belief=${slide1}`)
+    }
+    if (loc.includes('max_belief')) {
+      max_belief = new URL(loc).searchParams.get('max_belief');
+      loc = loc.replace(`max_belief=${max_belief}`, `max_belief=${slide2}`)
+    } else {
+      loc = loc.concat(`&max_belief=${slide2}`)
+    }
+    location.replace(loc); 
+  }  else {
+    let model_name = loc.split('/')[4].split('?')[0]
+    window.open(`/all_statements/${model_name}?min_belief=${slide1}&max_belief=${slide2}&sort_by=belief`, target="_blank") 
+  }
 }
