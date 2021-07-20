@@ -1563,6 +1563,8 @@ def get_all_statements_page(model):
     if stmt_types:
         stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
     date = request.args.get('date')
+    min_belief = request.args.get('min_belief')
+    max_belief = request.args.get('max_belief')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
@@ -1575,6 +1577,9 @@ def get_all_statements_page(model):
     msg = None
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
+
+    beliefs = [stmt.belief for stmt in stmts]
+    belief_range = min(beliefs), max(beliefs)
 
     # Helper function for filtering statements on different conditions
     def filter_stmt(stmt):
@@ -1667,7 +1672,10 @@ def get_all_statements_page(model):
                            date=date,
                            tabs=False,
                            all_stmt_types=get_queryable_stmt_types(),
-                           stmt_types=stmt_types)
+                           stmt_types=stmt_types,
+                           belief_range=belief_range,
+                           min_belief=min_belief,
+                           max_belief=max_belief)
 
 
 @app.route('/demos')
