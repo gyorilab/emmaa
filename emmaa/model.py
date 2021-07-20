@@ -16,10 +16,12 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
 from indra.statements import stmts_from_json, Agent, ModCondition
 from indra.pipeline import AssemblyPipeline, register_pipeline
-from indra.tools.assemble_corpus import filter_grounded_only
+from indra.tools.assemble_corpus import filter_grounded_only, run_preassembly
+from indra.sources.indra_db_rest import get_statements_by_hash
 from indra.sources.minerva import process_from_web
 from indra.explanation.reporting import stmt_from_rule
 from indra_db.client.principal.curation import get_curations
+from indra_db.client import HasHash
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
 from emmaa.readers.aws_reader import read_pmid_search_terms
@@ -943,6 +945,119 @@ def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
 def get_search_term_names(model, bucket=EMMAA_BUCKET_NAME):
     config = load_config_from_s3(model, bucket=bucket)
     return [st['name'] for st in config['search_terms']]
+
+
+@register_pipeline
+def load_belief_scorer(bucket, key):
+    logger.info(f'Loading the belief model from {key}')
+    scorer = load_pickle_from_s3(bucket, key)
+    return scorer
+
+
+def load_extra_evidence(stmts, method='db_query', ev_limit=1000,
+                        batch_size=3000):
+    """Load additional evidence for statements from database.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of statements to load evidence for.
+    method : str
+        What method to use to load evidence (accepted values: db_query and
+        rest_api). Default: db_query.
+    ev_limit : Optional[int]
+        How many evidences to load from the database for each statement.
+        Default: 1000.
+    batch_size : Optional[int]
+        Batch size used for querying. Default: 3000.
+
+    Returns
+    -------
+    stmts : list[indra.statements.Statement]
+        A list of statements with additional evidence.
+    """
+    stmt_hashes = [stmt.get_hash() for stmt in stmts]
+    # get stmts from database
+    logger.info(f'Loading additional evidences for {len(stmts)} stmts from db'
+                f' using {method} method')
+    new_stmts = []
+    offset = 0
+    while True:
+        if batch_size:
+            hashes_batch = stmt_hashes[offset:(offset + batch_size)]
+        else:
+            hashes_batch = stmt_hashes
+        if method == 'rest_api':
+            proc = get_statements_by_hash(hashes_batch, ev_limit=ev_limit)
+            batch_stmts = proc.statements
+        elif method == 'db_query':
+            q = HasHash(hashes_batch)
+            res = q.get_statements(ev_limit=ev_limit)
+            batch_stmts = res.statements()
+        new_stmts += batch_stmts
+        offset += batch_size
+        if offset >= len(stmt_hashes):
+            break
+    logger.info(f'Found {len(new_stmts)} stmts in the database')
+    evid_by_hash = {stmt.get_hash(): stmt.evidence for stmt in new_stmts}
+    # add db evidence to emmaa stmts evidence
+    # this can create duplicates but they are handled by preassembly
+    for stmt in stmts:
+        stmt.evidence += evid_by_hash.get(stmt.get_hash(), [])
+    return stmts
+
+
+@register_pipeline
+def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
+                                        belief_scorer=None,
+                                        query_method='db_query', ev_limit=1000,
+                                        batch_size=3000, **kwargs):
+    """Run preassembly on a list of statements.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to preassemble.
+    return_toplevel : Optional[bool]
+        If True, only the top-level statements are returned. If False,
+        all statements are returned irrespective of level of specificity.
+        Default: True
+    belief_scorer : Optional[indra.belief.BeliefScorer]
+        Instance of BeliefScorer class to use in calculating Statement
+        probabilities. If None is provided (default), then the default
+        scorer is used.
+    query_method : str
+        What method to use to load evidence (accepted values: db_query and
+        rest_api). Default: db_query.
+    ev_limit : Optional[int]
+        How many evidences to load from the database for each statement.
+        Default: 1000.
+    batch_size : Optional[int]
+        Batch size used for querying. Default: 3000.
+    kwargs : dict
+        Other keyword arguments to pass to run_preassembly.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of preassembled top-level statements.
+    """
+    temp_stmts = deepcopy(stmts_in)
+    temp_stmts = load_extra_evidence(
+        temp_stmts, query_method, ev_limit=ev_limit, batch_size=batch_size)
+    preassembled_stmts = run_preassembly(
+        temp_stmts, return_toplevel=return_toplevel,
+        belief_scorer=belief_scorer, **kwargs)
+    belief_by_hash = {stmt.get_hash(): stmt.belief
+                      for stmt in preassembled_stmts}
+    logger.info('Assigning new beliefs to original statements')
+    stmts_out = []
+    for stmt in stmts_in:
+        stmt_hash = stmt.get_hash()
+        if stmt_hash in belief_by_hash:
+            stmt.belief = belief_by_hash[stmt_hash]
+            stmts_out.append(stmt)
+    return stmts_out
 
 
 def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
