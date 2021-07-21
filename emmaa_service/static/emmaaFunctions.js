@@ -692,7 +692,9 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
     // https://stackoverflow.com/questions/43258981/c3js-bar-chart-align-data-to-x-tick-start-position-not-centered
     let onrendered_func = function () {
       var thisChart = d3.select(this.config.bindto);
-      thisChart.selectAll(".c3-axis-x .tick text").style("transform", "translate(-50px,0)");
+      var width = thisChart.select(".c3-bar-0").node().getBoundingClientRect().width / 2;
+      console.log(width)
+      thisChart.selectAll(".c3-axis-x .tick text").style("transform", "translate(-"+width+"px,0)");
     }
     var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis, onrendered_func);
   }
