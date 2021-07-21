@@ -809,15 +809,17 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     path_count = 0
     if path_counts:
         path_count = path_counts.get(stmt_hash)
+    neg = len([ev for ev in stmt.evidence if ev.epistemics.get('negated')])
     badges = _make_badges(evid_count, json_link, path_count,
                           round(stmt.belief, 2),
-                          cur_counts.get(stmt_hash))
+                          cur_counts.get(stmt_hash), neg)
     stmt_row = [
         (stmt.get_hash(refresh=True), english, evid, evid_count, badges)]
     return stmt_row
 
 
-def _make_badges(evid_count, json_link, path_count, belief, cur_counts=None):
+def _make_badges(evid_count, json_link, path_count, belief, cur_counts=None,
+                 neg=None):
     badges = [
         {'label': 'stmt_json', 'num': 'JSON', 'color': '#b3b3ff',
          'symbol': None, 'title': 'View statement JSON', 'href': json_link,
@@ -844,6 +846,12 @@ def _make_badges(evid_count, json_link, path_count, belief, cur_counts=None):
             {'label': 'incorrect_other', 'symbol': '\u270E',
              'num': cur_counts['other']['incorrect'], 'color': '#ffcccc',
              'title': 'Curated as incorrect outside of this model'}]
+    if neg:
+        badges.append(
+            {'label': 'negative', 'num': neg,
+             'color': '#ffb3b3', 'symbol':  '\uFF0D ',
+             'title': f'Has {neg} negative evidence'}
+        )
     return badges
 
 
