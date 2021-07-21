@@ -680,7 +680,7 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
     let axis = {
       rotated: false,
       x: {
-          max: 9,
+          max: belief_data.x.length - 2,
           type: 'category',
           categories: belief_array,
           tick: {
