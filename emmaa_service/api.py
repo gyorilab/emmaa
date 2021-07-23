@@ -1172,6 +1172,10 @@ def get_model_dashboard(model):
 
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
+    if not beliefs:
+        stmts = _load_stmts_from_cache(model, date)
+        if stmts:
+            beliefs = [stmt.belief for stmt in stmts]
     if beliefs:
         belief_freq, x = np.histogram(beliefs, 'doane')
         belief_x = [round(n, 2) for n in x]
