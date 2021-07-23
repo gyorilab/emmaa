@@ -1173,8 +1173,11 @@ def get_model_dashboard(model):
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
     if beliefs:
-        belief_freq, belief_x = np.histogram(beliefs, 'doane')
-        belief_x = [round(n, 2) for n in belief_x]
+        belief_freq, x = np.histogram(beliefs, 'doane')
+        belief_x = [round(n, 2) for n in x]
+        # Sometimes the bins are too close and rounding gets identical numbers
+        if len(belief_x) != len(set(belief_x)):
+            belief_x = [round(n, 3) for n in x]
         belief_freq = ['Beliefs'] + list(belief_freq) + [0]
         belief_data = {'x': belief_x, 'freq': belief_freq}
     logger.info('Rendering page')
