@@ -556,8 +556,12 @@ class EmmaaModel(object):
                     # Export gromet here if there's no separate "dynamic" pysb
                     if 'dynamic' not in self.assembly_config:
                         fname = f'gromet_{self.date_str}.json'
-                        pysb_to_gromet(pysb_model, self.name,
-                                       self.assembled_stmts, fname)
+                        try:
+                            pysb_to_gromet(pysb_model, self.name,
+                                           self.assembled_stmts, fname)
+                        except Exception as e:
+                            logger.info(e)
+                            logger.info('Could not export to GroMEt')
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
