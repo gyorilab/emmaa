@@ -562,6 +562,7 @@ class EmmaaModel(object):
                         except Exception as e:
                             logger.info(e)
                             logger.info('Could not export to GroMEt')
+                            continue
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
