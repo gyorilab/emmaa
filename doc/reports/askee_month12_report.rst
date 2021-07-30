@@ -136,7 +136,36 @@ biological systems.
 Progress on inter-sentence causal connective extraction from text
 -----------------------------------------------------------------
 
+We expanded our approach to generating a dataset of causally connected events
+in text. Our initial approach (described in last month's report) involved
+finding sequential sentences in a paper that described paired directed
+interactions A->B and B->C and overwhelmingly produced positive examples,
+suggesting that sentence proximity alone could be used to deterministically
+identify causally transitive relationships. The lack of negative examples in
+the training data was a problem for development of a classifier.
 
+During this period we expanded our search for relevant training examples
+(including negative examples) in three ways. First, we included undirected
+relationships (e.g., binding) in addition to directed relationships (e.g.,
+activation or modification). Second, we considered multi-sentence relationships
+not only where the textually preceding event E1 causally preceded the textually
+subsequent event E2 (e.g., E1 causes E2) but also the reverse, where the
+causally downstream event was described first (E2 causes E1). Third, we
+searched for events up to three sentences apart.
+
+This search produced a number of different types of examples not found
+previously. We manually curated 320 pairs of events and found 251 sentences
+where both events were correctly extracted; of these 148 were causally
+connected (positive examples) and 103 were not (negative examples). Pairs of
+events involving at least one undirected event were much more likely to be
+negative: for example, we found many cases where the binding of two proteins A
+and B was not causally connected to the activation of C by B, despite these
+events appearing closely in text. Interestingly, we also noticed examples of
+causal transitivity where a pair of events did not share a common node but were
+nevertheless causally connected. This can happen when an upstream event (e.g.,
+the binding of EGF to EGFR) indirectly affects a downstream event (e.g.,
+activation of ERK by MEK). The expanded dataset is being used by the University
+of Arizona team to develop a classifier to identify causal connections in text.
 
 Integrating belief information in the EMMAA dashboard
 -----------------------------------------------------
