@@ -1,0 +1,38 @@
+{% from "path_macros.html" import path_card %}
+
+{% macro belief_tab(belief_data) -%}
+<!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Belief Distribution</h4>
+    </div>
+    <div class="card-body">
+    {% if belief_data %}
+    <div class="container" id="beliefDistr"></div>
+    {% else %}
+    No belief data is available at the moment
+    {% endif %}
+    </div>
+  </div>
+  <div class="card" style="height: 200px;">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">View Statements within Belief Range</h4>
+    </div>
+    {% if belief_data %}
+    <div class="card-body">
+      <section class="range-slider">
+        <span class="rangeValues"></span>
+        <input value="{{ belief_data.x|first }}" min="{{ belief_data.x|first }}" max="{{ belief_data.x|last }}" step="0.01" type="range">
+        <input value="{{ belief_data.x|last }}" min="{{ belief_data.x|first }}" max="{{ belief_data.x|last }}" step="0.01" type="range">
+      </section>
+      <button class="btn btn-outline-secondary" style="font-size: medium; margin-left:600px;"onClick="filterBelief()" type="button">View statements</button>
+    </div>
+    {% else %}
+    No belief data is available at the moment
+    {% endif %}
+  </div>
+</div>
+
+{%- endmacro %}

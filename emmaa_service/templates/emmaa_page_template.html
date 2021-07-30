@@ -46,7 +46,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   {% block additional_scripts %}
   {% endblock %}
-
+  <!-- Belief range style adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
   <style>
     a.model-link {
       color: #000000;
@@ -102,6 +102,98 @@
       background: white;
       color:  #55ACEE;
     }
+    section.range-slider {
+      position: relative;
+      width: 500px;
+      height: 15px;
+      text-align: center;
+  }
+  
+  section.range-slider input {
+      -webkit-appearance: none;
+      pointer-events: none;
+      position: absolute;
+      overflow: hidden;
+      left: 0;
+      top: 25px;
+      width: 500px;
+      outline: none;
+      height: 15px;
+      border-radius: 5px; 
+      margin: 0;
+      padding: 0;
+      background: #d3d3d3;
+  }
+  
+  section.range-slider input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      pointer-events: all;
+      position: relative;
+      z-index: 1;
+      outline: 0;
+      height: 20px;
+      width: 15px;
+      cursor: pointer;
+      border-radius: 50%; 
+      background: #007bff;
+  }
+  
+  section.range-slider input::-moz-range-thumb {
+      pointer-events: all;
+      position: relative;
+      z-index: 10;
+      -moz-appearance: none;
+      width: 9px;
+      
+  }
+  
+  section.range-slider input:last-of-type::-moz-range-track {
+      -moz-appearance: none;
+      background: none transparent;
+      border: 0;
+  }
+    section.range-slider input[type=range]::-moz-focus-outer {
+    border: 0;
+  }
+  @-moz-document url-prefix() {
+    input[type='range']:nth-child(1){
+      -webkit-appearance: none;
+      position:absolute;
+      top:35px !important;
+      overflow:visible !important;
+      height:0;
+    }
+  
+    input[type='range']:nth-child(2){
+      -webkit-appearance: none;
+      position:absolute;
+      top:53px !important;
+      overflow:visible !important;
+      height:0;
+    }
+    input[type='range']::-moz-range-thumb {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      position: relative;
+      height: 13px;
+      width: 15px;
+      margin-top: -7px;
+      background: #007bff;
+      border: 1px solid #007bff;
+      border-radius: 25px;
+      z-index: 1;
+    }
+  
+    input[type='range']:nth-child(1)::-moz-range-thumb {
+        -webkit-appearance: none;
+        transform: translateY(-20px);    
+    }
+    input[type='range']:nth-child(2)::-moz-range-thumb {
+        -webkit-appearance: none;
+        transform: translateY(-20px);    
+    }
+  }
   </style>
 </head>
 

@@ -386,8 +386,8 @@ function subscribe_model(api_route, subscribe) {
 
 
 // Populate model and test stats jsons to modelTestResultBody
-function populateTestResultTable(tableBody, model_json, test_json) {
-
+function populateTestResultTable(tableBody, model_json, test_json, belief_data) {
+  console.log(belief_data)
   // IDs
   let stmtTypDistId = '#modelTestResultBody';
   let pasRatId = '#passedRatio';
@@ -400,6 +400,7 @@ function populateTestResultTable(tableBody, model_json, test_json) {
   let stmtCur = '#stmtCurations';
   let tagCur = '#tagCurations';
   let curTime = '#dateCurations';
+  let beliefs = '#beliefDistr';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -663,6 +664,41 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     var curCountChart = generateLineArea(curTime, curCountDataParams, '', curTicks, format='%Y-%m-%d');
   }
 
+  // Belief histogram
+  var beliefChart = NaN;
+  if (Object.keys(belief_data).length > 0) {
+    let belief_array = belief_data.x;
+    let belief_freq_array = belief_data.freq;
+    console.log(belief_array)
+    console.log(belief_freq_array)
+    let beliefDataParams = {
+      columns: [
+        belief_freq_array
+      ],
+      type: 'bar'
+    };
+    let axis = {
+      rotated: false,
+      x: {
+          max: belief_data.x.length - 2,
+          type: 'category',
+          categories: belief_array,
+          tick: {
+            outer: true
+          }
+      }
+    };
+    // Move the bar text to between the bars (histogram view)
+    // https://stackoverflow.com/questions/43258981/c3js-bar-chart-align-data-to-x-tick-start-position-not-centered
+    let onrendered_func = function () {
+      var thisChart = d3.select(this.config.bindto);
+      var width = thisChart.select(".c3-bar-0").node().getBoundingClientRect().width / 2;
+      console.log(width)
+      thisChart.selectAll(".c3-axis-x .tick text").style("transform", "translate(-"+width+"px,0)");
+    }
+    var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis, onrendered_func);
+  }
+
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
@@ -679,7 +715,11 @@ function populateTestResultTable(tableBody, model_json, test_json) {
     if (curCountChart) {
       curCountChart.flush();
     }
+    if (beliefChart) {
+      beliefChart.flush();
+    }
   });
+
   $(function() {
     //Executed on page load with URL containing an anchor tag.
     if($(location.href.split("#")[1])) {
@@ -700,25 +740,31 @@ Found here:
 https://c3js.org/
 */
 
-function generateBar(chartDivId, dataParams, ticksLabels, chartTitle) {
+function generateBar(chartDivId, dataParams, ticksLabels, chartTitle, widthRatio=0.5, axisOverride=null, onrendered_func=null) {
+  if (axisOverride) {
+    var axis = axisOverride;
+  } else {
+    var axis = {
+      rotated: true,
+      x: {
+          type: 'category',
+          categories: ticksLabels
+          }
+      };
+  }
   return c3.generate({
     bindto: chartDivId,
     data: dataParams,
     bar:  {
       width: {
-        ratio: 0.5 // this makes bar width 50% of length between ticks
+        ratio: widthRatio // this makes bar width 50% of length between ticks
       }
     },
-    axis: {
-      rotated: true,
-      x: {
-          type: 'category',
-          categories: ticksLabels
-      }
-    },
+    axis: axis,
     title: {
       text: chartTitle
-    }
+    },
+    onrendered: onrendered_func
   });
 }
 
@@ -748,4 +794,63 @@ function generateLineArea(chartDivId, dataParams, chartTitle, yticks=null, forma
       enabled: true
     }
   });
+}
+
+// Functions for belief range update
+// Source: https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible
+function getVals(){
+  // Get slider values
+  var parent = this.parentNode;
+  var slides = parent.getElementsByTagName("input");
+    var slide1 = parseFloat( slides[0].value );
+    var slide2 = parseFloat( slides[1].value );
+  // Neither slider will clip the other, so make sure we determine which is larger
+  if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
+  
+  var displayElement = parent.getElementsByClassName("rangeValues")[0];
+      displayElement.innerHTML = slide1 + " - " + slide2;
+}
+
+window.onload = function(){
+  // Initialize Sliders
+  var sliderSections = document.getElementsByClassName("range-slider");
+      for( var x = 0; x < sliderSections.length; x++ ){
+        var sliders = sliderSections[x].getElementsByTagName("input");
+        for( var y = 0; y < sliders.length; y++ ){
+          if( sliders[y].type ==="range" ){
+            sliders[y].oninput = getVals;
+            // Manually trigger event first time to display values
+            sliders[y].oninput();
+          }
+        }
+      }
+}
+
+function filterBelief(){
+  // Get slider values
+  var sliderSections = document.getElementsByClassName("range-slider");
+  var slides = sliderSections[0].getElementsByTagName("input");
+    var slide1 = parseFloat( slides[0].value );
+    var slide2 = parseFloat( slides[1].value );
+  // Neither slider will clip the other, so make sure we determine which is larger
+  if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
+  let loc = window.location.href;
+  if (loc.includes('all_statements')) {
+    if (loc.includes('min_belief')) {
+      min_belief = new URL(loc).searchParams.get('min_belief');
+      loc = loc.replace(`min_belief=${min_belief}`, `min_belief=${slide1}`)
+    } else {
+      loc = loc.concat(`&min_belief=${slide1}`)
+    }
+    if (loc.includes('max_belief')) {
+      max_belief = new URL(loc).searchParams.get('max_belief');
+      loc = loc.replace(`max_belief=${max_belief}`, `max_belief=${slide2}`)
+    } else {
+      loc = loc.concat(`&max_belief=${slide2}`)
+    }
+    location.replace(loc); 
+  }  else {
+    let model_name = loc.split('/')[4].split('?')[0]
+    window.open(`/all_statements/${model_name}?min_belief=${slide1}&max_belief=${slide2}&sort_by=belief`, target="_blank") 
+  }
 }
