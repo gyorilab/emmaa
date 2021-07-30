@@ -4,9 +4,17 @@ Walkthrough tutorial
 This tutorial demonstrates the use of EMMAA through a scientifically
 interesting example related to COVID-19, involving the drug `sitagliptin`.
 
+In each section, the **Background** block provides a description of some part
+of the EMMAA dashboard and explains the key concepts behind it. The **Action**
+block telss you what specifically to do at each step. Finally, the **Science**
+block provides insights and observations gained along the way about our
+scientific use case of interest.
+
+Each section also contains a short (less than one minute) video that you can
+watch to guide your exploration.
+
 **Note**: This tutorial uses webm videos. Not all versions of Safari support
-webm. We recommend using Chrome or Firefox to play the videos in this
-tutorial.
+webm. We recommend using Chrome or Firefox to play the videos in this tutorial.
 
 1. Visit the EMMAA Dashboard
 ----------------------------
@@ -127,10 +135,33 @@ therefore be specifically relevant for COVID-19 treatment.
     Your browser does not support the video tag.
     </video>
     <p>&nbsp;</p>
-    
+
 
 5. Bowse all statements in the model
 ------------------------------------
+
+**Background**: EMMAA allows browsing, sorting and filtering all the statements
+in the model according to a few different criteria. The default sort order is
+by evidence count (see gray badge on the right in each header). See Section 4
+for a detailed description of each statement header (and when clicked to
+expand) each evidence row underneath. In some of the statement headers, you see
+a blue badge with a flag and a number. The number here represents the number of
+explanatory paths that this statement is part of when the EMMAA COVID-19 model
+is used to automatically explain a set of drug effects on a set of viruses.
+Statements that have a high path count are specifically important since they
+play a role in analysis results. The "Sorting by evidence" dropdown allows
+sorting statements by paths (i.e., the number in the blue badges) or belief
+(i.e., the number in the orange badges). The "Filter by statement type"
+drowpdown also allows looking at only certain types of statements such as
+Activation or Phosphorylation.
+
+**Action**: On the EMMAA COVID-19 model page, next to the "Most Supported
+Statements" header, click on the "View All Statements" button. Scroll down the
+page to see example statements and click on any that you find interesting to
+examine its evidence. Then click on the "Sorting by evidence" dropdown and
+select "Sorting by paths", and click "Load Statements".  This gives you a list
+of statements based on how often they appear on paths explaining drug effects
+on viruses.
 
 .. raw:: html
 
@@ -143,6 +174,40 @@ therefore be specifically relevant for COVID-19 treatment.
 6. Examine drug-virus effect explanations
 -----------------------------------------
 
+**Background**: The EMMAA COVID-19 model can be used to explain experimental
+observations. This automated analysis feature is crucial to EMMAA and
+demonstrates that EMMAA can turn raw knowledge extracted from scientific text
+into actionable models. The COVID-19 model is compiled into a signed (e.g.,
+statement types like activation or inhibition imply positive and negative
+signs, respectively) and unsigned (i.e., statement types are ignored) graph,
+and semantically constrained automated path finding is performed to reconstruct
+mechanistic paths that connect a perturbation to a readout. Given data
+sets of perturbations and readouts, EMMAA performs this analysis daily, with
+each model update - and each new piece of knowledge modeled - the results
+potentially changing.
+
+This aspect of EMMAA is also called "testing" (hence the "Tests" tab) since the
+results of these explanations, i.e, how many observations the model can explain
+are also indicative of the scope and quality of the model. On the Tests tab,
+one can select a corpus of observations. For the EMMAA COVID-19 model, we
+have two such test corpora available, the "Covid19 curated tests" represent
+positive hits in cell-based assays for drugs inhibiting SARS-CoV-2 or
+another coronavirus, curated by our team from publications. The "Covid19 mitre
+tests" corpus is integrated from the MITRE Therapeutics Information Portal
+and represents drugs that are known to or studied to affect SARS-CoV-2
+or other coronaviruses. The test page shows plots of how many tests
+"passed" (i.e., explanations were successfully found) over time as the
+model evolved. It also allows looking at the specific explanations found
+for each test under the "All Test Results" section by clicking on the green
+checkmark next to a test.
+
+**Action**: On the EMMAA COVID-19 model page, click on the "Tests" tab. Then
+under Test Corpus Selection, select "Covid19 mitre tests" and click "Load Test
+Resutlts". Now hoveer over the two plots showing the percentage of tests passed
+and passed and applied tests to see how the model's explanations evolved over
+time. Then scroll down to the "All Test Results" section and see the list of
+drug-virus effects for which there are automatically constructed explanations.
+
 .. raw:: html
 
     <video width="700" controls>
@@ -153,6 +218,27 @@ therefore be specifically relevant for COVID-19 treatment.
 7. Drill-down into explanation results
 --------------------------------------
 
+**Background**: To learn more and see if an explanation makes sense
+you can click on the statements underlying the explanation and curate
+any incorrect statements.
+
+**Action**: Scroll down to find (or use your browser's search) to find
+the test row in which "Sitagliptin inhibits SARS-CoV-2" in the "All Test
+Results" section. Then click on the green checkmark in the first (signed
+graph) column. This brings you to a page where you can see the specific
+explanation EMMAA found. Currently (note that explantions can change over time
+as the model evolves) the explanation shown here indicates the ACE protein as
+an intermediate on sitagliptin's effect on SARS-CoV-2. Click on the statement
+"Sitagliptin activates ACE" on the right to see its evidence.
+
+**Science**: Interestingly, ACE appears to be an intermediate mediating
+sitagliptin's effect on SARS-CoV-2. Examining the evidence for sitagliptin's
+effect on ACE - while the polarity of this extraction happens to be incorrect -
+it still draws our attention to an important observation, namely that
+both sitagliptin, and another DPP4 inhibitor, linagliptin are both able
+to inhibit ACE, a protein not directly responsible for (like ACE2), but
+involved in SARS-CoV-2 infection.
+
 .. raw:: html
 
     <video width="700" controls>
@@ -162,6 +248,10 @@ therefore be specifically relevant for COVID-19 treatment.
 
 8. Browse the model from the perspective of papers
 --------------------------------------------------
+
+**Background**: The third tab after "Model" and "Tests" we explore here is the
+"Papers" tab which allows exploring the COVID-19 model from the perspective
+of individual publications.
 
 .. raw:: html
 
