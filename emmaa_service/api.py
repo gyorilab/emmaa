@@ -1502,33 +1502,26 @@ def get_statement_evidence_page():
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
         all_stmts = _load_stmts_from_cache(model, date)
-        for stmt in all_stmts:
-            for stmt_hash in stmt_hashes:
-                if str(stmt.get_hash(refresh=True)) == str(stmt_hash):
-                    stmts.append(stmt)
+        stmts = [stmt for stmt in all_stmts
+                 if str(stmt.get_hash(refresh=True)) in stmt_hashes]
     elif source == 'paper':
         all_stmts = _load_stmts_from_cache(model, date)
-        for stmt in all_stmts:
-            for stmt_hash in stmt_hashes:
-                if str(stmt.get_hash(refresh=True)) == str(stmt_hash):
-                    stmts.append(filter_evidence(stmt, paper_id, paper_id_type))
+        stmts = [filter_evidence(stmt, paper_id, paper_id_type) for stmt in
+                 all_stmts if str(stmt.get_hash(refresh=True)) in stmt_hashes]
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
         tests = _load_tests_from_cache(test_corpus)
         stmt_counts_dict = None
-        for t in tests:
-            for stmt_hash in stmt_hashes:
-                if str(t.stmt.get_hash(refresh=True)) == str(stmt_hash):
-                    stmts.append(t.stmt)
+        stmts = [t.stmt for t in tests if
+                 str(t.stmt.get_hash(refresh=True)) in stmt_hashes]
     else:
         abort(Response(f'Source should be model_statement or test', 404))
     stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)
     if display_format == 'html':
         stmt_rows = []
-        stmts_by_hash = {}
-        for stmt in stmts:
-            stmts_by_hash[str(stmt.get_hash(refresh=True))] = stmt
+        stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt
+                         for stmt in stmts}
         curations = get_curations(pa_hash=stmt_hashes)
         cur_dict = defaultdict(list)
         for cur in curations:
@@ -1544,7 +1537,7 @@ def get_statement_evidence_page():
             tabs = True
             query = ','.join(
                 [ag.name for ag in stmts[0].agent_list() if ag is not None])
-            fig_list = get_figures_from_query(query, limit=None)
+            fig_list = get_figures_from_query(query, limit=10)
         for stmt in stmts:
             stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                      test_corpus, stmt_counts_dict,
