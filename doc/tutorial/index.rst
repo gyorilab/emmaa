@@ -1,3 +1,4 @@
+This tutorial 
 
 1. Visit the EMMAA Dashboard
 ============================
@@ -13,7 +14,7 @@ video below.
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_start.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -30,7 +31,7 @@ tab to register, then the Login tab to log in.
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_login.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -45,7 +46,7 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_model_page.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -56,18 +57,18 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_statement_drilldown.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
     
 
-5. Bowsing all statements in the model
-======================================
+5. Bowse all statements in the model
+====================================
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_all_stmts.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -78,7 +79,7 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_tests.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -88,7 +89,7 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_tests_sitagliptin.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -98,7 +99,7 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_papers.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -108,7 +109,7 @@ with the most support
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_query_source_target.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -118,7 +119,7 @@ Query result statement view, figures tab
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_query_source_target_figures.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -128,7 +129,7 @@ Query result statement view, figures tab
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_query_open_search.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -139,7 +140,7 @@ Query result statement view, figures tab
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_chat.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
@@ -149,7 +150,7 @@ Query result statement view, figures tab
 
 .. raw:: html
 
-    <video autoplay width="700" controls>
+    <video width="700" controls>
     <source src="../_static/images/emmaa_tutorial_twitter.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
