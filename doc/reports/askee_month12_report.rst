@@ -1,8 +1,106 @@
 ASKE-E Month 12 Milestone Report
 ================================
 
-Current state of EMMAA
-----------------------
+EMMAA and its role in the integrated architecture
+-------------------------------------------------
+
+By the end of this reporting period we completed our original integration plan
+for EMMAA with other systems developed in ASKE-E. We have reported on the
+technical details of each of these integrations in previous reports, here we
+summarize key points. The integration architecture is shown in the following
+diagram:
+
+.. figure:: ../_static/images/bio_platform.png
+   :align: center
+
+First, INDRA is integrated with (in addition to dozens of other knowledge
+sources) the Reach and Eidos machine reading systems developed by the
+University of Arizona team and we have made significant improvements to the
+utility of these systems tailored to ASKE use cases of interest such as
+modeling COVID-19 disease mechanisms.
+
+We integrated INDRA and EMMAA with the xDD and COSMOS systems developed by the
+University of Wisconsin team. Machine reading systems integrated with INDRA are
+deployed to xDD and read new literature content each day such that this content
+complement the open-access content processed each day on our team's compute
+infrastructure. Results are propagated back to INDRA and made use of by EMMAA
+for daily model updates. EMMAA is also integrated with COSMOS in several ways,
+first, it can access and integrated figures and tables extracted from a given
+publication through the COSMOS API; second, it can query for figures and tables
+relevant for a given pair of entities to provide figure/table context for
+statements in a given EMMAA model.
+
+The EMMAA COVID-19 model is also integrated with the MITRE Therapeutics
+Information Portal, namely, EMMAA constructs model-based mechanistic
+explanations for observations on drug-coronavirus effects collected by TIP and
+makes these explanations browseable and auditable on the EMMAA dashboard.
+
+EMMAA and all its models are also integrated with the Uncharted UI
+which draws on the data and APIs exposed by EMMAA, as well as the INDRA
+Ontology graph to render large networks, and drill down into smaller
+subnetworks in an integrated graphical interface.
+
+EMMAA's integration with the epidemiology platform centers around model
+representations: EMMAA supports executable model export into the GroMET
+format which is supported by the same simulation and analysis tools developed
+for epidemiology models. This integration at the executable model level is
+also compatible with the Uncharted UI, complementing EMMAA's contributions
+at the larger-scale causal network level. Finally, another connection
+with epidemiological models is through the causal relations
+the the COVID-19 EMMAA model collects, namely, EMMAA now also integrates
+causal relations between high-level concepts (diseases, phenotypes, etc.)
+in addition to molecular entities and cellular processes.
+
+The current state of EMMAA
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+EMMAA currently makes 16 models available covering a wide range of scopes and
+conceptual modeling approaches. Some models are fully automatically assembled
+and center around a given disease area (e.g., Melanoma, Vitiligo,
+Neurofibromatosis) with their scope defined by a set of search terms (genes,
+etc.) into the scientific literature. Other models are pathway focused such as
+the Ras Model which cuts across multiple biological contexts and focuses on
+pathway mechanisms, its scope defined by members of the pathway.  Several
+models are built using expert input where an expert defines mechanisms in the
+model using natural language which is intepreted and then assembled into an
+executable form, namely, the Ras Model and the MARM model. These models are
+particularly interesting as companions to the literature-derived models (e.g.,
+the Ras Machine or the Neurofibromatosis model) in several ways, including the
+ability to diagnose issues with large-scale reading and assembly, and also
+relying on the literature-derived models to detect gaps in the expert-defined
+model based on limitations of its explanatory capabilities.
+
+The COVID-19 model is currently the largest model in EMMAA - hardly surprising
+given the pace and quantity of publications on the topic - and is an example of
+a literature-derived model whose scope is defined fully based on the topic, not
+on specific entities or pathways. Meanwhile, the COVID-19 Diease Map model is
+an example of an expert-curated model that is imported into EMMAA, and then
+analyzed in EMMAA's testing and query frameworks, demonstrating its
+capabilities to integrate community models.
+
+Though somewhat of an outlier, the EMMAA Food Insecurity model serves to
+demonstrate the generalizability of EMMAA both conceptually and at a practical,
+working level. Namely, it uses a different literature source, different reading
+system, and a different assembly approach compared to the biology-oriented
+models to keep a model centered around scientific publications on food
+insecurity self-updating.
+
+It is also important to discuss the robustness and accuracy of EMMAA
+models. While text mining and automated assembly of the scientific literature
+directly and in an automated fashion is inevitebly imperfect, there
+are several strategies eployed by INDRA/EMMAA to manage this. First, EMMAA
+models draw on multiple text mining systems as well as high-quality
+structured resources to aggregate evidence and corroborate statements
+from multiple sources. This is also the basis of establishing the belief
+score associated with each statement: the key metric for quantifying
+the underlying uncertainty for components of EMMAA models. We have now
+created a dedicated tab for browsing EMMAA models from the perspective of
+belief scores, and display belief scores for statements in all the relevant
+pages (see more details below). Ultimately, the transparency of these models,
+i.e., the ability of users to examine textual evidence and link back
+to original publications as provenance for every piece of knowledge integrated
+into models is crucial and sets this approach apart from classic expert-guided
+modeling.
 
 Applying EMMAA model to COVID-19 therapeutics
 ---------------------------------------------
@@ -24,7 +122,9 @@ Review article on automated modeling
 ------------------------------------
 This month we submitted and revised a review article "From knowledge to models:
 automated modeling in systems and synthetic biology" which was accepted for
-publication. It introduces a conceptual framework for discussing levels of
+publication, and is now available online at https://www.sciencedirect.com/science/article/pii/S2452310021000561.
+
+The review introduces a conceptual framework for discussing levels of
 modeling automation with each level implying different roles for the human and
 the machine in the modeling process. The review discusses existing tools and
 approaches at each level of automation and provides. It also outlines the
