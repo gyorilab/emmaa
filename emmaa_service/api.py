@@ -1479,7 +1479,7 @@ def get_query_page():
 def get_statement_evidence_page():
     """Render page displaying evidence for statement or return statement JSON.
     """
-    stmt_hashes = request.args.getlist('stmt_hash')
+    stmt_hashes = set(request.args.getlist('stmt_hash'))
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
