@@ -6,7 +6,7 @@ interesting example related to COVID-19, involving the drug `sitagliptin`.
 
 In each section, the **Background** block provides a description of some part
 of the EMMAA dashboard and explains the key concepts behind it. The **Action**
-block telss you what specifically to do at each step. Finally, the **Science**
+block tells you what specifically to do at each step. Finally, the **Science**
 block provides insights and observations gained along the way about our
 scientific use case of interest.
 
@@ -88,7 +88,7 @@ tutorial, we will explore it as a possible therapeutic.
 -----------------------------------------
 
 **Background**: When you click on a statement such as "Sitagliptin inhibits
-DPP4", a new page opens up where the underlying evidence supportig the
+DPP4", a new page opens up where the underlying evidence supporting the
 statement can be examined.
 
 -   In the **header**, both relevant entities, "Sitagliptin"
@@ -100,7 +100,7 @@ statement can be examined.
     statement, in this case 1, meaning that EMMAA's measure of confidence for this
     statement being correct is high. The gray badge showing 10/318 indicates that
     there are a total of 318 evidences supporting this statement with 10 visible,
-    by clicking on the badge, all the evidences can be loaded.  Finally, the purple
+    (all the evidences can be loaded by clicking "Load more" below).  Finally, the purple
     JSON badge allows downloading the statement and its evidences in a
     machine-readable form for downstream processing.
 
@@ -108,7 +108,7 @@ statement can be examined.
     either as correct or incorrect (if incorrect, choose the error type that best
     matches the issue). Next to it, the source of the evidence is shown, for
     instance `sparser` or `reach`, two examples of text mining systems integrated
-    with EMMAA. In the middle, the evidence sentence is show with the entities of
+    with EMMAA. In the middle, the evidence sentence is shown with the entities of
     interest highlighted in the text (note that in the header, the names are
     standardized to e.g., standard gene symbols, whereas in scientific text, as
     seen in the evidence, authors often use synonyms).  On the right, a link out to
@@ -204,7 +204,7 @@ checkmark next to a test.
 
 **Action**: On the EMMAA COVID-19 model page, click on the "Tests" tab. Then
 under Test Corpus Selection, select "Covid19 mitre tests" and click "Load Test
-Resutlts". Now hoveer over the two plots showing the percentage of tests passed
+Resutlts". Now hover over the two plots showing the percentage of tests passed
 and passed and applied tests to see how the model's explanations evolved over
 time. Then scroll down to the "All Test Results" section and see the list of
 drug-virus effects for which there are automatically constructed explanations.
