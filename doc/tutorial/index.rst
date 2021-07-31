@@ -137,8 +137,8 @@ therefore be specifically relevant for COVID-19 treatment.
     <p>&nbsp;</p>
 
 
-5. Bowse all statements in the model
-------------------------------------
+5. Browse all statements in the model
+-------------------------------------
 
 **Background**: EMMAA allows browsing, sorting and filtering all the statements
 in the model according to a few different criteria. The default sort order is
