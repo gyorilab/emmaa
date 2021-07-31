@@ -117,9 +117,9 @@ statement can be examined.
 
 **Action**: Browse the evidences for the "Sitagliptin inhibits DPP4" statement.
 (Optional) If you registered and logged in, try clicking one of the pencils
-next to an evidence row, and add a curation. Try clicking the 10/318 badge
-to load all the evidences, and click on one of the PubMed ID links on the right
-to see one of the source publications.
+next to an evidence row, and add a curation. Try scrolling to the bottom and
+clicking "Load more" to load further evidences, and click on one of the PubMed
+ID links on the right to see one of the source publications.
 
 **Science**: Based on the evidence available here, we find that sitagliptin is
 discussed in a large number of publications as a drug that inhibits the DPP4
@@ -169,6 +169,7 @@ on viruses.
     <source src="../_static/images/emmaa_tutorial_all_stmts.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
     
 
 6. Examine drug-virus effect explanations
@@ -214,6 +215,7 @@ drug-virus effects for which there are automatically constructed explanations.
     <source src="../_static/images/emmaa_tutorial_tests.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
 
 7. Drill-down into explanation results
 --------------------------------------
@@ -245,13 +247,32 @@ involved in SARS-CoV-2 infection.
     <source src="../_static/images/emmaa_tutorial_tests_sitagliptin.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
 
 8. Browse the model from the perspective of papers
 --------------------------------------------------
 
 **Background**: The third tab after "Model" and "Tests" we explore here is the
 "Papers" tab which allows exploring the COVID-19 model from the perspective
-of individual publications.
+of individual publications. The Number of Papers over Time plot shows how many
+papers were processed to build the model over time, and the number of papers
+over time that provided at least one causal statement included in the model.
+Below, the Papers with the Largest Number of Statements contributed to the
+model are available. However, more interesting is the New Papers section below
+which, every day, shows the new COVID-19 publications that were automatically
+collected and processed to update the model. Clicking on the paper title
+brings up a page with the statements extracted from that paper (if any).
+The second Link column links out to the original publication.
+
+**Action**: Click on the "Papers" tab and hover over the plot of
+Papers over Time to see how the number of papers integrated into the model
+changed recently. Then scroll down and look at the list of new publications
+in the last update. Click on one of the paper titles with at least one
+Assembled Statement to browse the extracted statements.
+
+**Science**: If you are interested in a given disease area such as
+COVID-19, looking at the New Papers section after each update for the
+relevant EMMAA model can be useful to monitor progress in the given area.
 
 .. raw:: html
 
@@ -259,9 +280,39 @@ of individual publications.
     <source src="../_static/images/emmaa_tutorial_papers.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
 
 9. Query the model to find source-target paths
 ----------------------------------------------
+
+**Background**: EMMAA allows interactive querying of models on the
+Queries page.
+
+**Action**: At the top of the website toward the left, click on the "Queries"
+link to go to the Queries page. From the four tabs on top, select the
+"Source-target paths" and read the description to learn about how this query
+type works. Then under Model selection, select "Covid-19", and under Query
+selection, select Inhibition as the statement type, enter "sitagliptin"
+as source and "SARS-CoV-2" as target. Then click "Submit" to run the query
+and wait until it resolves (note that this can take minutes).
+
+**Action (optional)**: If you have registered and are logged in, you may also
+select the "Subscribe to query" checkbox. If this is selected, you will get
+an email from EMMAA, any time a model update resulted in a meaningful change
+in the results of this query, e.g., a newly discovered path between
+sitagliptin and SARS-CoV-2 in our example.
+
+**Action** Once the query resolves, check the Query Results tab and see that
+the COVID-19 EMMAA model found paths between the source and target both with
+the signed graph and unsigned graph approaches. Click on the green checkmark
+under Signed Graph to see the paths.
+
+**Science**: The paths that the COVID-19 model found for explaining how
+sitagliptin can inhibit SARS-CoV-2 are revealing, namely, they highlight
+inflammation, ACE, and DPP4 as important intermediates. Drilling down
+further into DPP4's reported effect on SARS-CoV-2, we learn that
+DPP4 inhibition may antagonize SARS-CoV-2 due to a multitude of possible
+mechanisms.
 
 .. raw:: html
 
@@ -269,9 +320,15 @@ of individual publications.
     <source src="../_static/images/emmaa_tutorial_query_source_target.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
     
 
-Query result statement view, figures tab
+**Action**: Click on the "DPP4 activates SARS-CoV-2" statement in the fourth
+path section on the right (note that results can change over time as the
+model is updated). Then click on the "Figures" tab next to the "Statements"
+tab. Then look at some of the figures which are referenced from
+publications discussing DPP4 in the context of SARS-CoV-2 infection. You
+can also click on "View paper" to see the source publication.
 
 .. raw:: html
 
@@ -279,9 +336,38 @@ Query result statement view, figures tab
     <source src="../_static/images/emmaa_tutorial_query_source_target_figures.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
 
 10. Query the model to find upstream regulator paths
 ----------------------------------------------------
+
+**Background**: The Up/down-stream paths query tab allows setting up
+"open ended" queries where only a source or a target is specified. This is
+specifically useful for instance to learn about upstream regulatory paths
+modulating a given target.
+
+**Action**: Back on the Queries page, click on the Up/down-stream paths tab and
+read the description to understand how this query type works.  Then under Query
+specification, select the "Covid-19" model, select the "Inhibition" statement
+type, enter "DPP4" as the agent, select "object (upstream search)" in the
+dropdown, and then select "small molecules" in the Limit entity types box.
+This sets up a search for "what small molecules inhibit DPP4?".
+Once the query resolves (note that this can take minutes), click on the
+green checkmark under Signed Graph to examine paths. Browse the paths
+to learn about possible modulators of DPP4 as an intermediate relevant
+for SARS-CoV-2 infection/COVID-19. Click on any statements of interest
+to browse their evidence and link out to the underlying publication.
+
+**Action (optional)**: Similar to Section 9 you may again click the
+"Subscribe to query" checkbox to get email notifications if there are
+meaningful new results to your query as the model is updated over time.
+
+**Science**: There are several noteworthy results here, for instance,
+in addition to sitagliptin, linagliptin shows up - another anti-diabetic
+drug. Drilling down into the supporting evidence, we find that it is also
+a DPP4 inhibitor and can therefore be relevant as a SARS-CoV-2/COVID-19
+therapeutic.
+
 
 .. raw:: html
 
@@ -289,10 +375,46 @@ Query result statement view, figures tab
     <source src="../_static/images/emmaa_tutorial_query_open_search.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
     
 
 11. Chat with a machine assistant about the COVID-19 model
 ----------------------------------------------------------
+
+**Background**: EMMAA also offers natural language human-machine dialogue
+via the CLARE system - also developed by our group - with any of the EMMAA
+models. This allows asking questions in simple English language
+such as "what is DPP4?", "what does it activate?". Note that crucially,
+natural language dialogue supports sequential exploration through co-references
+i.e., in this case the "it" in "what does it activate?", or for instance
+"any of those" in the question "are any of those small molecules?". Note that
+when chatting with a given EMMAA model, the system answers most questions
+that are based on the content of the model. So you might get different
+answers to the same question in the context of e.g., the COVID-19 model
+and the Neurofibromatosis model.
+
+**Actions**: Back on the main emmaa.indra.bio landing page, find the Covid-19
+model and click on the Chat button. Enter an email address and leave "covid19"
+(pre-filled) in the EMMAA model field. Then click on Start Chat.
+  - First say "hi" to see CLARE respond.
+  - You can also ask "what can you do?"
+    to see a list of capabilities with some example sentences.
+  - Ask "what is DPP4?" to learn about DPP4 and get links out to databases
+    describing it.
+  - Ask "what does it activate" to see what its downstream effects are
+    (ranked by evidence) in the context of the COVID-19 EMMAA model. You can
+    also click on the View statements link to browse the underlying statements
+    and evidences.
+  - You can now ask, "what inhibits DPP4?" to see a list of things that
+    inhibit it.
+  - Then follow up with "are any of those small molecules?" to filter that
+    list to just small molecules. See how "sitagliptin" and "linagliptin"
+    both show up along with a number of other potentially relevant drugs.
+ 
+**Science**: Using natural language dialogue, we could quickly establish that
+DPP4 has an important role in inflammatory response in the context of COVID-19,
+and that there are many approved inhibitors of DPP4 available (typically used
+to treat diabetes) that could be relevant for further studies and experiments.
 
 .. raw:: html
 
@@ -300,9 +422,21 @@ Query result statement view, figures tab
     <source src="../_static/images/emmaa_tutorial_chat.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
 
 12. Follow the COVID-19 EMMAA model on Twitter
 ----------------------------------------------
+
+**Background**: The COVID-19 EMMAA model has its own Twitter account where
+it tweets about its progress: the new papers it processes and new statements
+it adds to the model, as well as any new drug-virus effect explanations it
+constructs as a result of model updates. Tweets also link to specific
+pages on the EMMAA dashboard where you can examine the results.
+You can follow the Twitter account to get these updates.
+
+**Action (optional)**: On the emmaa.indra.bio landing page, find the Covid-19
+model and click on the Twitter icon (blue bird) to link to the Twitter page.
+Then click Follow to follow the model's tweets.
 
 .. raw:: html
 
@@ -310,3 +444,4 @@ Query result statement view, figures tab
     <source src="../_static/images/emmaa_tutorial_twitter.webm" type="video/webm">
     Your browser does not support the video tag.
     </video>
+    <p>&nbsp;</p>
