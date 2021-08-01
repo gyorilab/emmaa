@@ -556,8 +556,13 @@ class EmmaaModel(object):
                     # Export gromet here if there's no separate "dynamic" pysb
                     if 'dynamic' not in self.assembly_config:
                         fname = f'gromet_{self.date_str}.json'
-                        pysb_to_gromet(pysb_model, self.name,
-                                       self.assembled_stmts, fname)
+                        try:
+                            pysb_to_gromet(pysb_model, self.name,
+                                           self.assembled_stmts, fname)
+                        except Exception as e:
+                            logger.info(e)
+                            logger.info('Could not export to GroMEt')
+                            continue
                 else:
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
@@ -626,12 +631,16 @@ class EmmaaModel(object):
             pysb_model = pa.make_model()
             if mode == 's3' and 'gromet' in self.export_formats:
                 fname = f'gromet_{self.date_str}.json'
-                pysb_to_gromet(pysb_model, self.name,
-                               self.dynamic_assembled_stmts, fname)
-                logger.info(f'Uploading {fname}')
-                client = get_s3_client(unsigned=False)
-                client.upload_file(fname, bucket,
-                                   f'exports/{self.name}/{fname}')
+                try:
+                    pysb_to_gromet(pysb_model, self.name,
+                                   self.dynamic_assembled_stmts, fname)
+                    logger.info(f'Uploading {fname}')
+                    client = get_s3_client(unsigned=False)
+                    client.upload_file(fname, bucket,
+                                       f'exports/{self.name}/{fname}')
+                except Exception as e:
+                    logger.info(e)
+                    logger.info('Could not export to GroMEt')
             return pysb_model
         logger.info('Did not find dynamic assembly steps')
 
