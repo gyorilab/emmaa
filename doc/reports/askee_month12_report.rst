@@ -33,7 +33,7 @@ statements in a given EMMAA model.
 The EMMAA COVID-19 model is also integrated with the MITRE Therapeutics
 Information Portal, namely, EMMAA constructs model-based mechanistic
 explanations for observations on drug-coronavirus effects collected by TIP and
-makes these explanations browseable and auditable on the EMMAA dashboard.
+makes these explanations browsable and auditable on the EMMAA dashboard.
 
 EMMAA and all its models are also integrated with the Uncharted UI
 which draws on the data and APIs exposed by EMMAA, as well as the INDRA
@@ -47,7 +47,7 @@ for epidemiology models. This integration at the executable model level is
 also compatible with the Uncharted UI, complementing EMMAA's contributions
 at the larger-scale causal network level. Finally, another connection
 with epidemiological models is through the causal relations
-the the COVID-19 EMMAA model collects, namely, EMMAA now also integrates
+the COVID-19 EMMAA model collects, namely, EMMAA now also integrates
 causal relations between high-level concepts (diseases, phenotypes, etc.)
 in addition to molecular entities and cellular processes.
 
@@ -62,7 +62,7 @@ etc.) into the scientific literature. Other models are pathway focused such as
 the Ras Model which cuts across multiple biological contexts and focuses on
 pathway mechanisms, its scope defined by members of the pathway.  Several
 models are built using expert input where an expert defines mechanisms in the
-model using natural language which is intepreted and then assembled into an
+model using natural language which is interpreted and then assembled into an
 executable form, namely, the Ras Model and the MARM model. These models are
 particularly interesting as companions to the literature-derived models (e.g.,
 the Ras Machine or the Neurofibromatosis model) in several ways, including the
@@ -73,7 +73,7 @@ model based on limitations of its explanatory capabilities.
 The COVID-19 model is currently the largest model in EMMAA - hardly surprising
 given the pace and quantity of publications on the topic - and is an example of
 a literature-derived model whose scope is defined fully based on the topic, not
-on specific entities or pathways. Meanwhile, the COVID-19 Diease Map model is
+on specific entities or pathways. Meanwhile, the COVID-19 Disease Map model is
 an example of an expert-curated model that is imported into EMMAA, and then
 analyzed in EMMAA's testing and query frameworks, demonstrating its
 capabilities to integrate community models.
@@ -87,8 +87,8 @@ insecurity self-updating.
 
 It is also important to discuss the robustness and accuracy of EMMAA
 models. While text mining and automated assembly of the scientific literature
-directly and in an automated fashion is inevitebly imperfect, there
-are several strategies eployed by INDRA/EMMAA to manage this. First, EMMAA
+directly and in an automated fashion is inevitably imperfect, there
+are several strategies employed by INDRA/EMMAA to manage this. First, EMMAA
 models draw on multiple text mining systems as well as high-quality
 structured resources to aggregate evidence and corroborate statements
 from multiple sources. This is also the basis of establishing the belief
@@ -102,6 +102,15 @@ to original publications as provenance for every piece of knowledge integrated
 into models is crucial and sets this approach apart from classic expert-guided
 modeling.
 
+In recent months, we have reported on sevaral approaches to strengthen EMMAA's
+capabilities for dynamical modeling and simulation, including extended
+automated assembly pipelines, better integration with Kappa and BioNetGen, new
+dynamical property checking functionalities, and implementing support for the
+GroMET format (thereby connecting EMMAA to simulation frameworks developed for
+epidemiology models in ASKE-E). Going forward, we envision strengthening EMMAA
+further in this direction, working towards machine-assisted detailed analysis
+of models to gain insights about the underlying mechanisms.
+
 Applying EMMAA model to COVID-19 therapeutics
 ---------------------------------------------
 The COVID-19 EMMAA model has continued monitoring and processing the literature
@@ -109,9 +118,9 @@ being published - currently at a pace of around 315 papers per day -
 surrounding COVID-19. Since the beginning of 2021 the model has increased by
 56% in terms of the number of papers processed. During this period, it also
 identified over 30,000 new unique causal statements, an increase of around 8%.
-Interestingly, while new relationships are still being frequently mentioned,
-the rate of new, unique, causal knowledge being published appears to be
-decreasing.
+Interestingly, while new relationships are still being frequently mentioned
+in the literature, the rate of new, unique, causal knowledge being published
+appears to be decreasing.
 
 In terms of the model's explanatory capability, the number of drug effects on
 coronaviruses it is able to explain (with the signed graph model) has grown
@@ -131,7 +140,6 @@ approaches at each level of automation and provides. It also outlines the
 strengths and weaknesses of current modeling approaches at the different levels
 and discuss the prospect of fully automated fit-to-purpose modeling of
 biological systems.
-
 
 Progress on inter-sentence causal connective extraction from text
 -----------------------------------------------------------------
@@ -218,23 +226,25 @@ appropriate interface. Using this new OWL-ingestion module, we added nodes and
 relations from IDO to the INDRA Ontology graph and created a new export for use
 in the Uncharted UI.
 
-STonKGs paper
+STonKGs 
 -------------
-The transformers and attention architectures have reinvigorated large scale language models through
-`BERT <https://arxiv.org/abs/1810.04805>`_ and its derivatives. Our collaborators at Fraunhofer are
-developing Sophisticated Transformer trained on biomedical text and knowledge graphs (STonKGs), a
-joint knowledge graph and language model that relies on the following cross-modal attention
-mechanism:
+The transformers and attention architectures have reinvigorated large scale
+language models through `BERT <https://arxiv.org/abs/1810.04805>`_ and its
+derivatives. We are part of a collaboration with the Fraunhofer Institute to
+develop a Sophisticated Transformer trained on biomedical text and Kknowledge
+Graphs (STonKGs), a joint knowledge graph and language model that relies on the
+following cross-modal attention mechanism:
 
 .. figure:: ../_static/images/stonkgs_cross_modal_attention.png
    :align: center
 
    *The cross-modal attention mechanism in the STonKGs model enables joint learning over INDRA statements and their associated textual evidences*
 
-This model is able to take an INDRA statement and its associated text then generate a dense
-Euclidean vector representation that can be used for downstream machine learning tasks.
-We have prepared a dump of the INDRA database in order to pre-train this model and suggested
-several downstream "fine-tuning" binary/multi-class classification tasks on which STonKGs could be
+This model is able to take an INDRA statement and its associated text then
+generate a dense Euclidean vector representation that can be used for
+downstream machine learning tasks.  We have prepared a dump of the INDRA
+database in order to pre-train this model and suggested several downstream
+"fine-tuning" binary/multi-class classification tasks on which STonKGs could be
 evaluated:
 
 ================  ===================================================================================  ==============================================================================================================================================================================================
@@ -248,41 +258,47 @@ Location          Cellular location in which the particular relation occurs     
 Species           Species in which the particular relation has been described                          “Mutation of putative GRK phosphorylation sites in the cannabinoid receptor 1 (CB1R) confers resistance to cannabinoid tolerance and hypersensitivity to cannabinoids in mice” (PMID:24719095)
 ================  ===================================================================================  ==============================================================================================================================================================================================
 
-Ultimately, the model showed ability to learn and predict within the training/testing split
-across all tasks better than only using purely network-based prediction methods or purely
-text-based prediction methods.
+Ultimately, the model showed ability to learn and predict within the
+training/testing split across all tasks better than only using purely
+network-based prediction methods or purely text-based prediction methods.
 
-Further investigation is necessary to assess its overfitting to the underlying text mining
-systems, such as REACH, by generating additional curated corpora for each task that had not
-already been read by REACH.
+Further investigation is necessary to assess its overfitting to the underlying
+text mining systems, such as REACH, by generating additional curated corpora
+for each task that had not already been read by REACH.
 
 PyKEEN Updates
 --------------
 Improvements to Link Prediction Evaluation Metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The common evaluation metrics used in the link prediction task for knowledge graph embeddings
-(e.g., mean rank (MR), mean reciprocal rank (MRR), and hits at *k*) are not comparable for
-knowledge graphs of varying number of entities, relations, and triples. This poses a problem
-a as we move to apply knowledge graph embedding models to biomedical knowledge graphs because
-we are interested in comparing different formulations (e.g., using just knowledge from
-databases vs. INDRA's entire knowledge graph).
+The common evaluation metrics used in the link prediction task for knowledge
+graph embeddings (e.g., mean rank (MR), mean reciprocal rank (MRR), and hits at
+*k*) are not comparable for knowledge graphs of varying number of entities,
+relations, and triples. This poses a problem a as we move to apply knowledge
+graph embedding models to biomedical knowledge graphs because we are interested
+in comparing different formulations (e.g., using just knowledge from databases
+vs. INDRA's entire knowledge graph).
 
-`Berrendorf et al. (2020) <https://arxiv.org/abs/2002.06914>`_ proposed the adjusted mean rank,
-which normalized the value based on the expected value. We have derived closed form expectations
-for the mean reciprocal rank and hits at *k* and implemented their corresponding adjustments in PyKEEN.
+`Berrendorf et al. (2020) <https://arxiv.org/abs/2002.06914>`_ proposed the
+adjusted mean rank, which normalized the value based on the expected value. We
+have derived closed form expectations for the mean reciprocal rank and hits at
+*k* and implemented their corresponding adjustments in PyKEEN.
 
-Further we developed an alternative metric to the hits at *k* that uses a smooth logistic sigmoid
-instead of a discrete step function in order to mitigate some of its biases, including its applicability
-to graphs of varying sizes.
+Further we developed an alternative metric to the hits at *k* that uses a
+smooth logistic sigmoid instead of a discrete step function in order to
+mitigate some of its biases, including its applicability to graphs of varying
+sizes.
 
 Improvements to Loss Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The binary cross entropy loss, softplus loss, margin ranking loss, and non-self adversarial negative sampling
-loss have proven to be the most popular in knowledge graph embedding models. However, there are deep theoretical
-relationships between them, such as the alleged equivalence between the softplus loss and binary cross
-entropy loss with sigmoids, that have been relatively unexplored. We improved the programmatic design to
-generalize and identify some of these concepts, as well as provide implementations of the double margin loss and
-focal loss which we believe might be more valuable for applications to biological networks.
+The binary cross entropy loss, softplus loss, margin ranking loss, and non-self
+adversarial negative sampling loss have proven to be the most popular in
+knowledge graph embedding models. However, there are deep theoretical
+relationships between them, such as the alleged equivalence between the
+softplus loss and binary cross entropy loss with sigmoids, that have been
+relatively unexplored. We improved the programmatic design to generalize and
+identify some of these concepts, as well as provide implementations of the
+double margin loss and focal loss which we believe might be more valuable for
+applications to biological networks.
 
 The double loss is given as:
 
@@ -296,33 +312,41 @@ The focal loss is given as
 
     FL(p_t) = -(1 - p_t)^\gamma \log (p_t)
 
-with :math:`p_t = y \cdot p + (1 - y) \cdot (1 - p)`, where :math:`p` refers to the predicted probability, and `y`
-to the ground truth label in :math:`{0, 1}`.
+with :math:`p_t = y \cdot p + (1 - y) \cdot (1 - p)`, where :math:`p` refers to
+the predicted probability, and `y` to the ground truth label in :math:`{0, 1}`.
 
 
 Non-Parametric Baseline Models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Many supervised machine learning methods use y-scrambling or similar methods for generating null models
-against which the true model can be compared. Because knowledge graph embedding models are so time-consuming
-to train, comparison to a null model is often omitted in both theoretical and practical work. We have developed
-two non-parametric baseline models based solely on entity and relation co-occurrence that require no training.
+Many supervised machine learning methods use y-scrambling or similar methods
+for generating null models against which the true model can be compared.
+Because knowledge graph embedding models are so time-consuming to train,
+comparison to a null model is often omitted in both theoretical and practical
+work. We have developed two non-parametric baseline models based solely on
+entity and relation co-occurrence that require no training.
 
-For the marginal distribution model, to predict scores for the tails, we make the following simplification of
-:math:`P(t | h, r)`:
+For the marginal distribution model, to predict scores for the tails, we make
+the following simplification of :math:`P(t | h, r)`:
 
 .. math ::
 
     P(t | h, r) \sim P(t | h) * P(t | r)
 
-Surprisingly these perform very well, and ultimately provide a minimum threshold that any more knowledge
-graph embedding model must surpass. The results are available
-`here <https://pykeen.github.io/nonparametric-baseline-benchmark/>`_.
+Surprisingly these perform very well, and ultimately provide a minimum
+threshold that any more knowledge graph embedding model must surpass. The
+results are available `here
+<https://pykeen.github.io/nonparametric-baseline-benchmark/>`_.
 
-BioCreative participation
--------------------------
+BioCreative participation and new Walkthrough Tutorial
+------------------------------------------------------
 We continued working on the BioCreative challenge on interactive COVID-19 text
 mining tools. Our proposal "A self-updating causal model of COVID-19 mechanisms
 built from the scientific literature" was accepted for participation. This
 month, we prepared a system description document, recruited test users, and
-created a new tutorial for using EMMAA's COVID-19 model.  TODO: link to
-tutorial
+created a new tutorial for using EMMAA's COVID-19 model.
+
+This "Walkthrough tutorial" illustrates EMMAA's key features through the
+COVID-19 model using a series of short videos, descriptions, and to-do actions.
+Each section also describes relevant background. The tutorial can be found
+here: https://emmaa.readthedocs.io/en/latest/tutorial/index.html.
+
