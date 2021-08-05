@@ -980,10 +980,15 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     url = get_config('ENTITY_RESOLVER_URL')
     if url is None:
         return
-    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
-    res_json = res.json()
-    if not res_json['success']:
-        return  # there was a problem looking up CURIE in the bioresolver
+    try:
+        res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+        res_json = res.json()
+        if not res_json['success']:
+            return  # there was a problem looking up CURIE in the bioresolver
+    except ConnectionError as e:
+        logger.warning(e)
+        logger.warning('Could not connect to bioresolver')
+        return
     return res_json
 
 
