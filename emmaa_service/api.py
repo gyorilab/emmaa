@@ -980,10 +980,15 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     url = get_config('ENTITY_RESOLVER_URL')
     if url is None:
         return
-    res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
-    res_json = res.json()
-    if not res_json['success']:
-        return  # there was a problem looking up CURIE in the bioresolver
+    try:
+        res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+        res_json = res.json()
+        if not res_json['success']:
+            return  # there was a problem looking up CURIE in the bioresolver
+    except ConnectionError as e:
+        logger.warning(e)
+        logger.warning('Could not connect to bioresolver')
+        return
     return res_json
 
 
@@ -1520,30 +1525,36 @@ def get_statement_evidence_page():
     stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)
     if display_format == 'html':
         stmt_rows = []
-        stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt
-                         for stmt in stmts}
-        curations = get_curations(pa_hash=stmt_hashes)
-        cur_dict = defaultdict(list)
-        for cur in curations:
-            cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
-                {'error_type': cur['tag']})
-        cur_counts = _count_curations(curations, stmts_by_hash)
-        if len(stmts) > 1:
-            with_evid = False
-            tabs = False
-            fig_list = None
+        tabs = False
+        fig_list = None
+        if stmts:
+            stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt
+                             for stmt in stmts}
+            curations = get_curations(pa_hash=stmt_hashes)
+            cur_dict = defaultdict(list)
+            for cur in curations:
+                cur_dict[(cur['pa_hash'], cur['source_hash'])].append(
+                    {'error_type': cur['tag']})
+            cur_counts = _count_curations(curations, stmts_by_hash)
+            if len(stmts) > 1:
+                with_evid = False
+            else:
+                with_evid = True
+                tabs = True
+                query = ','.join(
+                    [ag.name for ag in stmts[0].agent_list()
+                     if ag is not None])
+                fig_list = get_figures_from_query(query, limit=10)
+            for stmt in stmts:
+                stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
+                                         test_corpus, stmt_counts_dict,
+                                         cur_dict, with_evid)
+                stmt_rows.append(stmt_row)
         else:
-            with_evid = True
-            tabs = True
-            query = ','.join(
-                [ag.name for ag in stmts[0].agent_list() if ag is not None])
-            fig_list = get_figures_from_query(query, limit=10)
-        for stmt in stmts:
-            stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
-                                     test_corpus, stmt_counts_dict,
-                                     cur_dict, with_evid)
-            stmt_rows.append(stmt_row)
+            stmt_rows = 'No statements found with this hash'
     else:
+        if not stmts:
+            return {'error': 'No statements found with this hash'}
         stmt_json = json.dumps(stmts[0].to_json(), indent=1)
         return Response(stmt_json, mimetype='application/json')
     return render_template('evidence_template.html',
