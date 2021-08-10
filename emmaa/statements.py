@@ -1,4 +1,5 @@
 import logging
+from indra.tools.assemble_corpus import fix_invalidities
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,11 @@ class EmmaaStatement(object):
 def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     """Make EMMAA statements from INDRA Statements with the given metadata."""
     emmaa_stmts = []
+    try:
+        stmt_list = fix_invalidities(stmt_list)
+    except AttributeError:  # for world modelers statements
+        logger.debug('Could not fix invalidities')
+        pass
     logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
                 f'{metadata}')
     for indra_stmt in stmt_list:
