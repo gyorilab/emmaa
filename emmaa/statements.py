@@ -48,7 +48,7 @@ def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     """Make EMMAA statements from INDRA Statements with the given metadata."""
     emmaa_stmts = []
     try:
-        stmt_list = fix_invalidities(stmt_list)
+        stmt_list = fix_invalidities(stmt_list, in_place=True)
     except AttributeError:  # for world modelers statements
         logger.debug('Could not fix invalidities')
         pass
