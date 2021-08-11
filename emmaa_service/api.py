@@ -985,7 +985,7 @@ def _lookup_bioresolver(prefix: str, identifier: str):
         res_json = res.json()
         if not res_json['success']:
             return  # there was a problem looking up CURIE in the bioresolver
-    except ConnectionError as e:
+    except Exception as e:
         logger.warning(e)
         logger.warning('Could not connect to bioresolver')
         return
