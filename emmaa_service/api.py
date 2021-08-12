@@ -1644,6 +1644,7 @@ def get_all_statements_page(model):
     date = request.args.get('date')
     min_belief = request.args.get('min_belief')
     max_belief = request.args.get('max_belief')
+    agent = request.args.get('agent')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
@@ -1664,6 +1665,10 @@ def get_all_statements_page(model):
     def filter_stmt(stmt):
         accepted = []
         stmt_hash = str(stmt.get_hash(refresh=True))
+        if agent:
+            has_agent = agent.lower() in [
+                ag.name.lower() for ag in stmt.real_agent_list()]
+            accepted.append(has_agent)
         if stmt_types:
             accepted.append(type(stmt).__name__.lower() in stmt_types)
         if filter_curated:
