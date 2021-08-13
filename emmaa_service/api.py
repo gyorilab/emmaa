@@ -1597,8 +1597,7 @@ def get_statement_evidence_page():
                 with_evid = True
                 tabs = True
                 query = ','.join(
-                    [ag.name for ag in stmts[0].agent_list()
-                     if ag is not None])
+                    [ag.name for ag in stmts[0].real_agent_list()])
                 fig_list = get_figures_from_query(query, limit=10)
             for stmt in stmts:
                 stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
