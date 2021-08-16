@@ -1129,6 +1129,11 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     species_nodes = [str(sp) for sp in pysb_model.species]
     # Add all species junctions
     for ix, sp in enumerate(pysb_model.species):
+        if ix not in species_values:
+            species_values[ix] = Literal(
+                uid=None, type=UidType("Integer"),
+                value=Val(0),
+                name=None, metadata=None)
         # Map to a list of agents
         agents = []
         for mp in sp.monomer_patterns:
