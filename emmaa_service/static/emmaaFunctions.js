@@ -862,3 +862,14 @@ function filterBelief(){
     window.open(`/all_statements/${model_name}?min_belief=${slide1}&max_belief=${slide2}&sort_by=belief`, target="_blank") 
   }
 }
+
+function filterAgent(agent) {
+  let loc = window.location.href;
+  if (loc.includes('agent')) {
+    cur_agent = new URL(loc).searchParams.get('agent');
+    redirect = loc.replace(`agent=${cur_agent}`, `agent=${agent}`);
+  } else {
+    redirect = loc.concat(`&agent=${agent}`)
+  }
+  location.replace(redirect);
+}

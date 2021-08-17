@@ -1762,7 +1762,8 @@ def get_all_statements_page(model):
                            stmt_types=stmt_types,
                            belief_range=belief_range,
                            min_belief=min_belief,
-                           max_belief=max_belief)
+                           max_belief=max_belief,
+                           agent=agent)
 
 
 @app.route('/demos')
