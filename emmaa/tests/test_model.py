@@ -151,6 +151,7 @@ def test_pysb_to_gromet():
     assert len(pysb_model.species) == 5
     assert len(pysb_model.reactions) == 2
     assert len(gromet.junctions) == 7
+    assert all(j.value is not None for j in gromet.junctions)
     assert len([j for j in gromet.junctions if j.type == 'State']) == 5
     assert len([j for j in gromet.junctions if j.type == 'Rate']) == 2
     # Number of wires match total number of reactants and products in reactions

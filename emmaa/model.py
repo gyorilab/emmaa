@@ -14,7 +14,9 @@ from indra.assemblers.pysb import PysbAssembler
 from indra.assemblers.pysb.sites import states
 from indra.assemblers.pybel import PybelAssembler
 from indra.assemblers.indranet import IndraNetAssembler
-from indra.statements import stmts_from_json, Agent, ModCondition
+from indra.statements import stmts_from_json, Agent, ModCondition, \
+    RegulateActivity, RegulateAmount, Modification, ActivityCondition
+from indra.mechlinker import MechLinker
 from indra.pipeline import AssemblyPipeline, register_pipeline
 from indra.tools.assemble_corpus import filter_grounded_only, run_preassembly
 from indra.sources.indra_db_rest import get_statements_by_hash
@@ -1069,6 +1071,29 @@ def run_preassembly_with_extra_evidence(stmts_in, return_toplevel=True,
     return stmts_out
 
 
+@register_pipeline
+def add_missing_activities(stmts):
+    """Identify missing activities with Mechlinker and add to statements."""
+    logger.info('Adding missing activities')
+    ml = MechLinker(stmts)
+    ml.gather_explicit_activities()
+    suggestions = []
+    for stmt in stmts:
+        if isinstance(stmt, (Modification, RegulateActivity,
+                             RegulateAmount)):
+            # The subj here is in an "active" position
+            subj, obj = stmt.agent_list()
+            if subj is None:
+                continue
+            subj_base = ml._get_base(subj)
+            # If it has any activities but isn't in an active state
+            # here
+            if subj_base.activity_types and not subj.activity:
+                for act in subj_base.activity_types:
+                    subj.activity = ActivityCondition(act, True)
+    return stmts
+
+
 def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     """Convert PySB model to GroMEt object and save it to a JSON file.
 
@@ -1129,6 +1154,11 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     species_nodes = [str(sp) for sp in pysb_model.species]
     # Add all species junctions
     for ix, sp in enumerate(pysb_model.species):
+        if ix not in species_values:
+            species_values[ix] = Literal(
+                uid=None, type=UidType("Integer"),
+                value=Val(0),
+                name=None, metadata=None)
         # Map to a list of agents
         agents = []
         for mp in sp.monomer_patterns:
