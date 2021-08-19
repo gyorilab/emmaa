@@ -1657,9 +1657,6 @@ def get_all_statements_page(model):
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
 
-    beliefs = [stmt.belief for stmt in stmts]
-    belief_range = min(beliefs), max(beliefs)
-
     # Helper function for filtering statements on different conditions
     def filter_stmt(stmt):
         accepted = []
@@ -1683,6 +1680,9 @@ def get_all_statements_page(model):
 
     # Filter statements with all filters
     stmts = list(filter(filter_stmt, stmts))
+
+    beliefs = [stmt.belief for stmt in stmts]
+    belief_range = min(beliefs), max(beliefs)
 
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
