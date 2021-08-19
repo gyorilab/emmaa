@@ -1,3 +1,4 @@
+from datetime import date
 import logging
 import jsonpickle
 from collections import defaultdict
@@ -5,9 +6,10 @@ from emmaa.model import load_stmts_from_s3
 from emmaa.statements import filter_emmaa_stmts_by_metadata, \
     filter_indra_stmts_by_metadata
 from emmaa.model_tests import load_model_manager_from_s3
-from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
+from emmaa.util import NotAClassName, find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
     _make_delta_msg
+from indra.statements import agent
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.literature import pubmed_client, crossref_client, pmc_client
@@ -1025,6 +1027,82 @@ class TestStatsGenerator(StatsGenerator):
         logger.info(f'Loading earlier statistics from {key}')
         previous_json_stats = load_json_from_s3(self.bucket, key)
         return previous_json_stats
+
+
+class AgentStatsGenerator(object):
+    def __init__(self, model_name, agent_name, date_str,
+                 test_corpus_str='large_corpus_tests', all_stmts=None,
+                 model_stats=None, test_stats=None,
+                 bucket=EMMAA_BUCKET_NAME):
+        self.model_name = model_name
+        self.agent_name = agent_name
+        self.date_str = date_str
+        self.test_corpus = test_corpus_str
+        self.bucket = bucket
+        self.full_model_stats = model_stats if model_stats else \
+            self.load_model_stats()
+        self.full_test_stats = test_stats if test_stats else \
+            self.load_test_stats()
+        self.filtered_stmts = self.filter_stmts(agent_name, all_stmts)
+        self.model_round = self.get_model_round()
+        self.test_round = self.get_test_round()
+        self.json_stats = {}
+
+    def make_stats(self):
+        self.make_model_stats()
+        self.make_test_stats()
+
+    def make_model_stats(self):
+        self.make_model_summary()
+        self.make_model_delta()
+        self.make_paper_delta()
+        self.make_paper_summary()
+        self.make_curation_summary()
+
+    def make_test_stats(self):
+        self.make_test_summary()
+        self.make_tests_delta()
+
+    def make_model_summary(self):
+        pass
+
+    def make_model_delta(self):
+        pass
+
+    def make_paper_delta(self):
+        pass
+
+    def make_paper_summary(self):
+        pass
+
+    def make_curation_summary(self):
+        pass
+
+    def make_test_summary(self):
+        pass
+
+    def make_tests_delta(self):
+        pass
+
+    def load_model_stats(self):
+        # TODO load full model stats from S3
+        pass
+
+    def load_test_stats(self):
+        # TODO load full test stats from S3
+        pass
+
+    def filter_stmts(agent_name, all_stmts=None):
+        # TODO filter stmts to only containing given agent
+        pass
+
+    def get_model_round(self):
+        # TODO instantiate ModelRound with filtered statements
+        pass
+
+    def get_test_round(self):
+        # TODO instantiate TestRound
+        pass
 
 
 def generate_stats_on_s3(
