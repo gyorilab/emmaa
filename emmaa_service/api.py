@@ -1037,6 +1037,10 @@ def get_home():
 @jwt_optional
 def get_model_dashboard(model):
     """Render model dashboard page."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template('loading.html')
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
@@ -1047,12 +1051,6 @@ def get_model_dashboard(model):
     if not date:
         date = latest_date
     tab = request.args.get('tab', 'model')
-    loaded = request.args.get('loaded')
-    loaded = (loaded == 'true')
-    if not loaded:
-        return render_template('loading.html', model=model,
-                               test_corpus=test_corpus, date=date, tab=tab)
-
     user, roles = resolve_auth(dict(request.args))
     logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
                 f'at {date}.')
