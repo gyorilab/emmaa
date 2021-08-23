@@ -1040,7 +1040,9 @@ def get_model_dashboard(model):
     loaded = request.args.get('loaded')
     loaded = (loaded == 'true')
     if not loaded:
-        return render_template('loading.html')
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the model statistics...')
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
