@@ -137,4 +137,12 @@
 
   {{ belief_tab(belief_data) }}
 </div>
+
+<script>
+  const url = new URL(window.location);
+  if (url.href.includes('loaded')) {
+    url.href = url.href.replace('&loaded=true', '')
+    window.history.pushState('', '', url);
+  }
+</script>
 {% endblock %}
