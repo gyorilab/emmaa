@@ -76,5 +76,9 @@
     </div>
   </div>
 </body>
-<script> window.location.replace('/dashboard/{{model}}?test_corpus={{test_corpus}}&tab={{tab}}&date={{date}}&loaded=true'); </script>
+<script>
+  var loc = window.location.href;
+  loc = loc.concat('&loaded=true')
+  window.location.replace(loc);
+</script>
 </html>
