@@ -1026,6 +1026,12 @@ def health():
 @app.route('/home')
 @jwt_optional
 def get_home():
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the models...')
     user, roles = resolve_auth(dict(request.args))
     model_data = _get_model_meta_data()
     return render_template('index_template.html', model_data=model_data,
