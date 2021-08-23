@@ -295,4 +295,17 @@
     </div>
   </footer>
   {% endif %}
+  <script>
+    const url = new URL(window.location);
+    console.log(url)
+    if (url.href.includes('&loaded=true')) {
+      console.log('&')
+      url.href = url.href.replace('&loaded=true', '')
+      window.history.pushState('', '', url);
+    } else if (url.href.includes('?loaded=true')) {
+      console.log('?')
+      url.href = url.href.replace('?loaded=true', '')
+      window.history.pushState('', '', url);
+    }
+  </script>
 </body>
