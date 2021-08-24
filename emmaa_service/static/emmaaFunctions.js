@@ -46,10 +46,6 @@ function modelRedirect(ddSelect, current_model) {
     tab = new URL(loc).searchParams.get('tab');
     loc = loc.replace(`tab=${tab}`, 'tab=model')
   }  
-  if (loc.includes('loaded')) {
-    loaded = new URL(loc).searchParams.get('loaded');
-    loc = loc.replace(`&loaded=${loaded}`, '')
-  }
   // redirect url:
   let redirect = loc.replace(current_model, newModel);
   if (redirect.endsWith('&')) {
