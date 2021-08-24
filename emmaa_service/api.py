@@ -26,6 +26,8 @@ from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, Agent, \
     RemoveModification, get_statement_by_name, stmts_to_json
+from indra.databases import uniprot_client
+from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.html.assembler import _format_evidence_text, \
     _format_stmt_text
 from indra_db.client.principal.curation import get_curations, submit_curation
@@ -2238,12 +2240,17 @@ class EntityInfo(Resource):
         # for adding model-specific entity info later
         namespace = request.args.get('namespace')
         identifier = request.args.get('id')
-        url = get_identifiers_url(namespace, identifier)
-        rv = {'url': url}
-        bioresolver_json = _lookup_bioresolver(namespace, identifier)
-        if bioresolver_json:
-            rv['name'] = bioresolver_json.get('name')
-            rv['definition'] = bioresolver_json.get('definition')
+        std_name, db_refs = standardize_name_db_refs({namespace: identifier})
+        up_id = db_refs.get('UP')
+        original_url = get_identifiers_url(namespace, identifier)
+        urls = [get_identifiers_url(k, v) for k, v in db_refs.items()]
+        all_urls = {url.split('/')[-1]: url for url in urls if url}
+        rv = {'url': original_url, 'all_urls': all_urls,
+              'name': std_name}
+        if up_id:
+            rv['definition'] = uniprot_client.get_function(up_id)
+        else:
+            rv['definition'] = None
         return rv
 
 
