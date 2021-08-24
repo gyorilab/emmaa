@@ -1587,6 +1587,12 @@ def get_statement_evidence_page():
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
     """Render page with all statements for the model."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the model statements...')
     # Get all arguments
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
