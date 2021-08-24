@@ -14,7 +14,7 @@ html {
 }
 
 body {
-    background-color: #1FB6DB;
+    background-color: #fff;
 }
 
 .msg {
@@ -35,7 +35,7 @@ body {
 
 /* loading icon color */
 #bonfire-pageloader svg {
-    fill:#fff;
+    fill:#007bff;
 }
 
 #bonfire-pageloader svg {
