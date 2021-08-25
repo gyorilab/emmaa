@@ -222,7 +222,11 @@ entity_info_model = api.model('entity_info', {
         example='B-Raf proto-oncogene, serine/threonine kinase',
         description='Entity definition'),
     'url': fields.String(example='https://identifiers.org/hgnc:1097',
-                         description='URL for entity')
+                         description='URL for entity'),
+    'all_urls': fields.Nested(
+        dict_model, description='Mapping between identifiers and URLs',
+        example={"hgnc:1097": "https://identifiers.org/hgnc:1097",
+                 "uniprot:P15056": "https://identifiers.org/uniprot:P15056"})
 })
 edge_model = api.model('edge', {
     'type': fields.String(example='statements', description='Type of edge'),
@@ -2285,7 +2289,8 @@ class TestInfo(Resource):
 @metadata_ns.expect(entity_parser)
 @metadata_ns.route('/entity_info/<model>')
 class EntityInfo(Resource):
-    @metadata_ns.marshal_with(entity_info_model)
+    @metadata_ns.response(200, 'Information about entity',
+                          model=entity_info_model)
     def get(self, model):
         """Get information about an entity."""
         # For now, the model isn't explicitly used but could be necessary
