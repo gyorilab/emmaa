@@ -1026,6 +1026,12 @@ def health():
 @app.route('/home')
 @jwt_optional
 def get_home():
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the models...')
     user, roles = resolve_auth(dict(request.args))
     model_data = _get_model_meta_data()
     return render_template('index_template.html', model_data=model_data,
@@ -1037,6 +1043,12 @@ def get_home():
 @jwt_optional
 def get_model_dashboard(model):
     """Render model dashboard page."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the model statistics...')
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
@@ -1296,10 +1308,19 @@ def get_paper_statements(model):
     format : str
         Format to return the result as ('json' or 'html').
     """
+    display_format = request.args.get('format', 'html')
+    if display_format == 'html':
+        loaded = request.args.get('loaded')
+        loaded = (loaded == 'true')
+        if not loaded:
+            return render_template(
+                'loading.html',
+                msg=('Please wait while we load the statements '
+                     'from this paper...'))
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
-    display_format = request.args.get('format', 'html')
+    
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
@@ -1368,6 +1389,12 @@ def get_paper_statements(model):
 @app.route('/tests/<model>')
 def get_model_tests_page(model):
     """Render page displaying results of individual test."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load test results...')
     model_type = request.args.get('model_type')
     test_hash = request.args.get('test_hash')
     test_corpus = request.args.get('test_corpus')
@@ -1440,6 +1467,12 @@ def get_model_tests_page(model):
 @jwt_optional
 def get_query_page():
     """Render queries page."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the queries...')
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
     tab = request.args.get('tab', 'static')
@@ -1486,12 +1519,19 @@ def get_query_page():
 def get_statement_evidence_page():
     """Render page displaying evidence for statement or return statement JSON.
     """
+    display_format = request.args.get('format', 'html')
+    if display_format == 'html':
+        loaded = request.args.get('loaded')
+        loaded = (loaded == 'true')
+        if not loaded:
+            return render_template(
+                'loading.html',
+                msg='Please wait while we load the statement evidence...')
     stmt_hashes = set(request.args.getlist('stmt_hash'))
     source = request.args.get('source')
     model = request.args.get('model')
     test_corpus = request.args.get('test_corpus', '')
     date = request.args.get('date')
-    display_format = request.args.get('format', 'html')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
     stmts = []
@@ -1575,6 +1615,12 @@ def get_statement_evidence_page():
 @app.route('/all_statements/<model>')
 def get_all_statements_page(model):
     """Render page with all statements for the model."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load the model statements...')
     # Get all arguments
     sort_by = request.args.get('sort_by', 'evidence')
     page = int(request.args.get('page', 1))
@@ -1749,6 +1795,12 @@ def pusher_authentication():
 @app.route('/query/<model>')
 def get_query_tests_page(model):
     """Render page displaying results of individual query."""
+    loaded = request.args.get('loaded')
+    loaded = (loaded == 'true')
+    if not loaded:
+        return render_template(
+            'loading.html',
+            msg='Please wait while we load query results...')
     model_type = request.args.get('model_type')
     query_hash = int(request.args.get('query_hash'))
     order = int(request.args.get('order', 1))
