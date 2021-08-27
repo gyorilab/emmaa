@@ -1044,24 +1044,18 @@ class AgentStatsGenerator(object):
         self.full_test_stats = test_stats if test_stats else \
             self.load_test_stats()
         self.filtered_stmts = self.filter_stmts(agent_name, all_stmts)
+        self.hashes = set(
+            [str(stmt.get_hash()) for stmt in self.filtered_stmts])
         self.model_round = self.get_model_round()
         self.test_round = self.get_test_round()
         self.json_stats = {}
 
     def make_stats(self):
-        self.make_model_stats()
-        self.make_test_stats()
-
-    def make_model_stats(self):
         self.make_model_summary()
         self.make_model_delta()
         self.make_paper_delta()
         self.make_paper_summary()
-        self.make_curation_summary()
-
-    def make_test_stats(self):
         self.make_test_summary()
-        self.make_tests_delta()
 
     def make_model_summary(self):
         pass
