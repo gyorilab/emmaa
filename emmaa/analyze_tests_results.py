@@ -1058,10 +1058,23 @@ class AgentStatsGenerator(object):
         self.make_test_summary()
 
     def make_model_summary(self):
-        pass
+        agents = self.model_round.get_agent_distribution()
+        # Filter main agent from agent distribution
+        agents = [ag_count for ag_count in agents
+                  if ag_count[0] != self.agent_name]
+        model_summary = {
+            'stmts_type_distr': self.model_round.get_statement_types(),
+            'agent_distr': agents,
+            'stmts_by_evidence': self.model_round.get_statements_by_evidence(),
+            'sources': self.model_round.get_sources_distribution()
+        }
+        self.json_stats['model_summary'] = model_summary
 
     def make_model_delta(self):
-        pass
+        new_stmts = [sh for sh in self.full_model_stats['model_delta'][
+            'statements_hashes_delta']['added'] if sh in self.hashes]
+        self.json_stats['model_delta'] = {
+            'statements_hashes_delta': {'added': new_stmts}}
 
     def make_paper_delta(self):
         pass
@@ -1069,13 +1082,7 @@ class AgentStatsGenerator(object):
     def make_paper_summary(self):
         pass
 
-    def make_curation_summary(self):
-        pass
-
     def make_test_summary(self):
-        pass
-
-    def make_tests_delta(self):
         pass
 
     def load_model_stats(self):
