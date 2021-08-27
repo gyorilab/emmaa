@@ -1076,11 +1076,23 @@ class AgentStatsGenerator(object):
         self.json_stats['model_delta'] = {
             'statements_hashes_delta': {'added': new_stmts}}
 
-    def make_paper_delta(self):
-        pass
-
     def make_paper_summary(self):
-        pass
+        self.json_stats['paper_summary'] = {
+            'stmts_by_paper': self.model_round.stmts_by_papers,
+            'paper_distr': self.model_round.get_papers_distribution()
+        }
+        freq_trids = [pair[0] for pair in
+                      self.json_stats['paper_summary']['paper_distr'][:10]]
+        titles, links = self.model_round.get_paper_titles_and_links(freq_trids)
+        self.json_stats['paper_summary']['paper_titles'] = titles
+        self.json_stats['paper_summary']['paper_links'] = links
+
+    def make_paper_delta(self):
+        paper_delta = [trid for trid in self.full_model_stats['paper_delta'][
+            'assembled_paper_ids_delta']['added'] if trid in
+                set(self.model_round.stmts_by_papers.keys())]
+        self.json_stats['paper_delta'] = {
+            'assembled_paper_ids_delta': {'added': paper_delta}}
 
     def make_test_summary(self):
         pass
