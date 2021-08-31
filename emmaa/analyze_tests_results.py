@@ -1030,14 +1030,12 @@ class TestStatsGenerator(StatsGenerator):
 
 
 class AgentStatsGenerator(object):
-    def __init__(self, model_name, agent_name, date_str,
-                 test_corpus_str='large_corpus_tests', all_stmts=None,
+    def __init__(self, model_name, agent_name, date_str, all_stmts,
                  model_stats=None, test_stats=None,
                  bucket=EMMAA_BUCKET_NAME):
         self.model_name = model_name
         self.agent_name = agent_name
         self.date_str = date_str
-        self.test_corpus = test_corpus_str
         self.bucket = bucket
         self.full_model_stats = model_stats
         self.full_test_stats = test_stats
@@ -1101,7 +1099,7 @@ class AgentStatsGenerator(object):
                 agent_tests.add(th)
             for mc_type, res in test.items():
                 if res[0] == 'Pass' and isinstance(res[1], list):
-                    if self.agent_name in res[1][0]['path'].split():
+                    if _agent_in_path(self.agent_name, res[1][0]['path']):
                         agent_paths[mc_type].add(th)
         agent_paths = dict(agent_paths)
         self.json_stats['test_round_summary'] = {
@@ -1109,13 +1107,15 @@ class AgentStatsGenerator(object):
             'agent_paths': agent_paths
         }
 
-    def filter_stmts(agent_name, all_stmts=None):
-        # TODO filter stmts to only containing given agent
-        pass
+    @staticmethod
+    def filter_stmts(agent_name, all_stmts):
+        filtered_stmts = [
+            stmt for stmt in all_stmts if agent_name.lower() in [
+                ag.name.lower() for ag in stmt.real_agent_list()]]
+        return filtered_stmts
 
     def get_model_round(self):
-        # TODO instantiate ModelRound with filtered statements
-        pass
+        self.model_round = ModelRound(self.filtered_stmts, self.date_str)
 
 
 def _agent_in_path(agent_name, path):
