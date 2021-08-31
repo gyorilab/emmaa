@@ -1039,15 +1039,12 @@ class AgentStatsGenerator(object):
         self.date_str = date_str
         self.test_corpus = test_corpus_str
         self.bucket = bucket
-        self.full_model_stats = model_stats if model_stats else \
-            self.load_model_stats()
-        self.full_test_stats = test_stats if test_stats else \
-            self.load_test_stats()
+        self.full_model_stats = model_stats
+        self.full_test_stats = test_stats
         self.filtered_stmts = self.filter_stmts(agent_name, all_stmts)
         self.hashes = set(
             [str(stmt.get_hash()) for stmt in self.filtered_stmts])
         self.model_round = self.get_model_round()
-        self.test_round = self.get_test_round()
         self.json_stats = {}
 
     def make_stats(self):
@@ -1112,24 +1109,12 @@ class AgentStatsGenerator(object):
             'agent_paths': agent_paths
         }
 
-    def load_model_stats(self):
-        # TODO load full model stats from S3
-        pass
-
-    def load_test_stats(self):
-        # TODO load full test stats from S3
-        pass
-
     def filter_stmts(agent_name, all_stmts=None):
         # TODO filter stmts to only containing given agent
         pass
 
     def get_model_round(self):
         # TODO instantiate ModelRound with filtered statements
-        pass
-
-    def get_test_round(self):
-        # TODO instantiate TestRound
         pass
 
 
