@@ -1095,7 +1095,22 @@ class AgentStatsGenerator(object):
             'assembled_paper_ids_delta': {'added': paper_delta}}
 
     def make_test_summary(self):
-        pass
+        agent_tests = set()
+        agent_paths = defaultdict(set)
+        for th, test in self.full_test_stats['test_round_summary'][
+                'all_test_results']:
+            test_sent = test['test'][1].rstrip('.')
+            if self.agent_name in test_sent.splt():
+                agent_tests.add(th)
+            for mc_type, res in test.items():
+                if res[0] == 'Pass' and isinstance(res[1], list):
+                    if self.agent_name in res[1][0]['path'].split():
+                        agent_paths[mc_type].add(th)
+        agent_paths = dict(agent_paths)
+        self.json_stats['test_round_summary'] = {
+            'agent_tests': agent_tests,
+            'agent_paths': agent_paths
+        }
 
     def load_model_stats(self):
         # TODO load full model stats from S3
@@ -1116,6 +1131,14 @@ class AgentStatsGenerator(object):
     def get_test_round(self):
         # TODO instantiate TestRound
         pass
+
+
+def _agent_in_path(agent_name, path):
+    # agent name has several words
+    if len(agent_name.split()) > 1:
+        return agent_name.lower() in path.lower()
+    # agent name is one word/acronym
+    return agent_name.lower() in [n.lower() for n in path.split()]
 
 
 def generate_stats_on_s3(
