@@ -1030,12 +1030,11 @@ class TestStatsGenerator(StatsGenerator):
 
 
 class AgentStatsGenerator(object):
-    def __init__(self, model_name, agent_name, date_str, all_stmts,
+    def __init__(self, model_name, agent_name, all_stmts,
                  model_stats=None, test_stats=None,
                  bucket=EMMAA_BUCKET_NAME):
         self.model_name = model_name
         self.agent_name = agent_name
-        self.date_str = date_str
         self.bucket = bucket
         self.full_model_stats = model_stats
         self.full_test_stats = test_stats
@@ -1093,13 +1092,13 @@ class AgentStatsGenerator(object):
         agent_tests = set()
         agent_paths = defaultdict(set)
         for th, test in self.full_test_stats['test_round_summary'][
-                'all_test_results']:
+                'all_test_results'].items():
             test_sent = test['test'][1].rstrip('.')
-            if self.agent_name in test_sent.splt():
+            if _agent_in_string(self.agent_name, test_sent):
                 agent_tests.add(th)
             for mc_type, res in test.items():
                 if res[0] == 'Pass' and isinstance(res[1], list):
-                    if _agent_in_path(self.agent_name, res[1][0]['path']):
+                    if _agent_in_string(self.agent_name, res[1][0]['path']):
                         agent_paths[mc_type].add(th)
         agent_paths = dict(agent_paths)
         self.json_stats['test_round_summary'] = {
@@ -1115,15 +1114,15 @@ class AgentStatsGenerator(object):
         return filtered_stmts
 
     def get_model_round(self):
-        self.model_round = ModelRound(self.filtered_stmts, self.date_str)
+        return ModelRound(self.filtered_stmts, None)
 
 
-def _agent_in_path(agent_name, path):
+def _agent_in_string(agent_name, string):
     # agent name has several words
     if len(agent_name.split()) > 1:
-        return agent_name.lower() in path.lower()
+        return agent_name.lower() in string.lower()
     # agent name is one word/acronym
-    return agent_name.lower() in [n.lower() for n in path.split()]
+    return agent_name.lower() in [n.lower() for n in string.split()]
 
 
 def generate_stats_on_s3(
