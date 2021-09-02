@@ -1072,6 +1072,7 @@ def get_model_dashboard(model):
     if not date:
         date = latest_date
     tab = request.args.get('tab', 'model')
+    agent = request.args.get('agent')
     user, roles = resolve_auth(dict(request.args))
     logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
                 f'at {date}.')
@@ -1249,7 +1250,9 @@ def get_model_dashboard(model):
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
                            new_papers=new_papers,
-                           belief_data=belief_data)
+                           belief_data=belief_data,
+                           agent=agent,
+                           agent_stats=None)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])

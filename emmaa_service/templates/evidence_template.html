@@ -116,9 +116,9 @@
       <!-- agent -->
       <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
         {% if agent %}
-        <input class="form-control" id="agentFilter" type="text" name="openAgentText" placeholder="Enter agent" value="{{ agent }}">
+        <input class="form-control" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" value="{{ agent }}">
         {% else %}
-        <input class="form-control" id="agentFilter" type="text" name="openAgentText" placeholder="Enter agent">
+        <input class="form-control" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent">
         {% endif %}
         <button class="btn btn-outline-secondary" style="position: absolute; top: 20px; left: 350px;" onClick="filterAgent(document.getElementById('agentFilter').value)" type="button">Filter by agent</button>
       </div>

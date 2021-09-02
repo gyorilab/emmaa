@@ -871,5 +871,9 @@ function filterAgent(agent) {
   } else {
     redirect = loc.concat(`&agent=${agent}`)
   }
+  if (loc.includes('tab=')) {
+    cur_tab = new URL(loc).searchParams.get('tab');
+    redirect = redirect.replace(`tab=${cur_tab}`, 'tab=agent');
+  }
   location.replace(redirect);
 }

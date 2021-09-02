@@ -4,6 +4,7 @@
 {% from "tabs/paper_tab.html" import paper_tab %}
 {% from "tabs/curation_tab.html" import curation_tab %}
 {% from "tabs/belief_tab.html" import belief_tab %}
+{% from "tabs/agent_tab.html" import agent_tab %}
 
 {% block additional_scripts %}
 <script>
@@ -62,30 +63,42 @@
       <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
       <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
       <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>
+      <a class="nav-item nav-link" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="false">Agent</a>
       {% elif tab == 'tests' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link active" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="true">Tests</a>
       <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
       <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
       <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>
+      <a class="nav-item nav-link" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="false">Agent</a>
       {% elif tab == 'papers' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
       <a class="nav-item nav-link active" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="true">Papers</a>
       <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
       <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>
+      <a class="nav-item nav-link" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="false">Agent</a>
       {% elif tab == 'curation' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
       <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
       <a class="nav-item nav-link active" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="true">Curation</a>
-      <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>      
+      <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a> 
+      <a class="nav-item nav-link" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="false">Agent</a>     
       {% elif tab == 'belief' %}
       <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
       <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
       <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
       <a class="nav-item nav-link active" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="true">Belief</a>  
+      <a class="nav-item nav-link" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="false">Agent</a>
+      {% elif tab == 'agent' %}
+      <a class="nav-item nav-link" id="nav-model-tab" data-toggle="tab" href="#nav-model" role="tab" aria-controls="nav-model" aria-selected="false">Model</a>
+      <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
+      <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
+      <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
+      <a class="nav-item nav-link active" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>  
+      <a class="nav-item nav-link active" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="true">Agent</a>      
       {% endif %}  
     </div>
   </nav>
@@ -136,5 +149,14 @@
   {% endif %}
 
   {{ belief_tab(belief_data) }}
+
+  </div>
+  {% if tab == 'agent' %}
+  <div class="tab-pane fade show active" id="nav-agent" role="tabpanel" aria-labelledby="nav-agent-tab">
+  {% else %}
+  <div class="tab-pane fade" id="nav-agent" role="tabpanel" aria-labelledby="nav-agent-tab">  
+  {% endif %}
+
+  {{ agent_tab(agent, agent_stats) }}
 </div>
 {% endblock %}
