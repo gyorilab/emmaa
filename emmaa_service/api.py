@@ -44,7 +44,7 @@ from emmaa.subscription.email_util import verify_email_signature,\
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
-from emmaa.analyze_tests_results import _get_trid_title
+from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -1082,6 +1082,12 @@ def get_model_dashboard(model):
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+    agent_stats = {}
+    if agent:
+        stmts = _load_stmts_from_cache(model, date)
+        sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
+        sg.make_stats()
+        agent_stats = sg.json_stats
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
     logger.info('Getting model information')
     ndex_id = None
@@ -1252,7 +1258,7 @@ def get_model_dashboard(model):
                            new_papers=new_papers,
                            belief_data=belief_data,
                            agent=agent,
-                           agent_stats=None)
+                           agent_stats=agent_stats)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
