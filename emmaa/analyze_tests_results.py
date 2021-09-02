@@ -1,4 +1,5 @@
 from datetime import date
+import json
 import logging
 import jsonpickle
 from collections import defaultdict
@@ -1050,6 +1051,7 @@ class AgentStatsGenerator(object):
         self.make_paper_delta()
         self.make_paper_summary()
         self.make_test_summary()
+        self.json_stats = json.loads(json.dumps(self.json_stats))
 
     def make_model_summary(self):
         agents = self.model_round.get_agent_distribution()
@@ -1100,9 +1102,9 @@ class AgentStatsGenerator(object):
                 if res[0] == 'Pass' and isinstance(res[1], list):
                     if _agent_in_string(self.agent_name, res[1][0]['path']):
                         agent_paths[mc_type].add(th)
-        agent_paths = dict(agent_paths)
+        agent_paths = {k: list(v) for k, v in agent_paths.items()}
         self.json_stats['test_round_summary'] = {
-            'agent_tests': agent_tests,
+            'agent_tests': list(agent_tests),
             'agent_paths': agent_paths
         }
 
