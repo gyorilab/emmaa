@@ -17,7 +17,7 @@
 
     let testResultsTableBody = document.getElementById('modelTestResultBody');
 
-    populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }}, {{ test_stats_json|safe }}, {{ belief_data|safe }});
+    populateTestResultTable(testResultsTableBody, {{ model_stats_json|safe }}, {{ test_stats_json|safe }}, {{ belief_data|safe }}, {{ agent_stats|safe }});
   });
 </script>
 <style>
@@ -97,7 +97,7 @@
       <a class="nav-item nav-link" id="nav-tests-tab" data-toggle="tab" href="#nav-tests" role="tab" aria-controls="nav-tests" aria-selected="false">Tests</a>
       <a class="nav-item nav-link" id="nav-papers-tab" data-toggle="tab" href="#nav-papers" role="tab" aria-controls="nav-papers" aria-selected="false">Papers</a>
       <a class="nav-item nav-link" id="nav-curation-tab" data-toggle="tab" href="#nav-curation" role="tab" aria-controls="nav-curation" aria-selected="false">Curation</a>
-      <a class="nav-item nav-link active" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>  
+      <a class="nav-item nav-link" id="nav-belief-tab" data-toggle="tab" href="#nav-belief" role="tab" aria-controls="nav-belief" aria-selected="false">Belief</a>  
       <a class="nav-item nav-link active" id="nav-agent-tab" data-toggle="tab" href="#nav-agent" role="tab" aria-controls="nav-agent" aria-selected="true">Agent</a>      
       {% endif %}  
     </div>
@@ -157,6 +157,6 @@
   <div class="tab-pane fade" id="nav-agent" role="tabpanel" aria-labelledby="nav-agent-tab">  
   {% endif %}
 
-  {{ agent_tab(agent, agent_stats) }}
+  {{ agent_tab(model, agent, agent_stats) }}
 </div>
 {% endblock %}

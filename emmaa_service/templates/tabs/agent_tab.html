@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card %}
 
-{% macro agent_tab(agent=None, agent_stats=None) -%}
+{% macro agent_tab(model, agent=None, agent_stats=None) -%}
 <!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
 
 <div class="container">
@@ -20,6 +20,32 @@
       </div>
     </div>
   </div>
+  {% if agent_stats %}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentStmtTypes"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Top 10 Interactors of {{agent}}</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentInteractors"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Knowledge Sources</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentSourceDistr"></div>
+    </div>
+  </div>
+{% endif %}
 </div>
 
 {%- endmacro %}
