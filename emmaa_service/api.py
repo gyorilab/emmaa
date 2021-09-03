@@ -1058,10 +1058,17 @@ def get_model_dashboard(model):
     """Render model dashboard page."""
     loaded = request.args.get('loaded')
     loaded = (loaded == 'true')
+    agent = request.args.get('agent')
     if not loaded:
-        return render_template(
-            'loading.html',
-            msg='Please wait while we load the model statistics...')
+        if agent:
+            return render_template(
+                'loading.html',
+                msg=('Please wait while we generate the '
+                     'statistics about this agent...'))
+        else:
+            return render_template(
+                'loading.html',
+                msg='Please wait while we load the model statistics...')
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
@@ -1072,7 +1079,6 @@ def get_model_dashboard(model):
     if not date:
         date = latest_date
     tab = request.args.get('tab', 'model')
-    agent = request.args.get('agent')
     user, roles = resolve_auth(dict(request.args))
     logger.info(f'Loading {tab} dashboard for {model} and {test_corpus} '
                 f'at {date}.')
@@ -1224,6 +1230,7 @@ def get_model_dashboard(model):
     agent_stats = {}
     agent_stmts_counts = None
     agent_added_stmts = None
+    agent_paper_distr = None
     if agent:
         logger.info('Generating agent statistics')
         stmts = _load_stmts_from_cache(model, date)
@@ -1253,6 +1260,15 @@ def get_model_dashboard(model):
                     (_update_stmt(st_hash, st_value, add_model_links),))
         else:
             agent_added_stmts = f'No new statements with {agent} were added'
+        logger.info('Getting agent paper statistics')
+        agent_trids_counts = agent_stats['paper_summary']['paper_distr'][:10]
+        if len(agent_trids_counts) > 0:
+            agent_paper_distr = [
+                [_get_paper_title_tuple(paper_id, agent_stats, date),
+                 _get_external_paper_link(model, paper_id, agent_stats),
+                 ('', str(c), '')] for paper_id, c in agent_trids_counts]
+        else:
+            agent_paper_distr = f'No papers about {agent} were found'
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -1290,7 +1306,8 @@ def get_model_dashboard(model):
                            agent=agent,
                            agent_stats=agent_stats,
                            agent_stmts_counts=agent_stmts_counts,
-                           agent_added_stmts=agent_added_stmts)
+                           agent_added_stmts=agent_added_stmts,
+                           agent_paper_distr=agent_paper_distr)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])

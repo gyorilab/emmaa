@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card, path_table %}
 
-{% macro agent_tab(model, agent, agent_stats, agent_stmts_counts, agent_added_stmts) -%}
+{% macro agent_tab(model, agent, agent_stats, agent_stmts_counts, agent_added_stmts, agent_paper_distr) -%}
 <!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
 
 <div class="container">
@@ -54,8 +54,10 @@
       {{ path_table(agent_stmts_counts, ["Statement", "Evidence Count"], "agentStmtEvidenceTable") }}
     </div>
   </div>
-  {% set title = "New Statements with" + agent %}
+  {% set title = "New Statements with " + agent %}
   {{ path_card(agent_added_stmts, title, "agentAddedStmts", ["Statement"], "agentAddedStmtsTable") }}
+  {% set paper_title = "Papers mentioning " + agent %}
+  {{ path_card(agent_paper_distr, paper_title, "agentPaperStmt", ["Paper Title", "Link", "Statement Count"], "agentPaperStmtTable") }}
 {% endif %}
 </div>
 
