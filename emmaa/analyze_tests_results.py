@@ -1048,7 +1048,6 @@ class AgentStatsGenerator(object):
     def make_stats(self):
         self.make_model_summary()
         self.make_model_delta()
-        self.make_paper_delta()
         self.make_paper_summary()
         self.make_test_summary()
         self.json_stats = json.loads(json.dumps(self.json_stats))
@@ -1059,6 +1058,7 @@ class AgentStatsGenerator(object):
         agents = [ag_count for ag_count in agents
                   if ag_count[0] != self.agent_name]
         model_summary = {
+            'model_name': self.model_name,
             'stmts_type_distr': self.model_round.get_statement_types(),
             'agent_distr': agents,
             'stmts_by_evidence': self.model_round.get_statements_by_evidence(),
@@ -1082,13 +1082,6 @@ class AgentStatsGenerator(object):
         titles, links = self.model_round.get_paper_titles_and_links(freq_trids)
         self.json_stats['paper_summary']['paper_titles'] = titles
         self.json_stats['paper_summary']['paper_links'] = links
-
-    def make_paper_delta(self):
-        paper_delta = [trid for trid in self.full_model_stats['paper_delta'][
-            'assembled_paper_ids_delta']['added'] if trid in
-                set(self.model_round.stmts_by_papers.keys())]
-        self.json_stats['paper_delta'] = {
-            'assembled_paper_ids_delta': {'added': paper_delta}}
 
     def make_test_summary(self):
         agent_tests = set()
