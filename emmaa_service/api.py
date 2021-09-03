@@ -1082,12 +1082,7 @@ def get_model_dashboard(model):
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
-    agent_stats = {}
-    if agent:
-        stmts = _load_stmts_from_cache(model, date)
-        sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
-        sg.make_stats()
-        agent_stats = sg.json_stats
+
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
     logger.info('Getting model information')
     ndex_id = None
@@ -1199,6 +1194,7 @@ def get_model_dashboard(model):
     else:
         added_stmts = 'No new statements were added'
 
+    logger.info('Getting paper statistics')
     if not model_stats['paper_summary'].get('paper_titles'):
         paper_distr = 'Paper titles are not currently available'
         new_papers = 'Paper titles are not currently available'
@@ -1209,6 +1205,7 @@ def get_model_dashboard(model):
                         ('', str(c), '')] for paper_id, c in trids_counts]
         new_papers = get_new_papers(model, model_stats, date)
 
+    logger.info('Getting belief distribution')
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
     if not beliefs:
@@ -1223,6 +1220,39 @@ def get_model_dashboard(model):
             belief_x = [round(n, 3) for n in x]
         belief_freq = ['Beliefs'] + list(belief_freq) + [0]
         belief_data = {'x': belief_x, 'freq': belief_freq}
+
+    agent_stats = {}
+    agent_stmts_counts = None
+    agent_added_stmts = None
+    if agent:
+        logger.info('Generating agent statistics')
+        stmts = _load_stmts_from_cache(model, date)
+        sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
+        sg.make_stats()
+        agent_stats = sg.json_stats
+        agent_supported = agent_stats['model_summary'][
+            'stmts_by_evidence'][:10]
+        agent_added_hashes = \
+            agent_stats['model_delta']['statements_hashes_delta']['added']
+        if len(agent_supported) > 0:
+            agent_stmts_counts = []
+            logger.info('Mapping curations to agent most supported statements')
+            for st_hash, c in agent_supported:
+                st_value = deepcopy(all_stmts[st_hash])
+                agent_stmts_counts.append(
+                    ((_update_stmt(st_hash, st_value, add_model_links)),
+                     ('', str(c), '')))
+        else:
+            agent_stmts_counts = f'No statements with {agent} were found'
+        if len(agent_added_hashes) > 0:
+            logger.info('Mapping curations to new added statements with agent')
+            agent_added_stmts = []
+            for st_hash in agent_added_hashes:
+                st_value = deepcopy(all_stmts[st_hash])
+                agent_added_stmts.append(
+                    (_update_stmt(st_hash, st_value, add_model_links),))
+        else:
+            agent_added_stmts = f'No new statements with {agent} were added'
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -1258,7 +1288,9 @@ def get_model_dashboard(model):
                            new_papers=new_papers,
                            belief_data=belief_data,
                            agent=agent,
-                           agent_stats=agent_stats)
+                           agent_stats=agent_stats,
+                           agent_stmts_counts=agent_stmts_counts,
+                           agent_added_stmts=agent_added_stmts)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
