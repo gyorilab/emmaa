@@ -729,6 +729,42 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
     return 'No new tests were passed'
 
 
+def _agent_paths_tests(model_name, agent_paths, test_stats_json, date,
+                       current_model_types, test_corpus, add_links=False):
+    agent_path_tests = []
+    all_test_results = test_stats_json['test_round_summary'][
+        'all_test_results']
+    for mt in current_model_types:
+        mt_path_hashes = agent_paths.get(mt)
+        if not mt_path_hashes:
+            continue
+        mt_rows = [[('', f'Paths in {FORMATTED_TYPE_NAMES[mt]} model.', '')]]
+        for th in mt_path_hashes:
+            test = all_test_results[th]
+            if add_links:
+                ev_url_par = parse.urlencode(
+                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                     'test_corpus': test_corpus, 'date': date})
+                test['test'][0] = f'/evidence?{ev_url_par}'
+                test['test'][2] = stmt_db_link_msg
+            path_loc = test[mt][1]
+            if isinstance(path_loc, list):
+                path = path_loc[0]['path']
+            else:
+                path = path_loc
+            url_param = parse.urlencode(
+                {'model_type': mt, 'test_hash': th, 'date': date,
+                 'test_corpus': test_corpus})
+            new_row = [(test['test']),
+                       (f'/tests/{model_name}?{url_param}', path,
+                        pass_fail_msg)]
+            mt_rows.append(new_row)
+        agent_path_tests += mt_rows
+    if len(agent_path_tests) > 0:
+        return agent_path_tests
+    return 'No paths with this agent'
+
+
 def _set_curation(stmt_hash, correct, incorrect):
     cur = ''
     if isinstance(stmt_hash, list):
@@ -1232,6 +1268,7 @@ def get_model_dashboard(model):
     agent_added_stmts = None
     agent_paper_distr = None
     agent_tests_table = None
+    agent_paths_table = None
     if agent:
         logger.info('Generating agent statistics')
         stmts = _load_stmts_from_cache(model, date)
@@ -1266,6 +1303,10 @@ def get_model_dashboard(model):
                        agent_stats['test_round_summary']['agent_tests']]
         agent_tests_table = _format_table_array(
             agent_tests, current_model_types, model, date,
+            test_corpus, add_test_links)
+        agent_paths = agent_stats['test_round_summary']['agent_paths']
+        agent_paths_table = _agent_paths_tests(
+            model, agent_paths, test_stats, date, current_model_types,
             test_corpus, add_test_links)
         logger.info('Getting agent paper statistics')
         agent_trids_counts = agent_stats['paper_summary']['paper_distr'][:10]
@@ -1315,7 +1356,8 @@ def get_model_dashboard(model):
                            agent_stmts_counts=agent_stmts_counts,
                            agent_added_stmts=agent_added_stmts,
                            agent_paper_distr=agent_paper_distr,
-                           agent_tests=agent_tests_table)
+                           agent_tests=agent_tests_table,
+                           agent_paths=agent_paths_table)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
