@@ -1231,6 +1231,7 @@ def get_model_dashboard(model):
     agent_stmts_counts = None
     agent_added_stmts = None
     agent_paper_distr = None
+    agent_tests_table = None
     if agent:
         logger.info('Generating agent statistics')
         stmts = _load_stmts_from_cache(model, date)
@@ -1260,6 +1261,12 @@ def get_model_dashboard(model):
                     (_update_stmt(st_hash, st_value, add_model_links),))
         else:
             agent_added_stmts = f'No new statements with {agent} were added'
+        logger.info('Getting agent test statistics')
+        agent_tests = [(th, test) for (th, test) in all_tests if th in
+                       agent_stats['test_round_summary']['agent_tests']]
+        agent_tests_table = _format_table_array(
+            agent_tests, current_model_types, model, date,
+            test_corpus, add_test_links)
         logger.info('Getting agent paper statistics')
         agent_trids_counts = agent_stats['paper_summary']['paper_distr'][:10]
         if len(agent_trids_counts) > 0:
@@ -1307,7 +1314,8 @@ def get_model_dashboard(model):
                            agent_stats=agent_stats,
                            agent_stmts_counts=agent_stmts_counts,
                            agent_added_stmts=agent_added_stmts,
-                           agent_paper_distr=agent_paper_distr)
+                           agent_paper_distr=agent_paper_distr,
+                           agent_tests=agent_tests_table)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
