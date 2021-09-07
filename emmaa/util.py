@@ -272,6 +272,12 @@ def load_pickle_from_s3(bucket, key):
         obj = client.get_object(Bucket=bucket, Key=key)
         content = pickle.loads(obj['Body'].read())
         return content
+    except OverflowError:
+        logger.info(f'Downloading file')
+        client.download_file(bucket, key, 'temp.pkl')
+        with open('temp.pkl', 'rb') as f:
+            content = pickle.load(f)
+        return content
     except Exception as e:
         logger.info(f'Could not load the pickle from {key}')
         logger.info(e)
