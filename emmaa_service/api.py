@@ -1289,9 +1289,12 @@ def get_model_dashboard(model):
         logger.info('Getting agent test statistics')
         agent_tests = [(th, test) for (th, test) in all_tests if th in
                        agent_stats['test_round_summary']['agent_tests']]
-        agent_tests_table = _format_table_array(
-            agent_tests, current_model_types, model, date,
-            test_corpus, add_test_links)
+        if agent_tests:
+            agent_tests_table = _format_table_array(
+                agent_tests, current_model_types, model, date,
+                test_corpus, add_test_links)
+        else:
+            agent_tests_table = 'No tests with this agent'
         agent_paths = agent_stats['test_round_summary']['agent_paths']
         agent_paths_table = _agent_paths_tests(
             model, agent_paths, test_stats, date, current_model_types,
