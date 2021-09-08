@@ -690,6 +690,32 @@ def _format_dynamic_query_results(formatted_results):
     return result_array
 
 
+def _get_mt_rows(model_name, mt, msg, hashes, all_test_results, date,
+                 test_corpus, add_links):
+    mt_rows = [[('', f'{msg} {FORMATTED_TYPE_NAMES[mt]} model.', '')]]
+    for th in hashes:
+        test = all_test_results[th]
+        if add_links:
+            ev_url_par = parse.urlencode(
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                    'test_corpus': test_corpus, 'date': date})
+            test['test'][0] = f'/evidence?{ev_url_par}'
+            test['test'][2] = stmt_db_link_msg
+        path_loc = test[mt][1]
+        if isinstance(path_loc, list):
+            path = path_loc[0]['path']
+        else:
+            path = path_loc
+        url_param = parse.urlencode(
+            {'model_type': mt, 'test_hash': th, 'date': date,
+                'test_corpus': test_corpus})
+        new_row = [(test['test']),
+                   (f'/tests/{model_name}?{url_param}', path,
+                    pass_fail_msg)]
+        mt_rows.append(new_row)
+    return mt_rows
+
+
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                       test_corpus, add_links=False):
     new_passed_tests = []
@@ -700,29 +726,9 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             'passed_hashes_delta']['added']
         if not new_passed_hashes:
             continue
-        mt_rows = [[('', f'New passed tests for '
-                         f'{FORMATTED_TYPE_NAMES[mt]} model.',
-                     '')]]
-        for th in new_passed_hashes:
-            test = all_test_results[th]
-            if add_links:
-                ev_url_par = parse.urlencode(
-                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                     'test_corpus': test_corpus, 'date': date})
-                test['test'][0] = f'/evidence?{ev_url_par}'
-                test['test'][2] = stmt_db_link_msg
-            path_loc = test[mt][1]
-            if isinstance(path_loc, list):
-                path = path_loc[0]['path']
-            else:
-                path = path_loc
-            url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date,
-                 'test_corpus': test_corpus})
-            new_row = [(test['test']),
-                       (f'/tests/{model_name}?{url_param}', path,
-                        pass_fail_msg)]
-            mt_rows.append(new_row)
+        mt_rows = _get_mt_rows(
+            model_name, mt, 'New passed tests for', new_passed_hashes,
+            all_test_results, date, test_corpus, add_links)
         new_passed_tests += mt_rows
     if len(new_passed_tests) > 0:
         return new_passed_tests
@@ -738,27 +744,9 @@ def _agent_paths_tests(model_name, agent_paths, test_stats_json, date,
         mt_path_hashes = agent_paths.get(mt)
         if not mt_path_hashes:
             continue
-        mt_rows = [[('', f'Paths in {FORMATTED_TYPE_NAMES[mt]} model.', '')]]
-        for th in mt_path_hashes:
-            test = all_test_results[th]
-            if add_links:
-                ev_url_par = parse.urlencode(
-                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                     'test_corpus': test_corpus, 'date': date})
-                test['test'][0] = f'/evidence?{ev_url_par}'
-                test['test'][2] = stmt_db_link_msg
-            path_loc = test[mt][1]
-            if isinstance(path_loc, list):
-                path = path_loc[0]['path']
-            else:
-                path = path_loc
-            url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date,
-                 'test_corpus': test_corpus})
-            new_row = [(test['test']),
-                       (f'/tests/{model_name}?{url_param}', path,
-                        pass_fail_msg)]
-            mt_rows.append(new_row)
+        mt_rows = _get_mt_rows(
+            model_name, mt, 'Paths in', mt_path_hashes,
+            all_test_results, date, test_corpus, add_links)
         agent_path_tests += mt_rows
     if len(agent_path_tests) > 0:
         return agent_path_tests
