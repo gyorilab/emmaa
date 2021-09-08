@@ -56,12 +56,12 @@
   </div>
   {% set title = "New Statements with " + agent %}
   {{ path_card(agent_added_stmts, title, "agentAddedStmts", ["Statement"], "agentAddedStmtsTable") }}
+  {% set paper_title = "Papers mentioning " + agent %}
+  {{ path_card(agent_paper_distr, paper_title, "agentPaperStmt", ["Paper Title", "Link", "Statement Count"], "agentPaperStmtTable") }}
   {% set test_title = "Results of tests about " + agent %}
   {{ path_card(agent_tests, test_title, "agentTests", model_types, "agentTestsTable") }}
   {% set path_title = "Paths with " + agent %}
   {{ path_card(agent_paths, path_title, "agentPaths", ["Test", "Top Path"], "agentPathsTable", true)}}
-  {% set paper_title = "Papers mentioning " + agent %}
-  {{ path_card(agent_paper_distr, paper_title, "agentPaperStmt", ["Paper Title", "Link", "Statement Count"], "agentPaperStmtTable") }}
 {% endif %}
 </div>
 
