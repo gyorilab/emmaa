@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card, path_table %}
 
-{% macro agent_tab(model, agent, agent_stats, agent_stmts_counts, agent_added_stmts, model_types, agent_tests, agent_paths, agent_paper_distr) -%}
+{% macro agent_tab(model, agent, agent_stats, agent_stmts_counts, agent_added_stmts, model_types, available_tests, test_corpus, agent_tests, agent_paths, agent_paper_distr) -%}
 <!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
 
 <div class="container">
@@ -58,6 +58,26 @@
   {{ path_card(agent_added_stmts, title, "agentAddedStmts", ["Statement"], "agentAddedStmtsTable") }}
   {% set paper_title = "Papers mentioning " + agent %}
   {{ path_card(agent_paper_distr, paper_title, "agentPaperStmt", ["Paper Title", "Link", "Statement Count"], "agentPaperStmtTable") }}
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Test Corpus Selection</h4>
+    </div>
+    <div class="card-body">
+      <select class="custom-select" id="agentTestSelectDD" aria-label="Example select with button addon" style="width: 300px">
+        <option selected disabled hidden>Select test...</option>
+        {% for test in available_tests %}
+          {% if test == test_corpus %}
+            <option selected value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
+          {% else %}
+            <option value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <div class="d-inline-flex button-container p-2">
+        <button class="btn btn-outline-secondary" onClick="testRedirect(document.getElementById('agentTestSelectDD'), 'agent')" type="button">Reload for other test corpus</button>
+      </div>
+    </div>
+  </div>
   {% set test_title = "Results of tests about " + agent %}
   {{ path_card(agent_tests, test_title, "agentTests", model_types, "agentTestsTable") }}
   {% set path_title = "Paths with " + agent %}

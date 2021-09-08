@@ -33,7 +33,7 @@ function modelRedirect(ddSelect, current_model) {
   }
 
   let loc = window.location.href;
-  // remove current date and test corpus
+  // remove current date and test corpus and agent
   if (loc.includes('date')) {
     date = new URL(loc).searchParams.get('date');
     loc = loc.replace(`date=${date}`, '')
@@ -41,6 +41,10 @@ function modelRedirect(ddSelect, current_model) {
   if (loc.includes('test_corpus')) {
     test_corpus = new URL(loc).searchParams.get('test_corpus');
     loc = loc.replace(`test_corpus=${test_corpus}`, '')
+  }  
+  if (loc.includes('agent')) {
+    agent = new URL(loc).searchParams.get('agent');
+    loc = loc.replace(`agent=${agent}`, '')
   }  
   if (loc.includes('tab')) {
     tab = new URL(loc).searchParams.get('tab');
@@ -93,7 +97,7 @@ function redirectToDate(new_date_str) {
 }
 
 
-function testRedirect(ddSelect) {
+function testRedirect(ddSelect, tab) {
   for (child of ddSelect.children) {
     if (child.selected) {
       newTest = child.value;
