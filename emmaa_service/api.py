@@ -1251,6 +1251,8 @@ def get_model_dashboard(model):
         belief_freq = ['Beliefs'] + list(belief_freq) + [0]
         belief_data = {'x': belief_x, 'freq': belief_freq}
 
+    all_agents = [ag for (ag, count) in
+                  model_stats['model_summary']['agent_distr']]
     agent_stats = {}
     agent_stmts_counts = None
     agent_added_stmts = None
@@ -1348,7 +1350,8 @@ def get_model_dashboard(model):
                            agent_added_stmts=agent_added_stmts,
                            agent_paper_distr=agent_paper_distr,
                            agent_tests=agent_tests_table,
-                           agent_paths=agent_paths_table)
+                           agent_paths=agent_paths_table,
+                           all_agents=all_agents)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])

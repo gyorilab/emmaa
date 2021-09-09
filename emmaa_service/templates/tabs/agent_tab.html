@@ -1,6 +1,6 @@
 {% from "path_macros.html" import path_card, path_table %}
 
-{% macro agent_tab(model, agent, agent_stats, agent_stmts_counts, agent_added_stmts, model_types, available_tests, test_corpus, agent_tests, agent_paths, agent_paper_distr) -%}
+{% macro agent_tab(model, all_agents, agent, agent_stats, agent_stmts_counts, agent_added_stmts, model_types, available_tests, test_corpus, agent_tests, agent_paths, agent_paper_distr) -%}
 <!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
 
 <div class="container">
@@ -12,10 +12,15 @@
       <!-- agent -->
       <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
         {% if agent %}
-        <input class="form-control" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" value="{{ agent }}">
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" value="{{ agent }}">
         {% else %}
-        <input class="form-control" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent">
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent">
         {% endif %}
+        <datalist id="datalistOptions">
+          {% for ag in all_agents %}
+          <option value="{{ ag }}">
+          {% endfor %}
+        </datalist>
         <button class="btn btn-outline-secondary" style="position: absolute; top: 20px; left: 350px;" onClick="filterAgent(document.getElementById('agentStatsSelect').value)" type="button">Generate agents stats</button>
       </div>
     </div>
