@@ -12,9 +12,9 @@
       <!-- agent -->
       <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
         {% if agent %}
-        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" value="{{ agent }}">
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" value="{{ agent }}" autocomplete="off">
         {% else %}
-        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent">
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" autocomplete="off">
         {% endif %}
         <datalist id="datalistOptions">
           {% for ag in all_agents %}
