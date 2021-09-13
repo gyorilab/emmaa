@@ -190,6 +190,7 @@ def test_test_stats_generator():
     assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
 
 
+@attr('notravis', 'nonpublic')
 def test_agent_stats_generator():
     # First generate model and test stats
     latest_round = ModelRound(new_stmts, '2020-01-02-00-00-00', new_papers)
