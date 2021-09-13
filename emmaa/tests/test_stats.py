@@ -6,7 +6,7 @@ from nose.plugins.attrib import attr
 from indra.statements import Activation, ActivityCondition, Phosphorylation, \
     Agent, Evidence
 from emmaa.analyze_tests_results import ModelRound, TestRound, \
-    ModelStatsGenerator, TestStatsGenerator
+    ModelStatsGenerator, TestStatsGenerator, AgentStatsGenerator
 
 
 TestRound.__test__ = False
@@ -188,3 +188,53 @@ def test_test_stats_generator():
     assert changes['signed_graph']['passed_ratio'] == [1, 1]
     assert changes['unsigned_graph']['number_passed_tests'] == [1, 2]
     assert changes['unsigned_graph']['passed_ratio'] == [1, 1]
+
+
+def test_agent_stats_generator():
+    # First generate model and test stats
+    latest_round = ModelRound(new_stmts, '2020-01-02-00-00-00', new_papers)
+    previous_round = ModelRound(previous_stmts, '2020-01-01-00-00-00',
+                                previous_papers)
+    msg = ModelStatsGenerator('test', latest_round=latest_round,
+                              previous_round=previous_round,
+                              previous_json_stats=previous_model_stats)
+    msg.make_stats()
+    model_stats = msg.json_stats
+    latest_round = TestRound(new_results, '2020-01-02-00-00-00')
+    previous_round = TestRound(previous_results, '2020-01-01-00-00-00')
+    tsg = TestStatsGenerator('test', latest_round=latest_round,
+                             previous_round=previous_round,
+                             previous_json_stats=previous_test_stats)
+    tsg.make_stats()
+    test_stats = tsg.json_stats
+
+    # Generate Agent stats using model and test stats and statements
+    asg = AgentStatsGenerator('test', 'BRAF', new_stmts, model_stats,
+                              test_stats)
+    asg.make_stats()
+    assert asg.json_stats
+
+    # Agent stats has fewer stats fields
+    model_summary = asg.json_stats['model_summary']
+    model_delta = asg.json_stats['model_delta']
+    paper_summary = asg.json_stats['paper_summary']
+    test_summary = asg.json_stats['test_round_summary']
+    assert model_summary['model_name'] == 'test'
+    assert model_summary['stmts_type_distr'] == [['Activation', 2]]
+    assert all(agent_tuple in model_summary['agent_distr'] for
+               agent_tuple in [['AKT', 1], ['MAP2K1', 1]])
+    assert all(source_tuple in model_summary['sources'] for source_tuple
+               in [['assertion', 1], ['test_source1', 1]])
+    assert len(model_summary['stmts_by_evidence']) == 2
+    assert len(model_delta['statements_hashes_delta']['added']) == 1
+    assert all(paper_tuple in paper_summary['paper_distr'] for
+               paper_tuple in [['1234', 1], ['2345', 1]])
+    assert paper_summary['stmts_by_paper']['1234'][0] == -20714390795236750
+    assert paper_summary['stmts_by_paper']['2345'][0] == -13855132444206450
+    assert len(paper_summary['paper_links']) == 2
+    assert len(paper_summary['paper_titles']) == 2
+    assert len(test_summary['agent_tests']) == 2
+    assert len(test_summary['agent_paths']['pysb']) == 2
+    assert len(test_summary['agent_paths']['pybel']) == 2
+    assert len(test_summary['agent_paths']['signed_graph']) == 2
+    assert len(test_summary['agent_paths']['unsigned_graph']) == 2
