@@ -1754,6 +1754,8 @@ def get_all_statements_page(model):
     # Load full list of statements
     stmts = _load_stmts_from_cache(model, date)
 
+    if agent:
+        stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
     stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt for stmt in stmts}
     msg = None
     curations = get_curations()
@@ -1763,10 +1765,6 @@ def get_all_statements_page(model):
     def filter_stmt(stmt):
         accepted = []
         stmt_hash = str(stmt.get_hash(refresh=True))
-        if agent:
-            has_agent = agent.lower() in [
-                ag.name.lower() for ag in stmt.real_agent_list()]
-            accepted.append(has_agent)
         if stmt_types:
             accepted.append(type(stmt).__name__.lower() in stmt_types)
         if filter_curated:
