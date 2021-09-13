@@ -26,11 +26,8 @@ from indra_db.client.principal.curation import get_curations
 from indra_db.client import HasHash
 from indra_db.util import get_db, _get_trids
 from emmaa.priors import SearchTerm
-from emmaa.readers.aws_reader import read_pmid_search_terms
 from emmaa.readers.db_client_reader import read_db_pmid_search_terms, \
     read_db_doi_search_terms
-from emmaa.readers.elsevier_eidos_reader import \
-    read_elsevier_eidos_search_terms
 from emmaa.util import make_date_str, find_latest_s3_file, strip_out_date, \
     EMMAA_BUCKET_NAME, find_nth_latest_s3_file, load_pickle_from_s3, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, \
@@ -267,6 +264,7 @@ class EmmaaModel(object):
             for lit_source, reader in zip(lit_sources, readers):
                 ids_to_terms = self.search_literature(lit_source, date_limit)
                 if reader == 'aws':
+                    from emmaa.readers.aws_reader import read_pmid_search_terms
                     new_estmts = read_pmid_search_terms(
                         ids_to_terms)
                     self.add_paper_ids(ids_to_terms.keys(), 'pmid')
@@ -279,6 +277,8 @@ class EmmaaModel(object):
                         ids_to_terms)
                     self.add_paper_ids(ids_to_terms.keys(), 'doi')
                 elif reader == 'elsevier_eidos':
+                    from emmaa.readers.elsevier_eidos_reader import \
+                        read_elsevier_eidos_search_terms
                     new_estmts = read_elsevier_eidos_search_terms(
                         ids_to_terms)
                     self.add_paper_ids(ids_to_terms.keys(), 'pii')

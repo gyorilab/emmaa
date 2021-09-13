@@ -80,11 +80,16 @@ def test_results_json():
     # Add statements with similar subject and object to test grouping
     map2k1 = model.assembled_stmts[1].subj
     mapk1 = model.assembled_stmts[1].obj
-    phos = Phosphorylation(map2k1, mapk1)
-    phos_t185 = Phosphorylation(map2k1, mapk1, 'T', '185')
-    phos_y187 = Phosphorylation(map2k1, mapk1, 'Y', '187')
-    inc = IncreaseAmount(map2k1, mapk1)
-    inh = Inhibition(map2k1, mapk1)
+    phos = Phosphorylation(map2k1, mapk1,
+                           evidence=[Evidence(source_api='assertion')])
+    phos_t185 = Phosphorylation(map2k1, mapk1, 'T', '185',
+                                evidence=[Evidence(source_api='assertion')])
+    phos_y187 = Phosphorylation(map2k1, mapk1, 'Y', '187',
+                                evidence=[Evidence(source_api='assertion')])
+    inc = IncreaseAmount(map2k1, mapk1,
+                         evidence=[Evidence(source_api='assertion')])
+    inh = Inhibition(map2k1, mapk1,
+                     evidence=[Evidence(source_api='assertion')])
     model.assembled_stmts += [phos, phos_t185, phos_y187, inc, inh]
     mm = ModelManager(model)
     tests = [StatementCheckingTest(
@@ -115,11 +120,12 @@ def test_results_json():
     second_edge = result_json[1]['signed_graph']['path_json'][0][
         'edge_list'][1]
     assert len(second_edge['stmts']) == 2
-    assert second_edge['stmts'][0][1] == 'MAP2K1 activates MAPK1.'
-    assert second_edge['stmts'][0][0].count('stmt_hash') == 1
-    assert second_edge['stmts'][1][1] == ('MAP2K1 increases the amount of '
-                                          'MAPK1.')
-    assert second_edge['stmts'][1][0].count('stmt_hash') == 1
+    sentence_counts = {pair[1]: pair[0].count('stmt_hash')
+                       for pair in second_edge['stmts']}
+    assert 'MAP2K1 activates MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 activates MAPK1.'] == 1
+    assert 'MAP2K1 increases the amount of MAPK1.' in sentence_counts
+    assert sentence_counts['MAP2K1 increases the amount of MAPK1.'] == 1
     # All statement types support unsigned graph edge, but different statements
     # of the same type are grouped together
     assert result_json[1]['unsigned_graph']['path_json'][0]['path'] == \
