@@ -987,7 +987,8 @@ def _update_bioresolver(prefix: str, identifier: str, rv) -> None:
     if not bioresolver_json:
         return
     for key in 'name', 'definition', 'species':
-        rv.setdefault(key, bioresolver_json.get(key))
+        if not rv.get(key):
+            rv[key] = bioresolver_json.get(key)
 
 
 def _lookup_bioresolver(prefix: str, identifier: str):
