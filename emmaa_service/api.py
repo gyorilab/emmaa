@@ -1784,6 +1784,9 @@ def get_all_statements_page(model):
     beliefs = [stmt.belief for stmt in stmts]
     belief_range = min(beliefs), max(beliefs)
 
+    model_stats = _load_model_stats_from_cache(model, date)
+    all_agents = [ag for (ag, count) in
+                  model_stats['model_summary']['agent_distr']]
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
@@ -1863,7 +1866,8 @@ def get_all_statements_page(model):
                            belief_range=belief_range,
                            min_belief=min_belief,
                            max_belief=max_belief,
-                           agent=agent)
+                           agent=agent,
+                           all_agents=all_agents)
 
 
 @app.route('/demos')

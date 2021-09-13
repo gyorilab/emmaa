@@ -116,10 +116,15 @@
       <!-- agent -->
       <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
         {% if agent %}
-        <input class="form-control" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" value="{{ agent }}">
+        <input class="form-control" list="agentOptions" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" value="{{ agent }}" autocomplete="off">
         {% else %}
-        <input class="form-control" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent">
+        <input class="form-control" list="agentOptions" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" autocomplete="off">
         {% endif %}
+        <datalist id="agentOptions">
+          {% for ag in all_agents %}
+          <option value="{{ ag }}">
+          {% endfor %}
+        </datalist>
         <button class="btn btn-outline-secondary" style="position: absolute; top: 20px; left: 350px;" onClick="filterAgent(document.getElementById('agentFilter').value)" type="button">Filter by agent</button>
       </div>
     </div>
