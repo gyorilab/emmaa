@@ -1287,7 +1287,7 @@ def get_model_dashboard(model):
         for k in ['name', 'definition', 'species']:
             if agent_dict.get(k):
                 agent_info.append(
-                    [('', k.capitalize(), ''), ('', str(agent_dict[k]), '')])
+                    [('', k.capitalize(), ''), ('', agent_dict[k], '')])
         for ns_id, url in agent_dict['all_urls'].items():
             agent_info.append(
                 [('', ns_id.upper(), ''), (url, url, 'Click to view more')])
