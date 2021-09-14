@@ -1269,6 +1269,7 @@ def get_model_dashboard(model):
     all_agents = [ag for (ag, count) in
                   model_stats['model_summary']['agent_distr']]
     agent_stats = {}
+    agent_info = None
     agent_stmts_counts = None
     agent_added_stmts = None
     agent_paper_distr = None
@@ -1280,6 +1281,16 @@ def get_model_dashboard(model):
         sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
         sg.make_stats()
         agent_stats = sg.json_stats
+        agent_refs = agent_stats['agent_summary']
+        agent_dict = get_entity_info(agent_refs['namespace'], agent_refs['id'])
+        agent_info = []
+        for k in ['name', 'definition', 'species']:
+            if agent_dict.get(k):
+                agent_info.append(
+                    [('', k.capitalize(), ''), ('', agent_dict[k], '')])
+        for ns_id, url in agent_dict['all_urls'].items():
+            agent_info.append(
+                [('', ns_id.upper(), ''), (url, url, 'Click to view more')])
         agent_supported = agent_stats['model_summary'][
             'stmts_by_evidence'][:10]
         agent_added_hashes = \
@@ -1360,6 +1371,7 @@ def get_model_dashboard(model):
                            new_papers=new_papers,
                            belief_data=belief_data,
                            agent=agent,
+                           agent_info=agent_info,
                            agent_stats=agent_stats,
                            agent_stmts_counts=agent_stmts_counts,
                            agent_added_stmts=agent_added_stmts,
