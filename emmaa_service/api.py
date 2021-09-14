@@ -1031,6 +1031,21 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     return res_json
 
 
+def get_entity_info(namespace, identifier):
+    std_name, db_refs = standardize_name_db_refs({namespace: identifier})
+    up_id = db_refs.get('UP')
+    original_url = get_identifiers_url(namespace, identifier)
+    urls = [get_identifiers_url(k, v) for k, v in db_refs.items()]
+    all_urls = {url.split('/')[-1]: url for url in urls if url}
+    rv = {'url': original_url, 'all_urls': all_urls, 'name': std_name}
+    if up_id:
+        rv['definition'] = uniprot_client.get_function(up_id)
+    else:
+        rv['definition'] = None
+    _update_bioresolver(namespace, identifier, rv)
+    return rv
+
+
 def _run_query(query, model):
     mm = load_model_manager_from_cache(model)
     full_results = mm.answer_query(query)
@@ -2415,18 +2430,7 @@ class EntityInfo(Resource):
         # for adding model-specific entity info later
         namespace = request.args.get('namespace')
         identifier = request.args.get('id')
-        std_name, db_refs = standardize_name_db_refs({namespace: identifier})
-        up_id = db_refs.get('UP')
-        original_url = get_identifiers_url(namespace, identifier)
-        urls = [get_identifiers_url(k, v) for k, v in db_refs.items()]
-        all_urls = {url.split('/')[-1]: url for url in urls if url}
-        rv = {'url': original_url, 'all_urls': all_urls,
-              'name': std_name}
-        if up_id:
-            rv['definition'] = uniprot_client.get_function(up_id)
-        else:
-            rv['definition'] = None
-        _update_bioresolver(namespace, identifier, rv)
+        rv = get_entity_info(namespace, identifier)
         return rv
 
 
