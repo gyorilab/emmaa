@@ -982,18 +982,27 @@ def get_subscribed_queries(query_type, user_email=None):
     return sub_results, headers
 
 
+def _update_bioresolver(prefix: str, identifier: str, rv) -> None:
+    bioresolver_json = _lookup_bioresolver(prefix, identifier)
+    if not bioresolver_json:
+        return
+    for key in 'name', 'definition', 'species':
+        if not rv.get(key):
+            rv[key] = bioresolver_json.get(key)
+
+
 def _lookup_bioresolver(prefix: str, identifier: str):
     url = get_config('ENTITY_RESOLVER_URL')
     if url is None:
         return
     try:
-        res = requests.get(f'{url}/resolve/{prefix}:{identifier}')
+        res = requests.get(f'{url}/api/lookup/{prefix}:{identifier}')
         res_json = res.json()
         if not res_json['success']:
-            return  # there was a problem looking up CURIE in the bioresolver
+            return  # there was a problem looking up CURIE in the Biolookup Service
     except Exception as e:
         logger.warning(e)
-        logger.warning('Could not connect to bioresolver')
+        logger.warning('Could not connect to the Biolookup Service')
         return
     return res_json
 
@@ -2308,6 +2317,7 @@ class EntityInfo(Resource):
             rv['definition'] = uniprot_client.get_function(up_id)
         else:
             rv['definition'] = None
+        _update_bioresolver(namespace, identifier, rv)
         return rv
 
 
