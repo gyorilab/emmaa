@@ -102,7 +102,17 @@ function testRedirect(ddSelect) {
   }
 
   // remove date if it is in the url
-  let loc = window.location.href
+  var loc = window.location.href
+  if (loc.includes('?')) {
+    if (loc.includes('tab')) {
+      currentTab = new URL(loc).searchParams.get('tab')
+      loc = loc.replace(`tab=${currentTab}`, 'tab=tests')
+    } else {
+      loc = loc.concat('&tab=tests')
+    }
+  } else {
+    loc = loc.concat('?tab=tests')
+  }
   if (loc.includes('date')) {
     date = new URL(loc).searchParams.get('date');
     loc = loc.replace(`date=${date}`, '')
@@ -116,9 +126,7 @@ function testRedirect(ddSelect) {
   }
   console.log(loc)
   // redirect url:
-  currentTab = new URL(loc).searchParams.get('tab')
-  let redirectTab = loc.replace(`tab=${currentTab}`, 'tab=tests')
-  location.replace(redirectTab);
+  location.replace(loc);
 }
 
 
