@@ -1032,11 +1032,9 @@ class TestStatsGenerator(StatsGenerator):
 
 class AgentStatsGenerator(object):
     def __init__(self, model_name, agent_name, all_stmts,
-                 model_stats=None, test_stats=None,
-                 bucket=EMMAA_BUCKET_NAME):
+                 model_stats=None, test_stats=None):
         self.model_name = model_name
         self.agent_name = agent_name
-        self.bucket = bucket
         self.full_model_stats = model_stats
         self.full_test_stats = test_stats
         self.filtered_stmts = self.filter_stmts(agent_name, all_stmts)
@@ -1046,11 +1044,19 @@ class AgentStatsGenerator(object):
         self.json_stats = {}
 
     def make_stats(self):
+        self.make_agent_summary()
         self.make_model_summary()
         self.make_model_delta()
         self.make_paper_summary()
         self.make_test_summary()
         self.json_stats = json.loads(json.dumps(self.json_stats))
+
+    def make_agent_summary(self):
+        # Get an agent object from statements
+        ag = [a for a in self.filtered_stmts[0].real_agent_list()
+              if a.name == self.agent_name][0]
+        ns, id = ag.get_grounding()
+        self.json_stats['agent_summary'] = {'namespace': ns, 'id': id}
 
     def make_model_summary(self):
         agents = self.model_round.get_agent_distribution()
