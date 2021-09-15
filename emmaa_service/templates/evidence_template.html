@@ -48,7 +48,7 @@
   {% endif %}
   <div>
     <div class="container">
-    <div class="card" style="height: 250px;">
+    <div class="card" style="height: 350px;">
       <div class="card-header">
       <h4 class="my-0 font-weight-normal">Filter and Sort Statements</h4>
       </div>
@@ -113,6 +113,20 @@
         <input value="{{ max_belief }}" min="{{ belief_range[0] }}" max="{{ belief_range[1] }}" step="0.01" type="range">
       </section> 
       <button class="btn btn-outline-secondary" style="font-size: medium; margin-left:550px;"onClick="filterBelief()" type="button">Load statements</button>
+      <!-- agent -->
+      <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
+        {% if agent %}
+        <input class="form-control" list="agentOptions" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" value="{{ agent }}" autocomplete="off">
+        {% else %}
+        <input class="form-control" list="agentOptions" id="agentFilter" type="text" name="agentFilterText" placeholder="Enter agent" autocomplete="off">
+        {% endif %}
+        <datalist id="agentOptions">
+          {% for ag in all_agents %}
+          <option value="{{ ag }}">
+          {% endfor %}
+        </datalist>
+        <button class="btn btn-outline-secondary" style="position: absolute; top: 20px; left: 350px;" onClick="filterAgent(document.getElementById('agentFilter').value)" type="button">Filter by agent</button>
+      </div>
     </div>
     </div>
   </div>  

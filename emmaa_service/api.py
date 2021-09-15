@@ -44,7 +44,7 @@ from emmaa.subscription.email_util import verify_email_signature,\
 from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
-from emmaa.analyze_tests_results import _get_trid_title
+from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -690,6 +690,32 @@ def _format_dynamic_query_results(formatted_results):
     return result_array
 
 
+def _get_mt_rows(model_name, mt, msg, hashes, all_test_results, date,
+                 test_corpus, add_links):
+    mt_rows = [[('', f'{msg} {FORMATTED_TYPE_NAMES[mt]} model.', '')]]
+    for th in hashes:
+        test = all_test_results[th]
+        if add_links:
+            ev_url_par = parse.urlencode(
+                {'stmt_hash': th, 'source': 'test', 'model': model_name,
+                    'test_corpus': test_corpus, 'date': date})
+            test['test'][0] = f'/evidence?{ev_url_par}'
+            test['test'][2] = stmt_db_link_msg
+        path_loc = test[mt][1]
+        if isinstance(path_loc, list):
+            path = path_loc[0]['path']
+        else:
+            path = path_loc
+        url_param = parse.urlencode(
+            {'model_type': mt, 'test_hash': th, 'date': date,
+                'test_corpus': test_corpus})
+        new_row = [(test['test']),
+                   (f'/tests/{model_name}?{url_param}', path,
+                    pass_fail_msg)]
+        mt_rows.append(new_row)
+    return mt_rows
+
+
 def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
                       test_corpus, add_links=False):
     new_passed_tests = []
@@ -700,33 +726,31 @@ def _new_passed_tests(model_name, test_stats_json, current_model_types, date,
             'passed_hashes_delta']['added']
         if not new_passed_hashes:
             continue
-        mt_rows = [[('', f'New passed tests for '
-                         f'{FORMATTED_TYPE_NAMES[mt]} model.',
-                     '')]]
-        for th in new_passed_hashes:
-            test = all_test_results[th]
-            if add_links:
-                ev_url_par = parse.urlencode(
-                    {'stmt_hash': th, 'source': 'test', 'model': model_name,
-                     'test_corpus': test_corpus, 'date': date})
-                test['test'][0] = f'/evidence?{ev_url_par}'
-                test['test'][2] = stmt_db_link_msg
-            path_loc = test[mt][1]
-            if isinstance(path_loc, list):
-                path = path_loc[0]['path']
-            else:
-                path = path_loc
-            url_param = parse.urlencode(
-                {'model_type': mt, 'test_hash': th, 'date': date,
-                 'test_corpus': test_corpus})
-            new_row = [(test['test']),
-                       (f'/tests/{model_name}?{url_param}', path,
-                        pass_fail_msg)]
-            mt_rows.append(new_row)
+        mt_rows = _get_mt_rows(
+            model_name, mt, 'New passed tests for', new_passed_hashes,
+            all_test_results, date, test_corpus, add_links)
         new_passed_tests += mt_rows
     if len(new_passed_tests) > 0:
         return new_passed_tests
     return 'No new tests were passed'
+
+
+def _agent_paths_tests(model_name, agent_paths, test_stats_json, date,
+                       current_model_types, test_corpus, add_links=False):
+    agent_path_tests = []
+    all_test_results = test_stats_json['test_round_summary'][
+        'all_test_results']
+    for mt in current_model_types:
+        mt_path_hashes = agent_paths.get(mt)
+        if not mt_path_hashes:
+            continue
+        mt_rows = _get_mt_rows(
+            model_name, mt, 'Paths in', mt_path_hashes,
+            all_test_results, date, test_corpus, add_links)
+        agent_path_tests += mt_rows
+    if len(agent_path_tests) > 0:
+        return agent_path_tests
+    return 'No paths with this agent'
 
 
 def _set_curation(stmt_hash, correct, incorrect):
@@ -1007,6 +1031,21 @@ def _lookup_bioresolver(prefix: str, identifier: str):
     return res_json
 
 
+def get_entity_info(namespace, identifier):
+    std_name, db_refs = standardize_name_db_refs({namespace: identifier})
+    up_id = db_refs.get('UP')
+    original_url = get_identifiers_url(namespace, identifier)
+    urls = [get_identifiers_url(k, v) for k, v in db_refs.items()]
+    all_urls = {url.split('/')[-1]: url for url in urls if url}
+    rv = {'url': original_url, 'all_urls': all_urls, 'name': std_name}
+    if up_id:
+        rv['definition'] = uniprot_client.get_function(up_id)
+    else:
+        rv['definition'] = None
+    _update_bioresolver(namespace, identifier, rv)
+    return rv
+
+
 def _run_query(query, model):
     mm = load_model_manager_from_cache(model)
     full_results = mm.answer_query(query)
@@ -1058,10 +1097,17 @@ def get_model_dashboard(model):
     """Render model dashboard page."""
     loaded = request.args.get('loaded')
     loaded = (loaded == 'true')
+    agent = request.args.get('agent')
     if not loaded:
-        return render_template(
-            'loading.html',
-            msg='Please wait while we load the model statistics...')
+        if agent:
+            return render_template(
+                'loading.html',
+                msg=('Please wait while we generate the '
+                     'statistics about this agent...'))
+        else:
+            return render_template(
+                'loading.html',
+                msg='Please wait while we load the model statistics...')
     test_corpus = request.args.get('test_corpus', _default_test(
         model, get_model_config(model)))
     if not test_corpus:
@@ -1081,6 +1127,7 @@ def get_model_dashboard(model):
     if not model_stats or not test_stats:
         abort(Response(f'Data for {model} and {test_corpus} for {date} '
                        f'was not found', 404))
+
     exp_formats = _get_available_formats(model, date, EMMAA_BUCKET_NAME)
     logger.info('Getting model information')
     ndex_id = None
@@ -1192,6 +1239,7 @@ def get_model_dashboard(model):
     else:
         added_stmts = 'No new statements were added'
 
+    logger.info('Getting paper statistics')
     if not model_stats['paper_summary'].get('paper_titles'):
         paper_distr = 'Paper titles are not currently available'
         new_papers = 'Paper titles are not currently available'
@@ -1202,6 +1250,7 @@ def get_model_dashboard(model):
                         ('', str(c), '')] for paper_id, c in trids_counts]
         new_papers = get_new_papers(model, model_stats, date)
 
+    logger.info('Getting belief distribution')
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
     if not beliefs:
@@ -1216,6 +1265,77 @@ def get_model_dashboard(model):
             belief_x = [round(n, 3) for n in x]
         belief_freq = ['Beliefs'] + list(belief_freq) + [0]
         belief_data = {'x': belief_x, 'freq': belief_freq}
+
+    all_agents = [ag for (ag, count) in
+                  model_stats['model_summary']['agent_distr']]
+    agent_stats = {}
+    agent_info = None
+    agent_stmts_counts = None
+    agent_added_stmts = None
+    agent_paper_distr = None
+    agent_tests_table = None
+    agent_paths_table = None
+    if agent:
+        logger.info('Generating agent statistics')
+        stmts = _load_stmts_from_cache(model, date)
+        sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
+        sg.make_stats()
+        agent_stats = sg.json_stats
+        agent_refs = agent_stats['agent_summary']
+        agent_dict = get_entity_info(agent_refs['namespace'], agent_refs['id'])
+        agent_info = []
+        for k in ['name', 'definition', 'species']:
+            if agent_dict.get(k):
+                agent_info.append(
+                    [('', k.capitalize(), ''), ('', agent_dict[k], '')])
+        for ns_id, url in agent_dict['all_urls'].items():
+            agent_info.append(
+                [('', ns_id.upper(), ''), (url, url, 'Click to view more')])
+        agent_supported = agent_stats['model_summary'][
+            'stmts_by_evidence'][:10]
+        agent_added_hashes = \
+            agent_stats['model_delta']['statements_hashes_delta']['added']
+        if len(agent_supported) > 0:
+            agent_stmts_counts = []
+            logger.info('Mapping curations to agent most supported statements')
+            for st_hash, c in agent_supported:
+                st_value = deepcopy(all_stmts[st_hash])
+                agent_stmts_counts.append(
+                    ((_update_stmt(st_hash, st_value, add_model_links)),
+                     ('', str(c), '')))
+        else:
+            agent_stmts_counts = f'No statements with {agent} were found'
+        if len(agent_added_hashes) > 0:
+            logger.info('Mapping curations to new added statements with agent')
+            agent_added_stmts = []
+            for st_hash in agent_added_hashes:
+                st_value = deepcopy(all_stmts[st_hash])
+                agent_added_stmts.append(
+                    (_update_stmt(st_hash, st_value, add_model_links),))
+        else:
+            agent_added_stmts = f'No new statements with {agent} were added'
+        logger.info('Getting agent test statistics')
+        agent_tests = [(th, test) for (th, test) in all_tests if th in
+                       agent_stats['test_round_summary']['agent_tests']]
+        if agent_tests:
+            agent_tests_table = _format_table_array(
+                agent_tests, current_model_types, model, date,
+                test_corpus, add_test_links)
+        else:
+            agent_tests_table = 'No tests with this agent'
+        agent_paths = agent_stats['test_round_summary']['agent_paths']
+        agent_paths_table = _agent_paths_tests(
+            model, agent_paths, test_stats, date, current_model_types,
+            test_corpus, add_test_links)
+        logger.info('Getting agent paper statistics')
+        agent_trids_counts = agent_stats['paper_summary']['paper_distr'][:10]
+        if len(agent_trids_counts) > 0:
+            agent_paper_distr = [
+                [_get_paper_title_tuple(paper_id, agent_stats, date),
+                 _get_external_paper_link(model, paper_id, agent_stats),
+                 ('', str(c), '')] for paper_id, c in agent_trids_counts]
+        else:
+            agent_paper_distr = f'No papers about {agent} were found'
     logger.info('Rendering page')
     return render_template('model_template.html',
                            model=model,
@@ -1249,7 +1369,16 @@ def get_model_dashboard(model):
                            exp_formats=exp_formats,
                            paper_distr=paper_distr,
                            new_papers=new_papers,
-                           belief_data=belief_data)
+                           belief_data=belief_data,
+                           agent=agent,
+                           agent_info=agent_info,
+                           agent_stats=agent_stats,
+                           agent_stmts_counts=agent_stmts_counts,
+                           agent_added_stmts=agent_added_stmts,
+                           agent_paper_distr=agent_paper_distr,
+                           agent_tests=agent_tests_table,
+                           agent_paths=agent_paths_table,
+                           all_agents=all_agents)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
@@ -1597,8 +1726,7 @@ def get_statement_evidence_page():
                 with_evid = True
                 tabs = True
                 query = ','.join(
-                    [ag.name for ag in stmts[0].agent_list()
-                     if ag is not None])
+                    [ag.name for ag in stmts[0].real_agent_list()])
                 fig_list = get_figures_from_query(query, limit=10)
             for stmt in stmts:
                 stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
@@ -1644,6 +1772,7 @@ def get_all_statements_page(model):
     date = request.args.get('date')
     min_belief = request.args.get('min_belief')
     max_belief = request.args.get('max_belief')
+    agent = request.args.get('agent')
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     filter_curated = (filter_curated == 'true')
@@ -1652,13 +1781,12 @@ def get_all_statements_page(model):
     # Load full list of statements
     stmts = _load_stmts_from_cache(model, date)
 
+    if agent:
+        stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
     stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt for stmt in stmts}
     msg = None
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
-
-    beliefs = [stmt.belief for stmt in stmts]
-    belief_range = min(beliefs), max(beliefs)
 
     # Helper function for filtering statements on different conditions
     def filter_stmt(stmt):
@@ -1680,6 +1808,12 @@ def get_all_statements_page(model):
     # Filter statements with all filters
     stmts = list(filter(filter_stmt, stmts))
 
+    beliefs = [stmt.belief for stmt in stmts]
+    belief_range = min(beliefs), max(beliefs)
+
+    model_stats = _load_model_stats_from_cache(model, date)
+    all_agents = [ag for (ag, count) in
+                  model_stats['model_summary']['agent_distr']]
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
@@ -1758,7 +1892,9 @@ def get_all_statements_page(model):
                            stmt_types=stmt_types,
                            belief_range=belief_range,
                            min_belief=min_belief,
-                           max_belief=max_belief)
+                           max_belief=max_belief,
+                           agent=agent,
+                           all_agents=all_agents)
 
 
 @app.route('/demos')
@@ -2306,18 +2442,7 @@ class EntityInfo(Resource):
         # for adding model-specific entity info later
         namespace = request.args.get('namespace')
         identifier = request.args.get('id')
-        std_name, db_refs = standardize_name_db_refs({namespace: identifier})
-        up_id = db_refs.get('UP')
-        original_url = get_identifiers_url(namespace, identifier)
-        urls = [get_identifiers_url(k, v) for k, v in db_refs.items()]
-        all_urls = {url.split('/')[-1]: url for url in urls if url}
-        rv = {'url': original_url, 'all_urls': all_urls,
-              'name': std_name}
-        if up_id:
-            rv['definition'] = uniprot_client.get_function(up_id)
-        else:
-            rv['definition'] = None
-        _update_bioresolver(namespace, identifier, rv)
+        rv = get_entity_info(namespace, identifier)
         return rv
 
 

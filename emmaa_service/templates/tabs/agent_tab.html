@@ -1,0 +1,94 @@
+{% from "path_macros.html" import path_card, path_table %}
+
+{% macro agent_tab(model, all_agents, agent, agent_info, agent_stmts_counts, agent_added_stmts, model_types, available_tests, test_corpus, agent_tests, agent_paths, agent_paper_distr) -%}
+<!-- Belief range code adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Agent Selection</h4>
+    </div>
+    <div class="card-body">
+      <!-- agent -->
+      <div class="col" style="padding-right: 2px; width: 300px; padding-top: 20px;">
+        {% if agent %}
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" value="{{ agent }}" autocomplete="off">
+        {% else %}
+        <input class="form-control" list="datalistOptions" id="agentStatsSelect" type="text" name="agentStatsText" placeholder="Enter agent" autocomplete="off">
+        {% endif %}
+        <datalist id="datalistOptions">
+          {% for ag in all_agents %}
+          <option value="{{ ag }}">
+          {% endfor %}
+        </datalist>
+        <button class="btn btn-outline-secondary" style="position: absolute; top: 20px; left: 350px;" onClick="filterAgent(document.getElementById('agentStatsSelect').value)" type="button">Generate agents stats</button>
+      </div>
+    </div>
+  </div>
+  {% if agent_info %}
+  {{ path_card(agent_info, "Agent Information", "agentInfoTable", ["Item", "Details"], "agentInfoTableBody", center=false) }}
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Statement Types Distribution</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentStmtTypes"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Top 10 Interactors of {{agent}}</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentInteractors"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+    <h4 class="my-0 font-weight-normal">Knowledge Sources</h4>
+    </div>
+    <div class="card-body">
+    <div class="container" id="agentSourceDistr"></div>
+    </div>
+  </div>
+  {% set show_all = url_for('get_all_statements_page', model=model, sort_by='evidence', page=1, filter_curated=false, date=date, agent=agent) %}
+  <div class="card" id="agentStmtEvidence">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Most Supported Statements with {{ agent }}<button class="btn btn-outline-secondary" onClick='window.open("{{ show_all }}", target="_blank")' style="position: absolute; right: 10px; top: 1.1%" type="button">View All Statements</button></h4>
+    </div>
+    <div class="card-body">
+      {{ path_table(agent_stmts_counts, ["Statement", "Evidence Count"], "agentStmtEvidenceTable") }}
+    </div>
+  </div>
+  {% set title = "New Statements with " + agent %}
+  {{ path_card(agent_added_stmts, title, "agentAddedStmts", ["Statement"], "agentAddedStmtsTable") }}
+  {% set paper_title = "Papers mentioning " + agent %}
+  {{ path_card(agent_paper_distr, paper_title, "agentPaperStmt", ["Paper Title", "Link", "Statement Count"], "agentPaperStmtTable") }}
+  <div class="card">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Test Corpus Selection</h4>
+    </div>
+    <div class="card-body">
+      <select class="custom-select" id="agentTestSelectDD" aria-label="Example select with button addon" style="width: 300px">
+        <option selected disabled hidden>Select test...</option>
+        {% for test in available_tests %}
+          {% if test == test_corpus %}
+            <option selected value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
+          {% else %}
+            <option value="{{ test }}">{{ test.replace('_', ' ').capitalize() }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <div class="d-inline-flex button-container p-2">
+        <button class="btn btn-outline-secondary" onClick="testRedirect(document.getElementById('agentTestSelectDD'), 'agent')" type="button">Reload for other test corpus</button>
+      </div>
+    </div>
+  </div>
+  {% set test_title = "Results of tests about " + agent %}
+  {{ path_card(agent_tests, test_title, "agentTests", model_types, "agentTestsTable") }}
+  {% set path_title = "Paths with " + agent %}
+  {{ path_card(agent_paths, path_title, "agentPaths", ["Test", "Top Path"], "agentPathsTable", true)}}
+{% endif %}
+</div>
+
+{%- endmacro %}

@@ -33,7 +33,7 @@ function modelRedirect(ddSelect, current_model) {
   }
 
   let loc = window.location.href;
-  // remove current date and test corpus
+  // remove current date and test corpus and agent
   if (loc.includes('date')) {
     date = new URL(loc).searchParams.get('date');
     loc = loc.replace(`date=${date}`, '')
@@ -41,6 +41,10 @@ function modelRedirect(ddSelect, current_model) {
   if (loc.includes('test_corpus')) {
     test_corpus = new URL(loc).searchParams.get('test_corpus');
     loc = loc.replace(`test_corpus=${test_corpus}`, '')
+  }  
+  if (loc.includes('agent')) {
+    agent = new URL(loc).searchParams.get('agent');
+    loc = loc.replace(`agent=${agent}`, '')
   }  
   if (loc.includes('tab')) {
     tab = new URL(loc).searchParams.get('tab');
@@ -93,7 +97,7 @@ function redirectToDate(new_date_str) {
 }
 
 
-function testRedirect(ddSelect) {
+function testRedirect(ddSelect, tab) {
   for (child of ddSelect.children) {
     if (child.selected) {
       newTest = child.value;
@@ -394,7 +398,7 @@ function subscribe_model(api_route, subscribe) {
 
 
 // Populate model and test stats jsons to modelTestResultBody
-function populateTestResultTable(tableBody, model_json, test_json, belief_data) {
+function populateTestResultTable(tableBody, model_json, test_json, belief_data, agent_stats) {
   console.log(belief_data)
   // IDs
   let stmtTypDistId = '#modelTestResultBody';
@@ -409,6 +413,9 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
   let tagCur = '#tagCurations';
   let curTime = '#dateCurations';
   let beliefs = '#beliefDistr';
+  let agentStmtType = '#agentStmtTypes';
+  let agentInter = '#agentInteractors';
+  let agentSource = '#agentSourceDistr';
 
   // Dates
   model_dates = model_json.changes_over_time.dates;
@@ -707,6 +714,72 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
     var beliefChart = generateBar(beliefs, beliefDataParams, belief_array, '', 1, axis, onrendered_func);
   }
 
+  var agentStmtTypeChart = NaN;
+  var agentInterChart = NaN;
+  var agentSourceChart = NaN;
+  if (Object.keys(agent_stats).length > 0) {
+      // Stmt type distribution bar graph 
+    let agent_stmt_type_array = [];
+    let agent_stmt_freq_array = ['Statements count'];
+
+    for (let pair of agent_stats.model_summary.stmts_type_distr) {
+      agent_stmt_type_array.push(pair[0]);
+      agent_stmt_freq_array.push(pair[1])
+    }
+    // See example at: https://c3js.org/samples/axes_x_tick_format.html
+    agentStmtTypeDataParams = {
+      // x: 'x',
+      columns: [
+        agent_stmt_freq_array
+      ],
+      type: 'bar',
+      onclick: function (d) { 
+        console.log(d)
+        var model_name = window.location.href.split('/')[4].split('?')[0]
+        window.open(`/all_statements/${model_name}?sort_by=evidence&page=1&filter_curated=False&stmt_type=${stmt_type_array[d.x]}`)
+      }
+    };
+
+    var agentStmtTypeChart = generateBar(agentStmtType, agentStmtTypeDataParams, agent_stmt_type_array, '');
+
+    // Top agents bar graph
+    let top_inter_array = [];
+    let inter_freq_array = ['Agent count'];
+
+    for (let pair of agent_stats.model_summary.agent_distr.slice(0, 10)) {
+      top_inter_array.push(pair[0]);
+      inter_freq_array.push(pair[1])
+    }
+
+    let agentInterDataParams = {
+      columns: [
+        inter_freq_array
+      ],
+      type: 'bar'
+    };
+
+    var agentInterChart = generateBar(agentInter, agentInterDataParams, top_inter_array, '');
+
+    // Source APIs bar graph
+    let agent_sources_array = [];
+    let agent_source_freq_array = ['Evidence count']
+
+    for (let pair of agent_stats.model_summary.sources) {
+      agent_sources_array.push(pair[0]);
+      agent_source_freq_array.push(pair[1]);
+    }
+
+    let agentSourceDataParams = {
+      columns: [
+        agent_source_freq_array
+      ],
+      type: 'bar'
+    };
+
+    var agentSourceChart = generateBar(agentSource, agentSourceDataParams, agent_sources_array, '');
+  }
+
+
   // Force redraw of charts to prevent chart overflow
   // https://c3js.org/reference.html#api-flush
   $('a[data-toggle=tab]').on('shown.bs.tab', function() { // This will trigger when tab is clicked
@@ -725,6 +798,15 @@ function populateTestResultTable(tableBody, model_json, test_json, belief_data) 
     }
     if (beliefChart) {
       beliefChart.flush();
+    }
+    if (agentStmtTypeChart) {
+      agentStmtTypeChart.flush();
+    }
+    if (agentInterChart) {
+      agentInterChart.flush();
+    }
+    if (agentSourceChart) {
+      agentSourceChart.flush();
     }
   });
 
@@ -861,4 +943,19 @@ function filterBelief(){
     let model_name = loc.split('/')[4].split('?')[0]
     window.open(`/all_statements/${model_name}?min_belief=${slide1}&max_belief=${slide2}&sort_by=belief`, target="_blank") 
   }
+}
+
+function filterAgent(agent) {
+  let loc = window.location.href;
+  if (loc.includes('agent')) {
+    cur_agent = new URL(loc).searchParams.get('agent');
+    redirect = loc.replace(`agent=${cur_agent}`, `agent=${agent}`);
+  } else {
+    redirect = loc.concat(`&agent=${agent}`)
+  }
+  if (loc.includes('tab=')) {
+    cur_tab = new URL(loc).searchParams.get('tab');
+    redirect = redirect.replace(`tab=${cur_tab}`, 'tab=agent');
+  }
+  location.replace(redirect);
 }

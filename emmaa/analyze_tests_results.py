@@ -1,3 +1,5 @@
+from datetime import date
+import json
 import logging
 import jsonpickle
 from collections import defaultdict
@@ -5,9 +7,10 @@ from emmaa.model import load_stmts_from_s3
 from emmaa.statements import filter_emmaa_stmts_by_metadata, \
     filter_indra_stmts_by_metadata
 from emmaa.model_tests import load_model_manager_from_s3
-from emmaa.util import find_latest_s3_file, find_nth_latest_s3_file, \
+from emmaa.util import NotAClassName, find_latest_s3_file, find_nth_latest_s3_file, \
     strip_out_date, EMMAA_BUCKET_NAME, load_json_from_s3, save_json_to_s3, \
     _make_delta_msg
+from indra.statements import agent
 from indra.statements.statements import Statement
 from indra.assemblers.english.assembler import EnglishAssembler
 from indra.literature import pubmed_client, crossref_client, pmc_client
@@ -1025,6 +1028,102 @@ class TestStatsGenerator(StatsGenerator):
         logger.info(f'Loading earlier statistics from {key}')
         previous_json_stats = load_json_from_s3(self.bucket, key)
         return previous_json_stats
+
+
+class AgentStatsGenerator(object):
+    def __init__(self, model_name, agent_name, all_stmts,
+                 model_stats=None, test_stats=None):
+        self.model_name = model_name
+        self.agent_name = agent_name
+        self.full_model_stats = model_stats
+        self.full_test_stats = test_stats
+        self.filtered_stmts = self.filter_stmts(agent_name, all_stmts)
+        self.hashes = set(
+            [str(stmt.get_hash()) for stmt in self.filtered_stmts])
+        self.model_round = self.get_model_round()
+        self.json_stats = {}
+
+    def make_stats(self):
+        self.make_agent_summary()
+        self.make_model_summary()
+        self.make_model_delta()
+        self.make_paper_summary()
+        self.make_test_summary()
+        self.json_stats = json.loads(json.dumps(self.json_stats))
+
+    def make_agent_summary(self):
+        # Get an agent object from statements
+        ag = [a for a in self.filtered_stmts[0].real_agent_list()
+              if a.name == self.agent_name][0]
+        ns, id = ag.get_grounding()
+        self.json_stats['agent_summary'] = {'namespace': ns, 'id': id}
+
+    def make_model_summary(self):
+        agents = self.model_round.get_agent_distribution()
+        # Filter main agent from agent distribution
+        agents = [ag_count for ag_count in agents
+                  if ag_count[0] != self.agent_name]
+        model_summary = {
+            'model_name': self.model_name,
+            'stmts_type_distr': self.model_round.get_statement_types(),
+            'agent_distr': agents,
+            'stmts_by_evidence': self.model_round.get_statements_by_evidence(),
+            'sources': self.model_round.get_sources_distribution()
+        }
+        self.json_stats['model_summary'] = model_summary
+
+    def make_model_delta(self):
+        new_stmts = [sh for sh in self.full_model_stats['model_delta'][
+            'statements_hashes_delta']['added'] if sh in self.hashes]
+        self.json_stats['model_delta'] = {
+            'statements_hashes_delta': {'added': new_stmts}}
+
+    def make_paper_summary(self):
+        self.json_stats['paper_summary'] = {
+            'stmts_by_paper': self.model_round.stmts_by_papers,
+            'paper_distr': self.model_round.get_papers_distribution()
+        }
+        freq_trids = [pair[0] for pair in
+                      self.json_stats['paper_summary']['paper_distr'][:10]]
+        titles, links = self.model_round.get_paper_titles_and_links(freq_trids)
+        self.json_stats['paper_summary']['paper_titles'] = titles
+        self.json_stats['paper_summary']['paper_links'] = links
+
+    def make_test_summary(self):
+        agent_tests = set()
+        agent_paths = defaultdict(set)
+        for th, test in self.full_test_stats['test_round_summary'][
+                'all_test_results'].items():
+            test_sent = test['test'][1].rstrip('.')
+            if _agent_in_string(self.agent_name, test_sent):
+                agent_tests.add(th)
+            for mc_type, res in test.items():
+                if res[0] == 'Pass' and isinstance(res[1], list):
+                    if _agent_in_string(self.agent_name, res[1][0]['path']):
+                        agent_paths[mc_type].add(th)
+        agent_paths = {k: list(v) for k, v in agent_paths.items()}
+        self.json_stats['test_round_summary'] = {
+            'agent_tests': list(agent_tests),
+            'agent_paths': agent_paths
+        }
+
+    @staticmethod
+    def filter_stmts(agent_name, all_stmts):
+        filtered_stmts = [
+            stmt for stmt in all_stmts if agent_name.lower() in [
+                ag.name.lower() for ag in stmt.real_agent_list()]]
+        return filtered_stmts
+
+    def get_model_round(self):
+        return ModelRound(self.filtered_stmts, None)
+
+
+def _agent_in_string(agent_name, string):
+    # agent name has several words
+    if len(agent_name.split()) > 1:
+        return agent_name.lower() in string.lower()
+    # agent name is one word/acronym
+    return agent_name.lower() in [n.lower() for n in string.split()]
 
 
 def generate_stats_on_s3(
