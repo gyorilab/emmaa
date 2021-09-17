@@ -6,7 +6,7 @@ from indra_db import get_db
 
 logger = logging.getLogger(__name__)
 api_key = os.environ.get('XDD_API_KEY')
-doc_url = 'https://xdddev.chtc.io/sets/xdd-covid-19/cosmos/api/document'
+doc_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/document'
 query_url = 'https://xdd.wisc.edu/sets/xdd-covid-19/cosmos/api/search'
 
 
