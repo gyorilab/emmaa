@@ -81,11 +81,19 @@
 <script>
   var loc = window.location.href;
   if (loc.includes('?')) {
-    loc = loc.concat('&loaded=true')
-    window.location.replace(loc);
+    if (loc.includes('#')) {
+      parts = loc.split("#")
+      loc = parts[0].concat('&loaded=true')
+      loc = loc.concat('#')
+      loc = loc.concat(parts[1])
+      window.location.replace(loc);
+    } else {
+      loc = loc.concat('&loaded=true')
+      window.location.replace(loc);
+    }
   } else {
     loc = loc.concat('?loaded=true')
-    window.location.replace(loc);    
+    window.location.replace(loc);
   }
 </script>
 </html>
