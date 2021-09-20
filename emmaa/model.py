@@ -594,7 +594,9 @@ class EmmaaModel(object):
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
+        method = self.test_config.get('indranet_method', 'preassembly')
         signed_graph = ia.make_model(
+            method=method,
             graph_type='signed',
             extra_columns=[('internal', is_internal)])
         if mode == 's3' and 'indranet' in self.export_formats:
@@ -612,7 +614,9 @@ class EmmaaModel(object):
         if not self.assembled_stmts:
             self.run_assembly()
         ia = IndraNetAssembler(self.assembled_stmts)
+        method = self.test_config.get('indranet_method', 'preassembly')
         unsigned_graph = ia.make_model(
+            method=method,
             graph_type='digraph',
             extra_columns=[('internal', is_internal)])
         return unsigned_graph
