@@ -345,6 +345,11 @@ following fields:
             }
         }
 
+- `indranet_method` : str, optional
+    Which method to use in IndraNetAssembler if signed_graph and unsigned_graph
+    are in `mc_types`. Assepted values: `df` and `preassembly`. Default:
+    `preassembly`.
+
 .. _query_config:
 
 Model queries configuration
