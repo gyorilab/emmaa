@@ -1,15 +1,32 @@
 EMMAA Models Page
 =================
 
-The models page contains detailed information about the selected model in four
-tabs: *Model*, *Tests*, *Papers*, and *Curation*. At the top of the page the
+The models page contains detailed information about the selected model in the
+following tabs:
+
+- :ref:`dashboard_model_overview_tab`
+- :ref:`dashboard_models_tests_tab`
+- :ref:`dashboard_agent_search_tab`
+- :ref:`dashboard_models_papers_tab`
+- :ref:`dashboard_models_curation_tab`
+- :ref:`dashboard_belief_tab`
+
+Each tab has a section describing its content. At the top of the page the
 selected model is shown in a drop-down menu. Another model can also be selected
 and loaded from the menu.
+
+.. figure:: ../_static/images/all_tabs.png
+  :align: center
+  :figwidth: 100 %
+
+  *Avaliable tabs*
 
 Link to statement details
 -------------------------
 
-To see further details regarding a mechanism, links to a separate page are
+Multiple tabs display the model statements descibing relevant biological
+mechanisms. To see further details regarding a mechanism, browse its
+evidence from literature and databases and submit curations, links to a separate page are
 generated for all statements where possible. To read more about that page, see:
 :ref:`statement_evidence`.
 
@@ -19,11 +36,14 @@ generated for all statements where possible. To read more about that page, see:
 
   *Link to statement evidence page*
 
-Model Tab
----------
+.. _dashboard_model_overview_tab:
 
-The model tab contains model info with the model description, the date the 
-model was last updated and the date when the displayed state of the model was 
+Model Overview Tab
+------------------
+
+This tab contains information and statistics about the model and the statements
+it is built from. At the top of the tab a user can find model description,
+the date when it was last updated and the date when the displayed state of the model was 
 generated. By default the latest available state of the model is displayed but 
 the user has an option to explore earlier states by clicking on an earlier time
 point on any of the time plots across the tabs
@@ -39,7 +59,9 @@ distribution of knowledge sources (reading systems and databases) of model
 statements and the statements with the most support from various knowledge bases.
 The table with most supported statements also has a button "All statements"
 clicking on which a user can be redirected to a page showing all statements in
-the model: :ref:`all_statements`.
+the model: :ref:`all_statements`. It is also possible to get redirected to
+all statements page by clicking on any statement type in "Statement Types
+Distribution" plot (the statements will be filtered to this type in this case).
 Further, the page shows how the number of statements in the model has evolved
 over time, and which statements were added to the model during the most recent
 update.
@@ -52,22 +74,27 @@ update.
 
 .. _dashboard_models_tests_tab:
 
-Tests Tab
----------
+Model Analysis/Testing Tab
+--------------------------
 
-At the top of the tests tab, a drop down menu displays which test corpus was
+The model analysis/testing tab contains information about the results of using
+the model on a selected “test” corpus. Test corpora consist of Statements
+representing observations. These can either be considered properties that the
+model is expected to satisfy (model validation or testing) or unexplained data
+that model analysis is used to explain (model analysis). At the top of the
+model analysis/testing tab, a drop down menu displays which test corpus was
 used for the currently displayed test results. Clicking on the drop down menu
 will display all available test corpora for the current model. Clicking
 "Load Test Results" will load the test results for the selected test corpus.
 
-.. figure:: ../_static/images/test_corpus_selection_cropped.png
+.. figure:: ../_static/images/test_corpus_selection.png
   :align: center
-  :figwidth: 100 %
+  :figwidth: 75 %
 
   *The results from different test corpora can be loaded. Here "Rasmodel Tests",
   "Skcm tests", "Rasmachine Tests", and "Large Corpus Tests" are available.*
 
-The tests tab contains two related plots: one showing the evolution over time
+The analysis/testing tab contains two related plots: one showing the evolution over time
 of the percentage of applicable tests that passed, and another showing the
 absolute number of tests that were applied to the model and the number of tests
 that passed in each of supported model types. For the first few months of the
@@ -119,13 +146,56 @@ status, linking to detailed test results page.
   *Part of the list showing all applied tests with a status indicator for
   passed/failed*
 
+.. _dashboard_agent_search_tab:
+
+Agent Search Tab
+----------------
+The Agent Search tab allows users to view the statistics about any individual
+agent (for instance, a protein, small molecule, or phenotype) in the model.
+To initiate the search, a user needs to type the name of the entity of interest
+(or select one from suggested options) and click "Generate agent stats" button.
+The page will be reloaded with the statistics about this agent.
+
+.. figure:: ../_static/images/agent_selection.png
+  :align: center
+  :figwidth: 75 %
+
+  *Suggestions for the partially typed agent name*
+
+The newly generated page contains the agent description and links to external
+ontologies as well as the relevant sections of other tabs with the focus on
+selected agent. Similarly to model overview tab, it displays the distribution
+of statement types, knowledge sources and most supported statements but only
+statements containing the selected agent are used to generate this statistics.
+The tab also shows top interactors of the entity in the model and publications
+from which the statements containing it were extracted.
+
+.. figure:: ../_static/images/agent_stats.png
+  :align: center
+  :figwidth: 75 %
+
+  *Part of the page generated for BRAF*
+
+Similarly to model analysis tab it contains the results of testing the model
+against a given test corpus. It is possible to select a different corpus to
+reload the results. There are two different aspects displayed here:
+1) the observations ("tests") that contain the agent of interest and their
+explanations
+2) explanations (paths) containing the agent of interest.
+
+.. figure:: ../_static/images/agent_tests.png
+  :align: center
+  :figwidth: 100 %
+
+  *Tests and paths containing BRAF*
+
 .. _dashboard_models_papers_tab:
 
-Papers Tab
-----------
+Publications Tab
+----------------
 
-The Papers tab shows statistics for both processed papers and papers that support
-assembled model statements. At the top of the Papers tab the time series plot
+The Publications tab shows statistics for both processed papers and papers that support
+assembled model statements. At the top of the Publications tab the time series plot
 shows the changes in the counts of both paper groups over time.
 
 .. figure:: ../_static/images/papers_over_time.png
@@ -155,10 +225,10 @@ original publication as an external resource.
 
 .. _dashboard_models_curation_tab:
 
-Curation Tab
-------------
+Model Curation Tab
+------------------
 
-The Curation tab summarizes statistics related to curations for statements
+The Model Curation tab summarizes statistics related to curations for statements
 that are part of the model. At the top of the tab two barplots
 show the counts of evidences and assembled statements curated by individual
 curators.  
@@ -184,6 +254,22 @@ Finally, the number of curated statements and evidences over time is shown.
   :figwidth: 100 %
 
   *Curations over time*
+
+.. _dashboard_belief_tab:
+
+Statement Confidence Tab
+------------------------
+
+Each statement in the model has an associated belief which represents the
+confidence level that the statement is correct. This tab shows the distribution
+of beliefs among statements in the model and allows users to select a belief
+range to view the statements within it.
+
+.. figure:: ../_static/images/belief_tab.png
+  :align: center
+  :figwidth: 100 %
+
+  *Statement Confidence tab*
 
 .. _dashboard_models_load_previous:
 
