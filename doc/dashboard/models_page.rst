@@ -50,6 +50,12 @@ point on any of the time plots across the tabs
 (for more details see: :ref:`dashboard_models_load_previous`).
 Links to the NDEx website where a network view of the
 model can be examined and to the Twitter account if available are provided.
+There are also two buttons in the top right corner of the first table:
+- "Subscribe" (might need to log in to see) that lets users subscribe to
+receive email notifications when the model has any updates.
+- "Chat" that opens up a dialogue window where users can chat with the model
+in natural language. Read more about this here: :ref:`chat_page`
+
 It is possible to download the models in various formats and the corresponding
 buttons are placed next.
 

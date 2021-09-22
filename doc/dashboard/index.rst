@@ -33,3 +33,4 @@ Please read the sections below to learn how different EMMAA pages work.
    model_queries
    response_codes
    detailed_test_results
+   chat_page
