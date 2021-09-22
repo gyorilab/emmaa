@@ -12,7 +12,8 @@ needs to click on a statement. Each statement can have multiple badges that
 have the same meaning as in the statement evidence page. A blue badge with a flag
 shows have many paths this statement is a part of. A green or a red badge with a 
 pencil shows how many times this statement was curated as correct or incorrect 
-respectively. The grey badge shows the number of loaded evidences and the total 
+respectively. An orange badge shows the statement's belief score.
+The grey badge shows the number of loaded evidences and the total 
 number of evidences supporting this statement. Clicking on the JSON badge opens a 
 new page containing the JSON representation of the statement.
 
@@ -21,3 +22,6 @@ new page containing the JSON representation of the statement.
   :figwidth: 100 %
 
   *Individual paper page view*
+
+If available, the Figures tab on this page also shows figures and tables from
+this publication.
