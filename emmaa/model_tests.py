@@ -631,7 +631,7 @@ class ModelManager(object):
                 for edge in resp['edge_list']:
                     for (_, sentence, _) in edge['stmts']:
                         sentences.append(sentence)
-                response_str = ' '.join(sentences)
+                response_str = ' '.join(sorted(sentences))
                 response_hash = str(fnv1a_32(response_str.encode('utf-8')))
                 response_dict[response_hash] = resp
         elif isinstance(response, dict):
