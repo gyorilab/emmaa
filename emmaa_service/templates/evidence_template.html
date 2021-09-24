@@ -160,6 +160,17 @@
   {% endif %}
 </div>
 <script>
+  const url = new URL(window.location);
+  console.log(url)
+  if (url.href.includes('&loaded=true')) {
+    console.log('&')
+    url.href = url.href.replace('&loaded=true', '')
+    window.history.pushState('', '', url);
+  } else if (url.href.includes('?loaded=true')) {
+    console.log('?')
+    url.href = url.href.replace('?loaded=true', '')
+    window.history.pushState('', '', url);
+  }
   Vue.prototype.$stmt_hash_url = "{{ url_for('get_statement_by_hash_model', model=model, date=date, hash_val='') }}";
   Vue.prototype.$curation_url = "{{ url_for('submit_curation_endpoint', hash_val='') }}";
   Vue.prototype.$curation_list_url = "{{ url_for('list_curations', stmt_hash='', src_hash='') }}".slice(0, -2);
