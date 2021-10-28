@@ -184,12 +184,15 @@ class ModelManager(object):
                          filter_func=None, edge_filter_func=None,
                          allow_direct=True):
         """Run all applicable tests with one ModelChecker."""
+        logger.info(f'Running the tests with {mc_type} ModelChecker.')
+        if filter_func:
+            logger.info(f'Applying {filter_func.__name__} to nodes')
+        if edge_filter_func:
+            logger.info(f'Applying {edge_filter_func.__name__} to edges')
+        logger.info(f'Allow direct connections as path: {allow_direct}')
         mc = self.get_updated_mc(
             mc_type, [test.stmt for test in self.applicable_tests],
             edge_filter_func=edge_filter_func)
-        logger.info(f'Running the tests with {mc_type} ModelChecker.')
-        if filter_func:
-            logger.info(f'Applying {filter_func.__name__}')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths,
             agent_filter_func=filter_func, edge_filter_func=edge_filter_func,
@@ -751,7 +754,8 @@ class TestManager(object):
             A TestConnector object to use for connecting models to tests.
         """
         logger.info(f'Checking applicability of {len(self.tests)} tests to '
-                    f'{len(self.model_managers)} models')
+                    f'{len(self.model_managers)} models with '
+                    f'{type(test_connector).__name__}')
         for model_manager, test in itertools.product(self.model_managers,
                                                      self.tests):
             if test_connector.applicable(model_manager, test):
