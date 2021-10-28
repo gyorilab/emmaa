@@ -1043,14 +1043,17 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     filter_func = None
     edge_filter_func = None
     allow_direct = True
+    # Do we want to filter out any nodes?
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
         if filter_func_name:
             filter_func = node_filter_functions.get(filter_func_name)
+    # Do we want to filter out any edges?
     if mm.model.test_config.get('edge_filters'):
         edge_filter_func_name = mm.model.test_config['edge_filters'].get(
             test_corpus)
         edge_filter_func = edge_filter_functions.get(edge_filter_func_name)
+    # Do we want to allow direct connections as result
     if mm.model.test_config.get('direct_paths'):
         allow_direct = mm.model.test_config['direct_paths'].get(
             test_corpus, True)
