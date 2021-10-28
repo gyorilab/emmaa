@@ -169,17 +169,20 @@ class ModelManager(object):
         """Add a result to a list of results."""
         self.mc_types[mc_type]['test_results'].append(result)
 
-    def run_all_tests(self, filter_func=None, edge_filter_func=None):
+    def run_all_tests(self, filter_func=None, edge_filter_func=None,
+                      allow_direct=True):
         """Run all applicable tests with all available ModelCheckers."""
         max_path_length, max_paths = self._get_test_configs()
         for mc_type in self.mc_types:
             if mc_type not in MODEL_TYPES['path']:
                 continue
             self.run_tests_per_mc(mc_type, max_path_length, max_paths,
-                                  filter_func, edge_filter_func)
+                                  filter_func, edge_filter_func,
+                                  allow_direct=allow_direct)
 
     def run_tests_per_mc(self, mc_type, max_path_length, max_paths,
-                         filter_func=None, edge_filter_func=None):
+                         filter_func=None, edge_filter_func=None,
+                         allow_direct=True):
         """Run all applicable tests with one ModelChecker."""
         mc = self.get_updated_mc(
             mc_type, [test.stmt for test in self.applicable_tests],
@@ -189,7 +192,8 @@ class ModelManager(object):
             logger.info(f'Applying {filter_func.__name__}')
         results = mc.check_model(
             max_path_length=max_path_length, max_paths=max_paths,
-            agent_filter_func=filter_func, edge_filter_func=edge_filter_func)
+            agent_filter_func=filter_func, edge_filter_func=edge_filter_func,
+            allow_direct=allow_direct)
         for (stmt, result) in results:
             self.add_result(mc_type, result)
 
@@ -760,10 +764,12 @@ class TestManager(object):
             logger.info(f'Created {len(model_manager.applicable_tests)} tests '
                         f'for {model_manager.model.name} model.')
 
-    def run_tests(self, filter_func=None, edge_filter_func=None):
+    def run_tests(self, filter_func=None, edge_filter_func=None,
+                  allow_direct=True):
         """Run tests for a list of model-test pairs"""
         for model_manager in self.model_managers:
-            model_manager.run_all_tests(filter_func, edge_filter_func)
+            model_manager.run_all_tests(filter_func, edge_filter_func,
+                                        allow_direct=allow_direct)
 
 
 class TestConnector(object):
@@ -1036,6 +1042,7 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     tm.make_tests(test_connector)
     filter_func = None
     edge_filter_func = None
+    allow_direct = True
     if mm.model.test_config.get('filters'):
         filter_func_name = mm.model.test_config['filters'].get(test_corpus)
         if filter_func_name:
@@ -1044,7 +1051,10 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
         edge_filter_func_name = mm.model.test_config['edge_filters'].get(
             test_corpus)
         edge_filter_func = edge_filter_functions.get(edge_filter_func_name)
-    tm.run_tests(filter_func, edge_filter_func)
+    if mm.model.test_config.get('direct_paths'):
+        allow_direct = mm.model.test_config['direct_paths'].get(
+            test_corpus, True)
+    tm.run_tests(filter_func, edge_filter_func, allow_direct)
     # Optionally upload test results to S3
     if upload_results:
         mm.upload_results(test_corpus, test_data, bucket=bucket)
