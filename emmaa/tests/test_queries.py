@@ -251,21 +251,19 @@ def test_grounding_from_gilda():
     agent = get_agent_from_gilda('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
-                             'MESH': 'C535150', 'EGID': '5594'}, agent.db_refs
+    assert agent.db_refs['HGNC'] == '6871', agent.db_refs
 
     # test with lower case
     agent = get_agent_from_gilda('mapk1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'TEXT': 'mapk1', 'HGNC': '6871', 'UP': 'P28482',
-                             'MESH': 'C535150', 'EGID': '5594'}, agent.db_refs
+    assert agent.db_refs['HGNC'] == '6871', agent.db_refs
+
     # other agent
     agent = get_agent_from_gilda('BRAF')
     assert isinstance(agent, Agent)
     assert agent.name == 'BRAF'
-    assert agent.db_refs == {'TEXT': 'BRAF', 'EGID': '673', 'MESH': 'C482119',
-                             'HGNC': '1097', 'UP': 'P15056'}, agent.db_refs
+    assert agent.db_refs['HGNC'] == '1097', agent.db_refs
 
 
 def test_agent_from_trips():
@@ -281,8 +279,7 @@ def test_generic_agent_from_text():
     agent = get_agent_from_text('MAPK1')
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
-    assert agent.db_refs == {'TEXT': 'MAPK1', 'HGNC': '6871', 'UP': 'P28482',
-                             'MESH': 'C535150', 'EGID': '5594'}, agent.db_refs
+    assert agent.db_refs['HGNC'] == '6871', agent.db_refs
     assert not agent.mods
     ag_phos = get_agent_from_text('the phosphorylated MAP2K1')
     assert ag_phos.db_refs.get('HGNC') == '6840'
