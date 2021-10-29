@@ -345,6 +345,21 @@ following fields:
             }
         }
 
+- `direct_paths` : dict
+    Configuration whether to allow direct paths as a test result. Should be
+    set per test corpus. If not provided, set to True for all test corpora
+    (i.e. allow direct paths).
+
+
+    - Example:
+
+    .. code-block:: json
+
+        {"direct_paths": {
+            "covid19_tests" : false
+            }
+        }
+
 - `indranet_method` : str, optional
     Which method to use in IndraNetAssembler if signed_graph and unsigned_graph
     are in `mc_types`. Assepted values: `df` and `preassembly`. Default:

@@ -598,7 +598,8 @@ class EmmaaModel(object):
         signed_graph = ia.make_model(
             method=method,
             graph_type='signed',
-            extra_columns=[('internal', is_internal)])
+            extra_columns=[('internal', is_internal)],
+            keep_self_loops=False)
         if mode == 's3' and 'indranet' in self.export_formats:
             fname = f'indranet_{self.date_str}.tsv'
             df = ia.make_df()
@@ -618,7 +619,8 @@ class EmmaaModel(object):
         unsigned_graph = ia.make_model(
             method=method,
             graph_type='digraph',
-            extra_columns=[('internal', is_internal)])
+            extra_columns=[('internal', is_internal)],
+            keep_self_loops=False)
         return unsigned_graph
 
     def assemble_dynamic_pysb(self, mode='local', bucket=EMMAA_BUCKET_NAME):

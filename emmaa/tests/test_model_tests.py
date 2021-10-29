@@ -1,4 +1,7 @@
+import datetime
+
 from nose.plugins.attrib import attr
+from emmaa.statements import EmmaaStatement
 
 from indra.statements import *
 from indra.explanation.model_checker import PathResult, PysbModelChecker, \
@@ -186,3 +189,25 @@ def test_results_json():
                 assert len(path_dict['edges'][1]['hashes']) == 6
                 assert path_dict['edges'][2]['type'] == 'RefEdge'
                 assert 'hashes' not in path_dict['edges'][2]
+
+
+def test_direct_path_tests():
+    model = create_model()
+    stmt = Activation(Agent('BRAF', db_refs={'HGNC': '1097'}),
+                      Agent('MAPK1', db_refs={'UP': 'P28482'}))
+    model.stmts.append(EmmaaStatement(stmt, datetime.datetime.now(), [],
+                                      {'internal': True, 'curated': False}))
+    tests = [StatementCheckingTest(stmt)]
+    mm = ModelManager(model)
+    tm = TestManager([mm], tests)
+    tm.make_tests(ScopeTestConnector())
+    tm.run_tests(allow_direct=True)
+    for mc_type in ['pysb', 'signed_graph', 'unsigned_graph']:
+        res = mm.mc_types[mc_type]['test_results'][0]
+        print(res.paths)
+        assert len(res.paths[0]) == 2, (mc_type, res.paths[0])  # 1 edge
+    tm.run_tests(allow_direct=False)
+    for mc_type in ['pysb', 'signed_graph', 'unsigned_graph']:
+        # Look at the seecond test result here
+        res = mm.mc_types[mc_type]['test_results'][1]
+        assert len(res.paths[0]) == 3, (mc_type, res.paths[0])  # 2 edges
