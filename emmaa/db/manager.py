@@ -10,8 +10,10 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, UserModel
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, \
+    UserModel, Statement
 from emmaa.queries import Query as QueryObject
+from indra.statements import stmts_to_json, stmts_from_json
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class EmmaaDatabaseSessionManager(object):
 
 class EmmaaDatabaseManager(object):
     """A class used to manage sessions with EMMAA's database."""
-    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
+    table_order = ['user', 'query', 'user_query', 'user_model', 'result', 'statement']
 
     def __init__(self, host, label=None):
         self.host = host
@@ -587,6 +589,93 @@ class EmmaaDatabaseManager(object):
                 UserModel.subscription
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
+
+    def add_statements(self, model_id, date, statements):
+        """Add statements to the database.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to add statements to.
+        date : str
+            The date when the model was generated.
+        statements : list[str]
+            A list of statements to add to the database.
+
+        Returns
+        -------
+        bool
+            True if the statements were added successfully, False otherwise.
+        """
+        logger.info(f'Got request to add {len(statements)} statements to '
+                    f'model {model_id} on date {date}')
+        stmt_jsons = stmts_to_json(statements)
+        stmts_to_add = [Statement(model_id=model_id, date=date,
+                                  stmt_hash=stmt_json['matches_hash'],
+                                  statement_json=stmt_json)
+                        for stmt_json in stmt_jsons]
+        with self.get_session() as sess:
+            sess.add_all(stmts_to_add)
+        return
+
+    def get_statements(self, model_id, date, offset=0, limit=None):
+        """Load the statements by model and date.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to get statements for.
+        date : str
+            The date when the model was generated.
+        offset : int
+            The offset to start at.
+        limit : int
+            The number of statements to return.
+
+        Returns
+        -------
+        list[indra.statements.Statement]
+            A list of statements corresponding to the model and date.
+        """
+        logger.info(f'Got request to get statements for model {model_id} '
+                    f'on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.statement_json).filter(
+                Statement.model_id == model_id,
+                Statement.date == date
+            )
+            if limit:
+                q = q.offset(offset).limit(limit)
+            stmts = stmts_from_json([s for s, in q.all()])
+        return stmts
+
+    def get_statements_by_hash(self, model_id, date, stmt_hashes):
+        """Get statements by hash.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to get statements for.
+        date : str
+            The date when the model was generated.
+        stmt_hashes : list[str]
+            A list of statement hashes to get statements for.
+
+        Returns
+        -------
+        list[indra.statements.Statement]
+            A list of statements corresponding to the model and date.
+        """
+        logger.info(f'Got request to get statements for model {model_id} '
+                    f'on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.statement_json).filter(
+                Statement.model_id == model_id,
+                Statement.date == date,
+                Statement.stmt_hash.in_(stmt_hashes)
+            )
+            stmts = stmts_from_json([s for s, in q.all()])
+        return stmts
 
 
 def _weed_results(result_iter, latest_order=1):
