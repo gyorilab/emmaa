@@ -176,3 +176,28 @@ class Result(Base, EmmaaTable):
     mc_type = Column(String(20), default='pysb')
     all_result_hashes = Column(ARRAY(String), default=[])
     delta = Column(ARRAY(String), default=[])
+
+
+class Statement(Base, EmmaaTable):
+    """Statements in the model:
+
+    ``Statement(_id_, model_id, date, statement_json)``
+
+    Parameters
+    ----------
+    id : int
+        (auto, primary key) A database-assigned integer id.
+    model_id : str
+        (20 character) The short id/acronym for the given model.
+    stmt_hash : big-int
+        The hash of the statement.
+    date : str
+        The date when the model was assembled.
+    statement_json : json
+    """
+    __tablename__ = 'statement'
+    id = Column(Integer, primary_key=True)
+    model_id = Column(String(20), nullable=False)
+    stmt_hash = Column(BigInteger, nullable=False)
+    date = Column(String(10), nullable=False)
+    statement_json = Column(JSONB, nullable=False)
