@@ -11,3 +11,4 @@ inflection
 pybel
 gilda
 tweepy
+docutils<0.18
