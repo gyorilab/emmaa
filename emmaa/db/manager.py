@@ -610,12 +610,15 @@ class EmmaaDatabaseManager(object):
         logger.info(f'Got request to add {len(statements)} statements to '
                     f'model {model_id} on date {date}')
         stmt_jsons = stmts_to_json(statements)
+        logger.info(f'Converted {len(statements)} statements to json')
         stmts_to_add = [Statement(model_id=model_id, date=date,
                                   stmt_hash=stmt_json['matches_hash'],
                                   statement_json=stmt_json)
                         for stmt_json in stmt_jsons]
+        logger.info(f'Converted {len(statements)} statements to db objects')
         with self.get_session() as sess:
             sess.add_all(stmts_to_add)
+        logger.info(f'Added {len(statements)} statements to db')
         return
 
     def get_statements(self, model_id, date, offset=0, limit=None):
@@ -667,7 +670,7 @@ class EmmaaDatabaseManager(object):
             A list of statements corresponding to the model and date.
         """
         logger.info(f'Got request to get statements for model {model_id} '
-                    f'on date {date}')
+                    f'on date {date} for {len(stmt_hashes)} hashes')
         with self.get_session() as sess:
             q = sess.query(Statement.statement_json).filter(
                 Statement.model_id == model_id,
