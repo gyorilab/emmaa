@@ -655,7 +655,8 @@ class EmmaaDatabaseManager(object):
             A list of statements corresponding to the model and date.
         """
         logger.info(f'Got request to get statements for model {model_id} '
-                    f'on date {date}')
+                    f'on date {date} with offset {offset} and limit {limit} '
+                    f'and sort by {sort_by}')
         with self.get_session() as sess:
             q = sess.query(Statement.statement_json).filter(
                 Statement.model_id == model_id,
@@ -664,6 +665,8 @@ class EmmaaDatabaseManager(object):
             if sort_by == 'evidence':
                 q = q.order_by(jsonb_array_length(
                     Statement.statement_json["evidence"]).desc())
+            elif sort_by == 'belief':
+                q = q.order_by(Statement.statement_json['belief'].desc())
             if limit:
                 q = q.offset(offset).limit(limit)
             stmts = stmts_from_json([s for s, in q.all()])
