@@ -727,6 +727,35 @@ class EmmaaDatabaseManager(object):
                     Statement.stmt_hash == stmt_hash).first()
                 stmt.path_count += path_count
 
+    def get_path_counts(self, model_id, date):
+        """Get the path counts for statements.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+
+        Returns
+        -------
+        dict[int, int]
+            A dictionary mapping statement hashes to the number of times they
+            were used in the paths.
+        """
+        logger.info(f'Got request to get path counts for model {model_id} '
+                    f'on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.stmt_hash, Statement.path_count).filter(
+                Statement.model_id == model_id,
+                Statement.date == date
+            )
+            path_counts = {
+                stmt_hash: path_count for stmt_hash, path_count in q.all()
+                if path_count > 0
+            }
+        return path_counts
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter:
