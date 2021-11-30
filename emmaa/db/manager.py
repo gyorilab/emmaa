@@ -9,7 +9,8 @@ import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.sql.expression import FunctionElement
+from sqlalchemy.ext.compiler import compiles
 from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, \
     UserModel, Statement
 from emmaa.queries import Query as QueryObject
@@ -20,6 +21,18 @@ logger = logging.getLogger(__name__)
 
 class EmmaaDatabaseError(Exception):
     pass
+
+
+# This is used to get the length of JSONB arrays (e.g. number of evidence in
+# a statement),see
+# https://stackoverflow.com/questions/23060259/sqlalchemy-querying-the-length-json-field-having-an-array
+class jsonb_array_length(FunctionElement):
+    name = 'jsonb_array_length'
+
+
+@compiles(jsonb_array_length)
+def compile(element, compiler, **kwargs):
+    return 'jsonb_array_length(%s)' % compiler.process(element.clauses)
 
 
 class EmmaaDatabaseSessionManager(object):
@@ -621,7 +634,8 @@ class EmmaaDatabaseManager(object):
         logger.info(f'Added {len(statements)} statements to db')
         return
 
-    def get_statements(self, model_id, date, offset=0, limit=None):
+    def get_statements(self, model_id, date, offset=0, limit=None,
+                       sort_by=None):
         """Load the statements by model and date.
 
         Parameters
@@ -647,6 +661,9 @@ class EmmaaDatabaseManager(object):
                 Statement.model_id == model_id,
                 Statement.date == date
             )
+            if sort_by == 'evidence':
+                q = q.order_by(jsonb_array_length(
+                    Statement.statement_json["evidence"]).desc())
             if limit:
                 q = q.offset(offset).limit(limit)
             stmts = stmts_from_json([s for s, in q.all()])
