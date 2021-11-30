@@ -667,6 +667,8 @@ class EmmaaDatabaseManager(object):
                     Statement.statement_json["evidence"]).desc())
             elif sort_by == 'belief':
                 q = q.order_by(Statement.statement_json['belief'].desc())
+            elif sort_by == 'paths':
+                q = q.order_by(Statement.path_count.desc())
             if limit:
                 q = q.offset(offset).limit(limit)
             stmts = stmts_from_json([s for s, in q.all()])
@@ -699,6 +701,31 @@ class EmmaaDatabaseManager(object):
             )
             stmts = stmts_from_json([s for s, in q.all()])
         return stmts
+
+    def update_statements_path_counts(self, model_id, date, path_counts):
+        """Update the path counts for statements. The update is incremental
+        because we can have the statement used in the paths in different
+        test corpora.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+        path_counts : dict[int, int]
+            A dictionary mapping statement hashes to the number of times they
+            were used in the paths.
+        """
+        logger.info(f'Got request to update path counts for {len(path_counts)}'
+                    f' statements for model {model_id} on date {date}')
+        with self.get_session() as sess:
+            for stmt_hash, path_count in path_counts.items():
+                stmt = sess.query(Statement).filter(
+                    Statement.model_id == model_id,
+                    Statement.date == date,
+                    Statement.stmt_hash == stmt_hash).first()
+                stmt.path_count += path_count
 
 
 def _weed_results(result_iter, latest_order=1):

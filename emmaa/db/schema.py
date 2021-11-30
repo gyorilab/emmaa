@@ -201,3 +201,4 @@ class Statement(Base, EmmaaTable):
     stmt_hash = Column(BigInteger, nullable=False)
     date = Column(String(10), nullable=False)
     statement_json = Column(JSONB, nullable=False)
+    path_count = Column(Integer, nullable=False, default=0)
