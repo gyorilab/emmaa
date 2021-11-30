@@ -513,6 +513,11 @@ def load_stmts_by_hash(model, date, stmt_hashes):
     return stmts
 
 
+def load_path_counts(model, date):
+    emmaa_db = get_emmaa_db('dev')
+    return emmaa_db.get_path_counts(model, date)
+
+
 def _load_model_stats_from_cache(model, date):
     available_date, model_stats = model_stats_cache.get(model, (None, None))
     if model_stats and date and available_date == date:
@@ -838,6 +843,42 @@ def _count_curations(curations, stmts_by_hash):
             cur_source = 'other'
         cur_counts[stmt_hash][cur_source][cur_tag] += 1
     return cur_counts
+
+
+def _local_sort_stmts(stmts, stmts_by_hash, offset, sort_by):
+    # This is the old way of sorting statements after loading all of them
+    # in memory, used when statements are not available in the db
+    stmt_counts_dict = Counter()
+    test_corpora = _get_test_corpora(model)
+    for test_corpus in test_corpora:
+        test_date = last_updated_date(model, 'test_stats', 'date', test_corpus,
+                                      extension='.json')
+        test_stats, _ = _load_test_stats_from_cache(
+            model, test_corpus, test_date)
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
+        stmt_counts_dict += Counter(dict(stmt_counts))
+    if sort_by == 'evidence':
+        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+            offset:offset+1000]
+    elif sort_by == 'paths':
+        stmt_count_sorted = sorted(
+            stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
+        if not stmt_count_sorted:
+            msg = 'Sorting by paths is not available, sorting by evidence'
+            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+                offset:offset+1000]
+        else:
+            stmts = []
+            for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
+                try:
+                    stmts.append(stmts_by_hash[stmt_hash])
+                except KeyError:
+                    continue
+    elif sort_by == 'belief':
+        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
+            offset:offset+1000]
+    return stmts, stmt_counts_dict
 
 
 def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
@@ -1835,18 +1876,6 @@ def get_all_statements_page(model):
     all_agents = [ag for (ag, count) in
                   model_stats['model_summary']['agent_distr']]
     total_stmts = model_stats['model_summary']['number_of_statements']
-    # TODO instead of getting path counts from stats, use db to get it
-    # Add up paths per statement count across test corpora
-    stmt_counts_dict = Counter()
-    test_corpora = _get_test_corpora(model)
-    for test_corpus in test_corpora:
-        test_date = last_updated_date(model, 'test_stats', 'date', test_corpus,
-                                      extension='.json')
-        test_stats, _ = _load_test_stats_from_cache(
-            model, test_corpus, test_date)
-        stmt_counts = test_stats['test_round_summary'].get(
-            'path_stmt_counts', [])
-        stmt_counts_dict += Counter(dict(stmt_counts))
     if total_stmts % 1000 == 0:
         total_pages = total_stmts//1000
     else:
@@ -1860,28 +1889,9 @@ def get_all_statements_page(model):
     else:
         prev_page = None
     if not from_db:
-        # This is the old way of sorting statements after loading all of them
-        # in memory, used when statements are not available in the db
-        if sort_by == 'evidence':
-            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
-                offset:offset+1000]
-        elif sort_by == 'paths':
-            stmt_count_sorted = sorted(
-                stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
-            if not stmt_count_sorted:
-                msg = 'Sorting by paths is not available, sorting by evidence'
-                stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
-                    offset:offset+1000]
-            else:
-                stmts = []
-                for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
-                    try:
-                        stmts.append(stmts_by_hash[stmt_hash])
-                    except KeyError:
-                        continue
-        elif sort_by == 'belief':
-            stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
-                offset:offset+1000]
+        stmts, stmt_counts_dict = _local_sort_stmts(stmts, offset, sort_by)
+    else:
+        stmt_counts_dict = load_path_counts(model, date)
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
