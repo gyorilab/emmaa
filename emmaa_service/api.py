@@ -45,6 +45,7 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
+from emmaa.db import get_db as get_emmaa_db
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -486,6 +487,25 @@ def _load_stmts_from_cache(model, date):
         return stmts
     stmts, file_key = get_assembled_statements(model, date, EMMAA_BUCKET_NAME)
     stmts_cache[model] = (date, stmts)
+    return stmts
+
+
+def load_stmts(model, date):
+    emmaa_db = get_emmaa_db('dev')
+    stmts = emmaa_db.get_statements(model, date)
+    # Statements for that model/date are not in db
+    if not stmts:
+        stmts = _load_stmts_from_cache(model, date)
+    return stmts
+
+
+def load_stmts_by_hash(model, date, stmt_hashes):
+    emmaa_db = get_emmaa_db('dev')
+    stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
+    # Statements for that model/date are not in db
+    if not stmts:
+        stmts = _load_stmts_from_cache(model, date)
+        stmts = [stmt for stmt in stmts if str(stmt.get_hash()) in stmt_hashes]
     return stmts
 
 
@@ -1253,8 +1273,9 @@ def get_model_dashboard(model):
     logger.info('Getting belief distribution')
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
+    stmts = None
     if not beliefs:
-        stmts = _load_stmts_from_cache(model, date)
+        stmts = load_stmts(model, date)
         if stmts:
             beliefs = [stmt.belief for stmt in stmts]
     if beliefs:
@@ -1277,7 +1298,8 @@ def get_model_dashboard(model):
     agent_paths_table = None
     if agent:
         logger.info('Generating agent statistics')
-        stmts = _load_stmts_from_cache(model, date)
+        if not stmts:
+            stmts = load_stmts(model, date)
         sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
         sg.make_stats()
         agent_stats = sg.json_stats
@@ -1408,11 +1430,9 @@ def annotate_paper_statements(model):
             trid = str(trids[0])
         else:
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
-    all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
-    paper_stmts = [stmt for stmt in all_stmts
-                   if stmt.get_hash(refresh=True) in paper_hashes]
+    paper_stmts = load_stmts_by_hash(model, date, paper_hashes)
     for stmt in paper_stmts:
         stmt.evidence = [ev for ev in stmt.evidence
                          if str(ev.text_refs.get('TRID')) == trid]
@@ -1476,11 +1496,8 @@ def get_paper_statements(model):
     raw_paper_ids = model_stats['paper_summary']['raw_paper_ids']
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
     if paper_hashes:
-        all_stmts = _load_stmts_from_cache(model, date)
-        paper_stmts = [stmt for stmt in all_stmts
-                       if stmt.get_hash(refresh=True) in paper_hashes]
-        updated_stmts = [filter_evidence(stmt, trid, 'TRID')
-                         for stmt in paper_stmts]
+        updated_stmts = [filter_evidence(stmt, trid, 'TRID') for stmt
+                         in load_stmts_by_hash(model, date, paper_hashes)]
         updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
                                reverse=True)
     else:
@@ -1690,13 +1707,10 @@ def get_statement_evidence_page():
             stmt_counts = test_stats['test_round_summary'].get(
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
-        all_stmts = _load_stmts_from_cache(model, date)
-        stmts = [stmt for stmt in all_stmts
-                 if str(stmt.get_hash(refresh=True)) in stmt_hashes]
+        stmts = load_stmts(model, date, stmt_hashes)
     elif source == 'paper':
-        all_stmts = _load_stmts_from_cache(model, date)
         stmts = [filter_evidence(stmt, paper_id, paper_id_type) for stmt in
-                 all_stmts if str(stmt.get_hash(refresh=True)) in stmt_hashes]
+                 load_stmts_by_hash(model, date, stmt_hashes)]
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -1779,7 +1793,7 @@ def get_all_statements_page(model):
     offset = (page - 1)*1000
 
     # Load full list of statements
-    stmts = _load_stmts_from_cache(model, date)
+    stmts = load_stmts(model, date)
 
     if agent:
         stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
@@ -2201,7 +2215,7 @@ def model_subscription(model):
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
-    stmts = _load_stmts_from_cache(model, date)
+    stmts = load_stmts_by_hash(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
@@ -2240,7 +2254,7 @@ def get_tests_by_hash(test_corpus, hash_val):
            '<date>/<hash_val>', methods=['GET'])
 def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
     """Get model statement by hash and paper ID."""
-    stmts = _load_stmts_from_cache(model, date)
+    stmts = load_stmts_by_hash(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
