@@ -490,13 +490,17 @@ def _load_stmts_from_cache(model, date):
     return stmts
 
 
-def load_stmts(model, date):
+def load_stmts(model, date, **kwargs):
     emmaa_db = get_emmaa_db('dev')
-    stmts = emmaa_db.get_statements(model, date)
+    stmts = emmaa_db.get_statements(model, date, **kwargs)
+    from_db = True
     # Statements for that model/date are not in db
     if not stmts:
+        logger.info(f'Could not find statements for {model} {date} in db, '
+                    'using S3/cache.')
         stmts = _load_stmts_from_cache(model, date)
-    return stmts
+        from_db = False
+    return stmts, from_db
 
 
 def load_stmts_by_hash(model, date, stmt_hashes):
@@ -1275,7 +1279,7 @@ def get_model_dashboard(model):
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
     stmts = None
     if not beliefs:
-        stmts = load_stmts(model, date)
+        stmts, _ = load_stmts(model, date)
         if stmts:
             beliefs = [stmt.belief for stmt in stmts]
     if beliefs:
@@ -1299,7 +1303,7 @@ def get_model_dashboard(model):
     if agent:
         logger.info('Generating agent statistics')
         if not stmts:
-            stmts = load_stmts(model, date)
+            stmts, _ = load_stmts(model, date)
         sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
         sg.make_stats()
         agent_stats = sg.json_stats
@@ -1707,7 +1711,7 @@ def get_statement_evidence_page():
             stmt_counts = test_stats['test_round_summary'].get(
                 'path_stmt_counts', [])
             stmt_counts_dict += Counter(dict(stmt_counts))
-        stmts = load_stmts(model, date, stmt_hashes)
+        stmts, _ = load_stmts(model, date, stmt_hashes)
     elif source == 'paper':
         stmts = [filter_evidence(stmt, paper_id, paper_id_type) for stmt in
                  load_stmts_by_hash(model, date, stmt_hashes)]
@@ -1792,8 +1796,10 @@ def get_all_statements_page(model):
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
 
-    # Load full list of statements
-    stmts = load_stmts(model, date)
+    # Load the statements; if they are available in the database, the sorting,
+    # offset and limit will be done there; otherwise, the full list will be
+    # loaded and sorted here.
+    stmts, from_db = load_stmts(model, date, sort_by=sort_by, offset=offset, limit=1000)
 
     if agent:
         stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
@@ -1828,6 +1834,8 @@ def get_all_statements_page(model):
     model_stats = _load_model_stats_from_cache(model, date)
     all_agents = [ag for (ag, count) in
                   model_stats['model_summary']['agent_distr']]
+    total_stmts = model_stats['model_summary']['number_of_statements']
+    # TODO instead of getting path counts from stats, use db to get it
     # Add up paths per statement count across test corpora
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
@@ -1839,12 +1847,10 @@ def get_all_statements_page(model):
         stmt_counts = test_stats['test_round_summary'].get(
             'path_stmt_counts', [])
         stmt_counts_dict += Counter(dict(stmt_counts))
-    stmt_count_sorted = sorted(
-        stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
-    if len(stmts) % 1000 == 0:
-        total_pages = len(stmts)//1000
+    if total_stmts % 1000 == 0:
+        total_pages = total_stmts//1000
     else:
-        total_pages = len(stmts)//1000 + 1
+        total_pages = total_stmts//1000 + 1
     if page + 1 <= total_pages:
         next_page = page + 1
     else:
@@ -1853,24 +1859,29 @@ def get_all_statements_page(model):
         prev_page = page - 1
     else:
         prev_page = None
-    if sort_by == 'evidence':
-        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
-            offset:offset+1000]
-    elif sort_by == 'paths':
-        if not stmt_count_sorted:
-            msg = 'Sorting by paths is not available, sorting by evidence'
+    if not from_db:
+        # This is the old way of sorting statements after loading all of them
+        # in memory, used when statements are not available in the db
+        if sort_by == 'evidence':
             stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
                 offset:offset+1000]
-        else:
-            stmts = []
-            for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
-                try:
-                    stmts.append(stmts_by_hash[stmt_hash])
-                except KeyError:
-                    continue
-    elif sort_by == 'belief':
-        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
-            offset:offset+1000]
+        elif sort_by == 'paths':
+            stmt_count_sorted = sorted(
+                stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
+            if not stmt_count_sorted:
+                msg = 'Sorting by paths is not available, sorting by evidence'
+                stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+                    offset:offset+1000]
+            else:
+                stmts = []
+                for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
+                    try:
+                        stmts.append(stmts_by_hash[stmt_hash])
+                    except KeyError:
+                        continue
+        elif sort_by == 'belief':
+            stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
+                offset:offset+1000]
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
