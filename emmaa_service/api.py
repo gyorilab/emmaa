@@ -500,6 +500,9 @@ def load_stmts(model, date, **kwargs):
                     'using S3/cache.')
         stmts = _load_stmts_from_cache(model, date)
         from_db = False
+    # Clear the cache for this model if it's not activelly used
+    if from_db and model in stmts_cache:
+        del stmts_cache[model]
     return stmts, from_db
 
 
