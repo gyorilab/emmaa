@@ -7,7 +7,7 @@ __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
 
 import logging
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import FunctionElement
 from sqlalchemy.ext.compiler import compiles
@@ -635,7 +635,8 @@ class EmmaaDatabaseManager(object):
         return
 
     def get_statements(self, model_id, date, offset=0, limit=None,
-                       sort_by=None):
+                       sort_by=None, stmt_types=None, min_belief=None,
+                       max_belief=None):
         """Load the statements by model and date.
 
         Parameters
@@ -662,6 +663,18 @@ class EmmaaDatabaseManager(object):
                 Statement.model_id == model_id,
                 Statement.date == date
             )
+            if stmt_types:
+                q = q.filter(
+                    func.lower(Statement.statement_json[
+                        'type'].astext).in_(stmt_types))
+            if min_belief:
+                q = q.filter(
+                    Statement.statement_json['belief'].astext.cast(
+                        Float) >= float(min_belief))
+            if max_belief:
+                q = q.filter(
+                    Statement.statement_json['belief'].astext.cast(
+                        Float) <= float(max_belief))
             if sort_by == 'evidence':
                 q = q.order_by(jsonb_array_length(
                     Statement.statement_json["evidence"]).desc())
@@ -672,6 +685,7 @@ class EmmaaDatabaseManager(object):
             if limit:
                 q = q.offset(offset).limit(limit)
             stmts = stmts_from_json([s for s, in q.all()])
+            logger.info(f'Got {len(stmts)} statements')
         return stmts
 
     def get_statements_by_hash(self, model_id, date, stmt_hashes):
