@@ -739,7 +739,7 @@ class EmmaaDatabaseManager(object):
 
         Returns
         -------
-        dict[int, int]
+        dict[str, int]
             A dictionary mapping statement hashes to the number of times they
             were used in the paths.
         """
@@ -751,7 +751,7 @@ class EmmaaDatabaseManager(object):
                 Statement.date == date
             )
             path_counts = {
-                stmt_hash: path_count for stmt_hash, path_count in q.all()
+                str(stmt_hash): path_count for stmt_hash, path_count in q.all()
                 if path_count > 0
             }
         return path_counts
