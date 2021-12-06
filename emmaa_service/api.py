@@ -848,9 +848,32 @@ def _count_curations(curations, stmts_by_hash):
     return cur_counts
 
 
-def _local_sort_stmts(stmts, stmts_by_hash, offset, sort_by):
-    # This is the old way of sorting statements after loading all of them
-    # in memory, used when statements are not available in the db
+def _local_sort_filter_stmts(
+        stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
+        max_belief, filter_curated, cur_counts):
+    # This is the old way of filtering/sorting statements after loading all of
+    # them in memory, used when statements are not available in the db
+
+    # Helper function for filtering statements on different conditions
+    def filter_stmt(stmt):
+        accepted = []
+        stmt_hash = str(stmt.get_hash(refresh=True))
+        if stmt_types:
+            accepted.append(type(stmt).__name__.lower() in stmt_types)
+        if filter_curated:
+            accepted.append(stmt_hash not in cur_counts)
+        if min_belief:
+            accepted.append(stmt.belief >= float(min_belief))
+        if max_belief:
+            accepted.append(stmt.belief <= float(max_belief))
+        keep = all(accepted)
+        if not keep:
+            stmts_by_hash.pop(stmt_hash, None)
+        return all(accepted)
+
+    # Filter statements with all filters
+    stmts = list(filter(filter_stmt, stmts))
+
     stmt_counts_dict = Counter()
     test_corpora = _get_test_corpora(model)
     for test_corpus in test_corpora:
@@ -1841,10 +1864,14 @@ def get_all_statements_page(model):
     offset = (page - 1)*1000
 
     # Load the statements; if they are available in the database, the sorting,
-    # offset and limit will be done there; otherwise, the full list will be
-    # loaded and sorted here.
-    stmts, from_db = load_stmts(model, date, sort_by=sort_by, offset=offset, limit=1000)
+    # some filtering, offset and limit will be done there; otherwise,
+    # the full list will be loaded, filtered and sorted in memory
+    stmts, from_db = load_stmts(
+        model, date, sort_by=sort_by, offset=offset, limit=1000,
+        stmt_types=stmt_types, min_belief=min_belief, max_belief=max_belief)
 
+    print("FROM DB: ", from_db)
+    # For now agent filter is applied locally
     if agent:
         stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
     stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt for stmt in stmts}
@@ -1852,25 +1879,18 @@ def get_all_statements_page(model):
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
 
-    # Helper function for filtering statements on different conditions
-    def filter_stmt(stmt):
-        accepted = []
-        stmt_hash = str(stmt.get_hash(refresh=True))
-        if stmt_types:
-            accepted.append(type(stmt).__name__.lower() in stmt_types)
+    if not from_db:
+        # Apply filters and sort locally
+        stmts, stmt_counts_dict = _local_sort_filter_stmts(
+            stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
+            max_belief, filter_curated, cur_counts)
+    else:
+        # Most filters and sorting are already done in the database
+        stmt_counts_dict = load_path_counts(model, date)
+        # Filter curated since this data is not in EMMAA database
         if filter_curated:
-            accepted.append(stmt_hash not in cur_counts)
-        if min_belief:
-            accepted.append(stmt.belief >= float(min_belief))
-        if max_belief:
-            accepted.append(stmt.belief <= float(max_belief))
-        keep = all(accepted)
-        if not keep:
-            stmts_by_hash.pop(stmt_hash, None)
-        return all(accepted)
-
-    # Filter statements with all filters
-    stmts = list(filter(filter_stmt, stmts))
+            stmts = [stmt for stmt in stmts if
+                     str(stmt.get_hash(refresh=True)) not in cur_counts]
 
     beliefs = [stmt.belief for stmt in stmts]
     belief_range = round(min(beliefs), 2), round(max(beliefs), 2)
@@ -1891,10 +1911,7 @@ def get_all_statements_page(model):
         prev_page = page - 1
     else:
         prev_page = None
-    if not from_db:
-        stmts, stmt_counts_dict = _local_sort_stmts(stmts, offset, sort_by)
-    else:
-        stmt_counts_dict = load_path_counts(model, date)
+
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
