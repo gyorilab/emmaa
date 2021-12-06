@@ -1870,7 +1870,6 @@ def get_all_statements_page(model):
         model, date, sort_by=sort_by, offset=offset, limit=1000,
         stmt_types=stmt_types, min_belief=min_belief, max_belief=max_belief)
 
-    print("FROM DB: ", from_db)
     # For now agent filter is applied locally
     if agent:
         stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
