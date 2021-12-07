@@ -13,7 +13,9 @@ the latest tests applied to the models. The user can also navigate to a
 queries page where queries about the models can be answered. Users are able
 to sign up for specific notifications about one or more automatically
 built, tested and analyzed models. Some models also have a Twitter account and
-a link to it is provided on the dashboard if available
+a link to it is provided on the dashboard if available. To interact with a model
+in natural language, user can click on "Chat" button on the model card and the
+dialogue window will open up.
 
 
 .. image:: ../_static/images/dashboard_top.png
@@ -33,3 +35,4 @@ Please read the sections below to learn how different EMMAA pages work.
    model_queries
    response_codes
    detailed_test_results
+   chat_page

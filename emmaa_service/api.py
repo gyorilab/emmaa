@@ -1809,7 +1809,7 @@ def get_all_statements_page(model):
     stmts = list(filter(filter_stmt, stmts))
 
     beliefs = [stmt.belief for stmt in stmts]
-    belief_range = min(beliefs), max(beliefs)
+    belief_range = round(min(beliefs), 2), round(max(beliefs), 2)
 
     model_stats = _load_model_stats_from_cache(model, date)
     all_agents = [ag for (ag, count) in

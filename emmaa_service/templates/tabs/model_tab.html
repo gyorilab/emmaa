@@ -3,6 +3,25 @@
 {% macro model_tab(model_info_contents, exp_formats, model_stats_json, model, stmts_counts, date, added_stmts, subscription) -%}
 <!-- This table displays model data -->
   <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Description</h4>
+      </div>
+      <div class="card-body">
+        This tab contains information and statistics about the model and the
+        statements it is built from. Find model description, the date when it
+        was updated and the links to model’s external accounts on NDEx and
+        Twitter (if available). Click one of the buttons in the upper right
+        corner to subscribe to model updates (if you are logged in) or start
+        a chat with a model. Scroll further to download the model in one of
+        the available models and browse the statistics about the distribution
+        of statement types, top model entities, knowledge sources (reading
+        systems and curated databases), statements with a large number of
+        supporting evidence, statements added in the last update cycle and
+        change in number of statements over time. Click on any statement to
+        view its evidence.
+      </div>
+    </div>
     <div class="card" id="modelInfoTable">
       <div class="card-header">
         {% set logged_in, subscribe, url = subscription %}

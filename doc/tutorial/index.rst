@@ -16,6 +16,16 @@ watch to guide your exploration.
 **Note**: This tutorial uses webm videos. Not all versions of Safari support
 webm. We recommend using Chrome or Firefox to play the videos in this tutorial.
 
+**Note**: The tabs on each model page on the dashboard have been renamed
+as of Dec 7, 2021 as follows:
+- `Model` -> `Model overview`
+- `Tests` -> `Model analysis/testing`
+- `Papers` -> `Publications`
+- `Curation` -> `Model curation`
+- `Belief` -> `Statement confidence`
+- `Agents` -> `Agent search`
+The videos below currently use the old tab names.
+
 1. Visit the EMMAA Dashboard
 ----------------------------
 
