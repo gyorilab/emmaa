@@ -664,6 +664,7 @@ class EmmaaDatabaseManager(object):
                 Statement.date == date
             )
             if stmt_types:
+                stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
                 q = q.filter(
                     func.lower(Statement.statement_json[
                         'type'].astext).in_(stmt_types))
