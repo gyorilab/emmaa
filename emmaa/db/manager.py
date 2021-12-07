@@ -683,8 +683,10 @@ class EmmaaDatabaseManager(object):
                 q = q.order_by(Statement.statement_json['belief'].desc())
             elif sort_by == 'paths':
                 q = q.order_by(Statement.path_count.desc())
+            if offset:
+                q = q.offset(offset)
             if limit:
-                q = q.offset(offset).limit(limit)
+                q = q.limit(limit)
             stmts = stmts_from_json([s for s, in q.all()])
             logger.info(f'Got {len(stmts)} statements')
         return stmts
