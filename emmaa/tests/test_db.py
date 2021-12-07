@@ -4,6 +4,7 @@ import random
 from nose.plugins.attrib import attr
 from nose.tools import with_setup
 
+from indra.statements import Activation,  Agent, Evidence, Phosphorylation
 from emmaa.db import Query, Result, User, UserQuery
 from emmaa.queries import Query as QueryObject, PathProperty
 from emmaa.tests.db_setup import _get_test_db, setup_function, \
@@ -229,3 +230,163 @@ def test_model_subscription():
     assert len(paad_users) == 1
     assert paad_users == ['test@test.com']
     assert ms_users == []
+
+
+@with_setup(setup_function, teardown_function)
+@attr('nonpublic')
+def test_get_statements():
+    db = _get_test_db()
+    # Put statements and path counts in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    stmts[0].belief = 0.8
+    stmts[1].belief = 0.9
+    hash0 = stmts[0].get_hash()
+    hash1 = stmts[1].get_hash()
+    db.add_statements(model_id, date, stmts)
+    db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
+
+    # Load statements with different sort/filter options
+
+    # Sort by evidence count
+    stmts_loaded = db.get_statements(model_id, date, sort_by='evidence')
+    assert len(stmts_loaded) == 2
+    assert stmts_loaded[0].get_hash() == hash0
+    assert stmts_loaded[1].get_hash() == hash1
+    # Sort by belief
+    stmts_loaded = db.get_statements(model_id, date, sort_by='belief')
+    assert len(stmts_loaded) == 2
+    assert stmts_loaded[0].get_hash() == hash1
+    assert stmts_loaded[1].get_hash() == hash0
+    # Sort by path count
+    stmts_loaded = db.get_statements(model_id, date, sort_by='paths')
+    assert len(stmts_loaded) == 2
+    assert stmts_loaded[0].get_hash() == hash1
+    assert stmts_loaded[1].get_hash() == hash0
+
+    # Filter by statement type
+    stmts_loaded = db.get_statements(model_id, date, stmt_types=['Activation'])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash0
+    stmts_loaded = db.get_statements(model_id, date,
+                                     stmt_types=['Phosphorylation'])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash1
+
+    # Filter by belief
+    stmts_loaded = db.get_statements(model_id, date, min_belief=0.85)
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash1
+    stmts_loaded = db.get_statements(model_id, date, max_belief=0.85)
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash0
+    stmts_loaded = db.get_statements(model_id, date, min_belief=0.85,
+                                     max_belief=0.85)
+    assert len(stmts_loaded) == 0
+
+    # Use offset and limit
+    stmts_loaded = db.get_statements(model_id, date)
+    assert len(stmts_loaded) == 2
+    stmts_loaded = db.get_statements(model_id, date, offset=1)
+    assert len(stmts_loaded) == 1, stmts_loaded
+    stmts_loaded = db.get_statements(model_id, date, limit=1)
+    assert len(stmts_loaded) == 1
+    # Returns only remaining statements after upset even if limit is larger
+    stmts_loaded = db.get_statements(model_id, date, offset=1, limit=5)
+    assert len(stmts_loaded) == 1
+
+
+@with_setup(setup_function, teardown_function)
+@attr('nonpublic')
+def test_get_statements_by_hash():
+    db = _get_test_db()
+    # Put statements in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    hash0 = stmts[0].get_hash()
+    hash1 = stmts[1].get_hash()
+    db.add_statements(model_id, date, stmts)
+
+    # Load statements by hash
+    stmts_loaded = db.get_statements_by_hash(model_id, date, [hash0, hash1])
+    assert len(stmts_loaded) == 2
+    assert stmts_loaded[0].get_hash() == hash0
+    assert stmts_loaded[1].get_hash() == hash1
+    stmts_loaded = db.get_statements_by_hash(model_id, date, [hash0])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash0
+
+
+@with_setup(setup_function, teardown_function)
+@attr('nonpublic')
+def test_path_counts():
+    db = _get_test_db()
+    # Put statements in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    hash0 = str(stmts[0].get_hash())
+    hash1 = str(stmts[1].get_hash())
+    db.add_statements(model_id, date, stmts)
+    # All path counts should be 0
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 0
+    # Can update path counts multiple times, can be a subset of hashes
+    db.update_statements_path_counts(model_id, date, {hash0: 7})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 1, path_counts
+    assert path_counts[hash0] == 7
+    db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 2
+    assert path_counts[hash0] == 8  # 7 + 1
+    assert path_counts[hash1] == 5
+    db.update_statements_path_counts(model_id, date, {hash0: 3})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 2
+    assert path_counts[hash0] == 11  # 7 + 1 + 3
+    assert path_counts[hash1] == 5  # Only added 5
