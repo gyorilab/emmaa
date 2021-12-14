@@ -7,8 +7,8 @@ from nose.tools import with_setup
 from indra.statements import Activation,  Agent, Evidence, Phosphorylation
 from emmaa.db import Query, Result, User, UserQuery
 from emmaa.queries import Query as QueryObject, PathProperty
-from emmaa.tests.db_setup import _get_test_db, setup_function, \
-    teardown_function
+from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
+    teardown_query_db, setup_stmt_db, teardown_stmt_db
 
 
 test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
@@ -22,7 +22,7 @@ test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
 test_queries = [QueryObject._from_json(qj) for qj in test_query_jsons]
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_instantiation():
     db = _get_test_db()
@@ -30,7 +30,7 @@ def test_instantiation():
     return
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_put_queries():
     db = _get_test_db()
@@ -45,7 +45,7 @@ def test_put_queries():
     assert len(queries) == 3, len(queries)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_queries():
     db = _get_test_db()
@@ -66,7 +66,7 @@ def _get_random_result():
         [{'12': [['This is fine.', '']]}, {'34': [['This is not ok.', '']]}])
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_put_results():
     db = _get_test_db()
@@ -80,7 +80,7 @@ def test_put_results():
     assert len(db_results) == len(results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_results():
     db = _get_test_db()
@@ -103,7 +103,7 @@ def test_get_results():
     assert all(isinstance(result[3], dict) for result in results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_latest_results():
     db = _get_test_db()
@@ -132,7 +132,7 @@ def test_get_latest_results():
     assert all(isinstance(result[3], dict) for result in results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_subscribed_queries():
     db = _get_test_db()
@@ -144,7 +144,7 @@ def test_get_subscribed_queries():
     assert queries[0][2] == test_queries[0].get_hash_with_model('aml')
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_subscribed_users():
     db = _get_test_db()
@@ -156,7 +156,7 @@ def test_get_subscribed_users():
     assert emails[0] == 'test1@test.com'
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_update_email_subscription():
     db = _get_test_db()
@@ -174,7 +174,7 @@ def test_update_email_subscription():
     assert not [q[0] for q in q.all()][0]  # new subscription status is False
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_number_results():
     db = _get_test_db()
@@ -188,7 +188,7 @@ def test_get_number_results():
     assert db.get_number_of_results(qh, 'pysb') == 3
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_all_result_hashes_and_delta():
     db = _get_test_db()
@@ -215,7 +215,7 @@ def test_get_all_result_hashes_and_delta():
     assert results[0][4] == [], results[0]
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_model_subscription():
     db = _get_test_db()
@@ -232,10 +232,10 @@ def test_model_subscription():
     assert ms_users == []
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_stmt_db, teardown_stmt_db)
 @attr('nonpublic')
 def test_get_statements():
-    db = _get_test_db()
+    db = _get_test_db('stmt')
     # Put statements and path counts in the database
     model_id = 'test'
     date = '2021-01-01'
@@ -311,10 +311,10 @@ def test_get_statements():
     assert len(stmts_loaded) == 1
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_stmt_db, teardown_stmt_db)
 @attr('nonpublic')
 def test_get_statements_by_hash():
-    db = _get_test_db()
+    db = _get_test_db('stmt')
     # Put statements in the database
     model_id = 'test'
     date = '2021-01-01'
@@ -347,10 +347,10 @@ def test_get_statements_by_hash():
     assert stmts_loaded[0].get_hash() == hash0
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_stmt_db, teardown_stmt_db)
 @attr('nonpublic')
 def test_path_counts():
-    db = _get_test_db()
+    db = _get_test_db('stmt')
     # Put statements in the database
     model_id = 'test'
     date = '2021-01-01'
