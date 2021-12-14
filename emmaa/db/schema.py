@@ -1,4 +1,4 @@
-__all__ = ['User', 'Query', 'UserQuery', 'Result', 'UserModel']
+__all__ = ['User', 'Query', 'UserQuery', 'Result', 'UserModel', 'Statement']
 
 import logging
 
@@ -45,7 +45,15 @@ class EmmaaTable(object):
                f'({", ".join(self._content_strings())})'
 
 
-class User(Base, EmmaaTable):
+class QueriesDbTable(EmmaaTable):
+    pass
+
+
+class StatementsDbTable(EmmaaTable):
+    pass
+
+
+class User(Base, QueriesDbTable):
     """A table containing users of EMMAA: ``User(_id_, email)``
 
     Parameters
@@ -62,7 +70,7 @@ class User(Base, EmmaaTable):
     email = Column(String, unique=True)
 
 
-class Query(Base, EmmaaTable):
+class Query(Base, QueriesDbTable):
     """Queries run on each model: ``Query(_hash_, model_id, json, qtype)``
 
     The hash column is a hash generated from the json and model_id columns
@@ -87,7 +95,7 @@ class Query(Base, EmmaaTable):
         )
 
 
-class UserQuery(Base, EmmaaTable):
+class UserQuery(Base, QueriesDbTable):
     """A table linking users to queries:
 
     ``UserQuery(_id_, user_id, query_hash, date, subscription, count)``
@@ -120,7 +128,7 @@ class UserQuery(Base, EmmaaTable):
     count = Column(Integer, nullable=False)
 
 
-class UserModel(Base, EmmaaTable):
+class UserModel(Base, QueriesDbTable):
     """A table linking users to models:
 
     ``UserModel(_id_, user_id, model_id, date, subscription)``
@@ -147,7 +155,7 @@ class UserModel(Base, EmmaaTable):
     subscription = Column(Boolean, nullable=False)
 
 
-class Result(Base, EmmaaTable):
+class Result(Base, QueriesDbTable):
     """Results of queries to models:
 
     ``Result(_id_, query_hash, date, result_json, mc_type, all_result_hashes,
@@ -178,7 +186,7 @@ class Result(Base, EmmaaTable):
     delta = Column(ARRAY(String), default=[])
 
 
-class Statement(Base, EmmaaTable):
+class Statement(Base, StatementsDbTable):
     """Statements in the model:
 
     ``Statement(_id_, model_id, date, statement_json)``
