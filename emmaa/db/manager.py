@@ -3,7 +3,8 @@ from collections import defaultdict
 from fnvhash import fnv1a_32
 from sqlalchemy.exc import IntegrityError
 
-__all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
+__all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError',
+           'QueryDatabaseManager', 'StatementDatabaseManager']
 
 import logging
 
@@ -12,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import FunctionElement
 from sqlalchemy.ext.compiler import compiles
 from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, \
-    UserModel, Statement
+    UserModel, Statement, QueriesDbTable, StatementsDbTable
 from emmaa.queries import Query as QueryObject
 from indra.statements import stmts_to_json, stmts_from_json
 
@@ -64,15 +65,17 @@ class EmmaaDatabaseSessionManager(object):
 
 
 class EmmaaDatabaseManager(object):
-    """A class used to manage sessions with EMMAA's database."""
-    table_order = ['user', 'query', 'user_query', 'user_model', 'result', 'statement']
+    """A parent class used to manage sessions with in EMMAA's databases."""
+    # Child classes should set these attributes.
+    table_order = []
+    table_parent_class = EmmaaTable
 
     def __init__(self, host, label=None):
         self.host = host
         self.label = label
         self.engine = create_engine(host)
         self.tables = {tbl.__tablename__: tbl
-                       for tbl in EmmaaTable.__subclasses__()}
+                       for tbl in self.table_parent_class.__subclasses__()}
         self.session = None
         return
 
@@ -149,6 +152,12 @@ class EmmaaDatabaseManager(object):
                 else:
                     logger.debug("Table doesn't exist.")
         return True
+
+
+class QueryDatabaseManager(EmmaaDatabaseManager):
+    """A class used to manage sessions with EMMAA's query database."""
+    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
+    table_parent_class = QueriesDbTable
 
     def add_user(self, user_id, email):
         """Add a new user's email and id to Emmaa's User table."""
@@ -602,6 +611,12 @@ class EmmaaDatabaseManager(object):
                 UserModel.subscription
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
+
+
+class StatementDatabaseManager(EmmaaDatabaseManager):
+    """A class used to manage sessions with EMMAA's query database."""
+    table_order = ['statement']
+    table_parent_class = StatementsDbTable
 
     def add_statements(self, model_id, date, statements):
         """Add statements to the database.
