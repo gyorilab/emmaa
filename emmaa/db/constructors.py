@@ -21,4 +21,5 @@ def get_db(name):
 
 def get_statements_db():
     """Get the statements database."""
+    # TODO: use the same config as the queries db, also configure which DB manager to use
     return StatementDatabaseManager(os.environ['STATEMENTS_DB_HOST'])
