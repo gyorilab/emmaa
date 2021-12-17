@@ -626,7 +626,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """Build the database from S3 files."""
         self.create_tables()
         # Add each model one by one
-        for model, config in get_models():
+        for model, config in get_models(include_config=True):
             self.add_model_from_s3(model, config, number_of_updates, bucket)
 
     def add_model_from_s3(self, model_id, config=None, number_of_updates=7,
