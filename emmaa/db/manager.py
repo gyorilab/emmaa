@@ -635,6 +635,8 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         if not config:
             config = load_config_from_s3(model_id)
         test_corpora = config['test']['test_corpus']
+        if isinstance(test_corpora, str):
+            test_corpora = [test_corpora]
         stmt_files = sort_s3_files_by_date_str(
             bucket, f'assembled/{model_id}/statements_', '.gz')
         stmt_files_to_use = stmt_files[:number_of_updates]
