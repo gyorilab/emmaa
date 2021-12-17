@@ -30,7 +30,7 @@ from emmaa.util import make_date_str, get_s3_client, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_gzip_json_to_s3
 from emmaa.filter_functions import node_filter_functions, edge_filter_functions
-from emmaa.db import get_db
+from emmaa.db import get_statements_db
 
 
 logger = logging.getLogger(__name__)
@@ -705,13 +705,13 @@ class ModelManager(object):
         save_json_to_s3(json_lines, bucket, latest_paths_key, 'jsonl')
 
         # Also save the path counts to the database
-        db = get_db('dev')
+        db = get_statements_db()
         db.update_statements_path_counts(
             self.model.name, self.date_str[10:], self.path_stmt_counts)
 
     def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        def save_stmts(stmts, model_name):
+        def save_stmts(stmts, model_name, save_to_db):
             stmts_json = stmts_to_json(stmts)
             # Save a timestapmed version and a generic latest version of files
             dated_key = f'assembled/{model_name}/statements_{self.date_str}'
@@ -728,17 +728,15 @@ class ModelManager(object):
             save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
             logger.info(f'Uploading assembled statements to {dated_zip}')
             save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
+            if save_to_db:
+                db = get_statements_db()
+                db.add_statements(model_name, self.date_str[10:], stmts_json)
 
-        save_stmts(self.model.assembled_stmts, self.model.name)
+        save_stmts(self.model.assembled_stmts, self.model.name, save_to_db=True)
         if hasattr(self.model, 'dynamic_assembled_stmts') and \
                 self.model.dynamic_assembled_stmts:
             save_stmts(self.model.dynamic_assembled_stmts,
-                       f'{self.model.name}_dynamic')
-
-        # Also save the statements to the database
-        db = get_db('dev')
-        db.add_statements(
-            self.model.name, self.date_str[:10], self.model.assembled_stmts)
+                       f'{self.model.name}_dynamic', save_to_db=False)
 
 
 class TestManager(object):
