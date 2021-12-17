@@ -618,7 +618,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
     table_order = ['statement']
     table_parent_class = StatementsDbTable
 
-    def add_statements(self, model_id, date, statements):
+    def add_statements(self, model_id, date, stmt_jsons):
         """Add statements to the database.
 
         Parameters
@@ -627,26 +627,23 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             The standard name of the model to add statements to.
         date : str
             The date when the model was generated.
-        statements : list[str]
-            A list of statements to add to the database.
+        stmt_jsons : list[dict]
+            A list of statement JSONs to add to the database.
 
         Returns
         -------
         bool
             True if the statements were added successfully, False otherwise.
         """
-        logger.info(f'Got request to add {len(statements)} statements to '
+        logger.info(f'Got request to add {len(stmt_jsons)} statements to '
                     f'model {model_id} on date {date}')
-        stmt_jsons = stmts_to_json(statements)
-        logger.info(f'Converted {len(statements)} statements to json')
         stmts_to_add = [Statement(model_id=model_id, date=date,
                                   stmt_hash=stmt_json['matches_hash'],
                                   statement_json=stmt_json)
                         for stmt_json in stmt_jsons]
-        logger.info(f'Converted {len(statements)} statements to db objects')
         with self.get_session() as sess:
             sess.add_all(stmts_to_add)
-        logger.info(f'Added {len(statements)} statements to db')
+        logger.info(f'Added {len(stmt_jsons)} statements to db')
         return
 
     def get_statements(self, model_id, date, offset=0, limit=None,
