@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 
 from .config import get_databases
 from .manager import QueryDatabaseManager, StatementDatabaseManager
@@ -20,4 +21,4 @@ def get_db(name):
 
 def get_statements_db():
     """Get the statements database."""
-    return StatementDatabaseManager('8499')
+    return StatementDatabaseManager(os.environ['STATEMENTS_DB_HOST'])
