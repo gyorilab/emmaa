@@ -46,10 +46,12 @@ class EmmaaTable(object):
 
 
 class QueriesDbTable(EmmaaTable):
+    __tablename__ = ''
     pass
 
 
 class StatementsDbTable(EmmaaTable):
+    __tablename__ = ''
     pass
 
 
