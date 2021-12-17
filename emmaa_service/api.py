@@ -36,7 +36,7 @@ from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
-    get_model_stats, _default_test, get_assembled_statements
+    get_model_stats, _default_test, get_assembled_statements, get_models
 from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
@@ -545,24 +545,9 @@ def _load_test_stats_from_cache(model, test_corpus, date=None):
 
 
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
-    s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket=bucket, Prefix='models/',
-                           Delimiter='/')
-    model_data = []
-    for pref in resp['CommonPrefixes']:
-        model = pref['Prefix'].split('/')[1]
-        config_json = get_model_config(model, bucket=bucket)
-        if not config_json:
-            continue
-        dev_only = config_json.get('dev_only', False)
-        if dev_only:
-            if DEVMODE:
-                model_data.append((model, config_json))
-            else:
-                continue
-        else:
-            model_data.append((model, config_json))
-    return model_data
+    return get_models(include_config=True, include_dev=DEVMODE,
+                      config_load_func=get_model_config,
+                      bucket=bucket)
 
 
 def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
