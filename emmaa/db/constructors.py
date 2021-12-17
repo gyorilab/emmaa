@@ -20,5 +20,4 @@ def get_db(name):
 
 def get_statements_db():
     """Get the statements database."""
-    # NOTE this needs to be fixed to use the host
-    return StatementDatabaseManager('')
+    return StatementDatabaseManager('8499')
