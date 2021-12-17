@@ -490,30 +490,26 @@ def _load_stmts_from_cache(model, date):
     return stmts
 
 
-def load_stmts(model, date, **kwargs):
+def load_stmts(model, date, stmt_hashes=None, **kwargs):
     emmaa_db = get_statements_db()
-    stmts = emmaa_db.get_statements(model, date, **kwargs)
+    if stmt_hashes:
+        stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
+    else:
+        stmts = emmaa_db.get_statements(model, date, **kwargs)
     from_db = True
     # Statements for that model/date are not in db
     if not stmts:
         logger.info(f'Could not find statements for {model} {date} in db, '
                     'using S3/cache.')
         stmts = _load_stmts_from_cache(model, date)
+        if stmt_hashes:
+            stmts = [stmt for stmt in stmts if
+                     str(stmt.get_hash()) in stmt_hashes]
         from_db = False
     # Clear the cache for this model if it's not activelly used
     if from_db and model in stmts_cache:
         del stmts_cache[model]
     return stmts, from_db
-
-
-def load_stmts_by_hash(model, date, stmt_hashes):
-    emmaa_db = get_statements_db()
-    stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
-    # Statements for that model/date are not in db
-    if not stmts:
-        stmts = _load_stmts_from_cache(model, date)
-        stmts = [stmt for stmt in stmts if str(stmt.get_hash()) in stmt_hashes]
-    return stmts
 
 
 def load_path_counts(model, date):
@@ -1488,7 +1484,7 @@ def annotate_paper_statements(model):
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
     model_stats = _load_model_stats_from_cache(model, date)
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
-    paper_stmts = load_stmts_by_hash(model, date, paper_hashes)
+    paper_stmts, _ = load_stmts(model, date, paper_hashes)
     for stmt in paper_stmts:
         stmt.evidence = [ev for ev in stmt.evidence
                          if str(ev.text_refs.get('TRID')) == trid]
@@ -1553,7 +1549,7 @@ def get_paper_statements(model):
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
     if paper_hashes:
         updated_stmts = [filter_evidence(stmt, trid, 'TRID') for stmt
-                         in load_stmts_by_hash(model, date, paper_hashes)]
+                         in load_stmts(model, date, paper_hashes)[0]]
         updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
                                reverse=True)
     else:
@@ -1753,20 +1749,23 @@ def get_statement_evidence_page():
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     if source == 'model_statement':
-        # Add up paths per statement count across test corpora
-        stmt_counts_dict = Counter()
-        test_corpora = _get_test_corpora(model)
-        for test_corpus in test_corpora:
-            test_date = get_latest_available_date(model, test_corpus)
-            test_stats, _ = _load_test_stats_from_cache(
-                model, test_corpus, test_date)
-            stmt_counts = test_stats['test_round_summary'].get(
-                'path_stmt_counts', [])
-            stmt_counts_dict += Counter(dict(stmt_counts))
-        stmts, _ = load_stmts(model, date, stmt_hashes)
+        stmts, from_db = load_stmts(model, date, stmt_hashes)
+        if from_db:
+            stmt_counts_dict = load_path_counts(model, date)
+        else:
+            # Add up paths per statement count across test corpora
+            stmt_counts_dict = Counter()
+            test_corpora = _get_test_corpora(model)
+            for test_corpus in test_corpora:
+                test_date = get_latest_available_date(model, test_corpus)
+                test_stats, _ = _load_test_stats_from_cache(
+                    model, test_corpus, test_date)
+                stmt_counts = test_stats['test_round_summary'].get(
+                    'path_stmt_counts', [])
+                stmt_counts_dict += Counter(dict(stmt_counts))
     elif source == 'paper':
         stmts = [filter_evidence(stmt, paper_id, paper_id_type) for stmt in
-                 load_stmts_by_hash(model, date, stmt_hashes)]
+                 load_stmts(model, date, stmt_hashes)[0]]
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -2240,7 +2239,7 @@ def model_subscription(model):
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
-    stmts = load_stmts_by_hash(model, date, [hash_val])
+    stmts, _ = load_stmts(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
@@ -2279,7 +2278,7 @@ def get_tests_by_hash(test_corpus, hash_val):
            '<date>/<hash_val>', methods=['GET'])
 def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
     """Get model statement by hash and paper ID."""
-    stmts = load_stmts_by_hash(model, date, [hash_val])
+    stmts, _ = load_stmts(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
