@@ -45,7 +45,7 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
-from emmaa.db import get_db as get_emmaa_db
+from emmaa.db import get_statements_db
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -491,7 +491,7 @@ def _load_stmts_from_cache(model, date):
 
 
 def load_stmts(model, date, **kwargs):
-    emmaa_db = get_emmaa_db('dev')
+    emmaa_db = get_statements_db()
     stmts = emmaa_db.get_statements(model, date, **kwargs)
     from_db = True
     # Statements for that model/date are not in db
@@ -507,7 +507,7 @@ def load_stmts(model, date, **kwargs):
 
 
 def load_stmts_by_hash(model, date, stmt_hashes):
-    emmaa_db = get_emmaa_db('dev')
+    emmaa_db = get_statements_db()
     stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
     # Statements for that model/date are not in db
     if not stmts:
@@ -517,7 +517,7 @@ def load_stmts_by_hash(model, date, stmt_hashes):
 
 
 def load_path_counts(model, date):
-    emmaa_db = get_emmaa_db('dev')
+    emmaa_db = get_statements_db()
     return emmaa_db.get_path_counts(model, date)
 
 
