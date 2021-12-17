@@ -8,6 +8,7 @@ __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError',
 
 import logging
 
+from botocore.exceptions import ClientError
 from sqlalchemy import create_engine, func, Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import FunctionElement
@@ -15,7 +16,10 @@ from sqlalchemy.ext.compiler import compiles
 from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, \
     UserModel, Statement, QueriesDbTable, StatementsDbTable
 from emmaa.queries import Query as QueryObject
-from indra.statements import stmts_to_json, stmts_from_json
+from emmaa.model import get_models, load_config_from_s3
+from emmaa.util import EMMAA_BUCKET_NAME, load_gzip_json_from_s3, \
+    sort_s3_files_by_date_str, strip_out_date, load_json_from_s3
+from indra.statements import stmts_from_json
 
 logger = logging.getLogger(__name__)
 
@@ -617,6 +621,46 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
     """A class used to manage sessions with EMMAA's query database."""
     table_order = ['statement']
     table_parent_class = StatementsDbTable
+
+    def build_from_s3(self, number_of_updates=7, bucket=EMMAA_BUCKET_NAME):
+        """Build the database from S3 files."""
+        self.create_tables()
+        # Add each model one by one
+        for model, config in get_models():
+            self.add_model_from_s3(model, config, number_of_updates, bucket)
+
+    def add_model_from_s3(self, model_id, config=None, number_of_updates=7,
+                          bucket=EMMAA_BUCKET_NAME):
+        """Add data for one model from S3 files."""
+        if not config:
+            config = load_config_from_s3(model_id)
+        test_corpora = config['test']['test_corpus']
+        stmt_files = sort_s3_files_by_date_str(
+            bucket, f'assembled/{model_id}/statements_', '.gz')
+        stmt_files_to_use = stmt_files[:number_of_updates]
+        for stmt_file in stmt_files_to_use:
+            date = strip_out_date(stmt_file, 'date')
+            dt = strip_out_date(stmt_file, 'datetime')
+            # First get and add statements
+            stmt_jsons = load_gzip_json_from_s3(bucket, stmt_file)
+            self.add_statements(model_id, date, stmt_jsons)
+            # Also update the path counts from each test corpus
+            for test_corpus in test_corpora:
+                key = f'results/{model_id}/results_{test_corpus}_{dt}.json'
+                try:
+                    results = load_json_from_s3(bucket, key)
+                    path_counts = results[0].get('path_stmt_counts')
+                    if path_counts:
+                        self.update_statements_path_counts(
+                            model_id, date, path_counts)
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'NoSuchKey':
+                        logger.warning(f'No results file for {key}, skipping')
+                        continue
+                    else:
+                        raise e
+
+    # TODO: delete older records from the database when adding new ones
 
     def add_statements(self, model_id, date, stmt_jsons):
         """Add statements to the database.
