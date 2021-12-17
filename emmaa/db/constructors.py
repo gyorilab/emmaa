@@ -2,7 +2,7 @@ import re
 import logging
 
 from .config import get_databases
-from .manager import EmmaaDatabaseManager
+from .manager import QueryDatabaseManager, StatementDatabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -15,4 +15,10 @@ def get_db(name):
     if m is None:
         logger.error("Poorly formed db name: %s" % db_name)
         return
-    return EmmaaDatabaseManager(db_name, label=name)
+    return QueryDatabaseManager(db_name, label=name)
+
+
+def get_statements_db():
+    """Get the statements database."""
+    # NOTE this needs to be fixed to use the host
+    return StatementDatabaseManager('')
