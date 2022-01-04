@@ -394,3 +394,46 @@ def test_path_counts():
     assert len(path_counts) == 2
     assert path_counts[hash0] == 11  # 7 + 1 + 3
     assert path_counts[hash1] == 5  # Only added 5
+
+
+@with_setup(setup_stmt_db, teardown_stmt_db)
+@attr('nonpublic')
+def test_get_dates_and_delete():
+    db = _get_test_db('stmt')
+    model_id = 'test'
+    # At first there are no statements in the database
+    assert db.get_number_of_dates(model_id) == 0
+    assert db.get_oldest_date(model_id) is None
+    # Put statements in the database
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
+    # There should be one date
+    assert db.get_number_of_dates(model_id) == 1
+    assert db.get_oldest_date(model_id) == date
+    # Add another date
+    date2 = '2022-01-01'
+    db.add_statements(model_id, date2, stmt_jsons)
+    assert db.get_number_of_dates(model_id) == 2
+    # Oldest date is still the first one
+    assert db.get_oldest_date(model_id) == date
+    # Delete statements from the first date
+    db.delete_statements(model_id, date)
+    # There should be one date left
+    assert db.get_number_of_dates(model_id) == 1
+    assert db.get_oldest_date(model_id) == date2
