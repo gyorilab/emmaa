@@ -45,7 +45,7 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
-from emmaa.db import get_statements_db
+from emmaa.db import get_db
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -491,7 +491,7 @@ def _load_stmts_from_cache(model, date):
 
 
 def load_stmts(model, date, stmt_hashes=None, **kwargs):
-    emmaa_db = get_statements_db()
+    emmaa_db = get_db('stmt')
     if stmt_hashes:
         stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
     else:
@@ -513,7 +513,7 @@ def load_stmts(model, date, stmt_hashes=None, **kwargs):
 
 
 def load_path_counts(model, date):
-    emmaa_db = get_statements_db()
+    emmaa_db = get_db('stmt')
     return emmaa_db.get_path_counts(model, date)
 
 

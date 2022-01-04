@@ -30,7 +30,7 @@ from emmaa.util import make_date_str, get_s3_client, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_gzip_json_to_s3
 from emmaa.filter_functions import node_filter_functions, edge_filter_functions
-from emmaa.db import get_statements_db
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -705,7 +705,7 @@ class ModelManager(object):
         save_json_to_s3(json_lines, bucket, latest_paths_key, 'jsonl')
 
         # Also save the path counts to the database
-        db = get_statements_db()
+        db = get_db('stmt')
         db.update_statements_path_counts(
             self.model.name, self.date_str[10:], self.path_stmt_counts)
 
@@ -729,7 +729,7 @@ class ModelManager(object):
             logger.info(f'Uploading assembled statements to {dated_zip}')
             save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
             if save_to_db:
-                db = get_statements_db()
+                db = get_db('stmt')
                 db.add_statements(model_name, self.date_str[10:], stmts_json)
 
         save_stmts(self.model.assembled_stmts, self.model.name, save_to_db=True)
