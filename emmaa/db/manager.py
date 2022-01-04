@@ -835,6 +835,45 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             }
         return path_counts
 
+    def get_number_of_dates(self, model_id):
+        """Get the number of unique dates this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        int
+            The number of unique dates this model is available for.
+        """
+        logger.info(f'Got request to get number of dates for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.date).filter(
+                Statement.model_id == model_id).distinct()
+            return q.count()
+
+    def get_oldest_date(self, model_id):
+        """Get the oldest date this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        str
+            The oldest date this model is available for.
+        """
+        logger.info(f'Got request to get oldest date for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.date).filter(
+                Statement.model_id == model_id).order_by(
+                    Statement.date.asc()).first()
+            return q.date if q else None
+
 
 def _weed_results(result_iter, latest_order=1):
     # Each element of result_iter:
