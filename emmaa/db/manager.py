@@ -623,7 +623,11 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
     table_parent_class = StatementsDbTable
 
     def build_from_s3(self, number_of_updates=7, bucket=EMMAA_BUCKET_NAME):
-        """Build the database from S3 files."""
+        """
+        Build the database from S3 files.
+        NOTE: This deletes existing database entries and repopulates the tables.
+        """
+        self.drop_tables()
         self.create_tables()
         # Add each model one by one
         for model, config in get_models(include_config=True):
