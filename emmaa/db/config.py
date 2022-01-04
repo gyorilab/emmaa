@@ -56,7 +56,8 @@ def get_databases(force_update=False, include_config=True):
                     def_dict['port'] = ':' + def_dict['port']
                 if def_dict['password']:
                     def_dict['password'] = ':' + def_dict['password']
-                DATABASES[db_name] = DB_STR_FMT.format(**def_dict)
+                DATABASES[db_name] = (DB_STR_FMT.format(**def_dict),
+                                      def_dict.get('type', 'query'))
         DATABASES.update({k[len(ENV_PREFIX):].lower(): v
                           for k, v in environ.items()
                           if k.startswith(ENV_PREFIX)})
