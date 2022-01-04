@@ -675,7 +675,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                 Statement.date == date)
             q.delete(synchronize_session=False)
 
-    def add_statements(self, model_id, date, stmt_jsons):
+    def add_statements(self, model_id, date, stmt_jsons, max_updates=7):
         """Add statements to the database.
 
         Parameters
@@ -686,6 +686,9 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             The date when the model was generated.
         stmt_jsons : list[dict]
             A list of statement JSONs to add to the database.
+        max_updates : int
+            The maximum number of model states to keep in the database. If it
+            is reached, the oldest model state will be deleted.
 
         Returns
         -------
@@ -694,6 +697,10 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """
         logger.info(f'Got request to add {len(stmt_jsons)} statements to '
                     f'model {model_id} on date {date}')
+        while self.get_number_of_dates(model_id) > max_updates - 1:
+            oldest_date = self.get_oldest_date(model_id)
+            logger.info(f'Deleting statements from {oldest_date}')
+            self.delete_statements(model_id, oldest_date)
         stmts_to_add = [Statement(model_id=model_id, date=date,
                                   stmt_hash=stmt_json['matches_hash'],
                                   statement_json=stmt_json)
@@ -811,7 +818,11 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                     Statement.model_id == model_id,
                     Statement.date == date,
                     Statement.stmt_hash == stmt_hash).first()
-                stmt.path_count += path_count
+                if stmt:
+                    stmt.path_count += path_count
+                else:
+                    logger.warning(f'Statement {stmt_hash} not found in db '
+                                   f'for model {model_id} on date {date}')
 
     def get_path_counts(self, model_id, date):
         """Get the path counts for statements.
