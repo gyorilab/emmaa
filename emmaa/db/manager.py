@@ -666,7 +666,14 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                     else:
                         raise e
 
-    # TODO: delete older records from the database when adding new ones
+    def delete_statements(self, model_id, date):
+        """Delete statements from the database."""
+        logger.info(f'Got request to delete stmts for {model_id} on {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            q.delete(synchronize_session=False)
 
     def add_statements(self, model_id, date, stmt_jsons):
         """Add statements to the database.
