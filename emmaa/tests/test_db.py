@@ -4,7 +4,8 @@ import random
 from nose.plugins.attrib import attr
 from nose.tools import with_setup
 
-from indra.statements import Activation,  Agent, Evidence, Phosphorylation
+from indra.statements import Activation,  Agent, Evidence, Phosphorylation, \
+    stmts_to_json
 from emmaa.db import Query, Result, User, UserQuery
 from emmaa.queries import Query as QueryObject, PathProperty
 from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
@@ -258,7 +259,8 @@ def test_get_statements():
     stmts[1].belief = 0.9
     hash0 = stmts[0].get_hash()
     hash1 = stmts[1].get_hash()
-    db.add_statements(model_id, date, stmts)
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
     db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
 
     # Load statements with different sort/filter options
@@ -335,7 +337,8 @@ def test_get_statements_by_hash():
         ]
     hash0 = stmts[0].get_hash()
     hash1 = stmts[1].get_hash()
-    db.add_statements(model_id, date, stmts)
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
 
     # Load statements by hash
     stmts_loaded = db.get_statements_by_hash(model_id, date, [hash0, hash1])
@@ -371,7 +374,8 @@ def test_path_counts():
         ]
     hash0 = str(stmts[0].get_hash())
     hash1 = str(stmts[1].get_hash())
-    db.add_statements(model_id, date, stmts)
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
     # All path counts should be 0
     path_counts = db.get_path_counts(model_id, date)
     assert len(path_counts) == 0
