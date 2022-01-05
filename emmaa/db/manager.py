@@ -9,7 +9,7 @@ __all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError',
 import logging
 
 from botocore.exceptions import ClientError
-from sqlalchemy import create_engine, func, Float
+from sqlalchemy import create_engine, func, Float, nullslast
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import FunctionElement
 from sqlalchemy.ext.compiler import compiles
@@ -753,10 +753,11 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                     Statement.statement_json['belief'].astext.cast(
                         Float) <= float(max_belief))
             if sort_by == 'evidence':
-                q = q.order_by(jsonb_array_length(
-                    Statement.statement_json["evidence"]).desc())
+                q = q.order_by(nullslast(jsonb_array_length(
+                    Statement.statement_json["evidence"]).desc()))
             elif sort_by == 'belief':
-                q = q.order_by(Statement.statement_json['belief'].desc())
+                q = q.order_by(
+                    nullslast(Statement.statement_json['belief'].desc()))
             elif sort_by == 'paths':
                 q = q.order_by(Statement.path_count.desc())
             if offset:
