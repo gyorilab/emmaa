@@ -4,16 +4,16 @@ from emmaa.answer_queries import QueryManager, format_results
 from emmaa.queries import Query, DynamicProperty, get_agent_from_trips
 from emmaa.model_tests import ModelManager
 from emmaa.tests.test_model import create_model
-from emmaa.tests.db_setup import _get_test_db, setup_function, \
-    teardown_function
+from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
+    teardown_query_db
 
 
 def setup_module():
-    setup_function()
+    setup_query_db()
 
 
 def teardown_module():
-    teardown_function()
+    teardown_query_db()
 
 
 test_query = {'type': 'path_property', 'path': {'type': 'Activation',
