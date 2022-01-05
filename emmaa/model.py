@@ -979,7 +979,7 @@ def get_models(include_config=False, include_dev=False,
     for pref in resp['CommonPrefixes']:
         model = pref['Prefix'].split('/')[1]
         config_json = config_load_func(model, bucket=bucket)
-        if not config_json:
+        if model == 'test' or not config_json:
             continue
         if not include_dev and config_json.get('dev_only', False):
             continue
