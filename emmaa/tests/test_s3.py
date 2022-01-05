@@ -227,7 +227,7 @@ def test_run_model_tests_from_s3():
     assert not last_updated_date('test', 'test_results', tests='simple_tests',
                                  extension='.json', bucket=TEST_BUCKET_NAME)
     mm = run_model_tests_from_s3('test', 'simple_tests', upload_results=True,
-                                 bucket=TEST_BUCKET_NAME)
+                                 upload_to_db=False, bucket=TEST_BUCKET_NAME)
     assert isinstance(mm, ModelManager)
     # Results are saved now
     assert last_updated_date('test', 'test_results', tests='simple_tests',
