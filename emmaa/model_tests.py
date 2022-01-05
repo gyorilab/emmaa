@@ -709,7 +709,7 @@ class ModelManager(object):
         if upload_to_db:
             db = get_db('stmt')
             db.update_statements_path_counts(
-                self.model.name, self.date_str[10:], self.path_stmt_counts)
+                self.model.name, self.date_str[:10], self.path_stmt_counts)
 
     def save_assembled_statements(self, upload_to_db=True,
                                   bucket=EMMAA_BUCKET_NAME):
@@ -733,7 +733,7 @@ class ModelManager(object):
             save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
             if save_to_db:
                 db = get_db('stmt')
-                db.add_statements(model_name, self.date_str[10:], stmts_json)
+                db.add_statements(model_name, self.date_str[:10], stmts_json)
 
         # Assembled statements are also dumped to the database unless specified
         # otherwise; dynamic statements are only stored on s3
