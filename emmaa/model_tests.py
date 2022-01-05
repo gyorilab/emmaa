@@ -709,7 +709,8 @@ class ModelManager(object):
         db.update_statements_path_counts(
             self.model.name, self.date_str[10:], self.path_stmt_counts)
 
-    def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
+    def save_assembled_statements(self, upload_to_db=True,
+                                  bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
         def save_stmts(stmts, model_name, save_to_db):
             stmts_json = stmts_to_json(stmts)
@@ -732,7 +733,10 @@ class ModelManager(object):
                 db = get_db('stmt')
                 db.add_statements(model_name, self.date_str[10:], stmts_json)
 
-        save_stmts(self.model.assembled_stmts, self.model.name, save_to_db=True)
+        # Assembled statements are also dumped to the database unless specified
+        # otherwise; dynamic statements are only stored on s3
+        save_stmts(self.model.assembled_stmts, self.model.name,
+                   save_to_db=upload_to_db)
         if hasattr(self.model, 'dynamic_assembled_stmts') and \
                 self.model.dynamic_assembled_stmts:
             save_stmts(self.model.dynamic_assembled_stmts,
