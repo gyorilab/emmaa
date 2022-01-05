@@ -10,6 +10,7 @@ from emmaa.db import Query, Result, User, UserQuery
 from emmaa.queries import Query as QueryObject, PathProperty
 from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
     teardown_query_db, setup_stmt_db, teardown_stmt_db
+from indra.statements.statements import IncreaseAmount
 
 
 test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
@@ -253,12 +254,16 @@ def test_get_statements():
                         Agent('C', db_refs={'HGNC': '3456'}),
                         evidence=[Evidence(text='B phosphorylates C.',
                                            source_api='assertion',
-                                           text_refs={'TRID': '2345'})])
+                                           text_refs={'TRID': '2345'})]),
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1234'}),
+                       Agent('C', db_refs={'HGNC': '3456'}))
         ]
     stmts[0].belief = 0.8
     stmts[1].belief = 0.9
+    stmts[2].belief = 0.5
     hash0 = stmts[0].get_hash()
     hash1 = stmts[1].get_hash()
+    hash2 = stmts[2].get_hash()
     stmt_jsons = stmts_to_json(stmts)
     db.add_statements(model_id, date, stmt_jsons)
     db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
@@ -267,17 +272,18 @@ def test_get_statements():
 
     # Sort by evidence count
     stmts_loaded = db.get_statements(model_id, date, sort_by='evidence')
-    assert len(stmts_loaded) == 2
-    assert stmts_loaded[0].get_hash() == hash0
-    assert stmts_loaded[1].get_hash() == hash1
+    assert len(stmts_loaded) == 3
+    assert stmts_loaded[0].get_hash() == hash0, len(stmts_loaded[0].evidence)
+    assert stmts_loaded[1].get_hash() == hash1, len(stmts_loaded[1].evidence)
+    assert stmts_loaded[2].get_hash() == hash2  # stmt with no evidence is last
     # Sort by belief
     stmts_loaded = db.get_statements(model_id, date, sort_by='belief')
-    assert len(stmts_loaded) == 2
+    assert len(stmts_loaded) == 3
     assert stmts_loaded[0].get_hash() == hash1
     assert stmts_loaded[1].get_hash() == hash0
     # Sort by path count
     stmts_loaded = db.get_statements(model_id, date, sort_by='paths')
-    assert len(stmts_loaded) == 2
+    assert len(stmts_loaded) == 3
     assert stmts_loaded[0].get_hash() == hash1
     assert stmts_loaded[1].get_hash() == hash0
 
@@ -295,22 +301,22 @@ def test_get_statements():
     assert len(stmts_loaded) == 1
     assert stmts_loaded[0].get_hash() == hash1
     stmts_loaded = db.get_statements(model_id, date, max_belief=0.85)
-    assert len(stmts_loaded) == 1
-    assert stmts_loaded[0].get_hash() == hash0
+    assert len(stmts_loaded) == 2
+    assert set([stmt.get_hash() for stmt in stmts_loaded]) == {hash0, hash2}
     stmts_loaded = db.get_statements(model_id, date, min_belief=0.85,
                                      max_belief=0.85)
     assert len(stmts_loaded) == 0
 
     # Use offset and limit
     stmts_loaded = db.get_statements(model_id, date)
-    assert len(stmts_loaded) == 2
+    assert len(stmts_loaded) == 3
     stmts_loaded = db.get_statements(model_id, date, offset=1)
-    assert len(stmts_loaded) == 1, stmts_loaded
+    assert len(stmts_loaded) == 2, stmts_loaded
     stmts_loaded = db.get_statements(model_id, date, limit=1)
     assert len(stmts_loaded) == 1
     # Returns only remaining statements after upset even if limit is larger
     stmts_loaded = db.get_statements(model_id, date, offset=1, limit=5)
-    assert len(stmts_loaded) == 1
+    assert len(stmts_loaded) == 2
 
 
 @with_setup(setup_stmt_db, teardown_stmt_db)
