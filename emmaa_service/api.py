@@ -830,7 +830,7 @@ def _count_curations(curations, stmts_by_hash):
 
 
 def _local_sort_filter_stmts(
-        stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
+        model, stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
         max_belief, filter_curated, cur_counts):
     # This is the old way of filtering/sorting statements after loading all of
     # them in memory, used when statements are not available in the db
@@ -1865,8 +1865,8 @@ def get_all_statements_page(model):
     if not from_db:
         # Apply filters and sort locally
         stmts, stmt_counts_dict = _local_sort_filter_stmts(
-            stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
-            max_belief, filter_curated, cur_counts)
+            model, stmts, stmts_by_hash, offset, sort_by, stmt_types,
+            min_belief, max_belief, filter_curated, cur_counts)
     else:
         # Most filters and sorting are already done in the database
         stmt_counts_dict = load_path_counts(model, date)
