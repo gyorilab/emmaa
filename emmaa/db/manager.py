@@ -622,7 +622,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
     table_order = ['statement']
     table_parent_class = StatementsDbTable
 
-    def build_from_s3(self, number_of_updates=7, bucket=EMMAA_BUCKET_NAME):
+    def build_from_s3(self, number_of_updates=3, bucket=EMMAA_BUCKET_NAME):
         """
         Build the database from S3 files.
         NOTE: This deletes existing database entries and repopulates the tables.
@@ -633,7 +633,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         for model, config in get_models(include_config=True):
             self.add_model_from_s3(model, config, number_of_updates, bucket)
 
-    def add_model_from_s3(self, model_id, config=None, number_of_updates=7,
+    def add_model_from_s3(self, model_id, config=None, number_of_updates=3,
                           bucket=EMMAA_BUCKET_NAME):
         """Add data for one model from S3 files."""
         if not config:
@@ -675,7 +675,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                 Statement.date == date)
             q.delete(synchronize_session=False)
 
-    def add_statements(self, model_id, date, stmt_jsons, max_updates=7):
+    def add_statements(self, model_id, date, stmt_jsons, max_updates=3):
         """Add statements to the database.
 
         Parameters
