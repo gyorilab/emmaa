@@ -12,9 +12,8 @@ from emmaa.tests.test_stats import previous_results, \
     previous_test_stats, previous_model_stats
 from emmaa.tests.test_answer_queries import query_object
 from emmaa.util import make_date_str, RE_DATETIMEFORMAT, RE_DATEFORMAT
-from emmaa.tests.db_setup import _get_test_db, setup_function, \
-    teardown_function
-
+from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
+    teardown_query_db
 TEST_BUCKET_NAME = 'test_bucket'
 
 
@@ -68,7 +67,8 @@ def setup_bucket(
             emmaa_model = create_model()
         mm = ModelManager(emmaa_model)
         mm.date_str = date_str
-        mm.save_assembled_statements(bucket=TEST_BUCKET_NAME)
+        mm.save_assembled_statements(
+            upload_to_db=False, bucket=TEST_BUCKET_NAME)
         save_model_manager_to_s3('test', mm, bucket=TEST_BUCKET_NAME)
     if add_tests:
         tests = [StatementCheckingTest(
@@ -226,7 +226,7 @@ def test_run_model_tests_from_s3():
     assert not last_updated_date('test', 'test_results', tests='simple_tests',
                                  extension='.json', bucket=TEST_BUCKET_NAME)
     mm = run_model_tests_from_s3('test', 'simple_tests', upload_results=True,
-                                 bucket=TEST_BUCKET_NAME)
+                                 upload_to_db=False, bucket=TEST_BUCKET_NAME)
     assert isinstance(mm, ModelManager)
     # Results are saved now
     assert last_updated_date('test', 'test_results', tests='simple_tests',
@@ -342,7 +342,7 @@ def test_generate_stats_on_s3():
         TEST_BUCKET_NAME, 'stats/test/test_stats_') == 2
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @mock_s3
 def test_answer_queries_from_s3():
     # Local imports are recommended when using moto

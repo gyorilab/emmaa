@@ -3,21 +3,41 @@ from collections import defaultdict
 from fnvhash import fnv1a_32
 from sqlalchemy.exc import IntegrityError
 
-__all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError']
+__all__ = ['EmmaaDatabaseManager', 'EmmaaDatabaseError',
+           'QueryDatabaseManager', 'StatementDatabaseManager']
 
 import logging
 
-from sqlalchemy import create_engine
+from botocore.exceptions import ClientError
+from sqlalchemy import create_engine, func, Float, nullslast
 from sqlalchemy.orm import sessionmaker
-
-from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, UserModel
+from sqlalchemy.sql.expression import FunctionElement
+from sqlalchemy.ext.compiler import compiles
+from .schema import EmmaaTable, User, Query, Base, Result, UserQuery, \
+    UserModel, Statement, QueriesDbTable, StatementsDbTable
 from emmaa.queries import Query as QueryObject
+from emmaa.model import get_models, load_config_from_s3
+from emmaa.util import EMMAA_BUCKET_NAME, load_gzip_json_from_s3, \
+    sort_s3_files_by_date_str, strip_out_date, load_json_from_s3
+from indra.statements import stmts_from_json
 
 logger = logging.getLogger(__name__)
 
 
 class EmmaaDatabaseError(Exception):
     pass
+
+
+# This is used to get the length of JSONB arrays (e.g. number of evidence in
+# a statement),see
+# https://stackoverflow.com/questions/23060259/sqlalchemy-querying-the-length-json-field-having-an-array
+class jsonb_array_length(FunctionElement):
+    name = 'jsonb_array_length'
+
+
+@compiles(jsonb_array_length)
+def compile(element, compiler, **kwargs):
+    return 'jsonb_array_length(%s)' % compiler.process(element.clauses)
 
 
 class EmmaaDatabaseSessionManager(object):
@@ -49,15 +69,17 @@ class EmmaaDatabaseSessionManager(object):
 
 
 class EmmaaDatabaseManager(object):
-    """A class used to manage sessions with EMMAA's database."""
-    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
+    """A parent class used to manage sessions with in EMMAA's databases."""
+    # Child classes should set these attributes.
+    table_order = []
+    table_parent_class = EmmaaTable
 
     def __init__(self, host, label=None):
         self.host = host
         self.label = label
         self.engine = create_engine(host)
         self.tables = {tbl.__tablename__: tbl
-                       for tbl in EmmaaTable.__subclasses__()}
+                       for tbl in self.table_parent_class.__subclasses__()}
         self.session = None
         return
 
@@ -134,6 +156,12 @@ class EmmaaDatabaseManager(object):
                 else:
                     logger.debug("Table doesn't exist.")
         return True
+
+
+class QueryDatabaseManager(EmmaaDatabaseManager):
+    """A class used to manage sessions with EMMAA's query database."""
+    table_order = ['user', 'query', 'user_query', 'user_model', 'result']
+    table_parent_class = QueriesDbTable
 
     def add_user(self, user_id, email):
         """Add a new user's email and id to Emmaa's User table."""
@@ -587,6 +615,283 @@ class EmmaaDatabaseManager(object):
                 UserModel.subscription
             ).distinct()
         return [e for e, in q.all()] if q.all() else []
+
+
+class StatementDatabaseManager(EmmaaDatabaseManager):
+    """A class used to manage sessions with EMMAA's query database."""
+    table_order = ['statement']
+    table_parent_class = StatementsDbTable
+
+    def build_from_s3(self, number_of_updates=3, bucket=EMMAA_BUCKET_NAME):
+        """
+        Build the database from S3 files.
+        NOTE: This deletes existing database entries and repopulates the tables.
+        """
+        self.drop_tables()
+        self.create_tables()
+        # Add each model one by one
+        for model, config in get_models(include_config=True):
+            self.add_model_from_s3(model, config, number_of_updates, bucket)
+
+    def add_model_from_s3(self, model_id, config=None, number_of_updates=3,
+                          bucket=EMMAA_BUCKET_NAME):
+        """Add data for one model from S3 files."""
+        if not config:
+            config = load_config_from_s3(model_id)
+        test_corpora = config['test']['test_corpus']
+        if isinstance(test_corpora, str):
+            test_corpora = [test_corpora]
+        stmt_files = sort_s3_files_by_date_str(
+            bucket, f'assembled/{model_id}/statements_', '.gz')
+        stmt_files_to_use = stmt_files[:number_of_updates]
+        for stmt_file in stmt_files_to_use:
+            date = strip_out_date(stmt_file, 'date')
+            dt = strip_out_date(stmt_file, 'datetime')
+            # First get and add statements
+            stmt_jsons = load_gzip_json_from_s3(bucket, stmt_file)
+            self.add_statements(model_id, date, stmt_jsons)
+            # Also update the path counts from each test corpus
+            for test_corpus in test_corpora:
+                key = f'results/{model_id}/results_{test_corpus}_{dt}.json'
+                try:
+                    results = load_json_from_s3(bucket, key)
+                    path_counts = results[0].get('path_stmt_counts')
+                    if path_counts:
+                        self.update_statements_path_counts(
+                            model_id, date, path_counts)
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'NoSuchKey':
+                        logger.warning(f'No results file for {key}, skipping')
+                        continue
+                    else:
+                        raise e
+
+    def delete_statements(self, model_id, date):
+        """Delete statements from the database."""
+        logger.info(f'Got request to delete stmts for {model_id} on {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            q.delete(synchronize_session=False)
+
+    def add_statements(self, model_id, date, stmt_jsons, max_updates=3):
+        """Add statements to the database.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to add statements to.
+        date : str
+            The date when the model was generated.
+        stmt_jsons : list[dict]
+            A list of statement JSONs to add to the database.
+        max_updates : int
+            The maximum number of model states to keep in the database. If it
+            is reached, the oldest model state will be deleted.
+
+        Returns
+        -------
+        bool
+            True if the statements were added successfully, False otherwise.
+        """
+        logger.info(f'Got request to add {len(stmt_jsons)} statements to '
+                    f'model {model_id} on date {date}')
+        while self.get_number_of_dates(model_id) > max_updates - 1:
+            oldest_date = self.get_oldest_date(model_id)
+            logger.info(f'Deleting statements from {oldest_date}')
+            self.delete_statements(model_id, oldest_date)
+        stmts_to_add = [Statement(model_id=model_id, date=date,
+                                  stmt_hash=stmt_json['matches_hash'],
+                                  statement_json=stmt_json)
+                        for stmt_json in stmt_jsons]
+        with self.get_session() as sess:
+            sess.add_all(stmts_to_add)
+        logger.info(f'Added {len(stmt_jsons)} statements to db')
+        return
+
+    def get_statements(self, model_id, date, offset=0, limit=None,
+                       sort_by=None, stmt_types=None, min_belief=None,
+                       max_belief=None):
+        """Load the statements by model and date.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to get statements for.
+        date : str
+            The date when the model was generated.
+        offset : int
+            The offset to start at.
+        limit : int
+            The number of statements to return.
+
+        Returns
+        -------
+        list[indra.statements.Statement]
+            A list of statements corresponding to the model and date.
+        """
+        logger.info(f'Got request to get statements for model {model_id} '
+                    f'on date {date} with offset {offset} and limit {limit} '
+                    f'and sort by {sort_by}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.statement_json).filter(
+                Statement.model_id == model_id,
+                Statement.date == date
+            )
+            if stmt_types:
+                stmt_types = [stmt_type.lower() for stmt_type in stmt_types]
+                q = q.filter(
+                    func.lower(Statement.statement_json[
+                        'type'].astext).in_(stmt_types))
+            if min_belief:
+                q = q.filter(
+                    Statement.statement_json['belief'].astext.cast(
+                        Float) >= float(min_belief))
+            if max_belief:
+                q = q.filter(
+                    Statement.statement_json['belief'].astext.cast(
+                        Float) <= float(max_belief))
+            if sort_by == 'evidence':
+                q = q.order_by(nullslast(jsonb_array_length(
+                    Statement.statement_json["evidence"]).desc()))
+            elif sort_by == 'belief':
+                q = q.order_by(
+                    nullslast(Statement.statement_json['belief'].desc()))
+            elif sort_by == 'paths':
+                q = q.order_by(Statement.path_count.desc())
+            if offset:
+                q = q.offset(offset)
+            if limit:
+                q = q.limit(limit)
+            stmts = stmts_from_json([s for s, in q.all()])
+            logger.info(f'Got {len(stmts)} statements')
+        return stmts
+
+    def get_statements_by_hash(self, model_id, date, stmt_hashes):
+        """Get statements by hash.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model to get statements for.
+        date : str
+            The date when the model was generated.
+        stmt_hashes : list[str]
+            A list of statement hashes to get statements for.
+
+        Returns
+        -------
+        list[indra.statements.Statement]
+            A list of statements corresponding to the model and date.
+        """
+        logger.info(f'Got request to get statements for model {model_id} '
+                    f'on date {date} for {len(stmt_hashes)} hashes')
+        with self.get_session() as sess:
+            q = sess.query(Statement.statement_json).filter(
+                Statement.model_id == model_id,
+                Statement.date == date,
+                Statement.stmt_hash.in_(stmt_hashes)
+            )
+            stmts = stmts_from_json([s for s, in q.all()])
+        return stmts
+
+    def update_statements_path_counts(self, model_id, date, path_counts):
+        """Update the path counts for statements. The update is incremental
+        because we can have the statement used in the paths in different
+        test corpora.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+        path_counts : dict[int, int]
+            A dictionary mapping statement hashes to the number of times they
+            were used in the paths.
+        """
+        logger.info(f'Got request to update path counts for {len(path_counts)}'
+                    f' statements for model {model_id} on date {date}')
+        with self.get_session() as sess:
+            for stmt_hash, path_count in path_counts.items():
+                stmt = sess.query(Statement).filter(
+                    Statement.model_id == model_id,
+                    Statement.date == date,
+                    Statement.stmt_hash == stmt_hash).first()
+                if stmt:
+                    stmt.path_count += path_count
+                else:
+                    logger.warning(f'Statement {stmt_hash} not found in db '
+                                   f'for model {model_id} on date {date}')
+
+    def get_path_counts(self, model_id, date):
+        """Get the path counts for statements.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+
+        Returns
+        -------
+        dict[str, int]
+            A dictionary mapping statement hashes to the number of times they
+            were used in the paths.
+        """
+        logger.info(f'Got request to get path counts for model {model_id} '
+                    f'on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.stmt_hash, Statement.path_count).filter(
+                Statement.model_id == model_id,
+                Statement.date == date
+            )
+            path_counts = {
+                str(stmt_hash): path_count for stmt_hash, path_count in q.all()
+                if path_count > 0
+            }
+        return path_counts
+
+    def get_number_of_dates(self, model_id):
+        """Get the number of unique dates this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        int
+            The number of unique dates this model is available for.
+        """
+        logger.info(f'Got request to get number of dates for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.date).filter(
+                Statement.model_id == model_id).distinct()
+            return q.count()
+
+    def get_oldest_date(self, model_id):
+        """Get the oldest date this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        str
+            The oldest date this model is available for.
+        """
+        logger.info(f'Got request to get oldest date for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.date).filter(
+                Statement.model_id == model_id).order_by(
+                    Statement.date.asc()).first()
+            return q.date if q else None
 
 
 def _weed_results(result_iter, latest_order=1):

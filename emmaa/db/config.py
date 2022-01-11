@@ -56,8 +56,16 @@ def get_databases(force_update=False, include_config=True):
                     def_dict['port'] = ':' + def_dict['port']
                 if def_dict['password']:
                     def_dict['password'] = ':' + def_dict['password']
-                DATABASES[db_name] = DB_STR_FMT.format(**def_dict)
-        DATABASES.update({k[len(ENV_PREFIX):].lower(): v
+                DATABASES[db_name] = (DB_STR_FMT.format(**def_dict),
+                                      def_dict.get('type', 'query'))
+
+        def get_db_with_type(db_url):
+            conf = db_url.split(';')
+            if len(conf) == 1:
+                conf.append('query')
+            return conf
+
+        DATABASES.update({k[len(ENV_PREFIX):].lower(): get_db_with_type(v)
                           for k, v in environ.items()
                           if k.startswith(ENV_PREFIX)})
     return DATABASES

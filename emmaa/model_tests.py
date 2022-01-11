@@ -30,6 +30,7 @@ from emmaa.util import make_date_str, get_s3_client, \
     save_pickle_to_s3, load_json_from_s3, save_json_to_s3, strip_out_date, \
     save_gzip_json_to_s3
 from emmaa.filter_functions import node_filter_functions, edge_filter_functions
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -688,7 +689,8 @@ class ModelManager(object):
         return results_json, json_lines
 
     def upload_results(self, test_corpus='large_corpus_tests',
-                       test_data=None, bucket=EMMAA_BUCKET_NAME):
+                       test_data=None, upload_to_db=True,
+                       bucket=EMMAA_BUCKET_NAME):
         """Upload results to s3 bucket."""
         json_dict, json_lines = self.results_to_json(test_data)
         result_key = (f'results/{self.model.name}/results_'
@@ -703,9 +705,16 @@ class ModelManager(object):
         save_json_to_s3(json_lines, bucket, paths_key, save_format='jsonl')
         save_json_to_s3(json_lines, bucket, latest_paths_key, 'jsonl')
 
-    def save_assembled_statements(self, bucket=EMMAA_BUCKET_NAME):
+        # Also save the path counts to the database if requested
+        if upload_to_db:
+            db = get_db('stmt')
+            db.update_statements_path_counts(
+                self.model.name, self.date_str[:10], self.path_stmt_counts)
+
+    def save_assembled_statements(self, upload_to_db=True,
+                                  bucket=EMMAA_BUCKET_NAME):
         """Upload assembled statements jsons to S3 bucket."""
-        def save_stmts(stmts, model_name):
+        def save_stmts(stmts, model_name, save_to_db):
             stmts_json = stmts_to_json(stmts)
             # Save a timestapmed version and a generic latest version of files
             dated_key = f'assembled/{model_name}/statements_{self.date_str}'
@@ -722,12 +731,18 @@ class ModelManager(object):
             save_json_to_s3(stmts_json, bucket, dated_jsonl, 'jsonl')
             logger.info(f'Uploading assembled statements to {dated_zip}')
             save_gzip_json_to_s3(stmts_json, bucket, dated_zip, 'json')
+            if save_to_db:
+                db = get_db('stmt')
+                db.add_statements(model_name, self.date_str[:10], stmts_json)
 
-        save_stmts(self.model.assembled_stmts, self.model.name)
+        # Assembled statements are also dumped to the database unless specified
+        # otherwise; dynamic statements are only stored on s3
+        save_stmts(self.model.assembled_stmts, self.model.name,
+                   save_to_db=upload_to_db)
         if hasattr(self.model, 'dynamic_assembled_stmts') and \
                 self.model.dynamic_assembled_stmts:
             save_stmts(self.model.dynamic_assembled_stmts,
-                       f'{self.model.name}_dynamic')
+                       f'{self.model.name}_dynamic', save_to_db=False)
 
 
 class TestManager(object):
@@ -1006,7 +1021,8 @@ def save_tests_to_s3(tests, bucket, key, save_format='pkl'):
 
 
 def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
-                            upload_results=True, bucket=EMMAA_BUCKET_NAME):
+                            upload_results=True, upload_to_db=True,
+                            bucket=EMMAA_BUCKET_NAME):
     """Run a given set of tests on a given model, both loaded from S3.
 
     After loading both the model and the set of tests, model/test overlap
@@ -1022,7 +1038,9 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     upload_results : Optional[bool]
         Whether to upload test results to S3 in JSON format. Can be set
         to False when running tests. Default: True
-
+    upload_to_db : Optional[bool]
+        Whether to update path counts in the database. Can be set
+        to False when running tests. Default: True
     Returns
     -------
     emmaa.model_tests.ModelManager
@@ -1064,5 +1082,6 @@ def run_model_tests_from_s3(model_name, test_corpus='large_corpus_tests',
     tm.run_tests(filter_func, edge_filter_func, allow_direct)
     # Optionally upload test results to S3
     if upload_results:
-        mm.upload_results(test_corpus, test_data, bucket=bucket)
+        mm.upload_results(test_corpus, test_data, upload_to_db=upload_to_db,
+                          bucket=bucket)
     return mm

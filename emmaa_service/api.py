@@ -36,7 +36,7 @@ from emmaa.util import find_latest_s3_file, does_exist, \
     EMMAA_BUCKET_NAME, list_s3_files, find_index_of_s3_file, \
     find_number_of_files_on_s3, FORMATTED_TYPE_NAMES
 from emmaa.model import load_config_from_s3, last_updated_date, \
-    get_model_stats, _default_test, get_assembled_statements
+    get_model_stats, _default_test, get_assembled_statements, get_models
 from emmaa.model_tests import load_tests_from_s3
 from emmaa.answer_queries import QueryManager, load_model_manager_from_cache
 from emmaa.subscription.email_util import verify_email_signature,\
@@ -45,6 +45,7 @@ from emmaa.queries import PathProperty, get_agent_from_text, GroundingError, \
     DynamicProperty, OpenSearchQuery, SimpleInterventionProperty
 from emmaa.xdd import get_document_figures, get_figures_from_query
 from emmaa.analyze_tests_results import _get_trid_title, AgentStatsGenerator
+from emmaa.db import get_db
 
 from indralab_auth_tools.auth import auth, config_auth, resolve_auth
 from indralab_web_templates.path_templates import path_temps
@@ -489,6 +490,33 @@ def _load_stmts_from_cache(model, date):
     return stmts
 
 
+def load_stmts(model, date, stmt_hashes=None, **kwargs):
+    emmaa_db = get_db('stmt')
+    if stmt_hashes:
+        stmts = emmaa_db.get_statements_by_hash(model, date, stmt_hashes)
+    else:
+        stmts = emmaa_db.get_statements(model, date, **kwargs)
+    from_db = True
+    # Statements for that model/date are not in db
+    if not stmts:
+        logger.info(f'Could not find statements for {model} {date} in db, '
+                    'using S3/cache.')
+        stmts = _load_stmts_from_cache(model, date)
+        if stmt_hashes:
+            stmts = [stmt for stmt in stmts if
+                     str(stmt.get_hash()) in stmt_hashes]
+        from_db = False
+    # Clear the cache for this model if it's not activelly used
+    if from_db and model in stmts_cache:
+        del stmts_cache[model]
+    return stmts, from_db
+
+
+def load_path_counts(model, date):
+    emmaa_db = get_db('stmt')
+    return emmaa_db.get_path_counts(model, date)
+
+
 def _load_model_stats_from_cache(model, date):
     available_date, model_stats = model_stats_cache.get(model, (None, None))
     if model_stats and date and available_date == date:
@@ -513,24 +541,9 @@ def _load_test_stats_from_cache(model, test_corpus, date=None):
 
 
 def _get_model_meta_data(bucket=EMMAA_BUCKET_NAME):
-    s3 = boto3.client('s3')
-    resp = s3.list_objects(Bucket=bucket, Prefix='models/',
-                           Delimiter='/')
-    model_data = []
-    for pref in resp['CommonPrefixes']:
-        model = pref['Prefix'].split('/')[1]
-        config_json = get_model_config(model, bucket=bucket)
-        if not config_json:
-            continue
-        dev_only = config_json.get('dev_only', False)
-        if dev_only:
-            if DEVMODE:
-                model_data.append((model, config_json))
-            else:
-                continue
-        else:
-            model_data.append((model, config_json))
-    return model_data
+    return get_models(include_config=True, include_dev=DEVMODE,
+                      config_load_func=get_model_config,
+                      bucket=bucket)
 
 
 def get_model_config(model, bucket=EMMAA_BUCKET_NAME):
@@ -814,6 +827,65 @@ def _count_curations(curations, stmts_by_hash):
             cur_source = 'other'
         cur_counts[stmt_hash][cur_source][cur_tag] += 1
     return cur_counts
+
+
+def _local_sort_filter_stmts(
+        model, stmts, stmts_by_hash, offset, sort_by, stmt_types, min_belief,
+        max_belief, filter_curated, cur_counts):
+    # This is the old way of filtering/sorting statements after loading all of
+    # them in memory, used when statements are not available in the db
+
+    # Helper function for filtering statements on different conditions
+    def filter_stmt(stmt):
+        accepted = []
+        stmt_hash = str(stmt.get_hash(refresh=True))
+        if stmt_types:
+            accepted.append(type(stmt).__name__.lower() in stmt_types)
+        if filter_curated:
+            accepted.append(stmt_hash not in cur_counts)
+        if min_belief:
+            accepted.append(stmt.belief >= float(min_belief))
+        if max_belief:
+            accepted.append(stmt.belief <= float(max_belief))
+        keep = all(accepted)
+        if not keep:
+            stmts_by_hash.pop(stmt_hash, None)
+        return all(accepted)
+
+    # Filter statements with all filters
+    stmts = list(filter(filter_stmt, stmts))
+
+    stmt_counts_dict = Counter()
+    test_corpora = _get_test_corpora(model)
+    for test_corpus in test_corpora:
+        test_date = last_updated_date(model, 'test_stats', 'date', test_corpus,
+                                      extension='.json')
+        test_stats, _ = _load_test_stats_from_cache(
+            model, test_corpus, test_date)
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
+        stmt_counts_dict += Counter(dict(stmt_counts))
+    if sort_by == 'evidence':
+        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+            offset:offset+1000]
+    elif sort_by == 'paths':
+        stmt_count_sorted = sorted(
+            stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
+        if not stmt_count_sorted:
+            msg = 'Sorting by paths is not available, sorting by evidence'
+            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
+                offset:offset+1000]
+        else:
+            stmts = []
+            for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
+                try:
+                    stmts.append(stmts_by_hash[stmt_hash])
+                except KeyError:
+                    continue
+    elif sort_by == 'belief':
+        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
+            offset:offset+1000]
+    return stmts, stmt_counts_dict
 
 
 def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
@@ -1253,8 +1325,9 @@ def get_model_dashboard(model):
     logger.info('Getting belief distribution')
     belief_data = {}
     beliefs = model_stats['model_summary'].get('assembled_beliefs')
+    stmts = None
     if not beliefs:
-        stmts = _load_stmts_from_cache(model, date)
+        stmts, _ = load_stmts(model, date)
         if stmts:
             beliefs = [stmt.belief for stmt in stmts]
     if beliefs:
@@ -1277,7 +1350,8 @@ def get_model_dashboard(model):
     agent_paths_table = None
     if agent:
         logger.info('Generating agent statistics')
-        stmts = _load_stmts_from_cache(model, date)
+        if not stmts:
+            stmts, _ = load_stmts(model, date)
         sg = AgentStatsGenerator(model, agent, stmts, model_stats, test_stats)
         sg.make_stats()
         agent_stats = sg.json_stats
@@ -1408,11 +1482,9 @@ def annotate_paper_statements(model):
             trid = str(trids[0])
         else:
             abort(Response(f'Invalid paper ID: {paper_id}', 400))
-    all_stmts = _load_stmts_from_cache(model, date)
     model_stats = _load_model_stats_from_cache(model, date)
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'][trid]
-    paper_stmts = [stmt for stmt in all_stmts
-                   if stmt.get_hash(refresh=True) in paper_hashes]
+    paper_stmts, _ = load_stmts(model, date, paper_hashes)
     for stmt in paper_stmts:
         stmt.evidence = [ev for ev in stmt.evidence
                          if str(ev.text_refs.get('TRID')) == trid]
@@ -1476,11 +1548,8 @@ def get_paper_statements(model):
     raw_paper_ids = model_stats['paper_summary']['raw_paper_ids']
     paper_hashes = model_stats['paper_summary']['stmts_by_paper'].get(trid, [])
     if paper_hashes:
-        all_stmts = _load_stmts_from_cache(model, date)
-        paper_stmts = [stmt for stmt in all_stmts
-                       if stmt.get_hash(refresh=True) in paper_hashes]
-        updated_stmts = [filter_evidence(stmt, trid, 'TRID')
-                         for stmt in paper_stmts]
+        updated_stmts = [filter_evidence(stmt, trid, 'TRID') for stmt
+                         in load_stmts(model, date, paper_hashes)[0]]
         updated_stmts = sorted(updated_stmts, key=lambda x: len(x.evidence),
                                reverse=True)
     else:
@@ -1680,23 +1749,23 @@ def get_statement_evidence_page():
     if not date:
         date = get_latest_available_date(model, _default_test(model))
     if source == 'model_statement':
-        # Add up paths per statement count across test corpora
-        stmt_counts_dict = Counter()
-        test_corpora = _get_test_corpora(model)
-        for test_corpus in test_corpora:
-            test_date = get_latest_available_date(model, test_corpus)
-            test_stats, _ = _load_test_stats_from_cache(
-                model, test_corpus, test_date)
-            stmt_counts = test_stats['test_round_summary'].get(
-                'path_stmt_counts', [])
-            stmt_counts_dict += Counter(dict(stmt_counts))
-        all_stmts = _load_stmts_from_cache(model, date)
-        stmts = [stmt for stmt in all_stmts
-                 if str(stmt.get_hash(refresh=True)) in stmt_hashes]
+        stmts, from_db = load_stmts(model, date, stmt_hashes)
+        if from_db:
+            stmt_counts_dict = load_path_counts(model, date)
+        else:
+            # Add up paths per statement count across test corpora
+            stmt_counts_dict = Counter()
+            test_corpora = _get_test_corpora(model)
+            for test_corpus in test_corpora:
+                test_date = get_latest_available_date(model, test_corpus)
+                test_stats, _ = _load_test_stats_from_cache(
+                    model, test_corpus, test_date)
+                stmt_counts = test_stats['test_round_summary'].get(
+                    'path_stmt_counts', [])
+                stmt_counts_dict += Counter(dict(stmt_counts))
     elif source == 'paper':
-        all_stmts = _load_stmts_from_cache(model, date)
         stmts = [filter_evidence(stmt, paper_id, paper_id_type) for stmt in
-                 all_stmts if str(stmt.get_hash(refresh=True)) in stmt_hashes]
+                 load_stmts(model, date, stmt_hashes)[0]]
     elif source == 'test':
         if not test_corpus:
             abort(Response(f'Need test corpus name to load evidence', 404))
@@ -1778,9 +1847,14 @@ def get_all_statements_page(model):
     filter_curated = (filter_curated == 'true')
     offset = (page - 1)*1000
 
-    # Load full list of statements
-    stmts = _load_stmts_from_cache(model, date)
+    # Load the statements; if they are available in the database, the sorting,
+    # some filtering, offset and limit will be done there; otherwise,
+    # the full list will be loaded, filtered and sorted in memory
+    stmts, from_db = load_stmts(
+        model, date, sort_by=sort_by, offset=offset, limit=1000,
+        stmt_types=stmt_types, min_belief=min_belief, max_belief=max_belief)
 
+    # For now agent filter is applied locally
     if agent:
         stmts = AgentStatsGenerator.filter_stmts(agent, stmts)
     stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt for stmt in stmts}
@@ -1788,25 +1862,18 @@ def get_all_statements_page(model):
     curations = get_curations()
     cur_counts = _count_curations(curations, stmts_by_hash)
 
-    # Helper function for filtering statements on different conditions
-    def filter_stmt(stmt):
-        accepted = []
-        stmt_hash = str(stmt.get_hash(refresh=True))
-        if stmt_types:
-            accepted.append(type(stmt).__name__.lower() in stmt_types)
+    if not from_db:
+        # Apply filters and sort locally
+        stmts, stmt_counts_dict = _local_sort_filter_stmts(
+            model, stmts, stmts_by_hash, offset, sort_by, stmt_types,
+            min_belief, max_belief, filter_curated, cur_counts)
+    else:
+        # Most filters and sorting are already done in the database
+        stmt_counts_dict = load_path_counts(model, date)
+        # Filter curated since this data is not in EMMAA database
         if filter_curated:
-            accepted.append(stmt_hash not in cur_counts)
-        if min_belief:
-            accepted.append(stmt.belief >= float(min_belief))
-        if max_belief:
-            accepted.append(stmt.belief <= float(max_belief))
-        keep = all(accepted)
-        if not keep:
-            stmts_by_hash.pop(stmt_hash, None)
-        return all(accepted)
-
-    # Filter statements with all filters
-    stmts = list(filter(filter_stmt, stmts))
+            stmts = [stmt for stmt in stmts if
+                     str(stmt.get_hash(refresh=True)) not in cur_counts]
 
     beliefs = [stmt.belief for stmt in stmts]
     belief_range = round(min(beliefs), 2), round(max(beliefs), 2)
@@ -1814,23 +1881,11 @@ def get_all_statements_page(model):
     model_stats = _load_model_stats_from_cache(model, date)
     all_agents = [ag for (ag, count) in
                   model_stats['model_summary']['agent_distr']]
-    # Add up paths per statement count across test corpora
-    stmt_counts_dict = Counter()
-    test_corpora = _get_test_corpora(model)
-    for test_corpus in test_corpora:
-        test_date = last_updated_date(model, 'test_stats', 'date', test_corpus,
-                                      extension='.json')
-        test_stats, _ = _load_test_stats_from_cache(
-            model, test_corpus, test_date)
-        stmt_counts = test_stats['test_round_summary'].get(
-            'path_stmt_counts', [])
-        stmt_counts_dict += Counter(dict(stmt_counts))
-    stmt_count_sorted = sorted(
-        stmt_counts_dict.items(), key=lambda x: x[1], reverse=True)
-    if len(stmts) % 1000 == 0:
-        total_pages = len(stmts)//1000
+    total_stmts = model_stats['model_summary']['number_of_statements']
+    if total_stmts % 1000 == 0:
+        total_pages = total_stmts//1000
     else:
-        total_pages = len(stmts)//1000 + 1
+        total_pages = total_stmts//1000 + 1
     if page + 1 <= total_pages:
         next_page = page + 1
     else:
@@ -1839,24 +1894,7 @@ def get_all_statements_page(model):
         prev_page = page - 1
     else:
         prev_page = None
-    if sort_by == 'evidence':
-        stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
-            offset:offset+1000]
-    elif sort_by == 'paths':
-        if not stmt_count_sorted:
-            msg = 'Sorting by paths is not available, sorting by evidence'
-            stmts = sorted(stmts, key=lambda x: len(x.evidence), reverse=True)[
-                offset:offset+1000]
-        else:
-            stmts = []
-            for (stmt_hash, count) in stmt_count_sorted[offset:offset+1000]:
-                try:
-                    stmts.append(stmts_by_hash[stmt_hash])
-                except KeyError:
-                    continue
-    elif sort_by == 'belief':
-        stmts = sorted(stmts, key=lambda x: x.belief, reverse=True)[
-            offset:offset+1000]
+
     stmt_rows = []
     for stmt in stmts:
         stmt_row = _get_stmt_row(stmt, 'model_statement', model, cur_counts,
@@ -2201,7 +2239,7 @@ def model_subscription(model):
 @app.route('/statements/from_hash/<model>/<date>/<hash_val>', methods=['GET'])
 def get_statement_by_hash_model(model, date, hash_val):
     """Get model statement JSON by hash."""
-    stmts = _load_stmts_from_cache(model, date)
+    stmts, _ = load_stmts(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)
@@ -2240,7 +2278,7 @@ def get_tests_by_hash(test_corpus, hash_val):
            '<date>/<hash_val>', methods=['GET'])
 def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
     """Get model statement by hash and paper ID."""
-    stmts = _load_stmts_from_cache(model, date)
+    stmts, _ = load_stmts(model, date, [hash_val])
     st_json = {}
     curations = get_curations(pa_hash=hash_val)
     cur_dict = defaultdict(list)

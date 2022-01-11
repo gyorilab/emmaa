@@ -951,6 +951,45 @@ def get_assembled_statements(model, date=None, bucket=EMMAA_BUCKET_NAME):
     return stmts, latest_file_key
 
 
+def get_models(include_config=False, include_dev=False,
+               config_load_func=load_config_from_s3, bucket=EMMAA_BUCKET_NAME):
+    """Get a list of all models in the EMMAA bucket.
+
+    Parameters
+    ----------
+    include_config : bool
+        Whether to include the config file for each model.
+    include_dev : bool
+        Whether to include the models in dev mode.
+    config_load_func : function
+        A function to load the config file (e.g. from s3 or from cache).
+    bucket : str
+        Name of S3 bucket to look for a file. Defaults to 'emmaa'.
+
+    Returns
+    -------
+    model_data : list[str] or list(tuple(str, dict))
+        A list of model names. If `include_config` is True, the list is a
+        list of tuples of model names and configs.
+    """
+    s3 = get_s3_client()
+    resp = s3.list_objects(Bucket=bucket, Prefix='models/',
+                           Delimiter='/')
+    model_data = []
+    for pref in resp['CommonPrefixes']:
+        model = pref['Prefix'].split('/')[1]
+        config_json = config_load_func(model, bucket=bucket)
+        if model == 'test' or not config_json:
+            continue
+        if not include_dev and config_json.get('dev_only', False):
+            continue
+        if include_config:
+            model_data.append((model, config_json))
+        else:
+            model_data.append(model)
+    return model_data
+
+
 @register_pipeline
 def load_custom_grounding_map(model, bucket=EMMAA_BUCKET_NAME):
     key = f'models/{model}/grounding_map.json'

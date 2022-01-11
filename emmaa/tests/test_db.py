@@ -4,10 +4,13 @@ import random
 from nose.plugins.attrib import attr
 from nose.tools import with_setup
 
+from indra.statements import Activation,  Agent, Evidence, Phosphorylation, \
+    stmts_to_json
 from emmaa.db import Query, Result, User, UserQuery
 from emmaa.queries import Query as QueryObject, PathProperty
-from emmaa.tests.db_setup import _get_test_db, setup_function, \
-    teardown_function
+from emmaa.tests.db_setup import _get_test_db, setup_query_db, \
+    teardown_query_db, setup_stmt_db, teardown_stmt_db
+from indra.statements.statements import IncreaseAmount
 
 
 test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
@@ -21,7 +24,7 @@ test_query_jsons = [{'type': 'path_property', 'path': {'type': 'Activation',
 test_queries = [QueryObject._from_json(qj) for qj in test_query_jsons]
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_instantiation():
     db = _get_test_db()
@@ -29,7 +32,7 @@ def test_instantiation():
     return
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_put_queries():
     db = _get_test_db()
@@ -44,7 +47,7 @@ def test_put_queries():
     assert len(queries) == 3, len(queries)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_queries():
     db = _get_test_db()
@@ -65,7 +68,7 @@ def _get_random_result():
         [{'12': [['This is fine.', '']]}, {'34': [['This is not ok.', '']]}])
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_put_results():
     db = _get_test_db()
@@ -79,7 +82,7 @@ def test_put_results():
     assert len(db_results) == len(results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_results():
     db = _get_test_db()
@@ -102,7 +105,7 @@ def test_get_results():
     assert all(isinstance(result[3], dict) for result in results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_latest_results():
     db = _get_test_db()
@@ -131,7 +134,7 @@ def test_get_latest_results():
     assert all(isinstance(result[3], dict) for result in results)
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_subscribed_queries():
     db = _get_test_db()
@@ -143,7 +146,7 @@ def test_get_subscribed_queries():
     assert queries[0][2] == test_queries[0].get_hash_with_model('aml')
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_subscribed_users():
     db = _get_test_db()
@@ -155,7 +158,7 @@ def test_get_subscribed_users():
     assert emails[0] == 'test1@test.com'
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_update_email_subscription():
     db = _get_test_db()
@@ -173,7 +176,7 @@ def test_update_email_subscription():
     assert not [q[0] for q in q.all()][0]  # new subscription status is False
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_number_results():
     db = _get_test_db()
@@ -187,7 +190,7 @@ def test_get_number_results():
     assert db.get_number_of_results(qh, 'pysb') == 3
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_get_all_result_hashes_and_delta():
     db = _get_test_db()
@@ -214,7 +217,7 @@ def test_get_all_result_hashes_and_delta():
     assert results[0][4] == [], results[0]
 
 
-@with_setup(setup_function, teardown_function)
+@with_setup(setup_query_db, teardown_query_db)
 @attr('nonpublic')
 def test_model_subscription():
     db = _get_test_db()
@@ -229,3 +232,214 @@ def test_model_subscription():
     assert len(paad_users) == 1
     assert paad_users == ['test@test.com']
     assert ms_users == []
+
+
+@with_setup(setup_stmt_db, teardown_stmt_db)
+@attr('nonpublic')
+def test_get_statements():
+    db = _get_test_db('stmt')
+    # Put statements and path counts in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})]),
+        IncreaseAmount(Agent('A', db_refs={'HGNC': '1234'}),
+                       Agent('C', db_refs={'HGNC': '3456'}))
+        ]
+    stmts[0].belief = 0.8
+    stmts[1].belief = 0.9
+    stmts[2].belief = 0.5
+    hash0 = stmts[0].get_hash()
+    hash1 = stmts[1].get_hash()
+    hash2 = stmts[2].get_hash()
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
+    db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
+
+    # Load statements with different sort/filter options
+
+    # Sort by evidence count
+    stmts_loaded = db.get_statements(model_id, date, sort_by='evidence')
+    assert len(stmts_loaded) == 3
+    assert stmts_loaded[0].get_hash() == hash0, len(stmts_loaded[0].evidence)
+    assert stmts_loaded[1].get_hash() == hash1, len(stmts_loaded[1].evidence)
+    assert stmts_loaded[2].get_hash() == hash2  # stmt with no evidence is last
+    # Sort by belief
+    stmts_loaded = db.get_statements(model_id, date, sort_by='belief')
+    assert len(stmts_loaded) == 3
+    assert stmts_loaded[0].get_hash() == hash1
+    assert stmts_loaded[1].get_hash() == hash0
+    # Sort by path count
+    stmts_loaded = db.get_statements(model_id, date, sort_by='paths')
+    assert len(stmts_loaded) == 3
+    assert stmts_loaded[0].get_hash() == hash1
+    assert stmts_loaded[1].get_hash() == hash0
+
+    # Filter by statement type
+    stmts_loaded = db.get_statements(model_id, date, stmt_types=['Activation'])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash0
+    stmts_loaded = db.get_statements(model_id, date,
+                                     stmt_types=['Phosphorylation'])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash1
+
+    # Filter by belief
+    stmts_loaded = db.get_statements(model_id, date, min_belief=0.85)
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash1
+    stmts_loaded = db.get_statements(model_id, date, max_belief=0.85)
+    assert len(stmts_loaded) == 2
+    assert set([stmt.get_hash() for stmt in stmts_loaded]) == {hash0, hash2}
+    stmts_loaded = db.get_statements(model_id, date, min_belief=0.85,
+                                     max_belief=0.85)
+    assert len(stmts_loaded) == 0
+
+    # Use offset and limit
+    stmts_loaded = db.get_statements(model_id, date)
+    assert len(stmts_loaded) == 3
+    stmts_loaded = db.get_statements(model_id, date, offset=1)
+    assert len(stmts_loaded) == 2, stmts_loaded
+    stmts_loaded = db.get_statements(model_id, date, limit=1)
+    assert len(stmts_loaded) == 1
+    # Returns only remaining statements after upset even if limit is larger
+    stmts_loaded = db.get_statements(model_id, date, offset=1, limit=5)
+    assert len(stmts_loaded) == 2
+
+
+@with_setup(setup_stmt_db, teardown_stmt_db)
+@attr('nonpublic')
+def test_get_statements_by_hash():
+    db = _get_test_db('stmt')
+    # Put statements in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    hash0 = stmts[0].get_hash()
+    hash1 = stmts[1].get_hash()
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
+
+    # Load statements by hash
+    stmts_loaded = db.get_statements_by_hash(model_id, date, [hash0, hash1])
+    assert len(stmts_loaded) == 2
+    assert stmts_loaded[0].get_hash() == hash0
+    assert stmts_loaded[1].get_hash() == hash1
+    stmts_loaded = db.get_statements_by_hash(model_id, date, [hash0])
+    assert len(stmts_loaded) == 1
+    assert stmts_loaded[0].get_hash() == hash0
+
+
+@with_setup(setup_stmt_db, teardown_stmt_db)
+@attr('nonpublic')
+def test_path_counts():
+    db = _get_test_db('stmt')
+    # Put statements in the database
+    model_id = 'test'
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    hash0 = str(stmts[0].get_hash())
+    hash1 = str(stmts[1].get_hash())
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
+    # All path counts should be 0
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 0
+    # Can update path counts multiple times, can be a subset of hashes
+    db.update_statements_path_counts(model_id, date, {hash0: 7})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 1, path_counts
+    assert path_counts[hash0] == 7
+    db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 2
+    assert path_counts[hash0] == 8  # 7 + 1
+    assert path_counts[hash1] == 5
+    db.update_statements_path_counts(model_id, date, {hash0: 3})
+    path_counts = db.get_path_counts(model_id, date)
+    assert len(path_counts) == 2
+    assert path_counts[hash0] == 11  # 7 + 1 + 3
+    assert path_counts[hash1] == 5  # Only added 5
+
+
+@with_setup(setup_stmt_db, teardown_stmt_db)
+@attr('nonpublic')
+def test_get_dates_and_delete():
+    db = _get_test_db('stmt')
+    model_id = 'test'
+    # At first there are no statements in the database
+    assert db.get_number_of_dates(model_id) == 0
+    assert db.get_oldest_date(model_id) is None
+    # Put statements in the database
+    date = '2021-01-01'
+    stmts = [
+        Activation(Agent('A', db_refs={'HGNC': '1234'}),
+                   Agent('B', db_refs={'HGNC': '2345'}),
+                   evidence=[Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1234'}),
+                             Evidence(text='A activates B.',
+                                      source_api='assertion',
+                                      text_refs={'TRID': '1235'})]),
+        Phosphorylation(Agent('B', db_refs={'HGNC': '2345'}),
+                        Agent('C', db_refs={'HGNC': '3456'}),
+                        evidence=[Evidence(text='B phosphorylates C.',
+                                           source_api='assertion',
+                                           text_refs={'TRID': '2345'})])
+        ]
+    stmt_jsons = stmts_to_json(stmts)
+    db.add_statements(model_id, date, stmt_jsons)
+    # There should be one date
+    assert db.get_number_of_dates(model_id) == 1
+    assert db.get_oldest_date(model_id) == date
+    # Add another date
+    date2 = '2022-01-01'
+    db.add_statements(model_id, date2, stmt_jsons)
+    assert db.get_number_of_dates(model_id) == 2
+    # Oldest date is still the first one
+    assert db.get_oldest_date(model_id) == date
+    # Delete statements from the first date
+    db.delete_statements(model_id, date)
+    # There should be one date left
+    assert db.get_number_of_dates(model_id) == 1
+    assert db.get_oldest_date(model_id) == date2
