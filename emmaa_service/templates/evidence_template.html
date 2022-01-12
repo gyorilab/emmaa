@@ -144,17 +144,32 @@
     <div class="container nav-container">
       <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          {% if tab == 'statements' %}
           <a class="nav-item nav-link active" id="nav-stmts-tab" data-toggle="tab" href="#nav-stmts" role="tab" aria-controls="nav-stmts" aria-selected="true">Statements</a>
           <a class="nav-item nav-link" id="nav-figures-tab" data-toggle="tab" href="#nav-figures" role="tab" aria-controls="nav-figures" aria-selected="false">Figures</a>
+          {% else %}
+          <a class="nav-item nav-link" id="nav-stmts-tab" data-toggle="tab" href="#nav-stmts" role="tab" aria-controls="nav-stmts" aria-selected="false">Statements</a>
+          <a class="nav-item nav-link active" id="nav-figures-tab" data-toggle="tab" href="#nav-figures" role="tab" aria-controls="nav-figures" aria-selected="true">Figures</a>
+          {% endif %}
         </div>
       </nav>
     </div>
     <div class="tab-content" id="nav-tabContent">
+      {% if tab == 'statements' %}
       <div class="tab-pane fade show active" id="nav-stmts" role="tabpanel" aria-labelledby="nav-stmts-tab">
+      {% else %}
+      <div class="tab-pane fade" id="nav-stmts" role="tabpanel" aria-labelledby="nav-stmts-tab">
+      {% endif %}
       {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
+
       </div>
-      <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">  
-      {{ figure_tab(fig_list, source) }}
+      {% if tab == 'figures' %}
+      <div class="tab-pane fade show active" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">
+      {% else %}
+      <div class="tab-pane fade" id="nav-figures" role="tabpanel" aria-labelledby="nav-figures-tab">
+      {% endif %}
+
+      {{ figure_tab(fig_list, source, include_figures) }}
   {% else %}
     {{ path_card(stmt_rows, table_title, "EvidId", [], url=url) }}
   {% endif %}
