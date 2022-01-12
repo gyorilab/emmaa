@@ -1523,18 +1523,21 @@ def get_paper_statements(model):
         Format to return the result as ('json' or 'html').
     """
     display_format = request.args.get('format', 'html')
+    include_figures = (request.args.get('figures', False) == 'true')
     if display_format == 'html':
         loaded = request.args.get('loaded')
         loaded = (loaded == 'true')
         if not loaded:
-            return render_template(
-                'loading.html',
-                msg=('Please wait while we load the statements '
-                     'from this paper...'))
+            if include_figures:
+                msg = ('Please wait while we load the figures and tables '
+                       'for this paper...')
+            else:
+                msg = ('Please wait while we load the statements '
+                       'from this paper...')
+            return render_template('loading.html', msg=msg)
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
-    include_figures = (request.args.get('figures', False) == 'true')
 
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
@@ -1739,13 +1742,17 @@ def get_statement_evidence_page():
     """Render page displaying evidence for statement or return statement JSON.
     """
     display_format = request.args.get('format', 'html')
+    include_figures = (request.args.get('figures', False) == 'true')
     if display_format == 'html':
         loaded = request.args.get('loaded')
         loaded = (loaded == 'true')
         if not loaded:
-            return render_template(
-                'loading.html',
-                msg='Please wait while we load the statement evidence...')
+            if include_figures:
+                msg = ('Please wait while we load the figures and tables for '
+                       'this statement...')
+            else:
+                msg = 'Please wait while we load the statement evidence...'
+            return render_template('loading.html', msg=msg)
     stmt_hashes = set(request.args.getlist('stmt_hash'))
     source = request.args.get('source')
     model = request.args.get('model')
@@ -1753,7 +1760,6 @@ def get_statement_evidence_page():
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
-    include_figures = (request.args.get('figures', False) == 'true')
 
     stmts = []
     if not date:
