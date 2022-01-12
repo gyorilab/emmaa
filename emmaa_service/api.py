@@ -1587,8 +1587,10 @@ def get_paper_statements(model):
 
     if include_figures:
         fig_list = get_document_figures(paper_id, paper_id_type)
+        tab = 'figures'
     else:
         fig_list = None
+        tab = 'statements'
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -1599,7 +1601,8 @@ def get_paper_statements(model):
                            paper_id_type=paper_id_type,
                            fig_list=fig_list,
                            include_figures=include_figures,
-                           tabs=True)
+                           tabs=True,
+                           tab=tab)
 
 
 @app.route('/tests/<model>')
@@ -1786,6 +1789,7 @@ def get_statement_evidence_page():
     if display_format == 'html':
         stmt_rows = []
         tabs = False
+        tab = None
         fig_list = None
         if stmts:
             stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt
@@ -1801,7 +1805,9 @@ def get_statement_evidence_page():
             else:
                 with_evid = True
                 tabs = True
+                tab = 'statements'
                 if include_figures:
+                    tab = 'figures'
                     query = ','.join(
                         [ag.name for ag in stmts[0].real_agent_list()])
                     fig_list = get_figures_from_query(query, limit=10)
@@ -1828,7 +1834,8 @@ def get_statement_evidence_page():
                            date=date,
                            fig_list=fig_list,
                            include_figures=include_figures,
-                           tabs=tabs)
+                           tabs=tabs,
+                           tab=tab)
 
 
 @app.route('/all_statements/<model>')
