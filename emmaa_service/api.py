@@ -1534,7 +1534,8 @@ def get_paper_statements(model):
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
-    
+    include_figures = (request.args.get('figures', False) == 'true')
+
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
@@ -1584,7 +1585,10 @@ def get_paper_statements(model):
     paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
 
-    fig_list = get_document_figures(paper_id, paper_id_type)
+    if include_figures:
+        fig_list = get_document_figures(paper_id, paper_id_type)
+    else:
+        fig_list = None
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -1594,6 +1598,7 @@ def get_paper_statements(model):
                            paper_id=paper_id,
                            paper_id_type=paper_id_type,
                            fig_list=fig_list,
+                           include_figures=include_figures,
                            tabs=True)
 
 
@@ -1745,6 +1750,8 @@ def get_statement_evidence_page():
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
+    include_figures = (request.args.get('figures', False) == 'true')
+
     stmts = []
     if not date:
         date = get_latest_available_date(model, _default_test(model))
@@ -1794,9 +1801,10 @@ def get_statement_evidence_page():
             else:
                 with_evid = True
                 tabs = True
-                query = ','.join(
-                    [ag.name for ag in stmts[0].real_agent_list()])
-                fig_list = get_figures_from_query(query, limit=10)
+                if include_figures:
+                    query = ','.join(
+                        [ag.name for ag in stmts[0].real_agent_list()])
+                    fig_list = get_figures_from_query(query, limit=10)
             for stmt in stmts:
                 stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                          test_corpus, stmt_counts_dict,
@@ -1819,6 +1827,7 @@ def get_statement_evidence_page():
                            is_all_stmts=False,
                            date=date,
                            fig_list=fig_list,
+                           include_figures=include_figures,
                            tabs=tabs)
 
 
