@@ -1523,18 +1523,22 @@ def get_paper_statements(model):
         Format to return the result as ('json' or 'html').
     """
     display_format = request.args.get('format', 'html')
+    include_figures = (request.args.get('figures', False) == 'true')
     if display_format == 'html':
         loaded = request.args.get('loaded')
         loaded = (loaded == 'true')
         if not loaded:
-            return render_template(
-                'loading.html',
-                msg=('Please wait while we load the statements '
-                     'from this paper...'))
+            if include_figures:
+                msg = ('Please wait while we load the figures and tables '
+                       'for this paper...')
+            else:
+                msg = ('Please wait while we load the statements '
+                       'from this paper...')
+            return render_template('loading.html', msg=msg)
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
-    
+
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
@@ -1584,7 +1588,12 @@ def get_paper_statements(model):
     paper_title = _get_title(trid, model_stats)
     table_title = f'Statements from the paper "{paper_title}"'
 
-    fig_list = get_document_figures(paper_id, paper_id_type)
+    if include_figures:
+        fig_list = get_document_figures(paper_id, paper_id_type)
+        tab = 'figures'
+    else:
+        fig_list = None
+        tab = 'statements'
     return render_template('evidence_template.html',
                            stmt_rows=stmt_rows,
                            model=model,
@@ -1594,7 +1603,9 @@ def get_paper_statements(model):
                            paper_id=paper_id,
                            paper_id_type=paper_id_type,
                            fig_list=fig_list,
-                           tabs=True)
+                           include_figures=include_figures,
+                           tabs=True,
+                           tab=tab)
 
 
 @app.route('/tests/<model>')
@@ -1731,13 +1742,17 @@ def get_statement_evidence_page():
     """Render page displaying evidence for statement or return statement JSON.
     """
     display_format = request.args.get('format', 'html')
+    include_figures = (request.args.get('figures', False) == 'true')
     if display_format == 'html':
         loaded = request.args.get('loaded')
         loaded = (loaded == 'true')
         if not loaded:
-            return render_template(
-                'loading.html',
-                msg='Please wait while we load the statement evidence...')
+            if include_figures:
+                msg = ('Please wait while we load the figures and tables for '
+                       'this statement...')
+            else:
+                msg = 'Please wait while we load the statement evidence...'
+            return render_template('loading.html', msg=msg)
     stmt_hashes = set(request.args.getlist('stmt_hash'))
     source = request.args.get('source')
     model = request.args.get('model')
@@ -1745,6 +1760,7 @@ def get_statement_evidence_page():
     date = request.args.get('date')
     paper_id = request.args.get('paper_id')
     paper_id_type = request.args.get('paper_id_type')
+
     stmts = []
     if not date:
         date = get_latest_available_date(model, _default_test(model))
@@ -1779,6 +1795,7 @@ def get_statement_evidence_page():
     if display_format == 'html':
         stmt_rows = []
         tabs = False
+        tab = None
         fig_list = None
         if stmts:
             stmts_by_hash = {str(stmt.get_hash(refresh=True)): stmt
@@ -1794,9 +1811,12 @@ def get_statement_evidence_page():
             else:
                 with_evid = True
                 tabs = True
-                query = ','.join(
-                    [ag.name for ag in stmts[0].real_agent_list()])
-                fig_list = get_figures_from_query(query, limit=10)
+                tab = 'statements'
+                if include_figures:
+                    tab = 'figures'
+                    query = ','.join(
+                        [ag.name for ag in stmts[0].real_agent_list()])
+                    fig_list = get_figures_from_query(query, limit=10)
             for stmt in stmts:
                 stmt_row = _get_stmt_row(stmt, source, model, cur_counts, date,
                                          test_corpus, stmt_counts_dict,
@@ -1819,7 +1839,9 @@ def get_statement_evidence_page():
                            is_all_stmts=False,
                            date=date,
                            fig_list=fig_list,
-                           tabs=tabs)
+                           include_figures=include_figures,
+                           tabs=tabs,
+                           tab=tab)
 
 
 @app.route('/all_statements/<model>')
