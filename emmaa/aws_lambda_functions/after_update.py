@@ -14,14 +14,15 @@ import json
 
 
 batch = boto3.client('batch')
-JOB_DEF = 'emmaa_jobdef'
-QUEUE = 'emmaa-after-update'
 PROJECT = 'aske'
 BRANCH = 'origin/master'
+# Specify the models that require more resources and need to be run in a
+# different queue with a different job definition.
+LARGE_MODELS = {'covid19'}
 
 
 def submit_batch_job(script_command, purpose, job_name, wait_for=None,
-                     job_def=JOB_DEF):
+                     job_def=None, queue=None):
     print(f'Submitting job {job_name}')
     core_command = 'bash scripts/git_and_run.sh'
     if BRANCH is not None:
@@ -39,7 +40,7 @@ def submit_batch_job(script_command, purpose, job_name, wait_for=None,
                                for job_id in wait_for]
     ret = batch.submit_job(
         jobName=job_name,
-        jobQueue=QUEUE, jobDefinition=job_def,
+        jobQueue=queue, jobDefinition=job_def,
         containerOverrides=cont_overrides, **kwargs)
     job_id = ret['jobId']
     print(f"Result from job submission: {job_id}")
@@ -84,6 +85,13 @@ def lambda_handler(event, context):
         model_name = model_key.split('/')[1]
         now_str = model_key.split('model_manager_')[1][:-4]
         date = now_str[:10]
+
+        if model_name in LARGE_MODELS:
+            JOB_DEF = 'emmaa_testing_jobs_def'
+            QUEUE = 'emmaa-after-update'
+        else:
+            JOB_DEF = 'emmaa_jobdef'
+            QUEUE = 'emmaa-models-update-test'
         # Store all stats jobs IDs
         stats_job_ids = []
 
@@ -92,7 +100,7 @@ def lambda_handler(event, context):
                                f' --model {model_name}  --stats_mode model')
         model_stats_id = submit_batch_job(
             model_stats_command, 'update-emmaa-model-stats',
-            f'{model_name}_model_stats_{now_str}')
+            f'{model_name}_model_stats_{now_str}', None, JOB_DEF, QUEUE)
         stats_job_ids.append(model_stats_id)
 
         # Find all test corpora for daily runi
@@ -109,13 +117,13 @@ def lambda_handler(event, context):
                             f' --model {model_name} --tests {test_corpus}')
             test_id = submit_batch_job(
                 test_command, 'update-emmaa-results',
-                f'{model_name}_{test_corpus}_tests_{now_str}')
+                f'{model_name}_{test_corpus}_tests_{now_str}', None, JOB_DEF, QUEUE)
             test_stats_command = (' python scripts/run_model_stats_from_s3.py'
                                   f' --model {model_name} --stats_mode tests'
                                   f' --tests {test_corpus}')
             test_stats_id = submit_batch_job(
                 test_stats_command, 'update-emmaa-test-stats',
-                f'{model_name}_{test_corpus}_stats_{now_str}', [test_id])
+                f'{model_name}_{test_corpus}_stats_{now_str}', [test_id], JOB_DEF, QUEUE)
             stats_job_ids.append(test_stats_id)
 
         # Submit notification job
@@ -124,18 +132,18 @@ def lambda_handler(event, context):
             f'--test_corpora {" ".join(tc for tc in tests)} --date {date}')
         submit_batch_job(notify_command, 'model-notify',
                          f'{model_name}_notification_{now_str}', stats_job_ids,
-                         job_def='emmaa-email-notifications')
+                         job_def='emmaa-email-notifications', queue='emmaa-models-update-test')
         # Run queries
         query_command = (' python scripts/answer_queries_from_s3.py'
                          f' --model {model_name}')
         submit_batch_job(query_command, 'update-emmaa-queries',
-                         f'{model_name}_queries_{now_str}')
+                         f'{model_name}_queries_{now_str}', None, JOB_DEF, QUEUE)
 
         # Make tests if configured
         if config.get('make_tests', False):
             test_update_command = (' python scripts/model_to_tests.py'
                                    f' --model {model_name}')
             submit_batch_job(test_update_command, 'update-emmaa-tests',
-                             f'{model_name}_test_update_{now_str}')
+                             f'{model_name}_test_update_{now_str}', None, JOB_DEF, QUEUE)
 
     return 'All jobs sumbitted'

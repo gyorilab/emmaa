@@ -12,11 +12,12 @@ in this directory.
 import boto3
 from datetime import datetime
 
-JOB_DEF = 'emmaa_jobdef'
-QUEUE = 'emmaa-models-update-test'
 PROJECT = 'aske'
 PURPOSE = 'update-emmaa-model-manager'
 BRANCH = 'origin/master'
+# Specify the models that require more resources and need to be run in a
+# different queue with a different job definition.
+LARGE_MODELS = {'covid19', 'brca', 'rasmachine', 'painmachine'}
 
 
 def lambda_handler(event, context):
@@ -64,6 +65,12 @@ def lambda_handler(event, context):
                         '--project', PROJECT, '--purpose', PURPOSE,
                         core_command]
             }
+        if model_name in LARGE_MODELS:
+            JOB_DEF = 'emmaa_testing_jobs_def'
+            QUEUE = 'emmaa-after-update'
+        else:
+            JOB_DEF = 'emmaa_jobdef'
+            QUEUE = 'emmaa-models-update-test'
         now_str = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         ret = batch.submit_job(jobName=f'{model_name}_mm_update_{now_str}',
                                jobQueue=QUEUE, jobDefinition=JOB_DEF,
