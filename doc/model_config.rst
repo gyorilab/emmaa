@@ -76,6 +76,14 @@ First level fields of config.json
 - `run_daily_update` : bool
     Whether the model should be updated with new literature daily.
 
+- `run_daily_tests` : bool
+    Whether the model should be assembled and tested daily. Note that by
+    default all models that are updated are also assembled and tested, so this
+    argument is only necessary for the models that are not updated daily (e.g.
+    rasmodel is a manual model that isn't updated daily but we want to test
+    it since the tests created from literature-based models can
+    change).
+
 - `export_formats` : list[str], optional
     A list of formats the model can be exported to. Accepted values include:
     `indranet`, `pybel`, `sbml`, `kappa`, `kappa_im`, `kappa_cm`, `gromet`,
