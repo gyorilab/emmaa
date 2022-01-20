@@ -3,11 +3,12 @@ import pickle
 import unittest
 from indra_reading.batch.monitor import BatchMonitor
 
-from emmaa.aws_lambda_functions.model_tests import lambda_handler, QUEUE
+from emmaa.aws_lambda_functions.model_manager_update import lambda_handler
 from emmaa.util import make_date_str, get_s3_client
 
 RUN_STATI = ['SUBMITTED', 'PENDING', 'RUNNABLE', 'RUNNING']
 DONE_STATI = ['SUCCEEDED', 'FAILED']
+QUEUE = 'emmaa-models-update-test'
 
 
 def __get_jobs(batch):
