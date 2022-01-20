@@ -100,7 +100,19 @@ the job depending on the model's resource requirements.
 
 ## AWS Simple Storage Service (S3)
 
-All model states, model managers, assembled statements, test results, model and
-test statistics files, as well as additional outputs (e.g. exports to different
-formats, paths extracted from test results, images for dynamical queries, etc.)
-are stored on S3.
+All versions of model states and other outputs are stored on S3. The bucket
+has the following directories:
+
+- `models` - model states (pickle) and model coniguration files (JSON).
+- `results` - assembled model manager objects (pickle) and test results (JSON).
+- `assembled` - assembled statements (gzip JSON and JSONL).
+- `model_stats` - model statistics (JSON).
+- `stats` - test statistics (JSON).
+- `tests` - test corpora (pickle).
+- `exports` - different exports of model state (BNGL, SBML, TSV, KAPPA, GROMET, etc.).
+- `paths` - graph paths extracted from test results (JSONL).
+- `papers` - IDs of papers used to build a model (JSON).
+- `query_images` - plots of simulated query results (PNG).
+
+All of the above directories internally have subdirectories for each model.
+All files are versioned with the timestamp created during the model manager assembly.
