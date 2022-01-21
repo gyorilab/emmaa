@@ -13,7 +13,7 @@ def test_rx_id_from_up_id():
     """Check that Uniprot ids are being successfully mapped to reactome ids
     """
     test_cases = [('P01116', 'R-HSA-9653079'),   # KRAS
-                  ('P04637', 'R-HSA-69507'),   # TP53
+                  ('P04637', 'R-HSA-8869337'),   # TP53
                   ('Q13485', 'R-HSA-177103')]  # SMAD4
     for up_id, rx_id in test_cases:
         all_rx_ids = rx_id_from_up_id(up_id)
