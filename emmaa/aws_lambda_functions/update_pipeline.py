@@ -54,18 +54,22 @@ def lambda_handler(event, context):
         obj = s3.get_object(Bucket='emmaa', Key=config_key)
         config = json.loads(obj['Body'].read().decode('utf8'))
         model_name = prefix[7:-1]
-        if model_name == 'test':
-            continue
-        elif config.get('run_daily_update', False):
+        # Most models are updated daily
+        if config.get('run_daily_update'):
             payload = {"model": model_name}
             resp = lam.invoke(FunctionName='emmaa-model-update',
                               InvocationType='RequestResponse',
                               Payload=json.dumps(payload))
             print(resp['Payload'].read())
-        else:
+        # Some models are updated but still tested daily because the tests
+        # are updated (manual models)
+        elif config.get('run_daily_tests'):
             payload = {"Records": [{"s3": {"object": {
                 "key": f"models/{model_name}/model_2020-01-01-00-00-00.pkl"}}}]}
             resp = lam.invoke(FunctionName='emmaa-mm-update',
                               InvocationType='RequestResponse',
                               Payload=json.dumps(payload))
+        # Some models should not be updated or tested
+        else:
+            continue
     return {'statusCode': 200, 'result': 'SUCCESS'}
