@@ -9,6 +9,7 @@ from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default, notifications_return_default
 from emmaa.model import load_config_from_s3, get_model_stats
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -447,8 +448,9 @@ def get_all_stats(model_name, test_corpora, date):
     return model_stats, test_stats_by_corpus
 
 
-def update_path_counts(model_name, date, db, test_stats_by_corpus):
+def update_path_counts(model_name, date, test_stats_by_corpus):
     """Combine path counts from all test corpora and update in the database."""
+    db = get_db('stmt')
     path_count_dict = Counter()
     for test_corpus, test_stats in test_stats_by_corpus.items():
         stmt_counts = test_stats['test_round_summary'].get(
@@ -493,8 +495,8 @@ def model_update_notify(model_name, test_corpora, date, db,
         logger.warning('Stats are not found, cannot generate deltas')
         return
 
-    # Update path counts in the database
-    update_path_counts(model_name, date, db, test_stats_by_corpus)
+    # Update path counts in the statements database
+    update_path_counts(model_name, date, test_stats_by_corpus)
 
     # We only need the next steps if there are subscribers or Twitter account
     if not twitter_cred and not users:
