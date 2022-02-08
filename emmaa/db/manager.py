@@ -892,6 +892,49 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                 Statement.model_id == model_id).scalar()
             return q
 
+    def get_latest_date(self, model_id):
+        """Get the oldest date this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        str
+            The oldest date this model is available for.
+        """
+        logger.info(f'Got request to get latest date for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(func.max(Statement.date)).filter(
+                Statement.model_id == model_id).scalar()
+            return q
+
+    def get_number_of_statements(self, model_id, date=None):
+        """Get the number of statements in a model.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+
+        Returns
+        -------
+        int
+            The number of statements in the model.
+        """
+        if not date:
+            date = self.get_latest_date(model_id)
+        logger.info(f'Got request to get number of statements for model '
+                    f'{model_id} on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.id).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            return q.count()
 
 
 def _weed_results(result_iter, latest_order=1):
