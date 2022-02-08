@@ -550,7 +550,7 @@ class QueryDatabaseManager(EmmaaDatabaseManager):
             q = (sess.query(Result.id).filter(Result.query_hash == query_hash,
                                               Query.hash == Result.query_hash,
                                               Result.mc_type == mc_type))
-        return len(q.all())
+        return q.count()
 
     def subscribe_to_model(self, user_email, user_id, model_id):
         """Subsribe a user to model updates.
@@ -888,10 +888,10 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """
         logger.info(f'Got request to get oldest date for model {model_id}')
         with self.get_session() as sess:
-            q = sess.query(Statement.date).filter(
-                Statement.model_id == model_id).order_by(
-                    Statement.date.asc()).first()
-            return q.date if q else None
+            q = sess.query(func.min(Statement.date)).filter(
+                Statement.model_id == model_id).scalar()
+            return q
+
 
 
 def _weed_results(result_iter, latest_order=1):
