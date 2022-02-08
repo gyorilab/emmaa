@@ -710,7 +710,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         logger.info(f'Added {len(stmt_jsons)} statements to db')
         return
 
-    def get_statements(self, model_id, date, offset=0, limit=None,
+    def get_statements(self, model_id, date=None, offset=0, limit=None,
                        sort_by=None, stmt_types=None, min_belief=None,
                        max_belief=None):
         """Load the statements by model and date.
@@ -731,6 +731,8 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         list[indra.statements.Statement]
             A list of statements corresponding to the model and date.
         """
+        if not date:
+            date = self.get_latest_date(model_id)
         logger.info(f'Got request to get statements for model {model_id} '
                     f'on date {date} with offset {offset} and limit {limit} '
                     f'and sort by {sort_by}')
@@ -825,7 +827,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
                     logger.warning(f'Statement {stmt_hash} not found in db '
                                    f'for model {model_id} on date {date}')
 
-    def get_path_counts(self, model_id, date):
+    def get_path_counts(self, model_id, date=None):
         """Get the path counts for statements.
 
         Parameters
@@ -841,6 +843,8 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             A dictionary mapping statement hashes to the number of times they
             were used in the paths.
         """
+        if not date:
+            date = self.get_latest_date(model_id)
         logger.info(f'Got request to get path counts for model {model_id} '
                     f'on date {date}')
         with self.get_session() as sess:
