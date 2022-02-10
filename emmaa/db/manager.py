@@ -822,11 +822,12 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             # For large models loading all statements at once can take too
             # much memory. We load statements in batches. Code is modified from
             # https://stackoverflow.com/questions/7389759/memory-efficient-built-in-sqlalchemy-iterator-generator
-            window_size = 10000
+            window_size = 50000
             start = 0
             updated = 0
             while True:
                 stop = start + window_size
+                logger.info(f'Processing statements {start} to {stop}')
                 stmts = q.slice(start, stop).all()
                 if len(stmts) == 0:
                     break
