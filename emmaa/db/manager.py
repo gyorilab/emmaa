@@ -697,6 +697,9 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """
         logger.info(f'Got request to add {len(stmt_jsons)} statements to '
                     f'model {model_id} on date {date}')
+        if self.get_latest_date(model_id) == date:
+            logger.info(f'{model_id} already has statements for {date}, skip')
+            return
         while self.get_number_of_dates(model_id) > max_updates - 1:
             oldest_date = self.get_oldest_date(model_id)
             logger.info(f'Deleting statements from {oldest_date}')
