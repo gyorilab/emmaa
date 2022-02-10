@@ -816,16 +816,29 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         logger.info(f'Got request to update path counts for {len(path_counts)}'
                     f' statements for model {model_id} on date {date}')
         with self.get_session() as sess:
-            for stmt_hash, path_count in path_counts.items():
-                stmt = sess.query(Statement).filter(
-                    Statement.model_id == model_id,
-                    Statement.date == date,
-                    Statement.stmt_hash == stmt_hash).first()
-                if stmt:
-                    stmt.path_count += path_count
-                else:
-                    logger.warning(f'Statement {stmt_hash} not found in db '
-                                   f'for model {model_id} on date {date}')
+            q = sess.query(Statement).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            # For large models loading all statements at once can take too
+            # much memory. We load statements in batches. Code is modified from
+            # https://stackoverflow.com/questions/7389759/memory-efficient-built-in-sqlalchemy-iterator-generator
+            window_size = 10000
+            start = 0
+            updated = 0
+            while True:
+                stop = start + window_size
+                stmts = q.slice(start, stop).all()
+                if len(stmts) == 0:
+                    break
+                for stmt in stmts:
+                    stmt_hash = str(stmt.stmt_hash)
+                    if stmt_hash in path_counts:
+                        stmt.path_count += path_counts[stmt_hash]
+                        updated += 1
+                if len(stmts) < window_size:
+                    break
+                start += window_size
+        logger.info(f'Updated path counts for {updated} statements')
 
     def get_path_counts(self, model_id, date=None):
         """Get the path counts for statements.
