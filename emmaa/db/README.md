@@ -1,7 +1,8 @@
 # EMMAA Databases
 
 This directory contains code for creating and managing the EMMAA databases.
-This document describes the databases schemas and managers as well as ways to set up new instances of the databases and testing and debugging tips.
+This document describes the databases schemas and managers as well as ways to
+set up new instances of the databases and testing and debugging tips.
 
 EMMAA currently uses two databases:
 
@@ -94,11 +95,11 @@ type = query
 
 The environment variable should have the name EMMAADB<db_name>
 (e.g. EMMAADBPRIMARY) and the value should be in the format
-`postgres://<username>:<password>@<host>/<name>`
+`postgresql://<username>:<password>@<host>/<name>`
 Also set this environment variable in Batch job definition for jobs that need
 to access the database.
 
-3) Then run the DatabaseManager method to create tables (this is more error
+3) Then run the DatabaseManager method to create tables (this is less error
 prone than creating them manually).
 ```
 from emmaa.db import get_db
@@ -108,7 +109,7 @@ db.create_tables()
 
 ### Testing and debugging
 
-1) Set up the local small instance of the queries database
+1) Set up the local small instance of the  database.
 
 The easiest way to test QueryDatabaseManager code is to set up a local instance
 of a database. 
@@ -121,7 +122,8 @@ db = _get_test_db()
 
 Then all the methods in QueryDatabaseManager can be tested with `db` object.
 
-2) Use the dev instance of the queries database
+2) Use the remote dev instance of the queries database.
+
 When making changes to database schema or related code, it could be useful to
 test how it works over a period of time (e.g. make sure daily query runs on
 Batch can load and run the queries and store the results and UI can display
@@ -190,7 +192,7 @@ date and path counts for this statement. Path counts is defined as a total
 number of paths in test results (across test corpora for a given model)
 that include this statement. It might be worth considering separating the path
 counts into a separate table since they are populated in a separate process and
-it could be more efficient to up
+it could be more efficient to update them in separate tables. 
 The reason for keeping them in the same table is that it is easier to sort
 the statements by path counts (this is used in all statements page on EMMAA
 website).
@@ -241,11 +243,11 @@ type = statement
 ```
 The environment variable should have the name EMMAADB<db_name>
 (e.g. EMMAADBSTMT) and the value should be in the format
-`postgres://<username>:<password>@<host>;statement`
+`postgresql://<username>:<password>@<host>;statement`
 Also set this environment variable in Batch job definition for jobs that need
 to access the database.
 
-5) Then run the DatabaseManager method to create tables (this is more error
+5) Then run the DatabaseManager method to create tables (this is less error
 prone than creating them manually).
 ```
 from emmaa.db import get_db
@@ -261,7 +263,7 @@ db.build_from_s3()
 
 ### Testing and debugging
 
-1) Set up the local small instance of the queries database
+1) Set up the local small instance of the statements database
 
 The easiest way to test StatementDatabaseManager code is to set up a local
 instance of a database. 
@@ -274,7 +276,8 @@ db = _get_test_db()
 
 Then all the methods in StatementDatabaseManager can be tested with `db` object.
 
-2) Use the dev version of the statements database
+2) Use the dev version of the statements database (running on EMMAA dev server).
+
 When making changes to database schema or related code, it could be useful to
 test how it works over a period of time (e.g. make sure daily updates can
 upload new assembled statements and path counts to the database and that UI
