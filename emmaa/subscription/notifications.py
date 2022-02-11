@@ -1,12 +1,15 @@
 import logging
 import time
 import os
+from collections import Counter
+
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
     get_credentials, update_status, FORMATTED_TYPE_NAMES
 from emmaa.subscription.email_util import generate_unsubscribe_link
 from emmaa.subscription.email_service import send_email, \
     notifications_sender_default, notifications_return_default
 from emmaa.model import load_config_from_s3, get_model_stats
+from emmaa.db import get_db
 
 
 logger = logging.getLogger(__name__)
@@ -284,7 +287,7 @@ def make_html_report_per_user(static_results_delta, open_results_delta,
         return ''
 
 
-def get_model_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
+def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
     """Get deltas from model and test stats for further use in tweets and
     email notifications.
 
@@ -292,12 +295,12 @@ def get_model_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
     ----------
     model_name : str
         A name of the model to get the updates for.
-    test_corpora : list[str]
-        A list of test corpora names to get the test updates for.
     date : str
         A date for which the updates should be generated.
-    bucket : str
-        A name of S3 bucket where the stats files are stored.
+    model_stats : dict
+        A dictionary containing the stats for the given model.
+    test_stats_by_corpus : dict
+        A dictionary of test statistics keyed by test corpus name.
 
     Returns
     -------
@@ -306,17 +309,6 @@ def get_model_deltas(model_name, test_corpora, date, bucket=EMMAA_BUCKET_NAME):
         corpora.
     """
     deltas = {}
-    model_stats, _ = get_model_stats(model_name, 'model', date=date)
-    test_stats_by_corpus = {}
-    for test_corpus in test_corpora:
-        test_stats, _ = get_model_stats(model_name, 'test', tests=test_corpus,
-                                        date=date)
-        if not test_stats:
-            logger.info(f'Could not find test stats for {test_corpus}')
-        test_stats_by_corpus[test_corpus] = test_stats
-    if not model_stats or not test_stats_by_corpus:
-        logger.warning('Stats are not found, cannot generate deltas')
-        return deltas
     deltas['model_name'] = model_name
     deltas['date'] = date
     # Model deltas
@@ -426,6 +418,48 @@ def make_model_html_email(msg_dicts, email, domain='emmaa.indra.bio'):
     return email_html.render(msg_dicts, unsub_link=unsub_link)
 
 
+def get_all_stats(model_name, test_corpora, date):
+    """Get all stats for a model and its test corpora.
+
+    Parameters
+    ----------
+    model_name : str
+        A name of the model to get the updates for.
+    test_corpora : list[str]
+        A list of test corpora names to get the test updates for.
+    date : str
+        A date for which the updates should be generated.
+
+    Returns
+    -------
+    model_stats : dict
+        A dictionary containing the stats for the given model.
+    test_stats_by_corpus : dict
+        A dictionary of test statistics keyed by test corpus name.
+    """
+    model_stats, _ = get_model_stats(model_name, 'model', date=date)
+    test_stats_by_corpus = {}
+    for test_corpus in test_corpora:
+        test_stats, _ = get_model_stats(model_name, 'test', tests=test_corpus,
+                                        date=date)
+        if not test_stats:
+            logger.info(f'Could not find test stats for {test_corpus}')
+        test_stats_by_corpus[test_corpus] = test_stats
+    return model_stats, test_stats_by_corpus
+
+
+def update_path_counts(model_name, date, test_stats_by_corpus):
+    """Combine path counts from all test corpora and update in the database."""
+    db = get_db('stmt')
+    path_count_dict = Counter()
+    for test_corpus, test_stats in test_stats_by_corpus.items():
+        stmt_counts = test_stats['test_round_summary'].get(
+            'path_stmt_counts', [])
+        path_count_dict += Counter(dict(stmt_counts))
+    path_count_dict = dict(path_count_dict)
+    db.update_statements_path_counts(model_name, date, path_count_dict)
+
+
 def model_update_notify(model_name, test_corpora, date, db,
                         bucket=EMMAA_BUCKET_NAME):
     """This function finds delta for a given model and sends updates via
@@ -453,6 +487,18 @@ def model_update_notify(model_name, test_corpora, date, db,
 
     users = db.get_model_users(model_name)
 
+    # Get all the stats from S3
+    model_stats, test_stats_by_corpus = get_all_stats(
+        model_name, test_corpora, date)
+
+    if not model_stats or not test_stats_by_corpus:
+        logger.warning('Stats are not found, cannot generate deltas')
+        return
+
+    # Update path counts in the statements database
+    update_path_counts(model_name, date, test_stats_by_corpus)
+
+    # We only need the next steps if there are subscribers or Twitter account
     if not twitter_cred and not users:
         logger.info('No Twitter account and no users subscribed '
                     'to this model, not generating deltas')
@@ -460,7 +506,7 @@ def model_update_notify(model_name, test_corpora, date, db,
 
     # Get deltas
     deltas = get_model_deltas(
-        model_name, test_corpora, date, bucket=bucket)
+        model_name, date, model_stats, test_stats_by_corpus)
 
     # Tweet if configured
     if twitter_cred:

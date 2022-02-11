@@ -550,7 +550,7 @@ class QueryDatabaseManager(EmmaaDatabaseManager):
             q = (sess.query(Result.id).filter(Result.query_hash == query_hash,
                                               Query.hash == Result.query_hash,
                                               Result.mc_type == mc_type))
-        return len(q.all())
+        return q.count()
 
     def subscribe_to_model(self, user_email, user_id, model_id):
         """Subsribe a user to model updates.
@@ -697,6 +697,9 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """
         logger.info(f'Got request to add {len(stmt_jsons)} statements to '
                     f'model {model_id} on date {date}')
+        if self.get_latest_date(model_id) == date:
+            logger.info(f'{model_id} already has statements for {date}, skip')
+            return
         while self.get_number_of_dates(model_id) > max_updates - 1:
             oldest_date = self.get_oldest_date(model_id)
             logger.info(f'Deleting statements from {oldest_date}')
@@ -710,7 +713,7 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         logger.info(f'Added {len(stmt_jsons)} statements to db')
         return
 
-    def get_statements(self, model_id, date, offset=0, limit=None,
+    def get_statements(self, model_id, date=None, offset=0, limit=None,
                        sort_by=None, stmt_types=None, min_belief=None,
                        max_belief=None):
         """Load the statements by model and date.
@@ -731,6 +734,8 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         list[indra.statements.Statement]
             A list of statements corresponding to the model and date.
         """
+        if not date:
+            date = self.get_latest_date(model_id)
         logger.info(f'Got request to get statements for model {model_id} '
                     f'on date {date} with offset {offset} and limit {limit} '
                     f'and sort by {sort_by}')
@@ -814,18 +819,32 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         logger.info(f'Got request to update path counts for {len(path_counts)}'
                     f' statements for model {model_id} on date {date}')
         with self.get_session() as sess:
-            for stmt_hash, path_count in path_counts.items():
-                stmt = sess.query(Statement).filter(
-                    Statement.model_id == model_id,
-                    Statement.date == date,
-                    Statement.stmt_hash == stmt_hash).first()
-                if stmt:
-                    stmt.path_count += path_count
-                else:
-                    logger.warning(f'Statement {stmt_hash} not found in db '
-                                   f'for model {model_id} on date {date}')
+            q = sess.query(Statement).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            # For large models loading all statements at once can take too
+            # much memory. We load statements in batches. Code is modified from
+            # https://stackoverflow.com/questions/7389759/memory-efficient-built-in-sqlalchemy-iterator-generator
+            window_size = 50000
+            start = 0
+            updated = 0
+            while True:
+                stop = start + window_size
+                logger.info(f'Processing statements {start} to {stop}')
+                stmts = q.slice(start, stop).all()
+                if len(stmts) == 0:
+                    break
+                for stmt in stmts:
+                    stmt_hash = str(stmt.stmt_hash)
+                    if stmt_hash in path_counts:
+                        stmt.path_count += path_counts[stmt_hash]
+                        updated += 1
+                if len(stmts) < window_size:
+                    break
+                start += window_size
+        logger.info(f'Updated path counts for {updated} statements')
 
-    def get_path_counts(self, model_id, date):
+    def get_path_counts(self, model_id, date=None):
         """Get the path counts for statements.
 
         Parameters
@@ -841,6 +860,8 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
             A dictionary mapping statement hashes to the number of times they
             were used in the paths.
         """
+        if not date:
+            date = self.get_latest_date(model_id)
         logger.info(f'Got request to get path counts for model {model_id} '
                     f'on date {date}')
         with self.get_session() as sess:
@@ -888,10 +909,53 @@ class StatementDatabaseManager(EmmaaDatabaseManager):
         """
         logger.info(f'Got request to get oldest date for model {model_id}')
         with self.get_session() as sess:
-            q = sess.query(Statement.date).filter(
-                Statement.model_id == model_id).order_by(
-                    Statement.date.asc()).first()
-            return q.date if q else None
+            q = sess.query(func.min(Statement.date)).filter(
+                Statement.model_id == model_id).scalar()
+            return q
+
+    def get_latest_date(self, model_id):
+        """Get the oldest date this model is available for.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+
+        Returns
+        -------
+        str
+            The oldest date this model is available for.
+        """
+        logger.info(f'Got request to get latest date for model {model_id}')
+        with self.get_session() as sess:
+            q = sess.query(func.max(Statement.date)).filter(
+                Statement.model_id == model_id).scalar()
+            return q
+
+    def get_number_of_statements(self, model_id, date=None):
+        """Get the number of statements in a model.
+
+        Parameters
+        ----------
+        model_id : str
+            The standard name of the model.
+        date : str
+            The date when the model was generated.
+
+        Returns
+        -------
+        int
+            The number of statements in the model.
+        """
+        if not date:
+            date = self.get_latest_date(model_id)
+        logger.info(f'Got request to get number of statements for model '
+                    f'{model_id} on date {date}')
+        with self.get_session() as sess:
+            q = sess.query(Statement.id).filter(
+                Statement.model_id == model_id,
+                Statement.date == date)
+            return q.count()
 
 
 def _weed_results(result_iter, latest_order=1):
