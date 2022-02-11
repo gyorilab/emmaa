@@ -266,7 +266,8 @@ def test_get_statements():
     hash2 = stmts[2].get_hash()
     stmt_jsons = stmts_to_json(stmts)
     db.add_statements(model_id, date, stmt_jsons)
-    db.update_statements_path_counts(model_id, date, {hash0: 1, hash1: 5})
+    db.update_statements_path_counts(model_id, date,
+                                     {str(hash0): 1, str(hash1): 5})
 
     # Load statements with different sort/filter options
 
@@ -284,7 +285,7 @@ def test_get_statements():
     # Sort by path count
     stmts_loaded = db.get_statements(model_id, date, sort_by='paths')
     assert len(stmts_loaded) == 3
-    assert stmts_loaded[0].get_hash() == hash1
+    assert stmts_loaded[0].get_hash() == hash1, stmts_loaded
     assert stmts_loaded[1].get_hash() == hash0
 
     # Filter by statement type
