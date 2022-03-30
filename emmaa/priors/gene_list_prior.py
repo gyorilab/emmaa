@@ -1,3 +1,5 @@
+from typing import Optional
+
 from indra.sources import tas
 from indra.statements import Agent
 from indra.databases import hgnc_client
@@ -20,12 +22,13 @@ class GeneListPrior(object):
     human_readable_name : str
         The human readable name (display name) of the model
     """
-    def __init__(self, gene_list, name, human_readable_name):
+    def __init__(self, gene_list, name, human_readable_name, description: Optional[str] = None):
         self.name = name
         self.gene_list = gene_list
         self.human_readable_name = human_readable_name
         self.stmts = []
         self.search_terms = []
+        self.description = description
 
     def make_search_terms(self, drug_gene_stmts=None):
         """Generate search terms from the gene list."""
@@ -83,6 +86,8 @@ class GeneListPrior(object):
             'belief_cutoff': 0.8,
             'filter_ungrounded': True
         }
+        if self.description:
+            config['description'] = self.description
         return config
 
     def make_model(self):
