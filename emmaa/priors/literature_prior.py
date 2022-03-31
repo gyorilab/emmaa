@@ -260,24 +260,29 @@ def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
     return all_stmts
 
 
-def make_search_terms(search_strings, mesh_ids):
+def make_search_terms(
+    search_strings: List[str],
+    mesh_ids: List[str],
+) -> List[SearchTerm]:
     """Return EMMAA SearchTerms based on search strings and MeSH IDs.
 
     Parameters
     ----------
-    search_strings : list of str
+    search_strings :
         A list of search strings e.g., "diabetes" to find papers in the
         literature.
-    mesh_ids : list of str
+    mesh_ids :
         A list of MeSH IDs that are used to search the literature as headings
         associated with papers.
 
     Returns
     -------
-    list of emmmaa.prior.SearchTerm
+    :
         A list of EMMAA SearchTerm objects constructed from the search strings
         and the MeSH IDs.
     """
+    if not search_strings and not mesh_ids:
+        raise ValueError("Need at least one of search_strings or mesh_ids")
     search_terms = []
     for search_string in search_strings:
         search_term = SearchTerm(type='other', name=search_string,
@@ -285,10 +290,10 @@ def make_search_terms(search_strings, mesh_ids):
         search_terms.append(search_term)
     for mesh_id in mesh_ids:
         mesh_name = mesh_client.get_mesh_name(mesh_id)
+        # TODO explicitly handle mesh_id.startswith("C")?
         suffix = 'mh' if mesh_id.startswith('D') else 'nm'
         search_term = SearchTerm(type='mesh', name=mesh_name,
                                  db_refs={'MESH': mesh_id},
                                  search_term=f'{mesh_name} [{suffix}]')
         search_terms.append(search_term)
     return search_terms
-
