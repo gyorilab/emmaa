@@ -58,7 +58,7 @@ class LiteraturePrior:
         self.human_readable_name = human_readable_name
         self.description = description
         self.search_terms = \
-            make_search_terms(search_strings, mesh_ids)
+            make_search_terms(search_strings or [], mesh_ids or [])
         if assembly_config_template:
             self.assembly_config = \
                 self.get_config_from(assembly_config_template)
