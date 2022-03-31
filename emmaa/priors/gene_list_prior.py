@@ -1,11 +1,10 @@
-from typing import Optional
+from typing import List, Optional
 
 from indra.sources import tas
 from indra.statements import Agent
 from indra.databases import hgnc_client
 from . import SearchTerm, get_drugs_for_gene
 from . prior_stmts import get_stmts_for_gene_list
-import datetime
 from emmaa.statements import EmmaaStatement
 from emmaa.model import EmmaaModel, save_config_to_s3
 
@@ -55,8 +54,10 @@ class GeneListPrior(object):
         self.search_terms = terms
         return terms
 
-    def make_gene_statements(self):
+    def make_gene_statements(self) -> List[EmmaaStatement]:
         """Generate Statements from the gene list."""
+        if self.stmts:
+            return self.stmts
 
         def is_internal(stmt):
             # If all the agents are gene names, this is an internal statement.
@@ -71,6 +72,7 @@ class GeneListPrior(object):
                                  {'internal': is_internal(stmt)})
                   for stmt in indra_stmts]
         self.stmts = estmts
+        return self.stmts
 
     def make_config(self):
         """Generate a configuration based on attributes."""

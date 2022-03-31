@@ -70,6 +70,7 @@ class LiteraturePrior:
         else:
             self.assembly_config = {}
         self.test = test
+        self.stmts = []
 
     def get_statements(self, mode='all', batch_size=100):
         """Return EMMAA Statements for this prior's literature set.
@@ -91,6 +92,8 @@ class LiteraturePrior:
             A list of EMMAA Statements corresponding to extractions from
             the subset of literature defined by this prior's search terms.
         """
+        if self.stmts:
+            return self.stmts
         terms_to_pmids = \
             EmmaaModel.search_pubmed(search_terms=self.search_terms,
                                      date_limit=None)
@@ -104,13 +107,12 @@ class LiteraturePrior:
             get_raw_statements_for_pmids(all_pmids, mode=mode,
                                          batch_size=batch_size)
         timestamp = datetime.datetime.now()
-        estmts = []
         for pmid, stmts in raw_statements_by_pmid.items():
             for stmt in stmts:
-                estmts.append(EmmaaStatement(stmt, timestamp,
-                                             pmids_to_terms[pmid],
-                                             {'internal': True}))
-        return estmts
+                self.stmts.append(EmmaaStatement(stmt, timestamp,
+                                                 pmids_to_terms[pmid],
+                                                 {'internal': True}))
+        return self.stmts
 
     def get_config_from(self, assembly_config_template):
         """Return assembly config given a template model's name.
