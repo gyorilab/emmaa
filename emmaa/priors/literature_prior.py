@@ -12,6 +12,9 @@ literature searches. Example:
     model = lp.make_model(estmts, upload_to_s3=True)
 
 """
+
+from typing import List
+
 import tqdm
 import logging
 import datetime
@@ -33,7 +36,7 @@ logger = logging.getLogger(__name__)
 class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
                  search_strings=None, mesh_ids=None,
-                 assembly_config_template=None):
+                 assembly_config_template=None, test: bool = True):
         """A class to construct a literature-based prior for an EMMAA model.
 
         Parameters
@@ -53,6 +56,8 @@ class LiteraturePrior:
         assembly_config_template : Optional[str]
             The name of another model from which the initial assembly
             configuration should be adopted.
+        test :
+            Should tests be included in the configuration?
         """
         self.name = name
         self.human_readable_name = human_readable_name
@@ -64,6 +69,7 @@ class LiteraturePrior:
                 self.get_config_from(assembly_config_template)
         else:
             self.assembly_config = {}
+        self.test = test
 
     def get_statements(self, mode='all', batch_size=100):
         """Return EMMAA Statements for this prior's literature set.
@@ -150,28 +156,31 @@ class LiteraturePrior:
             'dev_only': True,
             # These are the search terms constructed upon
             # initialization
-            'search_terms': [st.to_json()
-                             for st in self.search_terms],
-            # This is adopted from the template specified upon
-            # initialization
-            'assembly': self.assembly_config,
+            'search_terms': [st.to_json() for st in self.search_terms],
+        }
+        # This is adopted from the template specified upon
+        # initialization
+        if self.assembly_config:
+            config["assembly"] = self.assembly_config
+
+        if self.test:
             # We configure the large corpus tests by default
-            'test': {
+            config["test"] = {
                 'statement_checking': {
                     'max_path_length': 10,
-                    'max_paths': 1
+                    'max_paths': 1,
                 },
                 'mc_types': [
-                    'signed_graph', 'unsigned_graph'
+                    'signed_graph', 'unsigned_graph',
                 ],
                 'make_links': True,
                 'test_corpus': ['large_corpus_tests'],
                 'default_test_corpus': 'large_corpus_tests',
                 'filters': {
-                    'large_corpus_tests': 'filter_chem_mesh_go'
-                }
+                    'large_corpus_tests': 'filter_chem_mesh_go',
+                },
             }
-        }
+
         if upload_to_s3:
             from emmaa.model import save_config_to_s3
             save_config_to_s3(self.name, config)
