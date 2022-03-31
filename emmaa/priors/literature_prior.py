@@ -34,7 +34,7 @@ class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
                  search_strings=None, mesh_ids=None,
                  assembly_config_template=None):
-        """A class to construct a literture-based prior for an EMMAA model.
+        """A class to construct a literature-based prior for an EMMAA model.
 
         Parameters
         ----------
@@ -144,7 +144,7 @@ class LiteraturePrior:
             'description': self.description,
             # We don't make tests by default
             'make_tests': False,
-            # We run daily upates by default
+            # We run daily updates by default
             'run_daily_update': True,
             # We first show the model just on dev
             'dev_only': True,
