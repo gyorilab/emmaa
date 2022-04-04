@@ -159,6 +159,22 @@ class LiteraturePrior:
             # These are the search terms constructed upon
             # initialization
             'search_terms': [st.to_json() for st in self.search_terms],
+            # We configure the large corpus tests by default
+            'test': {
+                'statement_checking': {
+                    'max_path_length': 10,
+                    'max_paths': 1
+                },
+                'mc_types': [
+                    'signed_graph', 'unsigned_graph'
+                ],
+                'make_links': True,
+                'test_corpus': ['large_corpus_tests'],
+                'default_test_corpus': 'large_corpus_tests',
+                'filters': {
+                    'large_corpus_tests': 'filter_chem_mesh_go'
+                }
+            }
         }
         # This is adopted from the template specified upon
         # initialization
