@@ -181,24 +181,6 @@ class LiteraturePrior:
         if self.assembly_config:
             config["assembly"] = self.assembly_config
 
-        if self.test:
-            # We configure the large corpus tests by default
-            config["test"] = {
-                'statement_checking': {
-                    'max_path_length': 10,
-                    'max_paths': 1,
-                },
-                'mc_types': [
-                    'signed_graph', 'unsigned_graph',
-                ],
-                'make_links': True,
-                'test_corpus': ['large_corpus_tests'],
-                'default_test_corpus': 'large_corpus_tests',
-                'filters': {
-                    'large_corpus_tests': 'filter_chem_mesh_go',
-                },
-            }
-
         if upload_to_s3:
             from emmaa.model import save_config_to_s3
             save_config_to_s3(self.name, config)
