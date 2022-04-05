@@ -61,7 +61,7 @@ class EmmaaStatement(object):
 
 def to_emmaa_stmts(
     stmt_list: List[Statement],
-    date: Optional[datetime.datetime],
+    date: Optional[datetime.datetime] = None,
     search_terms: Optional[List[SearchTerm]] = None,
     metadata: Optional[Mapping[str, Any]] = None,
 ):
@@ -75,6 +75,7 @@ def to_emmaa_stmts(
     logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
                 f'{metadata}')
     for indra_stmt in stmt_list:
+        es = EmmaaStatement(indra_stmt, date, search_terms, metadata)
         emmaa_stmts.append(es)
     return emmaa_stmts
 
