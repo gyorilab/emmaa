@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
                  search_strings=None, mesh_ids=None,
-                 assembly_config_template=None, test: bool = True):
+                 assembly_config_template=None):
         """A class to construct a literature-based prior for an EMMAA model.
 
         Parameters
@@ -56,8 +56,6 @@ class LiteraturePrior:
         assembly_config_template : Optional[str]
             The name of another model from which the initial assembly
             configuration should be adopted.
-        test :
-            Should tests be included in the configuration?
         """
         self.name = name
         self.human_readable_name = human_readable_name
@@ -69,7 +67,6 @@ class LiteraturePrior:
                 self.get_config_from(assembly_config_template)
         else:
             self.assembly_config = {}
-        self.test = test
         self.stmts = []
 
     def get_statements(self, mode='all', batch_size=100):
@@ -158,7 +155,8 @@ class LiteraturePrior:
             'dev_only': True,
             # These are the search terms constructed upon
             # initialization
-            'search_terms': [st.to_json() for st in self.search_terms],
+            'search_terms': [st.to_json()
+                             for st in self.search_terms],
             # We configure the large corpus tests by default
             'test': {
                 'statement_checking': {
