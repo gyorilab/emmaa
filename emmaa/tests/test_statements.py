@@ -37,16 +37,17 @@ def test_to_emmaa_stmts():
 
 
 def test_filter_emmaa_stmts():
-    estmt1 = EmmaaStatement(stmt, date, search_terms, {'internal': True})
-    estmt2 = EmmaaStatement(stmt, date, search_terms, {'internal': False})
-    estmt3 = EmmaaStatement(stmt, date, search_terms)
-    del estmt3.metadata  # Imitate older style statement withou metadata
-    # Only estmt2 with internal False should be filtered out
-    filtered_estmts = filter_emmaa_stmts_by_metadata(
-        [estmt1, estmt2, estmt3], {'internal': True})
-    assert len(filtered_estmts) == 2
-    assert estmt1 in filtered_estmts
-    assert estmt3 in filtered_estmts
+    for st in [None, search_terms]:
+        estmt1 = EmmaaStatement(stmt, date, st, {'internal': True})
+        estmt2 = EmmaaStatement(stmt, date, st, {'internal': False})
+        estmt3 = EmmaaStatement(stmt, date, st)
+        del estmt3.metadata  # Imitate older style statement without metadata
+        # Only estmt2 with internal False should be filtered out
+        filtered_estmts = filter_emmaa_stmts_by_metadata(
+            [estmt1, estmt2, estmt3], {'internal': True})
+        assert len(filtered_estmts) == 2
+        assert estmt1 in filtered_estmts
+        assert estmt3 in filtered_estmts
 
 
 def test_filter_indra_stmts():
