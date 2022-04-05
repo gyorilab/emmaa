@@ -1,6 +1,10 @@
+import datetime
 import logging
-from indra.tools.assemble_corpus import fix_invalidities
+from typing import Any, List, Mapping, Optional
 
+from emmaa.priors import SearchTerm
+from indra.statements import Statement
+from indra.tools.assemble_corpus import fix_invalidities
 
 logger = logging.getLogger(__name__)
 
@@ -10,23 +14,34 @@ class EmmaaStatement(object):
 
     Parameters
     ----------
-    stmt : indra.statements.Statement
+    stmt :
         An INDRA Statement
-    date : datetime
+    date :
         A datetime object that is attached to the Statement. Typically
         represents the time at which the Statement was created.
-    search_terms : list[emmaa.priors.SearchTerm]
+    search_terms :
         The list of search terms that led to the creation of the Statement.
-    metadata : dict
+    metadata :
         Additional metadata for the statement.
     """
-    def __init__(self, stmt, date, search_terms, metadata=None):
-        ann = emmaa_metadata_json(search_terms, metadata)
-        add_emmaa_annotations(stmt, ann)
+
+    def __init__(
+        self,
+        stmt: Statement,
+        date: Optional[datetime.datetime] = None,
+        search_terms: Optional[List[SearchTerm]] = None,
+        metadata: Optional[Mapping[str, Any]] = None,
+    ):
         self.stmt = stmt
-        self.date = date
-        self.search_terms = search_terms
+        self.date = date or datetime.datetime.now()
+        self.search_terms = search_terms or []
         self.metadata = metadata if metadata else {}
+        # Generate metadata
+        ann = emmaa_metadata_json(
+            search_terms=self.search_terms,
+            metadata=self.metadata,
+        )
+        add_emmaa_annotations(self.stmt, ann)
 
     def __repr__(self):
         return '%s(%s, %s, %s)' % (self.__class__.__name__, self.stmt,
@@ -44,7 +59,12 @@ class EmmaaStatement(object):
         return output_json
 
 
-def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
+def to_emmaa_stmts(
+    stmt_list: List[Statement],
+    date: Optional[datetime.datetime],
+    search_terms: Optional[List[SearchTerm]] = None,
+    metadata: Optional[Mapping[str, Any]] = None,
+):
     """Make EMMAA statements from INDRA Statements with the given metadata."""
     emmaa_stmts = []
     try:
@@ -55,12 +75,16 @@ def to_emmaa_stmts(stmt_list, date, search_terms, metadata=None):
     logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
                 f'{metadata}')
     for indra_stmt in stmt_list:
-        es = EmmaaStatement(indra_stmt, date, search_terms, metadata)
         emmaa_stmts.append(es)
     return emmaa_stmts
 
 
-def emmaa_metadata_json(search_terms, metadata):
+def emmaa_metadata_json(
+    search_terms: Optional[List[SearchTerm]] = None,
+    metadata: Optional[Mapping[str, Any]] = None,
+):
+    if not search_terms:
+        search_terms = []
     if not metadata:
         metadata = {}
     return {'search_terms': [st.to_json() for st in search_terms],
