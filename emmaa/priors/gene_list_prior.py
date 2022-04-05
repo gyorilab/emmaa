@@ -57,7 +57,8 @@ class GeneListPrior(object):
         drug_names = [st.name for st in self.search_terms if
                       st.type == 'drug']
         indra_stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
-        estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])
+        estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [],
+                                 {'internal': True})
                   for stmt in indra_stmts]
         self.stmts = estmts
 

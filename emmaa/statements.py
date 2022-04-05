@@ -22,7 +22,16 @@ class EmmaaStatement(object):
     search_terms :
         The list of search terms that led to the creation of the Statement.
     metadata :
-        Additional metadata for the statement.
+        Additional metadata for the statement. The metadata dict is expected
+        to contain the following keys:
+          - 'internal': a Boolean indicating whether the statement is internal
+            to the model or not. A statement is internal if it was picked up
+            using the model's scope definition (through e.g., literature searches
+            and subsequent text mining), and is typically not internal, if it
+            was added to the model to provide additional knowledge, such
+            as statements representing drug targets or phenotypic readouts that
+            are meant to aid explanation construction but are not internal to
+            the model.
     """
 
     def __init__(
