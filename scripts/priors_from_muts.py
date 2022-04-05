@@ -42,13 +42,11 @@ def save_prior(ctype, stmts):
         pickle.dump(stmts, fh)
 
 
-def upload_prior(ctype, config):
+def upload_prior(ctype, config, gene_names):
     fname = f'../models/{ctype}/prior_stmts.pkl'
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
-    estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [],
-                             {'internal': True})
-              for stmt in stmts]
+    estmts = get_emmaa_statements(stmts, gene_names)
     model = EmmaaModel(ctype, config)
     model.add_statements(estmts)
     model.update_to_ndex()
