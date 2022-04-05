@@ -199,7 +199,7 @@ def check_stmt(stmt, conditions, evid_policy='any'):
             metadata = emmaa_anns.get('metadata')
             checks = []
             for key, value in conditions.items():
-                checks.append(metadata[key] == value)
+                checks.append(key in metadata and metadata[key] == value)
             evid_checks.append(all(checks))
             if all(checks) and evid_policy == 'any':
                 break
