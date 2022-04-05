@@ -33,6 +33,7 @@ class EmmaaStatement(object):
             are meant to aid explanation construction but are not internal to
             the model.
     """
+
     def __init__(
         self,
         stmt: Statement,

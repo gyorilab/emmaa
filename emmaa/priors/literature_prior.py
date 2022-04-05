@@ -288,7 +288,6 @@ def make_search_terms(
         search_terms.append(search_term)
     for mesh_id in mesh_ids:
         mesh_name = mesh_client.get_mesh_name(mesh_id)
-        # TODO explicitly handle mesh_id.startswith("C")?
         suffix = 'mh' if mesh_id.startswith('D') else 'nm'
         search_term = SearchTerm(type='mesh', name=mesh_name,
                                  db_refs={'MESH': mesh_id},
