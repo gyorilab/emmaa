@@ -15,8 +15,9 @@ def generate_model(model_name):
     tp = trips.process_text('BRAF activates MAP2K1. '
                             'Active MAP2K1 activates MAPK1.')
     indra_stmts = tp.statements
-    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1')
-                    for stmt in indra_stmts]
+    emmaa_stmts = [EmmaaStatement(stmt, datetime.datetime.now(), 'MAPK1',
+                                  {'internal': True})
+                   for stmt in indra_stmts]
     # Create a CXAssembled model, upload to NDEx and retrieve key
     #cxa = CxAssembler(indra_stmts)
     #cxa.make_model()

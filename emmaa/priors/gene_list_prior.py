@@ -54,11 +54,18 @@ class GeneListPrior(object):
 
     def make_gene_statements(self):
         """Generate Statements from the gene list."""
+
+        def is_internal(stmt):
+            # If all the agents are gene names, this is an internal statement.
+            # We classify any statements with drugs in them as external.
+            return all([a.name in self.gene_list
+                        for a in stmt.real_agent_list()])
+
         drug_names = [st.name for st in self.search_terms if
                       st.type == 'drug']
         indra_stmts = get_stmts_for_gene_list(self.gene_list, drug_names)
         estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [],
-                                 {'internal': True})
+                                 {'internal': is_internal(stmt)})
                   for stmt in indra_stmts]
         self.stmts = estmts
 
