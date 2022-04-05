@@ -1,26 +1,42 @@
 import logging
-from indra_db import client
-from indra.tools import assemble_corpus as ac
+from typing import List
 
+from indra.databases import hgnc_client
+from indra.statements import Statement, stmts_from_json
+from indra.tools import assemble_corpus as ac
+from indra_db.client.principal import get_raw_stmt_jsons_from_agents
+
+__all__ = [
+    "get_stmts_for_gene",
+    "get_stmts_for_gene_list",
+]
 
 logger = logging.getLogger(__name__)
 
 
-def get_stmts_for_gene(gene):
+def get_stmts_for_gene(gene: str, max_stmts: int = 100000) -> List[Statement]:
     """Return all existing Statements for a given gene from the DB.
 
     Parameters
     ----------
-    gene : str
+    gene :
         The HGNC symbol of a gene to query.
+    max_stmts:
+        The maximum number of statements to return
 
     Returns
     -------
-    list[indra.statements.Statement]
+    :
         A list of INDRA Statements in which the given gene is involved.
     """
-    return client.get_statements_by_gene_role_type(gene, preassembled=False,
-                                                   count=100000)
+    hgnc_id = hgnc_client.get_current_hgnc_id(gene)
+    if hgnc_id is None:
+        return []
+    agents = [
+        (None, hgnc_id, "HGNC"),
+    ]
+    res = get_raw_stmt_jsons_from_agents(agents=agents, max_stmts=max_stmts)
+    return stmts_from_json(res.values())
 
 
 def get_stmts_for_gene_list(gene_list, other_entities):
