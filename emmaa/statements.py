@@ -84,7 +84,12 @@ def to_emmaa_stmts(
     logger.info(f'Making {len(stmt_list)} EMMAA statements with metadata: '
                 f'{metadata}')
     for indra_stmt in stmt_list:
-        es = EmmaaStatement(indra_stmt, date, search_terms, metadata)
+        es = EmmaaStatement(
+            indra_stmt,
+            date=date,
+            search_terms=search_terms,
+            metadata=metadata,
+        )
         emmaa_stmts.append(es)
     return emmaa_stmts
 

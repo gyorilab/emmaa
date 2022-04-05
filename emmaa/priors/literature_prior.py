@@ -12,6 +12,9 @@ literature searches. Example:
     model = lp.make_model(estmts, upload_to_s3=True)
 
 """
+
+from typing import List
+
 import tqdm
 import logging
 import datetime
@@ -34,7 +37,7 @@ class LiteraturePrior:
     def __init__(self, name, human_readable_name, description,
                  search_strings=None, mesh_ids=None,
                  assembly_config_template=None):
-        """A class to construct a literture-based prior for an EMMAA model.
+        """A class to construct a literature-based prior for an EMMAA model.
 
         Parameters
         ----------
@@ -58,12 +61,13 @@ class LiteraturePrior:
         self.human_readable_name = human_readable_name
         self.description = description
         self.search_terms = \
-            make_search_terms(search_strings, mesh_ids)
+            make_search_terms(search_strings or [], mesh_ids or [])
         if assembly_config_template:
             self.assembly_config = \
                 self.get_config_from(assembly_config_template)
         else:
             self.assembly_config = {}
+        self.stmts = []
 
     def get_statements(self, mode='all', batch_size=100):
         """Return EMMAA Statements for this prior's literature set.
@@ -85,6 +89,8 @@ class LiteraturePrior:
             A list of EMMAA Statements corresponding to extractions from
             the subset of literature defined by this prior's search terms.
         """
+        if self.stmts:
+            return self.stmts
         terms_to_pmids = \
             EmmaaModel.search_pubmed(search_terms=self.search_terms,
                                      date_limit=None)
@@ -98,13 +104,12 @@ class LiteraturePrior:
             get_raw_statements_for_pmids(all_pmids, mode=mode,
                                          batch_size=batch_size)
         timestamp = datetime.datetime.now()
-        estmts = []
         for pmid, stmts in raw_statements_by_pmid.items():
             for stmt in stmts:
-                estmts.append(EmmaaStatement(stmt, timestamp,
-                                             pmids_to_terms[pmid],
-                                             {'internal': True}))
-        return estmts
+                self.stmts.append(EmmaaStatement(stmt, timestamp,
+                                                 pmids_to_terms[pmid],
+                                                 {'internal': True}))
+        return self.stmts
 
     def get_config_from(self, assembly_config_template):
         """Return assembly config given a template model's name.
@@ -144,7 +149,7 @@ class LiteraturePrior:
             'description': self.description,
             # We don't make tests by default
             'make_tests': False,
-            # We run daily upates by default
+            # We run daily updates by default
             'run_daily_update': True,
             # We first show the model just on dev
             'dev_only': True,
@@ -152,9 +157,6 @@ class LiteraturePrior:
             # initialization
             'search_terms': [st.to_json()
                              for st in self.search_terms],
-            # This is adopted from the template specified upon
-            # initialization
-            'assembly': self.assembly_config,
             # We configure the large corpus tests by default
             'test': {
                 'statement_checking': {
@@ -172,6 +174,11 @@ class LiteraturePrior:
                 }
             }
         }
+        # This is adopted from the template specified upon
+        # initialization
+        if self.assembly_config:
+            config["assembly"] = self.assembly_config
+
         if upload_to_s3:
             from emmaa.model import save_config_to_s3
             save_config_to_s3(self.name, config)
@@ -251,24 +258,29 @@ def get_raw_statements_for_pmids(pmids, mode='all', batch_size=100):
     return all_stmts
 
 
-def make_search_terms(search_strings, mesh_ids):
+def make_search_terms(
+    search_strings: List[str],
+    mesh_ids: List[str],
+) -> List[SearchTerm]:
     """Return EMMAA SearchTerms based on search strings and MeSH IDs.
 
     Parameters
     ----------
-    search_strings : list of str
+    search_strings :
         A list of search strings e.g., "diabetes" to find papers in the
         literature.
-    mesh_ids : list of str
+    mesh_ids :
         A list of MeSH IDs that are used to search the literature as headings
         associated with papers.
 
     Returns
     -------
-    list of emmmaa.prior.SearchTerm
+    :
         A list of EMMAA SearchTerm objects constructed from the search strings
         and the MeSH IDs.
     """
+    if not search_strings and not mesh_ids:
+        raise ValueError("Need at least one of search_strings or mesh_ids")
     search_terms = []
     for search_string in search_strings:
         search_term = SearchTerm(type='other', name=search_string,
@@ -282,4 +294,3 @@ def make_search_terms(search_strings, mesh_ids):
                                  search_term=f'{mesh_name} [{suffix}]')
         search_terms.append(search_term)
     return search_terms
-
