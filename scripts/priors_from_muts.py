@@ -42,15 +42,26 @@ def save_prior(ctype, stmts):
         pickle.dump(stmts, fh)
 
 
-def upload_prior(ctype, config):
+def upload_prior(ctype, config, gene_names):
     fname = f'../models/{ctype}/prior_stmts.pkl'
     with open(fname, 'rb') as fh:
         stmts = pickle.load(fh)
-    estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [])
-              for stmt in stmts]
+    estmts = get_emmaa_statements(stmts, gene_names)
     model = EmmaaModel(ctype, config)
     model.add_statements(estmts)
     model.update_to_ndex()
+
+
+def get_emmaa_statements(stmts, gene_names):
+    def is_internal(stmt):
+        # If all the agents are gene names, this is an internal statement.
+        # We classify any statements with drugs in them as external.
+        return all([a.name in gene_names for a in stmt.real_agent_list()])
+
+    estmts = [EmmaaStatement(stmt, datetime.datetime.now(), [],
+                             {'internal': is_internal(stmt)})
+              for stmt in stmts]
+    return estmts
 
 
 if __name__ == '__main__':

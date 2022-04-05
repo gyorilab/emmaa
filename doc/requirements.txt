@@ -1,5 +1,6 @@
 sphinx
 sphinx_rtd_theme
+sphinx_autodoc_typehints
 mock
 boto3
 git+https://github.com/sorgerlab/indra.git

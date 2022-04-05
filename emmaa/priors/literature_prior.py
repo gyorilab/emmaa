@@ -102,7 +102,8 @@ class LiteraturePrior:
         for pmid, stmts in raw_statements_by_pmid.items():
             for stmt in stmts:
                 estmts.append(EmmaaStatement(stmt, timestamp,
-                                             pmids_to_terms[pmid]))
+                                             pmids_to_terms[pmid],
+                                             {'internal': True}))
         return estmts
 
     def get_config_from(self, assembly_config_template):
