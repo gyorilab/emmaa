@@ -77,14 +77,18 @@ def test_filter_indra_stmts():
     stmt7 = make_stmt_with_evid_anns([None, False])  # Filter false or unknown
     stmt8 = make_stmt_with_evid_anns([False, False])  # Only false anns
 
+    stmt9 = make_stmt_with_evid_anns([False])
+    del stmt9.evidence[0].annotations["emmaa"]["metadata"]["internal"]
+
     conditions = {'internal': True}
-    stmts = [stmt1, stmt2, stmt3, stmt4, stmt5, stmt6, stmt7, stmt8]
+    stmts = [stmt1, stmt2, stmt3, stmt4, stmt5, stmt6, stmt7, stmt8, stmt9]
 
     filtered_any = filter_indra_stmts_by_metadata(stmts, conditions, 'any')
     assert len(filtered_any) == 5
     assert stmt6 not in filtered_any
     assert stmt7 not in filtered_any
     assert stmt8 not in filtered_any
+    assert stmt9 not in filtered_any
     # Mixed is not filtered
     assert stmt5 in filtered_any
 
