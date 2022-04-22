@@ -179,7 +179,7 @@ body {
     border-radius: 5px 5px 5px 0;
     font-size: 14px;
     color: #fff;
-    background: #adb5bd;
+    background-color: #adb5bd;
     margin-bottom: 10px;
 }
 .chatbubble .messages li .sender {
