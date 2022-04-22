@@ -171,22 +171,26 @@ body {
     margin: 0 0 50px;
     padding: 0;
 }
+/* User chat bubble */
 .chatbubble .messages li {
     width: 85%;
     float: left;
     padding: 10px;
     border-radius: 5px 5px 5px 0;
     font-size: 14px;
-    background: #c9f1e6;
+    color: #fff;
+    background-color: #adb5bd;
     margin-bottom: 10px;
 }
 .chatbubble .messages li .sender {
     font-weight: 600;
 }
+/* Clare chat bubble */
 .chatbubble .messages li.support {
     float: right;
     text-align: left;
-    background-color: #faf099;
+    color: #212529;
+    background-color: #e9ecef;
     border-radius: 5px 5px 0 5px;
 }
 .chatbubble .chats .input {
