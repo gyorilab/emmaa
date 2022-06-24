@@ -421,3 +421,37 @@ def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
     msg = f'{start}{delta_part}{middle}. See {url} for more details.'
     return {'url': url, 'start': start, 'delta_part': delta_part,
             'middle': middle, 'message': msg}
+
+
+def s3_put(
+    bucket: str,
+    key: str,
+    obj: bytes,
+    unsigned_client: bool,
+    intelligent_tiering: bool = False,
+    **s3_options
+):
+    """A wrapper around boto3's put_object method.
+
+    Parameters
+    ----------
+    bucket :
+        The S3 bucket to put the object in.
+    key :
+        The key to put the object in.
+    obj :
+        The object to put as a bytestring.
+    unsigned_client :
+        Whether to use an unsigned client.
+    intelligent_tiering :
+        Whether to use intelligent tiering. Default is False.
+    s3_options :
+        Additional options to pass to the put_object method. If there are
+        any duplicate keys, the explicit values set in the parameters will
+        override the values set in the s3_options.
+    """
+    client = get_s3_client(unsigned=unsigned_client)
+    options = {**s3_options, **{'Body': obj, 'Bucket': bucket, 'Key': key}}
+    if intelligent_tiering:
+        options['StorageClass'] = 'INTELLIGENT_TIERING'
+    client.put_object(**options)
