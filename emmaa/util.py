@@ -11,7 +11,7 @@ from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
 from botocore import UNSIGNED
-from botocore.client import Config
+from botocore.client import Config, ClientError
 from inflection import camelize
 from zipfile import ZipFile
 from indra.util.aws import get_s3_file_tree, get_date_from_str, iter_s3_keys
@@ -460,14 +460,21 @@ def s3_put(
     client.put_object(**options)
 
 
-def s3_head_object(bucket, key, unsigned_client=False) -> Dict[str, Any]:
+def s3_head_object(bucket: str, key: str, unsigned_client: bool = False) -> \
+        Dict[str, Any]:
     client = get_s3_client(unsigned=unsigned_client)
     try:
         return client.head_object(Bucket=bucket, Key=key)
-    except Exception as err:
-        logger.error(err)
-        logger.error(f'Error checking object {key} from bucket {bucket} with '
-                     f's3.head_object')
+    except ClientError as err:
+        if err.response['Error']['Code'] == 'NoSuchKey':
+            logger.error(f'key {key} not in S3')
+            raise KeyError(key) from err
+        else:
+            logger.error(err)
+            logger.error(
+                f'Error checking object {key} from bucket {bucket} with s3.head_object'
+            )
+            raise err
 
 
 def get_s3_object_archive_status(bucket, key, unsigned_client=False) -> Dict[str, bool]:
