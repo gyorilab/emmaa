@@ -426,7 +426,7 @@ def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
 def s3_put(
     bucket: str,
     key: str,
-    obj: bytes,
+    body: bytes,
     unsigned_client: bool,
     intelligent_tiering: bool = False,
     **s3_options
@@ -439,8 +439,9 @@ def s3_put(
         The S3 bucket to put the object in.
     key :
         The key to put the object in.
-    obj :
-        The object to put as a bytestring.
+    body :
+        The bytestring representation of an object to put in a body as a
+        bytestring.
     unsigned_client :
         Whether to use an unsigned client.
     intelligent_tiering :
@@ -451,7 +452,7 @@ def s3_put(
         override the values set in the s3_options.
     """
     client = get_s3_client(unsigned=unsigned_client)
-    options = {**s3_options, **{'Body': obj, 'Bucket': bucket, 'Key': key}}
+    options = {**s3_options, **{'Body': body, 'Bucket': bucket, 'Key': key}}
     if intelligent_tiering:
         options['StorageClass'] = 'INTELLIGENT_TIERING'
     client.put_object(**options)
