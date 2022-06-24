@@ -477,7 +477,7 @@ def s3_head_object(bucket: str, key: str, unsigned_client: bool = False) -> \
             raise err
 
 
-def get_s3_object_archive_status(bucket, key, unsigned_client=False) -> Dict[str, bool]:
+def get_s3_archive_status(bucket, key, unsigned_client=False) -> Dict[str, bool]:
     # See more details about the HeadObject status response here:
     # https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
     head_resp = s3_head_object(bucket=bucket, key=key,
