@@ -283,12 +283,12 @@ def load_pickle_from_s3(bucket, key):
         logger.info(e)
 
 
-def save_pickle_to_s3(obj, bucket, key):
-    client = get_s3_client(unsigned=False)
+def save_pickle_to_s3(obj, bucket, key, intelligent_tiering=True):
     logger.info('Pickling object')
     obj_str = pickle.dumps(obj, protocol=4)
     logger.info(f'Saving object to {key}')
-    client.put_object(Body=obj_str, Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=obj_str, unsigned_client=False,
+           intelligent_tiering=intelligent_tiering)
 
 
 def load_json_from_s3(bucket, key):
@@ -299,12 +299,12 @@ def load_json_from_s3(bucket, key):
     return content
 
 
-def save_json_to_s3(obj, bucket, key, save_format='json'):
-    client = get_s3_client(unsigned=False)
+def save_json_to_s3(obj, bucket, key, save_format='json',
+                    intelligent_tiering=True):
     json_str = _get_json_str(obj, save_format=save_format)
     logger.info(f'Uploading the {save_format} object to S3')
-    client.put_object(Body=json_str.encode('utf8'),
-                      Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=json_str.encode('utf8'),
+           unsigned_client=False, intelligent_tiering=intelligent_tiering)
 
 
 def load_gzip_json_from_s3(bucket, key):
@@ -325,11 +325,12 @@ def load_gzip_json_from_s3(bucket, key):
     return content
 
 
-def save_gzip_json_to_s3(obj, bucket, key, save_format='json'):
-    client = get_s3_client(unsigned=False)
+def save_gzip_json_to_s3(obj, bucket, key, save_format='json',
+                         intelligent_tiering=True):
     json_str = _get_json_str(obj, save_format=save_format)
     gz_str = gzip_string(json_str, f'assembled_stmts.{save_format}')
-    client.put_object(Body=gz_str, Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=gz_str, unsigned_client=False,
+           intelligent_tiering=intelligent_tiering)
 
 
 def _get_json_str(json_obj, save_format='json'):
