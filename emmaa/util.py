@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Dict, Any
 import boto3
 import logging
 import json
@@ -457,3 +458,44 @@ def s3_put(
     if intelligent_tiering:
         options['StorageClass'] = 'INTELLIGENT_TIERING'
     client.put_object(**options)
+
+
+def s3_head_object(bucket, key, unsigned_client=False) -> Dict[str, Any]:
+    client = get_s3_client(unsigned=unsigned_client)
+    try:
+        return client.head_object(Bucket=bucket, Key=key)
+    except Exception as err:
+        logger.error(err)
+        logger.error(f'Error checking object {key} from bucket {bucket} with '
+                     f's3.head_object')
+
+
+def get_s3_object_archive_status(bucket, key, unsigned_client=False) -> Dict[str, bool]:
+    # See more details about the HeadObject status response here:
+    # https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
+    head_resp = s3_head_object(bucket=bucket, key=key,
+                               unsigned_client=unsigned_client)
+
+    is_in_intelligent_tiering = False
+    is_archived = False
+
+    if head_resp:
+        try:
+            # Look 'ResponseMetadata' -> 'HTTPHeaders' -> 'x-amz-archive-status'
+            is_in_intelligent_tiering = \
+                head_resp['ResponseMetadata']['HTTPHeaders']['x-amz-storage-class'] == 'INTELLIGENT_TIERING'
+        except KeyError:
+            pass
+        if is_in_intelligent_tiering:
+            # Find 'ResponseMetadata' -> 'HTTPHeaders' -> 'x-amz-storage-class'
+            # Options are: ARCHIVE_ACCESS | DEEP_ARCHIVE_ACCESS
+            try:
+                archive_status = head_resp['ResponseMetadata']['HTTPHeaders']['x-amz-archive-status']
+                is_archived = \
+                    'ARCHIVE_ACCESS' == archive_status or \
+                    'DEEP_ARCHIVE_ACCESS' == archive_status
+            except KeyError:
+                pass
+
+    return {'intelligent_tiering': is_in_intelligent_tiering,
+            'archived': is_archived}
