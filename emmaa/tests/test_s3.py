@@ -137,7 +137,7 @@ def test_last_updated():
     assert key_str
     assert re.search(RE_DATETIMEFORMAT, key_str).group()
     key_str = last_updated_date(
-        'test', 'test_stats', 'datetime', 'simple_tests', 
+        'test', 'test_stats', 'datetime', 'simple_tests',
         extension='.json', bucket=TEST_BUCKET_NAME)
     assert key_str
     assert re.search(RE_DATETIMEFORMAT, key_str).group()
@@ -384,3 +384,23 @@ def test_util_find_on_s3_functions():
         TEST_BUCKET_NAME, 'results/test/results_') == 1
     assert find_number_of_files_on_s3(
         TEST_BUCKET_NAME, 'results/test/', '.json') == 1
+
+
+@mock_s3
+def test_util_s3_intelligent_tiering():
+    from emmaa.util import save_json_to_s3, get_s3_client, get_s3_archive_status
+    # Generate a file that's larger than 128kB
+    large_file = ''.join(['a' for i in range(1024 * 129)])
+    # Put it in a dict in order to serialize it as JSON
+    large_file_dict = {'large_file': large_file}
+    # Save it to S3
+    client = get_s3_client()
+    bucket = client.create_bucket(Bucket=TEST_BUCKET_NAME, ACL='public-read')
+    key = 'intelligent_tiering_test/large_file.json'
+    save_json_to_s3(obj=large_file_dict, bucket=TEST_BUCKET_NAME, key=key,
+                    intelligent_tiering=True)
+
+    # Check the archive status
+    status = get_s3_archive_status(TEST_BUCKET_NAME, key)
+    assert status['intelligent_tiering'] is True
+    assert status['archived'] is False

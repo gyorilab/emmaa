@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Dict, Any
 import boto3
 import logging
 import json
@@ -10,7 +11,7 @@ from flask import Flask
 from pathlib import Path
 from datetime import datetime, timedelta
 from botocore import UNSIGNED
-from botocore.client import Config
+from botocore.client import Config, ClientError
 from inflection import camelize
 from zipfile import ZipFile
 from indra.util.aws import get_s3_file_tree, get_date_from_str, iter_s3_keys
@@ -283,12 +284,12 @@ def load_pickle_from_s3(bucket, key):
         logger.info(e)
 
 
-def save_pickle_to_s3(obj, bucket, key):
-    client = get_s3_client(unsigned=False)
+def save_pickle_to_s3(obj, bucket, key, intelligent_tiering=True):
     logger.info('Pickling object')
     obj_str = pickle.dumps(obj, protocol=4)
     logger.info(f'Saving object to {key}')
-    client.put_object(Body=obj_str, Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=obj_str, unsigned_client=False,
+           intelligent_tiering=intelligent_tiering)
 
 
 def load_json_from_s3(bucket, key):
@@ -299,12 +300,12 @@ def load_json_from_s3(bucket, key):
     return content
 
 
-def save_json_to_s3(obj, bucket, key, save_format='json'):
-    client = get_s3_client(unsigned=False)
+def save_json_to_s3(obj, bucket, key, save_format='json',
+                    intelligent_tiering=True):
     json_str = _get_json_str(obj, save_format=save_format)
     logger.info(f'Uploading the {save_format} object to S3')
-    client.put_object(Body=json_str.encode('utf8'),
-                      Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=json_str.encode('utf8'),
+           unsigned_client=False, intelligent_tiering=intelligent_tiering)
 
 
 def load_gzip_json_from_s3(bucket, key):
@@ -325,11 +326,12 @@ def load_gzip_json_from_s3(bucket, key):
     return content
 
 
-def save_gzip_json_to_s3(obj, bucket, key, save_format='json'):
-    client = get_s3_client(unsigned=False)
+def save_gzip_json_to_s3(obj, bucket, key, save_format='json',
+                         intelligent_tiering=True):
     json_str = _get_json_str(obj, save_format=save_format)
     gz_str = gzip_string(json_str, f'assembled_stmts.{save_format}')
-    client.put_object(Body=gz_str, Bucket=bucket, Key=key)
+    s3_put(bucket=bucket, key=key, body=gz_str, unsigned_client=False,
+           intelligent_tiering=intelligent_tiering)
 
 
 def _get_json_str(json_obj, save_format='json'):
@@ -421,3 +423,86 @@ def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
     msg = f'{start}{delta_part}{middle}. See {url} for more details.'
     return {'url': url, 'start': start, 'delta_part': delta_part,
             'middle': middle, 'message': msg}
+
+
+def s3_put(
+    bucket: str,
+    key: str,
+    body: bytes,
+    unsigned_client: bool,
+    intelligent_tiering: bool = False,
+    **s3_options
+):
+    """A wrapper around boto3's put_object method.
+
+    Parameters
+    ----------
+    bucket :
+        The S3 bucket to put the object in.
+    key :
+        The key to put the object in.
+    body :
+        The bytestring representation of an object to put in a body as a
+        bytestring.
+    unsigned_client :
+        Whether to use an unsigned client.
+    intelligent_tiering :
+        Whether to use intelligent tiering. Default is False.
+    s3_options :
+        Additional options to pass to the put_object method. If there are
+        any duplicate keys, the explicit values set in the parameters will
+        override the values set in the s3_options.
+    """
+    client = get_s3_client(unsigned=unsigned_client)
+    options = {**s3_options, **{'Body': body, 'Bucket': bucket, 'Key': key}}
+    if intelligent_tiering:
+        options['StorageClass'] = 'INTELLIGENT_TIERING'
+    client.put_object(**options)
+
+
+def s3_head_object(bucket: str, key: str, unsigned_client: bool = False) -> \
+        Dict[str, Any]:
+    client = get_s3_client(unsigned=unsigned_client)
+    try:
+        return client.head_object(Bucket=bucket, Key=key)
+    except ClientError as err:
+        if err.response['Error']['Code'] == 'NoSuchKey':
+            logger.error(f'key {key} not in S3')
+            raise KeyError(key) from err
+        else:
+            logger.error(err)
+            logger.error(
+                f'Error checking object {key} from bucket {bucket} with s3.head_object'
+            )
+            raise err
+
+
+def get_s3_archive_status(bucket, key, unsigned_client=False) -> Dict[str, bool]:
+    # See more details about the HeadObject status response here:
+    # https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
+    head_resp = s3_head_object(bucket=bucket, key=key,
+                               unsigned_client=unsigned_client)
+
+    is_in_intelligent_tiering = False
+    is_archived = False
+
+    if head_resp:
+        try:
+            # Look 'ResponseMetadata' -> 'HTTPHeaders' -> 'x-amz-archive-status'
+            is_in_intelligent_tiering = \
+                head_resp['ResponseMetadata']['HTTPHeaders']['x-amz-storage-class'] == 'INTELLIGENT_TIERING'
+        except KeyError:
+            pass
+        if is_in_intelligent_tiering:
+            # Find 'ResponseMetadata' -> 'HTTPHeaders' -> 'x-amz-storage-class'
+            # Options are: ARCHIVE_ACCESS | DEEP_ARCHIVE_ACCESS
+            try:
+                archive_status = head_resp['ResponseMetadata']['HTTPHeaders']['x-amz-archive-status']
+                is_archived = \
+                    'ARCHIVE_ACCESS' == archive_status or \
+                    'DEEP_ARCHIVE_ACCESS' == archive_status
+            except KeyError:
+                pass
+
+    return {'intelligent_tiering': is_in_intelligent_tiering,
+            'archived': is_archived}
