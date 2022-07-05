@@ -455,7 +455,9 @@ def s3_put(
     """
     client = get_s3_client(unsigned=unsigned_client)
     options = {**s3_options, **{'Body': body, 'Bucket': bucket, 'Key': key}}
-    if intelligent_tiering:
+    # Check if intelligent tiering is enabled and that the object is larger
+    # than 128 KB
+    if intelligent_tiering and len(body) > 128 * 1024:
         options['StorageClass'] = 'INTELLIGENT_TIERING'
     client.put_object(**options)
 
