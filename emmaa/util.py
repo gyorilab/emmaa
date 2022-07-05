@@ -447,11 +447,14 @@ def s3_put(
     unsigned_client :
         Whether to use an unsigned client.
     intelligent_tiering :
-        Whether to use intelligent tiering. Default is False.
+        Whether to use intelligent tiering. Default is False. If the object
+        is smaller than 128 KB, it will be stored in the Standard tier
+        regardless of value of `intelligent_tiering`.
     s3_options :
-        Additional options to pass to the put_object method. If there are
-        any duplicate keys, the explicit values set in the parameters will
-        override the values set in the s3_options.
+        Additional options to pass to the put_object method. If there are any
+        duplicate values between the function parameters and the keys of
+        s3_options, the values set in the parameters take precedence to the
+        values set in the s3_options dict.
     """
     client = get_s3_client(unsigned=unsigned_client)
     options = {**s3_options, **{'Body': body, 'Bucket': bucket, 'Key': key}}
