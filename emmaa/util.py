@@ -448,7 +448,7 @@ def s3_put(
         Whether to use an unsigned client.
     intelligent_tiering :
         Whether to use intelligent tiering. Default is False. If the object
-        is smaller than 128 KB, it will be stored in the Standard tier
+        is smaller than 128 KB, it will be stored in the default storage class
         regardless of value of `intelligent_tiering`.
     s3_options :
         Additional options to pass to the put_object method. If there are any
