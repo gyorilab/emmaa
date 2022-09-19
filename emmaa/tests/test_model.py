@@ -139,6 +139,7 @@ def test_papers():
     assert len(emmaa_model.paper_ids) == 5
 
 
+@attr("notravis")
 def test_pysb_to_gromet():
     from gromet import Gromet
     emmaa_model = create_model()
