@@ -1159,6 +1159,7 @@ def pysb_to_gromet(pysb_model, model_name, statements=None, fname=None):
     g : automates.script.gromet.gromet.Gromet
         A GroMEt object built from PySB model.
     """
+    raise NotImplementedError("GroMEt has been updated and cannot currently be used")
     from gromet import Gromet, gromet_to_json, \
         Junction, Wire, UidJunction, UidType, UidWire, Relation, \
         UidBox, UidGromet, Literal, Val
