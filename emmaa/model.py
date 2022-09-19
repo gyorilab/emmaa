@@ -135,6 +135,9 @@ class EmmaaModel(object):
         if 'human_readable_name' in config:
             self.human_readable_name = config['human_readable_name']
         self.export_formats = config.get('export_formats', [])
+        # todo: remove this temporary fix when GroMEt works again
+        if "gromet" in self.export_formats:
+            self.export_formats.remove("gromet")
 
     def search_literature(self, lit_source, date_limit=None):
         """Search for the model's search terms in the literature.
