@@ -18,7 +18,7 @@ PROJECT = 'aske'
 BRANCH = 'origin/master'
 # Specify the models that require more resources and need to be run in a
 # different queue with a different job definition.
-LARGE_MODELS = {'covid19'}
+LARGE_MODELS = {'covid19', 'painmachine'}
 
 
 def submit_batch_job(script_command, purpose, job_name, wait_for=None,
