@@ -430,7 +430,7 @@ def s3_put(
     key: str,
     body: bytes,
     unsigned_client: bool,
-    intelligent_tiering: bool = False,
+    intelligent_tiering: bool = True,
     **s3_options
 ):
     """A wrapper around boto3's put_object method.
@@ -447,15 +447,20 @@ def s3_put(
     unsigned_client :
         Whether to use an unsigned client.
     intelligent_tiering :
-        Whether to use intelligent tiering. Default is False.
+        Whether to use intelligent tiering. Default is True. If the object
+        is smaller than 128 KB, it will be stored in the default storage class
+        regardless of value of `intelligent_tiering`.
     s3_options :
-        Additional options to pass to the put_object method. If there are
-        any duplicate keys, the explicit values set in the parameters will
-        override the values set in the s3_options.
+        Additional options to pass to the put_object method. If there are any
+        duplicate values between the function parameters and the keys of
+        s3_options, the values set in the parameters take precedence to the
+        values set in the s3_options dict.
     """
     client = get_s3_client(unsigned=unsigned_client)
     options = {**s3_options, **{'Body': body, 'Bucket': bucket, 'Key': key}}
-    if intelligent_tiering:
+    # Check if intelligent tiering is enabled and that the object is larger
+    # than 128 KB
+    if intelligent_tiering and len(body) > 128 * 1024:
         options['StorageClass'] = 'INTELLIGENT_TIERING'
     client.put_object(**options)
 
