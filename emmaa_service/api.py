@@ -21,7 +21,7 @@ from pusher import pusher
 from sqlalchemy.sql.sqltypes import String
 
 from indra_db.exceptions import BadHashError
-from indra_db import get_db
+from indra_db import get_db as get_indra_db
 from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, Agent, \
@@ -1481,7 +1481,7 @@ def annotate_paper_statements(model):
     if paper_id_type == 'TRID':
         trid = paper_id
     else:
-        db = get_db('primary')
+        db = get_indra_db('primary')
         trids = _get_trids(db, paper_id, paper_id_type.lower())
         if trids:
             trid = str(trids[0])
@@ -1547,7 +1547,7 @@ def get_paper_statements(model):
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
-        db = get_db('primary')
+        db = get_indra_db('primary')
         trids = _get_trids(db, paper_id, paper_id_type.lower())
         if trids:
             trid = str(trids[0])
