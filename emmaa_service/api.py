@@ -913,7 +913,7 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     json_link = f'/evidence?{url_param}'
     path_count = 0
     if path_counts:
-        path_count = path_counts.get(stmt_hash)
+        path_count = path_counts.get(stmt_hash, 0)
     neg = len([ev for ev in stmt.evidence if ev.epistemics.get('negated')])
     badges = _make_badges(evid_count, json_link, path_count,
                           round(stmt.belief, 2),
