@@ -21,7 +21,7 @@ from pusher import pusher
 from sqlalchemy.sql.sqltypes import String
 
 from indra_db.exceptions import BadHashError
-from indra_db import get_db
+from indra_db import get_db as get_indra_db
 from indra_db.util import _get_trids
 from indra.statements import get_all_descendants, IncreaseAmount, \
     DecreaseAmount, Activation, Inhibition, AddModification, Agent, \
@@ -896,8 +896,11 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     evid_count = len(stmt.evidence)
     evid = []
     if with_evid and cur_dict is not None:
-        evid = json.loads(json.dumps(_format_evidence_text(
-            stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis'])))[:10]
+        evid = json.dumps(
+            _format_evidence_text(
+                stmt, cur_dict, ['correct', 'act_vs_amt', 'hypothesis']
+            )[:10]
+        )
     params = {'stmt_hash': stmt_hash, 'source': source, 'model': model,
               'format': 'json', 'date': date}
     if test_corpus:
@@ -910,13 +913,15 @@ def _get_stmt_row(stmt, source, model, cur_counts, date, test_corpus=None,
     json_link = f'/evidence?{url_param}'
     path_count = 0
     if path_counts:
-        path_count = path_counts.get(stmt_hash)
+        path_count = path_counts.get(stmt_hash, 0)
     neg = len([ev for ev in stmt.evidence if ev.epistemics.get('negated')])
     badges = _make_badges(evid_count, json_link, path_count,
                           round(stmt.belief, 2),
                           cur_counts.get(stmt_hash), neg)
     stmt_row = [
-        (stmt.get_hash(refresh=True), english, evid, evid_count, badges)]
+        (stmt.get_hash(refresh=True), english,
+         evid, evid_count, json.dumps(badges))
+    ]
     return stmt_row
 
 
@@ -1476,7 +1481,7 @@ def annotate_paper_statements(model):
     if paper_id_type == 'TRID':
         trid = paper_id
     else:
-        db = get_db('primary')
+        db = get_indra_db('primary')
         trids = _get_trids(db, paper_id, paper_id_type.lower())
         if trids:
             trid = str(trids[0])
@@ -1542,7 +1547,7 @@ def get_paper_statements(model):
     if paper_id_type.upper() == 'TRID':
         trid = paper_id
     else:
-        db = get_db('primary')
+        db = get_indra_db('primary')
         trids = _get_trids(db, paper_id, paper_id_type.lower())
         if trids:
             trid = str(trids[0])
