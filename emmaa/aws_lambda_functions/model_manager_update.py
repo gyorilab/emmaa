@@ -17,7 +17,7 @@ PURPOSE = 'update-emmaa-model-manager'
 BRANCH = 'origin/master'
 # Specify the models that require more resources and need to be run in a
 # different queue with a different job definition.
-LARGE_MODELS = {'covid19', 'brca', 'rasmachine', 'painmachine'}
+LARGE_MODELS = {'covid19', 'brca', 'rasmachine', 'painmachine', 'nf'}
 
 
 def lambda_handler(event, context):
