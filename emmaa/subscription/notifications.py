@@ -581,6 +581,8 @@ def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
 
     # Follows instructions from Tweepy for API v2 -> Create Tweet
     # https://docs.tweepy.org/en/v4.6.0/examples.html
+    # See also the OAuth 1.0a authentication documentation for the Twitter API
+    # https://developer.twitter.com/en/docs/authentication/oauth-1-0a/api-key-and-secret
     import tweepy
     tweepy_client = tweepy.Client(
         consumer_key=consumer_key,
