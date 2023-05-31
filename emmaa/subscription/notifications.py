@@ -536,7 +536,7 @@ def model_update_notify(model_name, test_corpora, date, db,
 def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
     """Assumes tweepy==4.6.0, the last version that supports python 3.6
 
-    This is the Python version running the emmaa service
+    Python 3.6 is what's running the emmaa service
 
     Parameters
     ----------
@@ -549,10 +549,13 @@ def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
     test_corpora = ["chemical_pain_ctd_tests"]
     date_strf = "%Y-%m-%d"
     prev_day = (datetime.now() - timedelta(days=days_back)).strftime(date_strf)
-    logger.info(f"Looing at {prev_day} for {model_name} updates to tweet")
+    logger.info(f"Looking at {prev_day} for {model_name} updates to tweet")
     bucket = EMMAA_BUCKET_NAME
     config = load_config_from_s3(model_name, bucket)
     twitter_key = config.get('twitter')
+    if not twitter_key:
+        logger.warning(f"No twitter key found for {model_name}")
+        return
     twitter_cred = get_credentials(twitter_key)
     model_stats, test_stats_by_corpus = get_all_stats(
         model_name, test_corpora, prev_day
@@ -562,7 +565,8 @@ def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
     )
     msgs = get_all_update_messages(deltas, is_tweet=True)
     if not msgs:
-        logger.warning("No messages to tweet, pick another day")
+        logger.warning("No messages to tweet, pick another day and/or model")
+        return
 
     consumer_key = twitter_cred['consumer_token']
     assert consumer_key, 'consumer_key is empty'
@@ -573,9 +577,9 @@ def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
     access_token_secret = twitter_cred['access_secret']
     assert access_token_secret, 'access_token_secret is empty'
 
-    logger.info("Using OAuth1a authentication to create an API v2 Client")
+    logger.info("Using OAuth 1.0a API authentication to create a v2 Client")
 
-    # Follows instructions from API v2 -> Create Tweet
+    # Follows instructions from Tweepy for API v2 -> Create Tweet
     # https://docs.tweepy.org/en/v4.6.0/examples.html
     import tweepy
     tweepy_client = tweepy.Client(
