@@ -2,6 +2,7 @@ import logging
 import time
 import os
 from collections import Counter
+from datetime import datetime, timedelta
 
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
     get_credentials, update_status, FORMATTED_TYPE_NAMES
@@ -530,3 +531,63 @@ def model_update_notify(model_name, test_corpora, date, db,
                                  return_email=notifications_return_default,
                                  return_arn=indra_bio_ARN
                                  )
+
+
+def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
+    """Assumes tweepy==4.6.0, the last version that supports python 3.6
+
+    This is the Python version running the emmaa service
+
+    Parameters
+    ----------
+    days_back : int
+        Number of days back to look for updates
+    model_name : str
+        Name of the model to look for updates
+    """
+    twitter_handle = "pain_emmaa"
+    test_corpora = ["chemical_pain_ctd_tests"]
+    date_strf = "%Y-%m-%d"
+    prev_day = (datetime.now() - timedelta(days=days_back)).strftime(date_strf)
+    logger.info(f"Looing at {prev_day} for {model_name} updates to tweet")
+    bucket = EMMAA_BUCKET_NAME
+    config = load_config_from_s3(model_name, bucket)
+    twitter_key = config.get('twitter')
+    twitter_cred = get_credentials(twitter_key)
+    model_stats, test_stats_by_corpus = get_all_stats(
+        model_name, test_corpora, prev_day
+    )
+    deltas = get_model_deltas(
+        model_name, prev_day, model_stats, test_stats_by_corpus
+    )
+    msgs = get_all_update_messages(deltas, is_tweet=True)
+    if not msgs:
+        logger.warning("No messages to tweet, pick another day")
+
+    consumer_key = twitter_cred['consumer_token']
+    assert consumer_key, 'consumer_key is empty'
+    consumer_secret = twitter_cred['consumer_secret']
+    assert consumer_secret, 'consumer_secret is empty'
+    access_token = twitter_cred['access_token']
+    assert access_token, 'access_token is empty'
+    access_token_secret = twitter_cred['access_secret']
+    assert access_token_secret, 'access_token_secret is empty'
+
+    logger.info("Using OAuth1a authentication to create an API v2 Client")
+
+    # Follows instructions from API v2 -> Create Tweet
+    # https://docs.tweepy.org/en/v4.6.0/examples.html
+    import tweepy
+    tweepy_client = tweepy.Client(
+        consumer_key=consumer_key,
+        consumer_secret=consumer_secret,
+        access_token=access_token,
+        access_token_secret=access_token_secret
+    )
+    for msg in msgs:
+        # user_auth=True for OAuth1a, user_auth=False for Bearer token
+        # authentication
+        res = tweepy_client.create_tweet(text=msg["message"], user_auth=True)
+        logger.info(
+            f"Tweet: https://twitter.com/{twitter_handle}/status/{res.data['id']}"
+        )
