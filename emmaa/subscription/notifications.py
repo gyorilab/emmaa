@@ -535,8 +535,8 @@ def model_update_notify(model_name, test_corpora, date, db,
 
 def run_tweepy_oath1_0a_api_v2(days_back: int = 1, model_name="painmachine"):
     """Assumes tweepy==4.6.0, the last version that supports python 3.6
-
-    Python 3.6 is what's running the emmaa service
+    (the python version running the emmaa service), although it seems to
+    work with the latest version of tweepy (4.14.0) as well.
 
     Parameters
     ----------
