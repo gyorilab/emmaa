@@ -324,6 +324,10 @@ def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
         'tests': {}
     }
     for test_corpus, test_stats in test_stats_by_corpus.items():
+        if test_stats is None:
+            logger.info(f"No test stats for {test_corpus}")
+            continue
+
         test_deltas = {}
         test_name = None
         test_data = test_stats['test_round_summary'].get('test_data')
