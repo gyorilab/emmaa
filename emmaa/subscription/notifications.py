@@ -297,7 +297,8 @@ def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
     model_name : str
         A name of the model to get the updates for.
     date : str
-        A date for which the updates should be generated.
+        A date for which the updates should be generated. The
+        format should be "YYYY-MM-DD".
     model_stats : dict
         A dictionary containing the stats for the given model.
     test_stats_by_corpus : dict
@@ -436,7 +437,8 @@ def get_all_stats(model_name, test_corpora, date):
     test_corpora : list[str]
         A list of test corpora names to get the test updates for.
     date : str
-        A date for which the updates should be generated.
+        A date for which the updates should be generated. The
+        format should be "YYYY-MM-DD".
 
     Returns
     -------
