@@ -310,17 +310,19 @@ def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
         A dictionary containing the deltas for the given model and test
         corpora.
     """
-    deltas = {}
-    deltas['model_name'] = model_name
-    deltas['date'] = date
     # Model deltas
     stmts_delta = model_stats['model_delta']['statements_hashes_delta']
     paper_delta = model_stats['paper_delta']['raw_paper_ids_delta']
     new_papers = len(paper_delta['added'])
-    deltas['stmts_delta'] = stmts_delta
-    deltas['new_papers'] = new_papers
+
     # Test deltas
-    deltas['tests'] = {}
+    deltas = {
+        'model_name': model_name,
+        'date': date,
+        'stmts_delta': stmts_delta,
+        'new_papers': new_papers,
+        'tests': {}
+    }
     for test_corpus, test_stats in test_stats_by_corpus.items():
         test_deltas = {}
         test_name = None
