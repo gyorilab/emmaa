@@ -348,8 +348,12 @@ class NotAClassName(Exception):
     pass
 
 
-def get_credentials(key):
-    client = boto3.client('ssm')
+def get_credentials(key, profile_name=None):
+    if profile_name is not None:
+        client = boto3.session.Session(
+            profile_name=profile_name).client('ssm', region_name='us-east-1')
+    else:
+        client = boto3.client('ssm')
     auth_dict = {}
     for par in ['consumer_token', 'consumer_secret', 'access_token',
                 'access_secret']:
@@ -359,7 +363,7 @@ def get_credentials(key):
             val = response['Parameter']['Value']
             auth_dict[par] = val
         except Exception as e:
-            print(e)
+            logger.exception(e)
             break
     return auth_dict
 
