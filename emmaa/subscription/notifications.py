@@ -2,7 +2,6 @@ import logging
 import time
 import os
 from collections import Counter
-from datetime import datetime, timedelta
 
 from emmaa.util import _get_flask_app, _make_delta_msg, EMMAA_BUCKET_NAME, \
     get_credentials, update_status, FORMATTED_TYPE_NAMES
