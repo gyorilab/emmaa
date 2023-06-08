@@ -459,7 +459,9 @@ def get_all_stats(model_name, test_corpora, date):
         test_stats, _ = get_model_stats(model_name, 'test', tests=test_corpus,
                                         date=date)
         if not test_stats:
-            logger.info(f'Could not find test stats for {test_corpus}')
+            logger.info(
+                f"Could not find test stats for {test_corpus} for date {date}"
+            )
         test_stats_by_corpus[test_corpus] = test_stats
     return model_stats, test_stats_by_corpus
 
