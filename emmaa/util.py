@@ -398,15 +398,25 @@ def get_credentials(
 
 
 def update_status(msg, twitter_cred):
-    twitter_client = tweepy.Client(
-        consumer_key=twitter_cred['consumer_token'],
-        consumer_secret=twitter_cred['consumer_secret'],
-        access_token=twitter_cred['access_token'],
-        access_token_secret=twitter_cred['access_secret']
-    )
+    if 'consumer_secret' in twitter_cred and 'access_secret' in twitter_cred:
+        twitter_client = tweepy.Client(
+            consumer_key=twitter_cred['consumer_token'],
+            consumer_secret=twitter_cred['consumer_secret'],
+            access_token=twitter_cred['access_token'],
+            access_token_secret=twitter_cred['access_secret']
+        )
+        user_auth = True
+    elif 'bearer_token' in twitter_cred:
+        twitter_client = tweepy.Client(
+            bearer_token=twitter_cred['bearer_token']
+        )
+        user_auth = False
+    else:
+        raise ValueError('Missing credentials')
+
     # Set user_auth=True when authenticating with consumer key/secret pair
-    # and access token/secret pair
-    return twitter_client.create_tweet(text=msg, user_auth=True)
+    # and access token/secret pair, and False when using bearer token
+    return twitter_client.create_tweet(text=msg, user_auth=user_auth)
 
 
 def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
