@@ -348,15 +348,44 @@ class NotAClassName(Exception):
     pass
 
 
-def get_credentials(key, profile_name=None):
+def get_credentials(
+        key: str, profile_name: str = None, cred_type: str = "oauth1_0a"
+):
+    """Get twitter credentials from AWS SSM
+
+    Parameters
+    ----------
+    key : str
+        The initial key to the credentials in SSM. The full key will be
+        /twitter/{key}/{par} where par is determined by the type of
+        credentials.
+    profile_name : str
+        The name of the AWS profile to use. If None (default), the default
+        profile will be used.
+    cred_type : str
+        The type of credentials to get. Choices are "oauth1_0a" and "bearer".
+        Default: "oauth1_0a". Bearer uses OAuth 2.0.
+
+    Returns
+    -------
+    dict
+        A dictionary with the requested credentials.
+    """
     if profile_name is not None:
         client = boto3.session.Session(
             profile_name=profile_name).client('ssm', region_name='us-east-1')
     else:
         client = boto3.client('ssm')
+    params = ['app_id']
+    if cred_type == 'oauth1_0a':
+        params += ['consumer_token', 'consumer_secret',
+                   'access_token', 'access_secret']
+    elif cred_type == 'bearer':
+        params += ['bearer_token']
+    else:
+        raise ValueError(f'Unknown credential type: {cred_type}')
     auth_dict = {}
-    for par in ['consumer_token', 'consumer_secret', 'access_token',
-                'access_secret']:
+    for par in params:
         name = f'/twitter/{key}/{par}'
         try:
             response = client.get_parameter(Name=name, WithDecryption=True)
