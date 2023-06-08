@@ -383,7 +383,8 @@ def get_credentials(
     elif cred_type == 'bearer':
         params += ['bearer_token']
     else:
-        raise ValueError(f'Unknown credential type: {cred_type}')
+        raise ValueError(f"Unknown credential type: {cred_type}. Must be one "
+                         f"of oath1_0a or bearer.")
     auth_dict = {}
     for par in params:
         name = f'/twitter/{key}/{par}'
