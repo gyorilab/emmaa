@@ -409,7 +409,10 @@ def tweet_deltas(deltas, twitter_cred):
     for msg in msgs:
         update_status(msg['message'], twitter_cred)
         time.sleep(1)
-    logger.info('Done tweeting')
+    if msgs:
+        logger.info(f'Done tweeting {len(msgs)} messages')
+    else:
+        logger.info('No tweets to send')
 
 
 def make_model_html_email(msg_dicts, email, domain='emmaa.indra.bio'):
