@@ -393,7 +393,7 @@ def get_all_update_messages(deltas, is_tweet=False):
     return msg_dicts
 
 
-def tweet_deltas(deltas, twitter_cred):
+def tweet_deltas(deltas, twitter_cred, verbose=False):
     """Tweet the model updates.
 
     Parameters
@@ -404,10 +404,14 @@ def tweet_deltas(deltas, twitter_cred):
     twitter_cred : dict
         A dictionary containing consumer_token, consumer_secret, access_token,
         and access_secret for a model Twitter account.
+    verbose : bool
+        If True, the return from `tweepy.Client.create_tweet` will be printed
     """
     msgs = get_all_update_messages(deltas, is_tweet=True)
     for msg in msgs:
-        update_status(msg['message'], twitter_cred)
+        res = update_status(msg['message'], twitter_cred)
+        if verbose:
+            print(res)
         time.sleep(1)
     if msgs:
         logger.info(f'Done tweeting {len(msgs)} messages')
