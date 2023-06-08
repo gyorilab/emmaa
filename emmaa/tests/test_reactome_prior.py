@@ -29,7 +29,7 @@ def test_get_pathways_containing_genes():
     # Check if function returns a reasonable number of pathways
     assert len(KRAS_pathways) > 3
     # Signaling Downstream of RAS mutants
-    assert 'R-HSA-9649948.1' in KRAS_pathways
+    assert 'R-HSA-9649948.2' in KRAS_pathways
 
 
 def test_get_genes_contained_in_pathway():
