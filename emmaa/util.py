@@ -368,20 +368,16 @@ def get_credentials(key, profile_name=None):
     return auth_dict
 
 
-def get_oauth_dict(auth_dict):
-    oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
-                                auth_dict.get('consumer_secret'))
-    oauth.set_access_token(auth_dict.get('access_token'),
-                           auth_dict.get('access_secret'))
-    return oauth
-
-
 def update_status(msg, twitter_cred):
-    twitter_auth = get_oauth_dict(twitter_cred)
-    if twitter_auth is None:
-        return
-    twitter_api = tweepy.API(twitter_auth)
-    twitter_api.update_status(msg)
+    twitter_client = tweepy.Client(
+        consumer_key=twitter_cred['consumer_token'],
+        consumer_secret=twitter_cred['consumer_secret'],
+        access_token=twitter_cred['access_token'],
+        access_token_secret=twitter_cred['access_secret']
+    )
+    # Set user_auth=True when authenticating with consumer key/secret pair
+    # and access token/secret pair
+    return twitter_client.create_tweet(text=msg, user_auth=True)
 
 
 def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,
