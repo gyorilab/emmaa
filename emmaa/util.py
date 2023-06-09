@@ -348,36 +348,76 @@ class NotAClassName(Exception):
     pass
 
 
-def get_credentials(key):
-    client = boto3.client('ssm')
+def get_credentials(
+        key: str, profile_name: str = None, cred_type: str = "oauth1_0a"
+):
+    """Get twitter credentials from AWS SSM
+
+    Parameters
+    ----------
+    key : str
+        The initial key to the credentials in SSM. The full key will be
+        /twitter/{key}/{par} where par is determined by the type of
+        credentials.
+    profile_name : str
+        The name of the AWS profile to use. If None (default), the default
+        profile will be used.
+    cred_type : str
+        The type of credentials to get. Choices are "oauth1_0a" and "bearer".
+        Default: "oauth1_0a". Bearer uses OAuth 2.0.
+
+    Returns
+    -------
+    dict
+        A dictionary with the requested credentials.
+    """
+    if profile_name is not None:
+        client = boto3.session.Session(
+            profile_name=profile_name).client('ssm', region_name='us-east-1')
+    else:
+        client = boto3.client('ssm')
+    params = ['app_id']
+    if cred_type == 'oauth1_0a':
+        params += ['consumer_token', 'consumer_secret',
+                   'access_token', 'access_secret']
+    elif cred_type == 'bearer':
+        params += ['bearer_token']
+    else:
+        raise ValueError(f"Unknown credential type: {cred_type}. Must be one "
+                         f"of oath1_0a or bearer.")
     auth_dict = {}
-    for par in ['consumer_token', 'consumer_secret', 'access_token',
-                'access_secret']:
+    for par in params:
         name = f'/twitter/{key}/{par}'
         try:
             response = client.get_parameter(Name=name, WithDecryption=True)
             val = response['Parameter']['Value']
             auth_dict[par] = val
         except Exception as e:
-            print(e)
+            logger.exception(e)
             break
     return auth_dict
 
 
-def get_oauth_dict(auth_dict):
-    oauth = tweepy.OAuthHandler(auth_dict.get('consumer_token'),
-                                auth_dict.get('consumer_secret'))
-    oauth.set_access_token(auth_dict.get('access_token'),
-                           auth_dict.get('access_secret'))
-    return oauth
-
-
 def update_status(msg, twitter_cred):
-    twitter_auth = get_oauth_dict(twitter_cred)
-    if twitter_auth is None:
-        return
-    twitter_api = tweepy.API(twitter_auth)
-    twitter_api.update_status(msg)
+    if 'consumer_secret' in twitter_cred and 'access_secret' in twitter_cred:
+        twitter_client = tweepy.Client(
+            consumer_key=twitter_cred['consumer_token'],
+            consumer_secret=twitter_cred['consumer_secret'],
+            access_token=twitter_cred['access_token'],
+            access_token_secret=twitter_cred['access_secret']
+        )
+        user_auth = True
+    elif 'bearer_token' in twitter_cred:
+        twitter_client = tweepy.Client(
+            bearer_token=twitter_cred['bearer_token']
+        )
+        user_auth = False
+    else:
+        raise ValueError('Missing credentials')
+
+    # Set user_auth=True when authenticating with consumer key/secret pair
+    # and access token/secret pair, and False when using bearer token
+    return twitter_client.create_tweet(text=msg, user_auth=user_auth)
 
 
 def _make_delta_msg(model_name, msg_type, delta, date, mc_type=None,

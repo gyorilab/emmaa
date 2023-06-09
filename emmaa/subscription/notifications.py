@@ -296,7 +296,8 @@ def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
     model_name : str
         A name of the model to get the updates for.
     date : str
-        A date for which the updates should be generated.
+        A date for which the updates should be generated. The
+        format should be "YYYY-MM-DD".
     model_stats : dict
         A dictionary containing the stats for the given model.
     test_stats_by_corpus : dict
@@ -308,18 +309,24 @@ def get_model_deltas(model_name, date, model_stats, test_stats_by_corpus):
         A dictionary containing the deltas for the given model and test
         corpora.
     """
-    deltas = {}
-    deltas['model_name'] = model_name
-    deltas['date'] = date
     # Model deltas
     stmts_delta = model_stats['model_delta']['statements_hashes_delta']
     paper_delta = model_stats['paper_delta']['raw_paper_ids_delta']
     new_papers = len(paper_delta['added'])
-    deltas['stmts_delta'] = stmts_delta
-    deltas['new_papers'] = new_papers
+
     # Test deltas
-    deltas['tests'] = {}
+    deltas = {
+        'model_name': model_name,
+        'date': date,
+        'stmts_delta': stmts_delta,
+        'new_papers': new_papers,
+        'tests': {}
+    }
     for test_corpus, test_stats in test_stats_by_corpus.items():
+        if test_stats is None:
+            logger.info(f"No test stats for {test_corpus}")
+            continue
+
         test_deltas = {}
         test_name = None
         test_data = test_stats['test_round_summary'].get('test_data')
@@ -392,7 +399,7 @@ def get_all_update_messages(deltas, is_tweet=False):
     return msg_dicts
 
 
-def tweet_deltas(deltas, twitter_cred):
+def tweet_deltas(deltas, twitter_cred, verbose=False):
     """Tweet the model updates.
 
     Parameters
@@ -403,12 +410,19 @@ def tweet_deltas(deltas, twitter_cred):
     twitter_cred : dict
         A dictionary containing consumer_token, consumer_secret, access_token,
         and access_secret for a model Twitter account.
+    verbose : bool
+        If True, the return from `tweepy.Client.create_tweet` will be printed
     """
     msgs = get_all_update_messages(deltas, is_tweet=True)
     for msg in msgs:
-        update_status(msg['message'], twitter_cred)
+        res = update_status(msg['message'], twitter_cred)
+        if verbose:
+            print(res)
         time.sleep(1)
-    logger.info('Done tweeting')
+    if msgs:
+        logger.info(f'Done tweeting {len(msgs)} messages')
+    else:
+        logger.info('No tweets to send')
 
 
 def make_model_html_email(msg_dicts, email, domain='emmaa.indra.bio'):
@@ -428,7 +442,8 @@ def get_all_stats(model_name, test_corpora, date):
     test_corpora : list[str]
         A list of test corpora names to get the test updates for.
     date : str
-        A date for which the updates should be generated.
+        A date for which the updates should be generated. The
+        format should be "YYYY-MM-DD".
 
     Returns
     -------
@@ -443,7 +458,9 @@ def get_all_stats(model_name, test_corpora, date):
         test_stats, _ = get_model_stats(model_name, 'test', tests=test_corpus,
                                         date=date)
         if not test_stats:
-            logger.info(f'Could not find test stats for {test_corpus}')
+            logger.info(
+                f"Could not find test stats for {test_corpus} for date {date}"
+            )
         test_stats_by_corpus[test_corpus] = test_stats
     return model_stats, test_stats_by_corpus
 
