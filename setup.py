@@ -38,6 +38,6 @@ setup(name='emmaa',
                         'pygraphviz', 'fnvhash', 'sqlalchemy<1.4',
                         'inflection', 'pybel==0.15',
                         'flask_jwt_extended', 'gilda', 'tweepy'],
-      extras_require={'test': ['nose', 'coverage', 'moto[iam]',
+      extras_require={'test': ['nose', 'coverage', 'moto[iam]<5',
                                'sqlalchemy_utils']}
       )
