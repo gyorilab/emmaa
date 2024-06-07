@@ -13,7 +13,7 @@ from flask import abort, Flask, request, Response, render_template, jsonify,\
 from flask_restx import Api, Resource, fields, inputs, abort as restx_abort
 from flask_cors import CORS
 
-from flask_jwt_extended import jwt_optional
+from flask_jwt_extended import jwt_required
 from urllib import parse
 from collections import defaultdict, Counter
 from copy import deepcopy
@@ -1146,14 +1146,14 @@ def session_expiration_check():
 
 
 @app.route('/health')
-@jwt_optional
+@jwt_required(optional=True)
 def health():
     return jsonify({'status': 'pass'})
 
 
 @app.route('/')
 @app.route('/home')
-@jwt_optional
+@jwt_required(optional=True)
 def get_home():
     loaded = request.args.get('loaded')
     loaded = (loaded == 'true')
@@ -1169,7 +1169,7 @@ def get_home():
 
 
 @app.route('/dashboard/<model>')
-@jwt_optional
+@jwt_required(optional=True)
 def get_model_dashboard(model):
     """Render model dashboard page."""
     loaded = request.args.get('loaded')
@@ -1691,7 +1691,7 @@ def get_model_tests_page(model):
 
 
 @app.route('/query')
-@jwt_optional
+@jwt_required(optional=True)
 def get_query_page():
     """Render queries page."""
     loaded = request.args.get('loaded')
@@ -1963,7 +1963,7 @@ def get_all_statements_page(model):
 
 
 @app.route('/demos')
-@jwt_optional
+@jwt_required(optional=True)
 def get_demos_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
@@ -1972,7 +1972,7 @@ def get_demos_page():
 
 
 @app.route('/chat')
-@jwt_optional
+@jwt_required(optional=True)
 def chat_with_the_model():
     model = request.args.get('model', '')
     user, roles = resolve_auth(dict(request.args))
@@ -2057,7 +2057,7 @@ def get_query_tests_page(model):
 
 
 @app.route('/query/submit', methods=['POST'])
-@jwt_optional
+@jwt_required(optional=True)
 def process_query():
     """Get result for a query."""
     # Print inputs.
@@ -2241,7 +2241,7 @@ def email_unsubscribe_post():
 
 
 @app.route('/subscribe/<model>', methods=['POST'])
-@jwt_optional
+@jwt_required(optional=True)
 def model_subscription(model):
     user, roles = resolve_auth(dict(request.args))
     if not roles and not user:
@@ -2323,7 +2323,7 @@ def get_statement_by_paper(model, paper_id, paper_id_type, date, hash_val):
 
 
 @app.route('/curation/submit/<hash_val>', methods=['POST'])
-@jwt_optional
+@jwt_required(optional=True)
 def submit_curation_endpoint(hash_val, **kwargs):
     user, roles = resolve_auth(dict(request.args))
     if not roles and not user:
