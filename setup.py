@@ -30,14 +30,14 @@ setup(name='emmaa',
       author_email='benjamin_gyori@hms.harvard.edu',
       classifiers=[
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.8'
         ],
       packages=find_packages(),
       install_requires=['indra', 'boto3', 'jsonpickle', 'kappy==4.1.2',
                         'pygraphviz', 'fnvhash', 'sqlalchemy<1.4',
                         'inflection', 'pybel==0.15',
-                        'flask_jwt_extended==3.25.0', 'gilda', 'tweepy'],
-      extras_require={'test': ['nose', 'coverage', 'moto[iam]',
+                        'flask_jwt_extended==3.25.0', 'gilda', 'tweepy',
+                        'markupsafe<2.1.0'],
+      extras_require={'test': ['nose', 'coverage', 'moto[iam]<5',
                                'sqlalchemy_utils']}
       )

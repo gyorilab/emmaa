@@ -26,21 +26,19 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    # Set up Python 3.7
-    - name: Set up Python 3.7
+    # Set up Python 3.8
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.8
     # Install EMMAA/test dependencies
     - name: Install dependencies
       run: |
         sudo apt-get install libpq-dev
         psql --no-password -h localhost -c 'create database emmaadb_test;' -U postgres
-        wget -nv https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
-        mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
-        unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         sudo apt-get install graphviz libgraphviz-dev pkg-config
         python -m pip install --upgrade pip
+        pip install kappy==4.1.2
         pip install nose coverage flask pyyaml boto3 openpyxl
         pip install git+https://github.com/sorgerlab/indra.git
         pip uninstall -y enum34
@@ -60,7 +58,7 @@ jobs:
         # cd automates
         # git checkout claytonm/gromet
         # cd ..
-        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors
+        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage 'moto[iam]<5' sqlalchemy_utils termcolor flask-cors 'markupsafe<2.1.0'
         pip install --no-dependencies .
         pip install -U sqlalchemy==1.3.23
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
