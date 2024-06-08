@@ -4,11 +4,11 @@ from emmaa.xdd import get_document_figures, get_figures_from_query
 
 @attr('nonpublic')
 def test_document_figures_doi():
-    doi = '10.1016/j.apsb.2020.09.003'
+    doi = '10.1136/bmj.n436'
     fig_list = get_document_figures(doi, 'DOI')
     assert fig_list
     # Should be a list of tuples with title and image bytes
-    assert len(fig_list[0]) == 2
+    assert len(fig_list[0]) == 8
 
 
 # This would call database
