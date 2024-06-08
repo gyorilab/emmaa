@@ -61,7 +61,7 @@ jobs:
         # cd automates
         # git checkout claytonm/gromet
         # cd ..
-        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors 'markupsafe<2.1.0'
+        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage 'moto[iam]<5' sqlalchemy_utils termcolor flask-cors 'markupsafe<2.1.0'
         pip install --no-dependencies .
         pip install -U sqlalchemy==1.3.23
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
