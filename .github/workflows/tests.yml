@@ -26,11 +26,11 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    # Set up Python 3.7
-    - name: Set up Python 3.7
+    # Set up Python 3.8
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.8
     # Install EMMAA/test dependencies
     - name: Install dependencies
       run: |
