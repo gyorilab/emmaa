@@ -36,11 +36,12 @@ jobs:
       run: |
         sudo apt-get install libpq-dev
         psql --no-password -h localhost -c 'create database emmaadb_test;' -U postgres
-        wget -nv https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
-        mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
-        unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
+#        wget -nv https://files.pythonhosted.org/packages/91/a1/55b8224cbc9986bbad4b8f0f2dd11892845156b759b3495202d457ca0b73/kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl
+#        mv kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.whl kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
+#        unzip kappy-4.0.94-cp37-cp37m-manylinux2010_x86_64.zip
         sudo apt-get install graphviz libgraphviz-dev pkg-config
         python -m pip install --upgrade pip
+        pip install kappy==4.1.2
         pip install nose coverage flask pyyaml boto3 openpyxl
         pip install git+https://github.com/sorgerlab/indra.git@gilda-flask-deps
         pip uninstall -y enum34
