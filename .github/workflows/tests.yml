@@ -48,8 +48,9 @@ jobs:
         pip install git+https://github.com/sorgerlab/bioagents.git
         git clone https://github.com/indralab/indra_world.git
         git clone https://github.com/indralab/covid-19.git
-        git clone https://github.com/indralab/ui_util.git@flask3
+        git clone https://github.com/indralab/ui_util.git
         cd ui_util/indralab_auth_tools
+        git checkout flask3
         pip install .
         cd ../indralab_web_templates
         pip install .
