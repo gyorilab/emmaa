@@ -26,11 +26,11 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    # Set up Python 3.7
-    - name: Set up Python 3.7
+    # Set up Python 3.10
+    - name: Set up Python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.10
     # Install EMMAA/test dependencies
     - name: Install dependencies
       run: |
@@ -42,7 +42,7 @@ jobs:
         sudo apt-get install graphviz libgraphviz-dev pkg-config
         python -m pip install --upgrade pip
         pip install nose coverage flask pyyaml boto3 openpyxl
-        pip install git+https://github.com/sorgerlab/indra.git
+        pip install git+https://github.com/sorgerlab/indra.git@gilda-flask-deps
         pip uninstall -y enum34
         pip install cachetools matplotlib
         pip install git+https://github.com/indralab/indra_db.git
@@ -50,7 +50,7 @@ jobs:
         pip install git+https://github.com/sorgerlab/bioagents.git
         git clone https://github.com/indralab/indra_world.git
         git clone https://github.com/indralab/covid-19.git
-        git clone https://github.com/indralab/ui_util.git
+        git clone https://github.com/indralab/ui_util.git@flask3
         cd ui_util/indralab_auth_tools
         pip install .
         cd ../indralab_web_templates
@@ -60,7 +60,7 @@ jobs:
         # cd automates
         # git checkout claytonm/gromet
         # cd ..
-        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==3.25.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors
+        pip install boto3 jsonpickle pygraphviz fnvhash inflection pybel==0.15 flask_jwt_extended==4.6.0 gilda tweepy nose coverage moto[iam] sqlalchemy_utils termcolor flask-cors==4.0.1
         pip install --no-dependencies .
         pip install -U sqlalchemy==1.3.23
         wget "https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.4.0/BioNetGen-2.4.0-Linux.tgz" -O bionetgen.tar.gz -nv
