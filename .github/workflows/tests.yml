@@ -8,7 +8,7 @@ jobs:
     # Set up postgres
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:13.13
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_USER: postgres
