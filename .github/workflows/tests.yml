@@ -40,7 +40,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install kappy==4.1.2
         pip install nose coverage flask pyyaml boto3 openpyxl
-        pip install git+https://github.com/sorgerlab/indra.git@79ed55b29fcd1a2cec91cf12887c3410983fe07d
+        pip install git+https://github.com/sorgerlab/indra.git
         pip uninstall -y enum34
         pip install cachetools matplotlib
         pip install git+https://github.com/indralab/indra_db.git
@@ -50,7 +50,6 @@ jobs:
         git clone https://github.com/indralab/covid-19.git
         git clone https://github.com/indralab/ui_util.git
         cd ui_util/indralab_auth_tools
-        git checkout flask3
         pip install .
         cd ../indralab_web_templates
         pip install .
