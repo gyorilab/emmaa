@@ -209,7 +209,7 @@ def find_latest_emails(email_type, time_delta=None, w_dt=False):
 
 
 def get_email_content(key):
-    s3 = get_s3_client(unsigned=False)
+    s3 = get_s3_client()
     email_obj = s3.get_object(Bucket=email_bucket, Key=key)
     return email_obj['Body'].read().decode()
 

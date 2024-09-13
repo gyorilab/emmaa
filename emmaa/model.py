@@ -573,7 +573,7 @@ class EmmaaModel(object):
                     fname = f'{exp_f}_{self.date_str}.{exp_f}'
                     pa.export_model(exp_f, fname)
                 logger.info(f'Uploading {fname}')
-                client = get_s3_client(unsigned=False)
+                client = get_s3_client()
                 client.upload_file(fname, bucket,
                                    f'exports/{self.name}/{fname}')
         return pysb_model
@@ -588,7 +588,7 @@ class EmmaaModel(object):
             fname = f'pybel_{self.date_str}.bel.nodelink.json.gz'
             pybel.dump(pybel_model, fname)
             logger.info(f'Uploading {fname}')
-            client = get_s3_client(unsigned=False)
+            client = get_s3_client()
             client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return pybel_model
 
@@ -609,7 +609,7 @@ class EmmaaModel(object):
             df = ia.make_df()
             df.to_csv(fname, sep='\t', index=False)
             logger.info(f'Uploading {fname}')
-            client = get_s3_client(unsigned=False)
+            client = get_s3_client()
             client.upload_file(fname, bucket, f'exports/{self.name}/{fname}')
         return signed_graph
 
@@ -647,7 +647,7 @@ class EmmaaModel(object):
                     pysb_to_gromet(pysb_model, self.name,
                                    self.dynamic_assembled_stmts, fname)
                     logger.info(f'Uploading {fname}')
-                    client = get_s3_client(unsigned=False)
+                    client = get_s3_client()
                     client.upload_file(fname, bucket,
                                        f'exports/{self.name}/{fname}')
                 except Exception as e:

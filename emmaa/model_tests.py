@@ -368,7 +368,7 @@ class ModelManager(object):
                 s3_key = (f'query_images/{self.model.name}/{fig_name}_'
                           f'{date_str}{ext}')
                 s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
-                client = get_s3_client(unsigned=False)
+                client = get_s3_client()
                 logger.info(f'Uploading image to {s3_path}')
                 client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
                 fig_path = s3_path
@@ -397,7 +397,7 @@ class ModelManager(object):
                 s3_key = (f'query_images/{self.model.name}/{fig_name}_'
                           f'{date_str}{ext}')
                 s3_path = f'https://{bucket}.s3.amazonaws.com/{s3_key}'
-                client = get_s3_client(unsigned=False)
+                client = get_s3_client()
                 logger.info(f'Uploading image to {s3_path}')
                 client.upload_file(fig_path, Bucket=bucket, Key=s3_key)
                 fig_path = s3_path
