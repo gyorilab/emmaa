@@ -230,7 +230,7 @@ def does_exist(bucket, prefix, extension=None):
     return False
 
 
-def get_s3_client(unsigned=True):
+def get_s3_client(unsigned=False):
     """Return a boto3 S3 client with optional unsigned config.
 
     Parameters
