@@ -328,6 +328,12 @@ logger.setLevel(logging.INFO)
 DEVMODE = int(os.environ.get('DEVMODE', 0))
 GLOBAL_PRELOAD = int(os.environ.get('GLOBAL_PRELOAD', 0))
 TITLE = 'emmaa title'
+
+# Set to the URL where the Vue app is
+VUE_DEPLOYMENT = os.environ["VUE_DEPLOYMENT"]
+if VUE_DEPLOYMENT.endswith('/'):
+    VUE_DEPLOYMENT = VUE_DEPLOYMENT[:-1]
+
 ALL_MODEL_TYPES = ['pysb', 'pybel', 'signed_graph', 'unsigned_graph']
 LINKAGE_SYMBOLS = {'LEFT TACK': '\u22a3',
                    'RIGHTWARDS ARROW': '\u2192'}
@@ -1163,9 +1169,11 @@ def get_home():
             msg='Please wait while we load the models...')
     user, roles = resolve_auth(dict(request.args))
     model_data = _get_model_meta_data()
-    return render_template('index_template.html', model_data=model_data,
+    return render_template('index_template.html',
+                           model_data=model_data,
                            link_list=link_list,
-                           user_email=user.email if user else "")
+                           user_email=user.email if user else "",
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/dashboard/<model>')
@@ -1457,7 +1465,8 @@ def get_model_dashboard(model):
                            agent_paper_distr=agent_paper_distr,
                            agent_tests=agent_tests_table,
                            agent_paths=agent_paths_table,
-                           all_agents=all_agents)
+                           all_agents=all_agents,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/annotate_paper/<model>', methods=['GET', 'POST'])
@@ -1610,7 +1619,8 @@ def get_paper_statements(model):
                            fig_list=fig_list,
                            include_figures=include_figures,
                            tabs=True,
-                           tab=tab)
+                           tab=tab,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/tests/<model>')
@@ -1687,7 +1697,8 @@ def get_model_tests_page(model):
                            date=date,
                            latest_date=latest_date,
                            prev=prev_date,
-                           next=next_date)
+                           next=next_date,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/query')
@@ -1739,7 +1750,8 @@ def get_query_page():
                            user_email=user_email,
                            tab=tab,
                            preselected_model=preselected_model,
-                           latest_query=latest_query)
+                           latest_query=latest_query,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/evidence')
@@ -1846,7 +1858,8 @@ def get_statement_evidence_page():
                            fig_list=fig_list,
                            include_figures=include_figures,
                            tabs=tabs,
-                           tab=tab)
+                           tab=tab,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/all_statements/<model>')
@@ -1959,7 +1972,8 @@ def get_all_statements_page(model):
                            min_belief=min_belief,
                            max_belief=max_belief,
                            agent=agent,
-                           all_agents=all_agents)
+                           all_agents=all_agents,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/demos')
@@ -1967,8 +1981,10 @@ def get_all_statements_page(model):
 def get_demos_page():
     user, roles = resolve_auth(dict(request.args))
     user_email = user.email if user else ""
-    return render_template('demos_template.html', link_list=link_list,
-                           user_email=user_email)
+    return render_template('demos_template.html',
+                           link_list=link_list,
+                           user_email=user_email,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/chat')
@@ -1982,7 +1998,8 @@ def chat_with_the_model():
                            model=model,
                            link_list=link_list,
                            exclude_footer=True,
-                           pusher_key=pusher_key)
+                           pusher_key=pusher_key,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/new/guest', methods=['POST'])
@@ -2053,7 +2070,8 @@ def get_query_tests_page(model):
                            formatted_names=FORMATTED_TYPE_NAMES,
                            date=date,
                            prev=prev_order,
-                           next=next_order)
+                           next=next_order,
+                           vue_deployment=VUE_DEPLOYMENT)
 
 
 @app.route('/query/submit', methods=['POST'])
