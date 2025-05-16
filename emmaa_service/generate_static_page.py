@@ -9,6 +9,8 @@ from emmaa.util import find_latest_s3_file, load_json_from_s3, does_exist
 
 HERE = Path(__file__).parent.resolve()
 JSON_PATH = HERE / "models.json"
+TEMPLATES_DIRECTORY = HERE / "templates"
+HTML_PATH = TEMPLATES_DIRECTORY / "static_page.html"
 
 MODELS = [
     "aml",
@@ -32,6 +34,19 @@ MODELS = [
     "skcm",
     "vitiligo",
 ]
+
+
+def get_jinja_env():
+    """Get the Jinja2 environment."""
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(
+        autoescape=True,
+        loader=FileSystemLoader(TEMPLATES_DIRECTORY),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    return env
 
 
 def get_meta_data(model: str) -> Dict[str, str]:
@@ -94,11 +109,33 @@ def get_model_metadata() -> Dict[str, Dict[str, str]]:
 
 
 if __name__ == "__main__":
-    # Get the metadata for all models
-    model_metadata = get_model_metadata()
-
-    # Save the metadata to a JSON file
-    with open(JSON_PATH, "w") as f:
-        json.dump(model_metadata, f, indent=2)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Generate a static page for the models."
+    )
+    parser.add_argument(
+        "--regenerate-json",
+        action="store_true",
+        help="Regenerate the JSON file with model metadata.",
+    )
+    args = parser.parse_args()
+    if args.regenerate_json or not JSON_PATH.exists():
+        # Get the metadata for all models and save it to a JSON file
+        model_metadata = get_model_metadata()
+        with open(JSON_PATH, "w") as f:
+            json.dump(model_metadata, f, indent=2)
+    else:
+        # Load the metadata from the JSON file
+        model_metadata = json.loads(JSON_PATH.read_text())
 
     # Render page
+    environment = get_jinja_env()
+    template = environment.get_template("static_page_template.html")
+    html = template.render(
+        model_metadata=model_metadata,
+        models=MODELS,
+    )
+
+    # Save the rendered HTML to a file
+    print(f"Saving HTML to {HTML_PATH}")
+    HTML_PATH.write_text(html)
