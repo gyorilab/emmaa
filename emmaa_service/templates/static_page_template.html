@@ -222,24 +222,24 @@
           {% set meta_data = model_metadata[model] %}
             <tr>
               <td>{{ meta_data.name }}</td>
-              <td>{{ model.description }}</td>
+              <td>{{ meta_data.description }}</td>
               <td>
-                {% if model.model_path or model.test_path %}
-                  {% if model.model_path %}
-                  <a href="{{ model.model_path }}" target="_blank">Model pickle</a>,
+                {% if meta_data.model_path or meta_data.test_path %}
+                  {% if meta_data.model_path %}
+                  <a href="/{{ meta_data.model_path }}" target="_blank">Model pickle</a>,
                   {% endif %}
-                  {% if model.test_path %}
-                  <a href="{{ model.test_path }}" target="_blank">Tests JSON</a>
+                  {% if meta_data.test_path %}
+                  <a href="/{{ meta_data.test_path }}" target="_blank">Tests JSON</a>
                   {% endif %}
                 {% else %}
                   <i class="text-muted">No download available</i>
                 {% endif %}
               </td>
               <td>
-                {% if model.ndex %}
+                {% if meta_data.ndex %}
                   <a
-                      href="https://www.ndexbio.org/viewer/networks/{{ model.ndex }}"
-                      target="_blank">{{ model.ndex }}
+                      href="https://www.ndexbio.org/viewer/networks/{{ meta_data.ndex }}"
+                      target="_blank">{{ meta_data.ndex }}
                   </a>
                 {% else %}
                   <i class="text-muted">No network available</i>
