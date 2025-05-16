@@ -1,0 +1,182 @@
+{
+  "aml": {
+    "model": "aml",
+    "model_short_name": "aml",
+    "name": "Acute myeloid leukemia",
+    "description": "A model of molecular mechanisms governing AML, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/aml/model_2024-08-26-17-05-43.pkl",
+    "test_path": "stats/aml/test_stats_large_corpus_tests_2024-08-01-17-17-03.json",
+    "ndex": "ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf"
+  },
+  "brca": {
+    "model": "brca",
+    "model_short_name": "brca",
+    "name": "Breast Cancer",
+    "description": "A model of molecular mechanisms governing brest cancer, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/brca/model_2024-08-26-17-06-49.pkl",
+    "test_path": "stats/brca/test_stats_large_corpus_tests_2024-02-10-17-19-47.json",
+    "ndex": "a16b5ca0-f6a3-11e8-aaa6-0ac135e8bacf"
+  },
+  "covid19": {
+    "model": "covid19",
+    "model_short_name": "covid19",
+    "name": "Covid-19",
+    "description": "Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
+    "model_path": "models/covid19/model_2024-08-26-17-08-33.pkl",
+    "test_path": "stats/covid19/test_stats_covid19_curated_tests_2024-08-01-17-49-59.json",
+    "ndex": "a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf"
+  },
+  "covid19_dev": {
+    "model": "covid19_dev",
+    "model_short_name": "covid19_dev",
+    "name": "Covid-19 Dev",
+    "description": "Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.",
+    "model_path": "models/covid19_dev/model_2021-01-19-06-44-59.pkl",
+    "test_path": "stats/covid19_dev/test_stats_covid19_curated_tests_2021-01-19-07-47-38.json",
+    "ndex": "959c94cc-7503-11ea-aaef-0ac135e8bacf"
+  },
+  "covid19_inflammasome": {
+    "model": "covid19_inflammasome",
+    "model_short_name": "covid19_inflammasome",
+    "name": "NLRP3 inflammasome in COVID-19",
+    "description": "NLRP3 inflammasome model assembled from the COVID-19 Disease Map and surrounding literature",
+    "model_path": "models/covid19_inflammasome/model_2021-08-19-13-39-52.pkl",
+    "test_path": "stats/covid19_inflammasome/test_stats_covid19_tests_2021-08-23-17-19-58.json",
+    "ndex": ""
+  },
+  "covid19_map": {
+    "model": "covid19_map",
+    "model_short_name": "covid19_map",
+    "name": "Covid-19 Disease Map",
+    "description": "Covid-19 knowledge network automatically assembled from the Covid-19 Disease Map",
+    "model_path": "models/covid19_map/model_2024-08-26-17-05-53.pkl",
+    "test_path": "stats/covid19_map/test_stats_covid19_curated_tests_c19dm_2024-07-31-17-09-56.json",
+    "ndex": ""
+  },
+  "food_insecurity": {
+    "model": "food_insecurity",
+    "model_short_name": "food_insecurity",
+    "name": "Food Insecurity Model",
+    "description": "A model of causal factors affecting food insecurity, built around a set of core concepts.",
+    "model_path": "models/food_insecurity/model_2024-08-26-17-06-40.pkl",
+    "test_path": "stats/food_insecurity/test_stats_world_modelers_tests_2024-08-01-17-20-04.json",
+    "ndex": "478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf"
+  },
+  "luad": {
+    "model": "luad",
+    "model_short_name": "luad",
+    "name": "Lung adenocarcinoma",
+    "description": "A model of molecular mechanisms governing lung cancer, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/luad/model_2024-08-26-17-06-36.pkl",
+    "test_path": "stats/luad/test_stats_large_corpus_tests_2024-08-01-17-19-03.json",
+    "ndex": "b56642b3-f6a3-11e8-aaa6-0ac135e8bacf"
+  },
+  "marm_model": {
+    "model": "marm_model",
+    "model_short_name": "marm_model",
+    "name": "MARM Model",
+    "description": "Natural-language-based implementation of the MARM model.",
+    "model_path": "",
+    "test_path": "stats/marm_model/test_stats_rasmachine_tests_2024-08-01-17-06-20.json",
+    "ndex": "b634dca6-87c7-11e9-848d-0ac135e8bacf"
+  },
+  "monkeypox": {
+    "model": "monkeypox",
+    "model_short_name": "monkeypox",
+    "name": "Monkeypox model",
+    "description": "A self-updating model of monkeypox literature.",
+    "model_path": "models/monkeypox/model_2024-08-26-17-05-44.pkl",
+    "test_path": "stats/monkeypox/test_stats_large_corpus_tests_2024-08-01-17-06-40.json",
+    "ndex": ""
+  },
+  "ms": {
+    "model": "ms",
+    "model_short_name": "ms",
+    "name": "Multiple sclerosis",
+    "description": "A self-updating model of multiple sclerosis",
+    "model_path": "models/ms/model_2024-08-26-17-05-55.pkl",
+    "test_path": "stats/ms/test_stats_large_corpus_tests_2024-08-01-17-07-24.json",
+    "ndex": "b02b8bcf-3425-11eb-9e72-0ac135e8bacf"
+  },
+  "nf": {
+    "model": "nf",
+    "model_short_name": "nf",
+    "name": "Neurofibromatosis",
+    "description": "Neurofibromatosis knowledge network automatically assembled from relevant publications in PubMed.",
+    "model_path": "models/nf/model_2024-08-26-17-05-53.pkl",
+    "test_path": "stats/nf/test_stats_large_corpus_tests_2024-08-01-17-11-46.json",
+    "ndex": "f2af7563-1874-11eb-9eee-0ac135e8bacf"
+  },
+  "paad": {
+    "model": "paad",
+    "model_short_name": "paad",
+    "name": "Pancreas adenocarcinoma",
+    "description": "A model of molecular mechanisms governing pancreatic cancer, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/paad/model_2024-08-26-17-05-32.pkl",
+    "test_path": "stats/paad/test_stats_large_corpus_tests_2024-08-01-17-14-31.json",
+    "ndex": "8d1330ca-f6a2-11e8-aaa6-0ac135e8bacf"
+  },
+  "painmachine": {
+    "model": "painmachine",
+    "model_short_name": "painmachine",
+    "name": "Pain Machine",
+    "description": "A model of molecular mechanisms governing pain.",
+    "model_path": "models/painmachine/model_2024-08-26-17-07-15.pkl",
+    "test_path": "stats/painmachine/test_stats_chemical_pain_ctd_tests_2024-08-01-17-53-47.json",
+    "ndex": "e1e5963a-eb0e-11e9-bb65-0ac135e8bacf"
+  },
+  "pompe": {
+    "model": "pompe",
+    "model_short_name": "pompe",
+    "name": "Pompe Disease",
+    "description": "A self-updating model of Pompe Disease",
+    "model_path": "models/pompe/model_2024-08-26-17-06-00.pkl",
+    "test_path": "stats/pompe/test_stats_large_corpus_tests_2024-08-01-17-07-42.json",
+    "ndex": ""
+  },
+  "prad": {
+    "model": "prad",
+    "model_short_name": "prad",
+    "name": "Prostate adenocarcinoma",
+    "description": "A model of molecular mechanisms governing prostace cancer, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/prad/model_2024-08-26-17-06-33.pkl",
+    "test_path": "stats/prad/test_stats_large_corpus_tests_2024-08-01-17-15-19.json",
+    "ndex": "caa8c3f6-f6a3-11e8-aaa6-0ac135e8bacf"
+  },
+  "rasmachine": {
+    "model": "rasmachine",
+    "model_short_name": "rasmachine",
+    "name": "Ras Machine 2.0",
+    "description": "A model of Ras signaling built using automated reading and assembly from the scientific literature.",
+    "model_path": "models/rasmachine/model_2024-08-26-17-07-46.pkl",
+    "test_path": "stats/rasmachine/test_stats_large_corpus_tests_2024-08-01-17-44-31.json",
+    "ndex": "cdba5bd5-5195-11e9-9f06-0ac135e8bacf"
+  },
+  "rasmodel": {
+    "model": "rasmodel",
+    "model_short_name": "luad",
+    "name": "Ras Model",
+    "description": "A human-curated model of Ras signaling defined in natural language.",
+    "model_path": "models/rasmodel/model_2020-11-20-19-18-50.pkl",
+    "test_path": "stats/rasmodel/test_stats_large_corpus_tests_2024-08-01-17-07-18.json",
+    "ndex": "cc9f904f-4ffd-11e9-9f06-0ac135e8bacf"
+  },
+  "skcm": {
+    "model": "skcm",
+    "model_short_name": "skcm",
+    "name": "Skin cutaneous melanoma",
+    "description": "A model of molecular mechanisms governing melanoma, focusing on frequently mutated genes, and the pathways in which they are involved.",
+    "model_path": "models/skcm/model_2024-08-26-17-06-51.pkl",
+    "test_path": "stats/skcm/test_stats_large_corpus_tests_2024-08-01-17-17-24.json",
+    "ndex": "da832549-f6a3-11e8-aaa6-0ac135e8bacf"
+  },
+  "vitiligo": {
+    "model": "vitiligo",
+    "model_short_name": "vitiligo",
+    "name": "Vitiligo",
+    "description": "A self-updating model of vitiligo",
+    "model_path": "models/vitiligo/model_2024-08-26-17-06-47.pkl",
+    "test_path": "stats/vitiligo/test_stats_large_corpus_tests_2024-08-01-17-08-04.json",
+    "ndex": "7e60e908-3420-11eb-9e72-0ac135e8bacf"
+  }
+}
