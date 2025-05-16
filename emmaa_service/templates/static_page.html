@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EMMAA dashboard</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+  <!-- bootstrap 4.1.3 -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+  <!-- Add icon library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Belief range style adapted from https://stackoverflow.com/questions/4753946/html5-slider-with-two-inputs-possible -->
+  <style>
+    html {
+      position: relative;
+      min-height: 100%;
+    }
+    body {
+      /* Margin bottom by footer height */
+      margin-bottom: 190px;
+    }
+    .footer {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      /* Set the fixed height of the footer here */
+      height: 190px;
+      background-color: #f5f5f5;
+    }
+    a.model-link {
+      color: #000000;
+    }
+    .choices__list--multiple .choices__item {
+      background-color: #007bff;
+      border: #007bff;
+    }
+    a.stmt-dblink {
+      color: #000000;
+      text-decoration: none;
+    }
+    a.status-link {
+      color: #000000;
+      text-decoration: none;
+    }
+    a {
+      target-new: tab;
+    }
+    body > .container {
+      padding: 85px 15px 0;
+    }
+    a.btn {
+      background-color: rgb(255, 255, 255);
+    }
+    .btn-group .btn {
+      border-radius: 6px;
+    }
+    .btn-group>.btn-group:not(:last-child)>.btn , .btn-group>.btn:not(:last-child):not(.dropdown-toggle){
+      border-radius: 6px;
+    }
+    .btn-group>.btn-group:not(:first-child)>.btn, .btn-group>.btn:not(:first-child) {
+      border-radius: 6px;
+    }
+    .btn-query-submit {
+      background-color: rgb(221, 221, 221);
+    }
+    button.btn-primary { /* For login button */
+      background-color: #007bff;
+    }
+    .fa-check {color: #00ff00}
+    .fa-times {color: #ff0000}
+    .fa-ban {color: #a5a5a5}
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {background-color: #f8f9fa}
+    .fa {
+      font-size:25px;
+      width: 30px;
+      text-align: center;
+      text-decoration: none;
+      padding: 0;
+    }
+    .fa-twitter {
+      background: white;
+      color:  #55ACEE;
+    }
+    section.range-slider {
+      position: relative;
+      width: 500px;
+      height: 15px;
+      text-align: center;
+  }
+  
+  section.range-slider input {
+      -webkit-appearance: none;
+      pointer-events: none;
+      position: absolute;
+      overflow: hidden;
+      left: 0;
+      top: 25px;
+      width: 500px;
+      outline: none;
+      height: 15px;
+      border-radius: 5px; 
+      margin: 0;
+      padding: 0;
+      background: #d3d3d3;
+  }
+  
+  section.range-slider input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      pointer-events: all;
+      position: relative;
+      z-index: 1;
+      outline: 0;
+      height: 20px;
+      width: 15px;
+      cursor: pointer;
+      border-radius: 50%; 
+      background: #007bff;
+  }
+  
+  section.range-slider input::-moz-range-thumb {
+      pointer-events: all;
+      position: relative;
+      z-index: 10;
+      -moz-appearance: none;
+      width: 9px;
+      
+  }
+  
+  section.range-slider input:last-of-type::-moz-range-track {
+      -moz-appearance: none;
+      background: none transparent;
+      border: 0;
+  }
+    section.range-slider input[type=range]::-moz-focus-outer {
+    border: 0;
+  }
+  @-moz-document url-prefix() {
+    input[type='range']:nth-child(1){
+      -webkit-appearance: none;
+      position:absolute;
+      top:35px !important;
+      overflow:visible !important;
+      height:0;
+    }
+  
+    input[type='range']:nth-child(2){
+      -webkit-appearance: none;
+      position:absolute;
+      top:53px !important;
+      overflow:visible !important;
+      height:0;
+    }
+    input[type='range']::-moz-range-thumb {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      position: relative;
+      height: 13px;
+      width: 15px;
+      margin-top: -7px;
+      background: #007bff;
+      border: 1px solid #007bff;
+      border-radius: 25px;
+      z-index: 1;
+    }
+  
+    input[type='range']:nth-child(1)::-moz-range-thumb {
+        -webkit-appearance: none;
+        transform: translateY(-20px);    
+    }
+    input[type='range']:nth-child(2)::-moz-range-thumb {
+        -webkit-appearance: none;
+        transform: translateY(-20px);    
+    }
+  }
+  </style>
+</head>
+
+<body>
+    <header class="bg-white border-bottom shadow-sm fixed-top no-horiz-pad">
+      <div class="d-flex flex-row align-items-center">
+        <nav class="d-inline-flex p-2">
+        <a class="p-2 text-dark"
+           href="https://emmaa.readthedocs.io/en/latest/index.html"
+           target="_blank">Documentation</a>
+      </nav>
+      </div>
+    </header>
+
+    <div class="container">
+      <h3>Where did the page go?</h3>
+      <p>
+        The EMMAA project has been put on hold and we are no longer serving the EMMAA
+        dashboard homepage. All the models and data are still available for download. A
+        future project may be launched to serve the EMMAA dashboard again.<br>
+        The documentation is still available at <a href="https://emmaa.readthedocs.io/en/latest/index.html" target="_blank">emmaa.readthedocs.io</a>.<br>
+      </p>
+      <h3>Download the latest data</h3>
+      <p>
+        The latest data is available for download:
+      </p>
+      <div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Description</th>
+              <th scope="col">Download Links</th>
+              <th scope="col">Network on NDex</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Acute myeloid leukemia</td>
+              <td>A model of molecular mechanisms governing AML, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/aml/model_2024-08-26-17-05-43.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/aml/test_stats_large_corpus_tests_2024-08-01-17-17-03.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">ef58f76d-f6a2-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Breast Cancer</td>
+              <td>A model of molecular mechanisms governing brest cancer, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/brca/model_2024-08-26-17-06-49.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/brca/test_stats_large_corpus_tests_2024-02-10-17-19-47.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/a16b5ca0-f6a3-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">a16b5ca0-f6a3-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Covid-19</td>
+              <td>Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.</td>
+              <td>
+                  <a href="/models/covid19/model_2024-08-26-17-08-33.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/covid19/test_stats_covid19_curated_tests_2024-08-01-17-49-59.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf"
+                      target="_blank">a8c0decc-6bbb-11ea-bfdc-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Covid-19 Dev</td>
+              <td>Development version of Covid-19 knowledge network automatically assembled from the CORD-19 document corpus.</td>
+              <td>
+                  <a href="/models/covid19_dev/model_2021-01-19-06-44-59.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/covid19_dev/test_stats_covid19_curated_tests_2021-01-19-07-47-38.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/959c94cc-7503-11ea-aaef-0ac135e8bacf"
+                      target="_blank">959c94cc-7503-11ea-aaef-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>NLRP3 inflammasome in COVID-19</td>
+              <td>NLRP3 inflammasome model assembled from the COVID-19 Disease Map and surrounding literature</td>
+              <td>
+                  <a href="/models/covid19_inflammasome/model_2021-08-19-13-39-52.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/covid19_inflammasome/test_stats_covid19_tests_2021-08-23-17-19-58.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <i class="text-muted">No network available</i>
+            </tr>
+            <tr>
+              <td>Covid-19 Disease Map</td>
+              <td>Covid-19 knowledge network automatically assembled from the Covid-19 Disease Map</td>
+              <td>
+                  <a href="/models/covid19_map/model_2024-08-26-17-05-53.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/covid19_map/test_stats_covid19_curated_tests_c19dm_2024-07-31-17-09-56.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <i class="text-muted">No network available</i>
+            </tr>
+            <tr>
+              <td>Food Insecurity Model</td>
+              <td>A model of causal factors affecting food insecurity, built around a set of core concepts.</td>
+              <td>
+                  <a href="/models/food_insecurity/model_2024-08-26-17-06-40.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/food_insecurity/test_stats_world_modelers_tests_2024-08-01-17-20-04.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf"
+                      target="_blank">478a3ed6-b3b7-11e9-8bb4-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Lung adenocarcinoma</td>
+              <td>A model of molecular mechanisms governing lung cancer, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/luad/model_2024-08-26-17-06-36.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/luad/test_stats_large_corpus_tests_2024-08-01-17-19-03.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/b56642b3-f6a3-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">b56642b3-f6a3-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>MARM Model</td>
+              <td>Natural-language-based implementation of the MARM model.</td>
+              <td>
+                  <a href="/stats/marm_model/test_stats_rasmachine_tests_2024-08-01-17-06-20.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/b634dca6-87c7-11e9-848d-0ac135e8bacf"
+                      target="_blank">b634dca6-87c7-11e9-848d-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Monkeypox model</td>
+              <td>A self-updating model of monkeypox literature.</td>
+              <td>
+                  <a href="/models/monkeypox/model_2024-08-26-17-05-44.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/monkeypox/test_stats_large_corpus_tests_2024-08-01-17-06-40.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <i class="text-muted">No network available</i>
+            </tr>
+            <tr>
+              <td>Multiple sclerosis</td>
+              <td>A self-updating model of multiple sclerosis</td>
+              <td>
+                  <a href="/models/ms/model_2024-08-26-17-05-55.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/ms/test_stats_large_corpus_tests_2024-08-01-17-07-24.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/b02b8bcf-3425-11eb-9e72-0ac135e8bacf"
+                      target="_blank">b02b8bcf-3425-11eb-9e72-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Neurofibromatosis</td>
+              <td>Neurofibromatosis knowledge network automatically assembled from relevant publications in PubMed.</td>
+              <td>
+                  <a href="/models/nf/model_2024-08-26-17-05-53.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/nf/test_stats_large_corpus_tests_2024-08-01-17-11-46.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/f2af7563-1874-11eb-9eee-0ac135e8bacf"
+                      target="_blank">f2af7563-1874-11eb-9eee-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Pancreas adenocarcinoma</td>
+              <td>A model of molecular mechanisms governing pancreatic cancer, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/paad/model_2024-08-26-17-05-32.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/paad/test_stats_large_corpus_tests_2024-08-01-17-14-31.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/8d1330ca-f6a2-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">8d1330ca-f6a2-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Pain Machine</td>
+              <td>A model of molecular mechanisms governing pain.</td>
+              <td>
+                  <a href="/models/painmachine/model_2024-08-26-17-07-15.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/painmachine/test_stats_chemical_pain_ctd_tests_2024-08-01-17-53-47.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/e1e5963a-eb0e-11e9-bb65-0ac135e8bacf"
+                      target="_blank">e1e5963a-eb0e-11e9-bb65-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Pompe Disease</td>
+              <td>A self-updating model of Pompe Disease</td>
+              <td>
+                  <a href="/models/pompe/model_2024-08-26-17-06-00.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/pompe/test_stats_large_corpus_tests_2024-08-01-17-07-42.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <i class="text-muted">No network available</i>
+            </tr>
+            <tr>
+              <td>Prostate adenocarcinoma</td>
+              <td>A model of molecular mechanisms governing prostace cancer, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/prad/model_2024-08-26-17-06-33.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/prad/test_stats_large_corpus_tests_2024-08-01-17-15-19.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/caa8c3f6-f6a3-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">caa8c3f6-f6a3-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Ras Machine 2.0</td>
+              <td>A model of Ras signaling built using automated reading and assembly from the scientific literature.</td>
+              <td>
+                  <a href="/models/rasmachine/model_2024-08-26-17-07-46.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/rasmachine/test_stats_large_corpus_tests_2024-08-01-17-44-31.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/cdba5bd5-5195-11e9-9f06-0ac135e8bacf"
+                      target="_blank">cdba5bd5-5195-11e9-9f06-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Ras Model</td>
+              <td>A human-curated model of Ras signaling defined in natural language.</td>
+              <td>
+                  <a href="/models/rasmodel/model_2020-11-20-19-18-50.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/rasmodel/test_stats_large_corpus_tests_2024-08-01-17-07-18.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/cc9f904f-4ffd-11e9-9f06-0ac135e8bacf"
+                      target="_blank">cc9f904f-4ffd-11e9-9f06-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Skin cutaneous melanoma</td>
+              <td>A model of molecular mechanisms governing melanoma, focusing on frequently mutated genes, and the pathways in which they are involved.</td>
+              <td>
+                  <a href="/models/skcm/model_2024-08-26-17-06-51.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/skcm/test_stats_large_corpus_tests_2024-08-01-17-17-24.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/da832549-f6a3-11e8-aaa6-0ac135e8bacf"
+                      target="_blank">da832549-f6a3-11e8-aaa6-0ac135e8bacf
+                  </a>
+            </tr>
+            <tr>
+              <td>Vitiligo</td>
+              <td>A self-updating model of vitiligo</td>
+              <td>
+                  <a href="/models/vitiligo/model_2024-08-26-17-06-47.pkl" target="_blank">Model pickle</a>,
+                  <a href="/stats/vitiligo/test_stats_large_corpus_tests_2024-08-01-17-08-04.json" target="_blank">Tests JSON</a>
+              </td>
+              <td>
+                  <a
+                      href="https://www.ndexbio.org/viewer/networks/7e60e908-3420-11eb-9e72-0ac135e8bacf"
+                      target="_blank">7e60e908-3420-11eb-9e72-0ac135e8bacf
+                  </a>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  <footer class="footer text-muted" id="about" style="background: #F5F5F5;">
+    <div class="container">
+      <h5 class="my-0 mr-md-auto font-weight-normal">About</h5>
+      <small>
+        <p class="float-right">
+          <a href="#">Back to top</a>
+        </p>
+        <p><a href="https://indralab.github.io" target="_blank">INDRALAB</a></p>
+        <p><a href="http://hits.harvard.edu" target="_blank">Harvard Program in Therapeutic Science (HiTS)</a></p>
+        <p><b>Automating Scientific Knowledge Extraction (ASKE)</b><br>EMMAA (Ecosystem of Machine-maintained Models with Automated Assembly) was a part of the DARPA ASKE program, which was part of DARPA's broader Artificial Intelligence Exploration program with the goal of developing technologies for the "Third Wave" of AI.<br><i>The EMMAA project was funded by the Defense Advanced Research Projects Agency under award HR00111990009.</i></p>
+      </small>
+    </div>
+  </footer>
+</body>
