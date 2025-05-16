@@ -1,8 +1,14 @@
+import json
+from pathlib import Path
 from typing import Dict
 
 from tqdm import tqdm
 
 from emmaa.util import find_latest_s3_file, load_json_from_s3, does_exist
+
+
+HERE = Path(__file__).parent.resolve()
+JSON_PATH = HERE / "models.json"
 
 MODELS = [
     "aml",
@@ -73,8 +79,8 @@ def get_meta_data(model: str) -> Dict[str, str]:
         "model_short_name": model_short_name,
         "name": human_readable_name,
         "description": config_json["description"],
-        "model_path": latest_model_pkl,
-        "test_path": latest_model_test,
+        "model_path": latest_model_pkl or "",
+        "test_path": latest_model_test or "",
         "ndex": config_json.get("ndex", {}).get("network", "")  # in config.json -> ndex -> network
     }
 
@@ -85,3 +91,14 @@ def get_model_metadata() -> Dict[str, Dict[str, str]]:
     for model in tqdm(MODELS, desc="Loading model metadata", unit="model"):
         model_metadata[model] = get_meta_data(model)
     return model_metadata
+
+
+if __name__ == "__main__":
+    # Get the metadata for all models
+    model_metadata = get_model_metadata()
+
+    # Save the metadata to a JSON file
+    with open(JSON_PATH, "w") as f:
+        json.dump(model_metadata, f, indent=2)
+
+    # Render page
